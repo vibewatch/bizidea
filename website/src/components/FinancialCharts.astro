@@ -1,0 +1,546 @@
+---
+// Hand-rolled SVG charts for the financial-model section. Zero-dep, monochrome,
+// no rounded corners. Hover tooltips wired up by a single inline script at the
+// bottom of the component.
+
+interface Props {
+  fm: any;
+}
+const { fm } = Astro.props as Props;
+
+type Pt = { label: string; revenueK: number; ebitdaK: number; cashEopK: number };
+
+const monthly: Pt[] = Array.isArray(fm?.y1Monthly)
+  ? fm.y1Monthly.map((m: any) => ({
+      label: m.month,
+      revenueK: Number(m.revenueK ?? 0),
+      ebitdaK: Number(m.ebitdaK ?? 0),
+      cashEopK: Number(m.cashEopK ?? 0),
+    }))
+  : [];
+const quarterly: Pt[] = Array.isArray(fm?.y2y3Quarterly)
+  ? fm.y2y3Quarterly.map((q: any) => ({
+      label: q.quarter,
+      revenueK: Number(q.revenueK ?? 0),
+      ebitdaK: Number(q.ebitdaK ?? 0),
+      cashEopK: Number(q.cashEopK ?? 0),
+    }))
+  : [];
+// Stitch into a single 20-point trajectory.
+const series: Pt[] = [...monthly, ...quarterly];
+
+const fmtK = (k: number) =>
+  Math.abs(k) >= 1000 ? `$${(k / 1000).toFixed(2)}M` : `$${k.toFixed(0)}K`;
+const fmtSigned = (k: number) => (k >= 0 ? fmtK(k) : `-${fmtK(-k)}`);
+
+// --- Trajectory chart (combined revenue line + cash line + EBITDA bars) ---
+const W = 720;
+const H = 280;
+const PAD = { l: 56, r: 16, t: 16, b: 36 };
+const innerW = W - PAD.l - PAD.r;
+const innerH = H - PAD.t - PAD.b;
+const n = series.length;
+
+const allRevCash = series.flatMap((p) => [p.revenueK, p.cashEopK]);
+const yMax = Math.max(0, ...allRevCash);
+const yMin = 0;
+const ebitdaVals = series.map((p) => p.ebitdaK);
+const eMin = Math.min(0, ...ebitdaVals);
+const eMax = Math.max(0, ...ebitdaVals);
+
+// Reserve bottom 30% of plot for ebitda baseline so the line series read cleanly.
+const lineH = Math.round(innerH * 0.66);
+const barH = innerH - lineH - 8;
+
+const xAt = (i: number) => PAD.l + (n <= 1 ? innerW / 2 : (i * innerW) / (n - 1));
+const yLine = (v: number) =>
+  PAD.t + (yMax === yMin ? lineH / 2 : (1 - (v - yMin) / (yMax - yMin)) * lineH);
+const yBarBase = PAD.t + lineH + 8;
+const eRange = eMax - eMin || 1;
+const yBar = (v: number) => yBarBase + (1 - (v - eMin) / eRange) * barH;
+
+// Y-axis ticks for the line panel
+function niceTicks(max: number, count = 4): number[] {
+  if (max <= 0) return [0];
+  const raw = max / count;
+  const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+  const norm = raw / pow;
+  const step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * pow;
+  const ticks: number[] = [];
+  for (let v = 0; v <= max + step / 2; v += step) ticks.push(v);
+  return ticks;
+}
+const yTicks = niceTicks(yMax);
+
+// Line paths
+const revPath = series
+  .map((p, i) => `${i === 0 ? 'M' : 'L'} ${xAt(i).toFixed(1)} ${yLine(p.revenueK).toFixed(1)}`)
+  .join(' ');
+const cashPath = series
+  .map((p, i) => `${i === 0 ? 'M' : 'L'} ${xAt(i).toFixed(1)} ${yLine(p.cashEopK).toFixed(1)}`)
+  .join(' ');
+
+// --- Use of funds horizontal bar ---
+const uof: { bucket: string; pct: number; usd: number }[] = Array.isArray(fm?.fundingAsk?.useOfFunds)
+  ? fm.fundingAsk.useOfFunds.map((b: any) => ({
+      bucket: String(b.bucket),
+      pct: Number(b.percentage ?? 0),
+      usd: Number(b.amountUsd ?? 0),
+    }))
+  : [];
+const uofTotal = uof.reduce((s, b) => s + b.pct, 0) || 100;
+
+// --- Headcount stacked bars ---
+const quarters = ['q1y1', 'q2y1', 'q3y1', 'q4y1', 'q1y2', 'q2y2', 'q3y2', 'q4y2', 'q1y3', 'q2y3', 'q3y3', 'q4y3'] as const;
+const qLabels = ['Q1Y1', 'Q2Y1', 'Q3Y1', 'Q4Y1', 'Q1Y2', 'Q2Y2', 'Q3Y2', 'Q4Y2', 'Q1Y3', 'Q2Y3', 'Q3Y3', 'Q4Y3'];
+const headcountRoles: { role: string; values: number[] }[] = Array.isArray(fm?.headcount)
+  ? fm.headcount.map((row: any) => ({
+      role: String(row.role),
+      values: quarters.map((k) => Number(row[k] ?? 0)),
+    }))
+  : [];
+const hcQuartersWithData = quarters
+  .map((q, i) => ({ i, q, total: headcountRoles.reduce((s, r) => s + (r.values[i] ?? 0), 0) }))
+  .filter((q) => q.total > 0 || headcountRoles.some((r) => r.values[q.i] !== undefined));
+const hcMaxTotal = hcQuartersWithData.reduce((m, q) => Math.max(m, q.total), 0) || 1;
+
+// --- Sensitivity tornado ---
+const sens: { variable: string; cashImpactK: number; revImpactK: number; downside: string; upside: string }[] = Array.isArray(fm?.sensitivity)
+  ? fm.sensitivity
+      .map((s: any) => ({
+        variable: String(s.variable),
+        cashImpactK: Number(s.cashImpactK ?? 0),
+        revImpactK: Number(s.y3RevenueImpactK ?? 0),
+        downside: String(s.downsideCase ?? ''),
+        upside: String(s.upsideCase ?? ''),
+      }))
+      .sort((a: any, b: any) => Math.abs(b.cashImpactK) - Math.abs(a.cashImpactK))
+  : [];
+const sensMax = sens.reduce((m, s) => Math.max(m, Math.abs(s.cashImpactK), Math.abs(s.revImpactK)), 0) || 1;
+
+// --- Scenarios (downside / base / upside) ---
+const scs = ['downside', 'base', 'upside'] as const;
+const scenarios = scs.map((k) => {
+  const s = fm?.scenarios?.[k] ?? {};
+  return {
+    key: k,
+    label: k.charAt(0).toUpperCase() + k.slice(1),
+    desc: String(s.description ?? ''),
+    revK: Number(s.y3RevenueK ?? 0),
+    ebitdaK: Number(s.y3EbitdaK ?? 0),
+    cashLowK: Number(s.cashLowPointK ?? 0),
+  };
+});
+const scMaxRev = scenarios.reduce((m, s) => Math.max(m, s.revK), 0) || 1;
+const scAbsCash = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.cashLowK)), 0) || 1;
+const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)), 0) || 1;
+---
+{n > 0 && (
+  <figure class="bz-chart" data-bz-chart>
+    <figcaption class="bz-chart__caption bz-mono">
+      Revenue, cash, and EBITDA — {monthly.length}-month Y1 + {quarterly.length}-quarter Y2/Y3
+    </figcaption>
+    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Financial trajectory" preserveAspectRatio="xMidYMid meet">
+      {/* y grid + labels (line panel) */}
+      {yTicks.map((t) => (
+        <g>
+          <line x1={PAD.l} x2={W - PAD.r} y1={yLine(t)} y2={yLine(t)} stroke="#e2e8f0" stroke-width="1" />
+          <text x={PAD.l - 8} y={yLine(t) + 4} text-anchor="end" class="bz-chart__tick">{fmtK(t)}</text>
+        </g>
+      ))}
+      {/* zero baseline for bars */}
+      <line x1={PAD.l} x2={W - PAD.r} y1={yBar(0)} y2={yBar(0)} stroke="#1a1a1a" stroke-width="1" />
+      {/* ebitda bars */}
+      {series.map((p, i) => {
+        const w = Math.max(2, innerW / n - 4);
+        const x = xAt(i) - w / 2;
+        const top = yBar(Math.max(0, p.ebitdaK));
+        const bot = yBar(Math.min(0, p.ebitdaK));
+        const fill = p.ebitdaK >= 0 ? '#1a1a1a' : '#a3a3a3';
+        return (
+          <rect
+            x={x}
+            y={top}
+            width={w}
+            height={Math.max(1, bot - top)}
+            fill={fill}
+            data-bz-tip={`${p.label} · EBITDA ${fmtSigned(p.ebitdaK)}`}
+          />
+        );
+      })}
+      {/* revenue area + line */}
+      <path d={`${revPath} L ${xAt(n - 1)} ${yLine(0)} L ${xAt(0)} ${yLine(0)} Z`} fill="#1a1a1a" fill-opacity="0.08" />
+      <path d={revPath} fill="none" stroke="#1a1a1a" stroke-width="2" />
+      {/* cash line (accent) */}
+      <path d={cashPath} fill="none" stroke="#057dbc" stroke-width="2" stroke-dasharray="4 3" />
+      {/* point markers (revenue) for tooltip targets */}
+      {series.map((p, i) => (
+        <g>
+          <circle cx={xAt(i)} cy={yLine(p.revenueK)} r="3" fill="#1a1a1a" />
+          <circle cx={xAt(i)} cy={yLine(p.cashEopK)} r="3" fill="#057dbc" />
+          <rect
+            x={xAt(i) - Math.max(8, innerW / n / 2)}
+            y={PAD.t}
+            width={Math.max(16, innerW / n)}
+            height={lineH}
+            fill="transparent"
+            data-bz-tip={`${p.label} · Revenue ${fmtK(p.revenueK)} · Cash EOP ${fmtK(p.cashEopK)} · EBITDA ${fmtSigned(p.ebitdaK)}`}
+          />
+        </g>
+      ))}
+      {/* x labels (every Nth to avoid overlap) */}
+      {series.map((p, i) => {
+        const step = n > 16 ? 3 : n > 10 ? 2 : 1;
+        if (i % step !== 0 && i !== n - 1) return null;
+        return <text x={xAt(i)} y={H - 14} text-anchor="middle" class="bz-chart__tick">{p.label}</text>;
+      })}
+    </svg>
+    <ul class="bz-chart__legend bz-mono">
+      <li><span class="bz-chart__swatch bz-chart__swatch--ink"></span>Revenue (line, area)</li>
+      <li><span class="bz-chart__swatch bz-chart__swatch--accent"></span>Cash EOP (dashed)</li>
+      <li><span class="bz-chart__swatch bz-chart__swatch--ink"></span>EBITDA (bars, gray = loss)</li>
+    </ul>
+  </figure>
+)}
+
+{uof.length > 0 && (
+  <figure class="bz-chart" data-bz-chart>
+    <figcaption class="bz-chart__caption bz-mono">
+      Use of funds — ${(fm.fundingAsk.amountM ?? 0).toFixed(1)}M {fm.fundingAsk.round}
+    </figcaption>
+    <svg viewBox="0 0 720 60" role="img" aria-label="Use of funds" preserveAspectRatio="none">
+      {(() => {
+        let acc = 0;
+        return uof.map((b, i) => {
+          const w = (b.pct / uofTotal) * 720;
+          const x = acc;
+          acc += w;
+          const fillTones = ['#1a1a1a', '#3d3d3d', '#666666', '#999999'];
+          const fill = fillTones[i % fillTones.length];
+          return (
+            <rect
+              x={x}
+              y={0}
+              width={w}
+              height={36}
+              fill={fill}
+              data-bz-tip={`${b.bucket} · ${b.pct}% · $${(b.usd / 1000).toFixed(0)}K`}
+            />
+          );
+        });
+      })()}
+      {(() => {
+        let acc = 0;
+        return uof.map((b) => {
+          const w = (b.pct / uofTotal) * 720;
+          const x = acc + w / 2;
+          acc += w;
+          return (
+            <text x={x} y={56} text-anchor="middle" class="bz-chart__tick">
+              {b.bucket} · {b.pct}%
+            </text>
+          );
+        });
+      })()}
+    </svg>
+  </figure>
+)}
+
+{headcountRoles.length > 0 && (
+  <figure class="bz-chart" data-bz-chart>
+    <figcaption class="bz-chart__caption bz-mono">
+      Headcount build by role — peak {hcMaxTotal} FTE
+    </figcaption>
+    <svg viewBox="0 0 720 220" role="img" aria-label="Headcount build">
+      {(() => {
+        const w = 720 - 36 - 16;
+        const h = 220 - 24 - 28;
+        const bw = w / hcQuartersWithData.length - 8;
+        const tones = ['#1a1a1a', '#3d3d3d', '#5c5c5c', '#7a7a7a', '#9a9a9a', '#bfbfbf', '#dcdcdc'];
+        return hcQuartersWithData.map((q, qi) => {
+          const xBar = 36 + qi * (w / hcQuartersWithData.length) + 4;
+          let yAcc = 24 + h;
+          const segs = headcountRoles.map((r, ri) => {
+            const v = r.values[q.i] ?? 0;
+            const segH = (v / hcMaxTotal) * h;
+            yAcc -= segH;
+            return (
+              <rect
+                x={xBar}
+                y={yAcc}
+                width={bw}
+                height={segH}
+                fill={tones[ri % tones.length]}
+                data-bz-tip={`${qLabels[q.i]} · ${r.role} ${v} FTE`}
+              />
+            );
+          });
+          return (
+            <g>
+              {segs}
+              <text x={xBar + bw / 2} y={220 - 10} text-anchor="middle" class="bz-chart__tick">{qLabels[q.i]}</text>
+              <text x={xBar + bw / 2} y={24 + h - (q.total / hcMaxTotal) * h - 6} text-anchor="middle" class="bz-chart__tick bz-chart__tick--bold">{q.total}</text>
+            </g>
+          );
+        });
+      })()}
+    </svg>
+    <ul class="bz-chart__legend bz-mono">
+      {headcountRoles.map((r, ri) => {
+        const tones = ['#1a1a1a', '#3d3d3d', '#5c5c5c', '#7a7a7a', '#9a9a9a', '#bfbfbf', '#dcdcdc'];
+        return (
+          <li>
+            <span class="bz-chart__swatch" style={`background:${tones[ri % tones.length]};`}></span>
+            {r.role}
+          </li>
+        );
+      })}
+    </ul>
+  </figure>
+)}
+
+{scenarios.some((s) => s.revK || s.ebitdaK || s.cashLowK) && (
+  <figure class="bz-chart" data-bz-chart>
+    <figcaption class="bz-chart__caption bz-mono">
+      Year-3 scenarios — base / downside / upside
+    </figcaption>
+    <table class="bz-chart__table">
+      <thead>
+        <tr>
+          <th class="bz-mono"></th>
+          <th class="bz-mono">Y3 revenue</th>
+          <th class="bz-mono">Y3 EBITDA</th>
+          <th class="bz-mono">Cash low point</th>
+          <th class="bz-mono">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {scenarios.map((s) => (
+          <tr>
+            <td class="bz-mono bz-chart__row-label">{s.label}</td>
+            <td class="bz-chart__bar-cell" data-bz-tip={`${s.label} · Y3 revenue ${fmtK(s.revK)}`}>
+              <span class="bz-chart__bar" style={`width:${(s.revK / scMaxRev) * 100}%;`}></span>
+              <span class="bz-chart__bar-num">{fmtK(s.revK)}</span>
+            </td>
+            <td class="bz-chart__bar-cell bz-chart__bar-cell--signed" data-bz-tip={`${s.label} · Y3 EBITDA ${fmtSigned(s.ebitdaK)}`}>
+              <span class={`bz-chart__bar ${s.ebitdaK >= 0 ? '' : 'bz-chart__bar--neg'}`} style={`width:${(Math.abs(s.ebitdaK) / scAbsEbitda) * 100}%;`}></span>
+              <span class="bz-chart__bar-num">{fmtSigned(s.ebitdaK)}</span>
+            </td>
+            <td class="bz-chart__bar-cell bz-chart__bar-cell--signed" data-bz-tip={`${s.label} · Cash low ${fmtSigned(s.cashLowK)}`}>
+              <span class={`bz-chart__bar ${s.cashLowK >= 0 ? '' : 'bz-chart__bar--neg'}`} style={`width:${(Math.abs(s.cashLowK) / scAbsCash) * 100}%;`}></span>
+              <span class="bz-chart__bar-num">{fmtSigned(s.cashLowK)}</span>
+            </td>
+            <td class="bz-chart__desc">{s.desc}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </figure>
+)}
+
+{sens.length > 0 && (
+  <figure class="bz-chart" data-bz-chart>
+    <figcaption class="bz-chart__caption bz-mono">
+      Sensitivity — Y3 cash and revenue impact, sorted by magnitude
+    </figcaption>
+    <table class="bz-chart__table bz-chart__table--tornado">
+      <thead>
+        <tr>
+          <th class="bz-mono">Variable</th>
+          <th class="bz-mono">Downside</th>
+          <th class="bz-mono">Upside</th>
+          <th class="bz-mono">Cash impact</th>
+          <th class="bz-mono">Revenue impact</th>
+        </tr>
+      </thead>
+      <tbody>
+        {sens.map((s) => (
+          <tr>
+            <td class="bz-mono bz-chart__row-label">{s.variable}</td>
+            <td class="bz-chart__cell-tight">{s.downside}</td>
+            <td class="bz-chart__cell-tight">{s.upside}</td>
+            <td class="bz-chart__bar-cell bz-chart__bar-cell--signed" data-bz-tip={`${s.variable} · cash impact ${fmtSigned(s.cashImpactK)}`}>
+              <span class={`bz-chart__bar ${s.cashImpactK >= 0 ? '' : 'bz-chart__bar--neg'}`} style={`width:${(Math.abs(s.cashImpactK) / sensMax) * 100}%;`}></span>
+              <span class="bz-chart__bar-num">{fmtSigned(s.cashImpactK)}</span>
+            </td>
+            <td class="bz-chart__bar-cell bz-chart__bar-cell--signed" data-bz-tip={`${s.variable} · revenue impact ${fmtSigned(s.revImpactK)}`}>
+              <span class={`bz-chart__bar ${s.revImpactK >= 0 ? '' : 'bz-chart__bar--neg'}`} style={`width:${(Math.abs(s.revImpactK) / sensMax) * 100}%;`}></span>
+              <span class="bz-chart__bar-num">{fmtSigned(s.revImpactK)}</span>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </figure>
+)}
+
+<div id="bz-chart-tip" class="bz-chart__tip" role="status" aria-live="polite"></div>
+
+<script is:inline>
+  (() => {
+    const tip = document.getElementById('bz-chart-tip');
+    if (!tip) return;
+    const charts = document.querySelectorAll('[data-bz-chart]');
+    let raf = 0;
+    const move = (e, text) => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        tip.textContent = text;
+        tip.style.transform = `translate(${e.clientX + 14}px, ${e.clientY + 14}px)`;
+        tip.dataset.show = '1';
+      });
+    };
+    const hide = () => { delete tip.dataset.show; };
+    charts.forEach((root) => {
+      root.addEventListener('mousemove', (e) => {
+        const t = e.target.closest('[data-bz-tip]');
+        if (!t) { hide(); return; }
+        move(e, t.getAttribute('data-bz-tip'));
+      });
+      root.addEventListener('mouseleave', hide);
+    });
+  })();
+</script>
+
+<style>
+  .bz-chart {
+    margin: var(--space-5) 0;
+    padding: var(--space-4) 0;
+    border-top: var(--rule-thin);
+  }
+  .bz-chart__caption {
+    color: var(--caption-gray);
+    margin-bottom: var(--space-3);
+    display: block;
+  }
+  .bz-chart svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    overflow: visible;
+  }
+  .bz-chart__tick {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    fill: var(--caption-gray);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  .bz-chart__tick--bold {
+    fill: var(--ink-page);
+    font-size: 12px;
+  }
+  .bz-chart__legend {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-3) 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    color: var(--caption-gray);
+  }
+  .bz-chart__legend li { display: inline-flex; align-items: center; gap: 6px; }
+  .bz-chart__swatch {
+    display: inline-block;
+    width: 14px;
+    height: 8px;
+    background: var(--ink-page);
+  }
+  .bz-chart__swatch--accent { background: var(--link-blue); }
+  .bz-chart__swatch--ink { background: var(--ink-page); }
+
+  .bz-chart__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-serif);
+    font-size: 0.9375rem;
+    line-height: 1.4;
+  }
+  .bz-chart__table th,
+  .bz-chart__table td {
+    padding: var(--space-3) var(--space-3) var(--space-3) 0;
+    border-top: var(--rule-hairline);
+    text-align: left;
+    vertical-align: middle;
+  }
+  .bz-chart__table thead th {
+    border-top: 0;
+    border-bottom: var(--rule-thin);
+    color: var(--caption-gray);
+    font-weight: 400;
+    padding-bottom: var(--space-2);
+  }
+  .bz-chart__row-label {
+    color: var(--ink-page);
+    width: 12%;
+  }
+  .bz-chart__bar-cell {
+    position: relative;
+    width: 22%;
+    min-width: 140px;
+    height: 36px;
+  }
+  .bz-chart__bar-cell--signed {
+    --neg: var(--caption-gray);
+  }
+  .bz-chart__bar {
+    display: block;
+    height: 14px;
+    background: var(--ink-page);
+    margin-top: 4px;
+    max-width: 100%;
+  }
+  .bz-chart__bar--neg {
+    background: repeating-linear-gradient(
+      135deg,
+      var(--caption-gray) 0,
+      var(--caption-gray) 6px,
+      #b9b9b9 6px,
+      #b9b9b9 12px
+    );
+  }
+  .bz-chart__bar-num {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-page);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .bz-chart__cell-tight {
+    color: var(--caption-gray);
+    font-size: 0.875rem;
+    width: 18%;
+  }
+  .bz-chart__desc {
+    color: var(--caption-gray);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    width: 38%;
+  }
+
+  .bz-chart__tip {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    background: var(--ink-page);
+    color: var(--paper);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    padding: 6px 10px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 80ms ease;
+    white-space: nowrap;
+    max-width: 90vw;
+  }
+  .bz-chart__tip[data-show='1'] { opacity: 1; }
+
+  @media (max-width: 599px) {
+    .bz-chart__cell-tight,
+    .bz-chart__desc { display: none; }
+    .bz-chart__bar-cell { min-width: 100px; }
+  }
+</style>

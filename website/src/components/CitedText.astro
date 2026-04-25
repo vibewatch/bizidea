@@ -1,0 +1,52 @@
+---
+// Linkifies `[N]` and `[N][M][...]` citation tokens into anchors that point at
+// the matching `<li id="cite-N">` in the cited-sources bibliography.
+
+interface Props {
+  text?: string | null;
+  /** Optional element wrapper, defaults to span. */
+  as?: keyof HTMLElementTagNameMap;
+  class?: string;
+}
+const { text, as: Tag = 'span', class: cls = '' } = Astro.props as Props;
+
+const parts: Array<string | { id: string }> = [];
+if (typeof text === 'string' && text.length > 0) {
+  const re = /\[(\d+)\]/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    parts.push({ id: m[1]! });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+}
+---
+<Tag class:list={[cls]}>
+  {parts.map((p) =>
+    typeof p === 'string'
+      ? p
+      : <a class="bz-cite" href={`#cite-${p.id}`} aria-label={`Citation ${p.id}`}>[{p.id}]</a>
+  )}
+</Tag>
+<style is:global>
+  .bz-cite {
+    color: var(--link-blue);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.78em;
+    letter-spacing: 0.4px;
+    padding: 0 1px;
+    vertical-align: baseline;
+  }
+  .bz-cite:hover,
+  .bz-cite:focus-visible {
+    text-decoration: underline;
+  }
+  .bz-bib > li:target {
+    background: #fff7d6;
+    outline: 2px solid var(--ink-page);
+    outline-offset: 2px;
+  }
+</style>

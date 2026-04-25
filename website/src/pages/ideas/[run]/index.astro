@@ -9,7 +9,10 @@ import RatingBlock from '../../../components/RatingBlock.astro';
 import FactRow from '../../../components/FactRow.astro';
 import Mermaid from '../../../components/Mermaid.astro';
 import MermaidLoader from '../../../components/MermaidLoader.astro';
+import FinancialCharts from '../../../components/FinancialCharts.astro';
+import CitedText from '../../../components/CitedText.astro';
 import { loadStageFiles } from '../../../content/ideas-loader';
+import { linkifyCitations } from '../../../lib/citations';
 
 export async function getStaticPaths() {
   const all = await getCollection('ideas');
@@ -57,11 +60,11 @@ const fmtK = (k: number) =>
       {Array.isArray(idea?.whyNow) && (
         <ol class="bz-list">
           {idea.whyNow.map((w: any) => (
-            <li>{w.point}</li>
+            <li><CitedText text={w.point} /></li>
           ))}
         </ol>
       )}
-      <p class="bz-story__lead"><strong>Catalyst.</strong> {idea?.startupThesis?.whyNowCatalyst}</p>
+      <p class="bz-story__lead"><strong>Catalyst.</strong> <CitedText text={idea?.startupThesis?.whyNowCatalyst} /></p>
     </div>
 
     <Ribbon label="The idea" id="idea" />
@@ -85,16 +88,16 @@ const fmtK = (k: number) =>
       <FactRow
         caption="Sizing"
         rows={[
-          { label: 'TAM', value: research?.market?.tam?.value ?? null, sub: research?.market?.tam?.rationale },
-          { label: 'SAM', value: research?.market?.sam?.value ?? null, sub: research?.market?.sam?.rationale },
-          { label: 'SOM', value: research?.market?.som?.value ?? null, sub: research?.market?.som?.rationale },
+          { label: 'TAM', value: research?.market?.tam?.value ?? null, subHtml: linkifyCitations(research?.market?.tam?.rationale) },
+          { label: 'SAM', value: research?.market?.sam?.value ?? null, subHtml: linkifyCitations(research?.market?.sam?.rationale) },
+          { label: 'SOM', value: research?.market?.som?.value ?? null, subHtml: linkifyCitations(research?.market?.som?.rationale) },
         ]}
       />
       {research?.reportMemo?.executiveTakeaways && (
         <>
           <h3 class="bz-section__head">Executive takeaways</h3>
           <ul class="bz-list">
-            {research.reportMemo.executiveTakeaways.map((t: string) => <li>{t}</li>)}
+            {research.reportMemo.executiveTakeaways.map((t: string) => <li><CitedText text={t} /></li>)}
           </ul>
         </>
       )}
@@ -135,7 +138,7 @@ const fmtK = (k: number) =>
           <h3 class="bz-section__head">Why incumbents do not win by default</h3>
           <ul class="bz-list">
             {research.reportMemo.incumbentThesis.map((i: any) => (
-              <li><strong>{i.incumbentClass}.</strong> {i.point}</li>
+              <li><strong>{i.incumbentClass}.</strong> <CitedText text={i.point} /></li>
             ))}
           </ul>
         </>
@@ -225,6 +228,7 @@ const fmtK = (k: number) =>
           </ul>
         </>
       )}
+      <FinancialCharts fm={fm} />
       {fm?.modelDiagram?.mermaid && (
         <Mermaid title={fm.modelDiagram.title ?? 'Model flow'} code={fm.modelDiagram.mermaid} />
       )}
@@ -249,7 +253,7 @@ const fmtK = (k: number) =>
           <h3 class="bz-section__head">Cited sources ({research.sources.length})</h3>
           <ol class="bz-bib">
             {research.sources.map((s: any) => (
-              <li>
+              <li id={`cite-${s.id}`}>
                 <strong>{s.publisher}.</strong> {s.title}
                 {s.date && <span class="bz-bib__date"> · {s.date}</span>}
                 {s.url && <span> · <a href={s.url} target="_blank" rel="noopener noreferrer">{s.url}</a></span>}
@@ -279,7 +283,7 @@ const fmtK = (k: number) =>
 </BaseLayout>
 
 <style>
-  .bz-story__head { padding: var(--space-8) 0 var(--space-4); }
+  .bz-story__head { padding-block: var(--space-8) var(--space-4); }
   .bz-story__deck {
     font-family: var(--font-serif);
     font-size: 1.1875rem;
@@ -297,7 +301,12 @@ const fmtK = (k: number) =>
     margin: 0 0 var(--space-4);
     max-width: 70ch;
   }
-  .bz-section { padding: var(--space-2) 0 var(--space-5); }
+  .bz-section { padding-block: var(--space-2) var(--space-5); }
+  .bz-section > p,
+  .bz-section > ol,
+  .bz-section > ul {
+    max-width: 72ch;
+  }
   .bz-section__head {
     font-family: var(--font-sans);
     font-size: 1.0625rem;
