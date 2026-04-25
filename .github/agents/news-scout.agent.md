@@ -196,9 +196,9 @@ Write exactly this structure to `<folder>/news.json`:
       "title": "string",
       "url": "https://...",
       "publisher": "string",
-      "publishedAt": "YYYY-MM-DD",
+      "publishedDate": "YYYY-MM-DD",
       "author": "string|null",
-      "verifiedByFetch": true,
+      "fetchVerified": true,
       "keyPoints": ["≤5 concise bullets in your own words"]
     }
   ],
@@ -223,7 +223,7 @@ Write exactly this structure to `<folder>/news.json`:
 ## Output rules
 
 - `sources` must contain 3–5 entries unless the scan genuinely yields fewer verified, high-value sources.
-- Every `sources[].verifiedByFetch` must be `true`.
+- Every `sources[].fetchVerified` must be `true`.
 - Every source must be within `timeWindow`.
 - `deduplication.uniqueEventsRetained` must equal `sources.length`.
 - `deduplication.duplicatesRemoved` must be `0` or greater.

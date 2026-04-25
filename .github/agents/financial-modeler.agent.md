@@ -49,7 +49,7 @@ Write to `<folder>/financial-model.json`. Pretty-print with 2-space indent. All 
   "slug": "string",
   "date": "YYYY-MM-DD",
   "currency": "USD",
-  "modelStart": "YYYY-MM",
+  "modelStartMonth": "YYYY-MM",
   "assumptions": [
     { "id": "A1", "name": "Starting customers (M1)", "value": "0", "unit": "count", "source": "[BP exec summary]" }
   ],
@@ -60,7 +60,7 @@ Write to `<folder>/financial-model.json`. Pretty-print with 2-space indent. All 
   "headcountTotalsFte":         { "q1y1": 3, "q2y1": 4, "q3y1": 6, "q4y1": 8, "q4y2": 11, "q4y3": 15 },
   "headcountAnnualizedPayrollK":{ "q1y1": 600.0, "q2y1": 800.0, "q3y1": 1200.0, "q4y1": 1600.0, "q4y2": 2200.0, "q4y3": 3000.0 },
   "y1Monthly": [
-    { "month": "M1", "customersEop": 0, "newCustomers": 0, "revenueK": 0.0, "cogsK": 0.0, "grossProfitK": 0.0, "smK": 0.0, "rdK": 0.0, "gaK": 0.0, "opexK": 0.0, "ebitdaK": 0.0, "cashEopK": 0.0 }
+    { "month": "M1", "customersEop": 0, "newCustomers": 0, "revenueK": 0.0, "cogsK": 0.0, "grossProfitK": 0.0, "salesMarketingK": 0.0, "researchDevelopmentK": 0.0, "generalAdministrativeK": 0.0, "opexK": 0.0, "ebitdaK": 0.0, "cashEopK": 0.0 }
   ],
   "y2y3Quarterly": [
     { "quarter": "Q1Y2", "customersEop": 0, "revenueK": 0.0, "grossProfitK": 0.0, "opexK": 0.0, "ebitdaK": 0.0, "cashEopK": 0.0 }
@@ -86,10 +86,10 @@ Write to `<folder>/financial-model.json`. Pretty-print with 2-space indent. All 
     "runwayMonths": 0,
     "milestone": "string",
     "useOfFunds": [
-      { "bucket": "Engineering", "amount": 0, "pct": 0 },
-      { "bucket": "GTM",         "amount": 0, "pct": 0 },
-      { "bucket": "G&A",         "amount": 0, "pct": 0 },
-      { "bucket": "Buffer (6 mo)", "amount": 0, "pct": 0 }
+      { "bucket": "Engineering", "amountUsd": 0, "percentage": 0 },
+      { "bucket": "GTM",         "amountUsd": 0, "percentage": 0 },
+      { "bucket": "G&A",         "amountUsd": 0, "percentage": 0 },
+      { "bucket": "Buffer (6 mo)", "amountUsd": 0, "percentage": 0 }
     ]
   },
   "scenarios": {
@@ -123,10 +123,10 @@ Write to `<folder>/financial-model.json`. Pretty-print with 2-space indent. All 
     "mermaid": "flowchart LR\n  Leads --> Customers\n  Customers --> Revenue\n  Revenue --> GrossProfit\n  GrossProfit --> Cash"
   },
   "modelSanity": [
-    { "label": "Revenue engine", "value": "what drives revenue in the base case" },
-    { "label": "Must go right", "value": "the most important operating condition" },
-    { "label": "Model breaks if", "value": "the biggest downside sensitivity or cash-risk condition" },
-    { "label": "Next-round proof", "value": "the milestone that justifies the next financing" }
+    { "checkName": "Revenue engine", "finding": "what drives revenue in the base case" },
+    { "checkName": "Must go right", "finding": "the most important operating condition" },
+    { "checkName": "Model breaks if", "finding": "the biggest downside sensitivity or cash-risk condition" },
+    { "checkName": "Next-round proof", "finding": "the milestone that justifies the next financing" }
   ],
   "sanityChecks": {
     "ruleOf40": "e.g. Y3 growth 73% + EBITDA margin 30% = 103%",
@@ -141,12 +141,12 @@ Rules:
 - `y1Monthly` must contain exactly 12 entries (M1–M12).
 - `y2y3Quarterly` must contain exactly 8 entries (Q1Y2–Q4Y3).
 - `totals` must equal the sum of the corresponding monthly/quarterly slices.
-- `fundingAsk.useOfFunds[].amount` is in whole USD, not K or M, and should reconcile approximately to `fundingAsk.amountM`.
-- `useOfFunds` percentages must sum to ~100.
+- `fundingAsk.useOfFunds[].amountUsd` is in whole USD, not K or M, and should reconcile approximately to `fundingAsk.amountM`.
+- `fundingAsk.useOfFunds[].percentage` values must sum to ~100.
 - `scenarios.base` must reconcile to the main `totals`; downside and upside should vary the smallest credible set of assumptions.
 - `sensitivity` should include 4–8 rows for the variables that most affect runway, revenue, or funding ask.
 - `modelDiagram.mermaid` must be valid Mermaid `flowchart` syntax as a plain JSON string; do not wrap it in Markdown fences.
-- `modelSanity` must contain exactly 4 entries with labels: `Revenue engine`, `Must go right`, `Model breaks if`, and `Next-round proof`. Keep values to 1 sentence each and ground them in scenarios, sensitivity, fundingAsk, or sanityChecks.
+- `modelSanity` must contain exactly 4 entries with `checkName` values: `Revenue engine`, `Must go right`, `Model breaks if`, and `Next-round proof`. Keep each `finding` to 1 sentence and ground it in scenarios, sensitivity, fundingAsk, or sanityChecks.
 
 ## Handoff
 

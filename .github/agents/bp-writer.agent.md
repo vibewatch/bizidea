@@ -107,7 +107,7 @@ Write to `<folder>/business-plan.json`. Pretty-print with 2-space indent. Schema
   ],
   "operations": ["key process / tool / partner bullet"],
   "team": [
-    { "role": "Founding eng", "when": "Month 0", "why": "string" }
+    { "role": "Founding eng", "startTiming": "Month 0", "rationale": "string" }
   ],
   "milestones": [
     { "horizon": "0–12 months", "items": ["string"] },
@@ -117,18 +117,18 @@ Write to `<folder>/business-plan.json`. Pretty-print with 2-space indent. Schema
   "risks": [
     { "risk": "string", "likelihood": "Low|Medium|High", "impact": "Low|Medium|High", "mitigation": "string" }
   ],
-  "ask": {
+  "fundingAsk": {
     "stage": "pre-seed|seed",
-    "rangeUsd": "e.g. $2–4M",
+    "targetFundingRangeUsd": "e.g. $2–4M",
     "runwayMonths": 18,
-    "buys": "string — what 18 months of runway buys"
+    "useOfFundsSummary": "string — what 18 months of runway buys"
   }
 }
 ```
 
 Rules:
 - Use `null` (not empty string) when a value is genuinely missing.
-- Specific dollar amounts will be set by the financial model; here `ask.rangeUsd` is the target band.
+- Specific dollar amounts will be set by the financial model; here `fundingAsk.targetFundingRangeUsd` is the target band.
 - `strategyMap.mermaid` must be valid Mermaid `flowchart` syntax as a plain JSON string; do not wrap it in Markdown fences.
 - `experimentRoadmap` should contain 4–8 concrete validation, build, sales, or partnership experiments across the first 12–18 months.
 - `investorMemo.verdict.call` should be candid. Use `Meet / investigate further` only when the evidence supports a plausible partner meeting; use `Watch` or `Pass` when customer timing, differentiation, or market size is weak.

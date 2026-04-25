@@ -56,7 +56,7 @@ After **every** subagent invocation:
 | 1 | `news.json` | `topic`, `sources`, `signals`, `deduplication` |
 | 2 | `idea.json` | `slug`, `date`, `pitch`, `solution` |
 | 3 | `research.json` | `slug`, `date`, `market`, `competitors`, `researchCoverage`, `deduplication`, `evidenceCorpus`, `sources`, `reportMemo.incumbentThesis` |
-| 4 | `business-plan.json` | `slug`, `date`, `executiveSummary`, `market`, `product`, `gtm`, `milestones`, `ask`, `investorMemo` |
+| 4 | `business-plan.json` | `slug`, `date`, `executiveSummary`, `market`, `product`, `gtm`, `milestones`, `fundingAsk`, `investorMemo` |
 | 5 | `financial-model.json` | `slug`, `date`, `totals`, `unitEconomics`, `fundingAsk`, `modelSanity` |
 | 6 | `index.json` | `slug`, `date`, `pitch`, `rating`, `files`, `financials` |
 
@@ -102,8 +102,8 @@ Use the todo tool to track these stages so the user can see progress.
 
 ### Stage 3 — Market research
 8. Invoke `Market Researcher` with the folder path. It writes `research.json`.
-   - Require an institutional-grade research pass, not a light web scan: the Market Researcher should build a broad evidence corpus from reputable sources, target **100+ fetched articles/pages** when the topic and time window support it, and include a coverage gap explanation if fewer than 100 credible fetchable sources exist.
-   - Do not proceed if `research.json` lacks `researchCoverage` or `evidenceCorpus`, or if `researchCoverage.articlesFetched < 100` without a clear `researchCoverage.coverageGap` explanation.
+   - Require an institutional-grade research pass, not a light web scan: the Market Researcher should build a broad evidence corpus from reputable sources, target **100+ fetched sources/pages** when the topic and time window support it, and include a coverage gap explanation if fewer than 100 credible fetchable sources exist.
+   - Do not proceed if `research.json` lacks `researchCoverage` or `evidenceCorpus`, or if `researchCoverage.sourcesFetched < 100` without a clear `researchCoverage.coverageGap` explanation.
    - Validate `research.json` using the artifact validation gate before Stage 4.
 
 ### Stage 4 — Business plan
@@ -115,7 +115,7 @@ Use the todo tool to track these stages so the user can see progress.
    - Validate `financial-model.json` using the artifact validation gate before Stage 6.
 
 ### Stage 6 — Structured sidecar
-11. Invoke `Reporter` with the absolute folder path. It reads the five stage JSON files and writes `index.json`, the machine-readable headline sidecar the website consumes at build time. If `Reporter` reports missing fields, surface that in the final response but do not retry the pipeline.
+11. Invoke `Reporter` with the absolute folder path. It reads the five stage JSON files and writes `index.json`, the machine-readable headline sidecar the website consumes at build time. If required `index.json` fields are missing or invalid, treat it as an artifact validation failure; optional `null` fields reported in the handoff do not change the final response.
    - Validate `index.json` using the artifact validation gate before the final response.
 
 ## Final response to the user

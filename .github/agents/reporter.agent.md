@@ -16,7 +16,7 @@ Quality bar:
 - Extract, normalize, and score; do not reinterpret or improve upstream claims.
 - Preserve units and filenames exactly so the website can render reliably.
 - Make rating rationales short, evidence-based, and reader-facing. Do not expose JSON field paths or implementation names in public copy.
-- If a source value is missing, set `null` and surface it through `fields_present` rather than guessing.
+- If a source value is missing, set `null` and list it in the `null_fields` handoff value rather than guessing.
 - When research includes `researchCoverage` and `evidenceCorpus`, use their evidence depth to calibrate confidence in the rating rationales, but do not add those fields to `index.json`.
 
 ## Inputs
@@ -54,7 +54,7 @@ Rationale writing rules:
 - If evidence is insufficient, write `"Insufficient public evidence to score confidently."`.
 
 - **market** — TAM/SAM size + category growth + competitor density.
-  Inputs: `research.json.market.tam.value`, `research.json.categoryDynamics.growthRate`, `research.json.competitors.length`, and, when present, `research.json.researchCoverage.articlesFetched`.
+  Inputs: `research.json.market.tam.value`, `research.json.categoryDynamics.growthRate`, `research.json.competitors.length`, and, when present, `research.json.researchCoverage.sourcesFetched`.
   Anchors: `1` = niche or shrinking (<$50M TAM); `3` = $100M–$1B TAM, normal growth, crowded; `5` = >$1B TAM with double-digit growth and breakable concentration.
 
 - **differentiation** — wedge sharpness vs incumbents.
@@ -81,7 +81,7 @@ Compute `overall` = `round(0.30 * market + 0.30 * differentiation + 0.25 * execu
   "pitch": "string",
   "kicker": "STRING",
   "sector": "string",
-  "scan": { "window": "YYYY-MM-DD to YYYY-MM-DD", "label": "string|null" },
+  "scan": { "timeWindow": "YYYY-MM-DD to YYYY-MM-DD", "timeWindowLabel": "string|null" },
   "rating": {
     "overall": 0.0,
     "dimensions": {
@@ -119,5 +119,5 @@ path: <absolute path to index.json>
 slug: <slug>
 sector: <sector>
 rating: <overall e.g. 3.7>
-fields_present: <comma-separated list of any null fields, or "all">
+null_fields: <comma-separated list of any null fields, or "none">
 ```

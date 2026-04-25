@@ -17,7 +17,7 @@ Quality bar:
 - Treat competitor analysis as strategic mapping, not a directory listing: explain each player’s wedge, strength, and gap versus the proposed startup.
 - Prefer recent, primary, or authoritative sources; every external claim should be traceable to fetched evidence.
 - Be candid about uncertainty through `openQuestions` instead of inventing precision.
-- Build a broad evidence corpus before writing conclusions: target **100+ reputable fetched articles/pages** across news, market reports, company pages, regulatory sources, analyst commentary, pricing pages, customer forums/reviews, and technical docs when the topic and time window support it.
+- Build a broad evidence corpus before writing conclusions: target **100+ reputable fetched sources/pages** across news, market reports, company pages, regulatory sources, analyst commentary, pricing pages, customer forums/reviews, and technical docs when the topic and time window support it.
 - Separate **evidence collection** from **report synthesis**: the report should be concise and analytical, while `evidenceCorpus` preserves the broader audit trail.
 - Remove duplicate evidence before synthesis so corpus counts represent distinct useful sources, not repeated syndications, mirrors, tracking-URL variants, or near-identical vendor pages.
 
@@ -70,7 +70,7 @@ Think like a diligence lead deciding whether this startup deserves a partner mee
 9. **Business-model implications** — likely pricing basis, sales motion, gross-margin pressure, channel partners, procurement timeline, and expansion path; do not write the full business plan.
 10. **Risks and disconfirming evidence** — credible reasons this might fail, weak evidence, crowded segments, low willingness to pay, or timing mismatch.
 11. **Open questions and validation plan** — what must be customer-tested next, with priority and suggested evidence to gather.
-12. **Evidence coverage** — how many articles/pages were found, fetched, retained, used in the memo, rejected, and what source classes were represented.
+12. **Evidence coverage** — how many sources/pages were found, fetched, retained, used in the memo, rejected, and what source classes were represented.
 
 ## Approach
 1. Read `idea.json`. Extract the target user, wedge, and core hypothesis.
@@ -83,7 +83,7 @@ Think like a diligence lead deciding whether this startup deserves a partner mee
   - funding/deal/news articles;
   - technical docs, benchmarks, open-source repos, or cloud/platform docs;
   - reviews/forums/RFPs/job posts when they reveal demand.
-3. Target **at least 100 reputable fetched, de-duplicated articles/pages** for `evidenceCorpus`.
+3. Target **at least 100 reputable fetched, de-duplicated sources/pages** for `evidenceCorpus`.
   - Prioritize source reputation and relevance over raw volume.
   - Use reputable publishers and primary sources first: Reuters, FT, Bloomberg, The Information, TechCrunch, Crunchbase News, PitchBook/CB Insights/Dealroom blogs, analyst firms, government/regulatory sites, standards bodies, company documentation, pricing pages, engineering blogs, public filings, respected sector publications, and credible trade press.
   - Avoid duplicate syndicated articles. If multiple sources repeat the same announcement, keep the primary release plus the best independent analysis.
@@ -103,12 +103,12 @@ Write to `<folder>/research.json`. Pretty-print with 2-space indent. Schema:
   "slug": "string",
   "date": "YYYY-MM-DD",
   "researchCoverage": {
-    "articleTarget": 100,
-    "articlesFound": 0,
-    "articlesFetched": 0,
-    "articlesRetained": 0,
+    "sourceTarget": 100,
+    "sourcesFound": 0,
+    "sourcesFetched": 0,
+    "sourcesRetained": 0,
     "duplicatesRemoved": 0,
-    "sourcesUsedInMemo": 0,
+    "memoSourcesUsed": 0,
     "reputablePublisherCount": 0,
     "searchedQueries": ["string"],
     "sourceQualityMix": {
@@ -145,7 +145,7 @@ Write to `<folder>/research.json`. Pretty-print with 2-space indent. Schema:
     "buyingTriggers": [{ "point": "string", "sourceRefs": [1] }],
     "willingnessToPay": { "summary": "string", "sourceRefs": [1] },
     "competitiveLandscape": "string",
-    "incumbentThesis": [{ "label": "Cloud platforms", "point": "why this class does not win by default", "sourceRefs": [1] }],
+    "incumbentThesis": [{ "incumbentClass": "Cloud platforms", "point": "why this class does not win by default", "sourceRefs": [1] }],
     "regulatoryLandscape": "string",
     "technologyLandscape": "string",
     "distributionChannels": [{ "point": "string", "sourceRefs": [1] }],
@@ -179,7 +179,7 @@ Write to `<folder>/research.json`. Pretty-print with 2-space indent. Schema:
     "sam": { "value": "$X.XM", "rationale": "constraint applied", "isEstimate": true, "sourceRefs": [1] },
     "som": { "value": "$X.XM", "rationale": "reachable share rationale", "isEstimate": true, "sourceRefs": [3] }
   },
-  "bottomUp": [
+  "bottomUpSizingDrivers": [
     { "driver": "Total addressable units", "value": "…", "source": "[1] or 'est.' or 'calc'" }
   ],
   "categoryDynamics": {
@@ -199,7 +199,7 @@ Write to `<folder>/research.json`. Pretty-print with 2-space indent. Schema:
       "sourceRefs": [4, 5]
     }
   ],
-  "constraints": [{ "point": "regulatory or technical constraint", "sourceRefs": [6] }],
+  "regulatoryTechnicalConstraints": [{ "point": "regulatory or technical constraint", "sourceRefs": [6] }],
   "validationSignals": [{ "point": "string", "sourceRefs": [7] }],
   "openQuestions": ["string"],
   "evidenceCorpus": [
@@ -226,9 +226,9 @@ Write to `<folder>/research.json`. Pretty-print with 2-space indent. Schema:
 Rules:
 - 3–5 competitors max.
 - 3–5 open questions.
-- `researchCoverage.articleTarget` MUST be `100`.
-- `researchCoverage.articlesFetched` SHOULD be at least `100`. If it is less than `100`, `researchCoverage.coverageGap` MUST explain why the topic/time window did not yield 100 credible fetchable sources.
-- `researchCoverage.articlesRetained` MUST equal `evidenceCorpus.length` after duplicate removal.
+- `researchCoverage.sourceTarget` MUST be `100`.
+- `researchCoverage.sourcesFetched` SHOULD be at least `100`. If it is less than `100`, `researchCoverage.coverageGap` MUST explain why the topic/time window did not yield 100 credible fetchable sources.
+- `researchCoverage.sourcesRetained` MUST equal `evidenceCorpus.length` after duplicate removal.
 - `researchCoverage.duplicatesRemoved` MUST equal `deduplication.duplicatesRemoved`.
 - `evidenceCorpus` SHOULD contain at least 100 entries. Every entry must have `fetchVerified: true`; otherwise drop it.
 - `sources` should contain the 20–40 strongest cited sources from `evidenceCorpus`, unless the evidence base is smaller.
