@@ -93,6 +93,10 @@ Think like a diligence lead deciding whether this startup deserves a partner mee
 7. Write the file using the schema below. Every numeric claim or external fact in the synthesized report must reference a `sources[].id`.
 8. Read `<folder>/research.yaml` back from disk and confirm it is non-empty valid YAML with the required top-level fields before returning `HANDOFF`.
 
+## YAML syntax rules
+
+Follow [yaml-syntax.md](./yaml-syntax.md). The pipeline parses every artifact with a strict YAML loader. Pay particular attention to citation `title` fields — they routinely contain `: ` and must be double-quoted; never use flow style (`- { id: 1, title: ..., url: ... }`) for `evidenceCorpus` or `sources`.
+
 ## Output Format
 
 Write to `<folder>/research.yaml`. Use YAML with 2-space indent. Schema:
@@ -135,25 +139,38 @@ reportMemo:
   marketDefinition: string
   customerAndBuyer: string
   buyingTriggers:
-    - { point: string, sourceRefs: [1] }
-  willingnessToPay: { summary: string, sourceRefs: [1] }
+    - point: string
+      sourceRefs: [1]
+  willingnessToPay:
+    summary: string
+    sourceRefs: [1]
   competitiveLandscape: string
   incumbentThesis:
-    - { incumbentClass: Cloud platforms, point: why this class does not win by default, sourceRefs: [1] }
+    - incumbentClass: Cloud platforms
+      point: why this class does not win by default
+      sourceRefs: [1]
   regulatoryLandscape: string
   technologyLandscape: string
   distributionChannels:
-    - { point: string, sourceRefs: [1] }
+    - point: string
+      sourceRefs: [1]
   partnershipEcosystem:
-    - { point: string, sourceRefs: [1] }
+    - point: string
+      sourceRefs: [1]
   dataMoats:
-    - { point: string, sourceRefs: [1] }
+    - point: string
+      sourceRefs: [1]
   geographicConsiderations:
-    - { point: string, sourceRefs: [1] }
+    - point: string
+      sourceRefs: [1]
   sensitivityCases:
-    - { case: string, impact: string, sourceRefs: [1] }
+    - case: string
+      impact: string
+      sourceRefs: [1]
   validationPlan:
-    - { priority: high|medium|low, question: string, evidenceToGather: string }
+    - priority: high|medium|low
+      question: string
+      evidenceToGather: string
 analysisModels:
   marketMapDiagram:
     title: short map title
@@ -165,28 +182,66 @@ analysisModels:
         Competitor A: [0.3, 0.7]
         Proposed startup: [0.8, 0.9]
   fiveForces:
-    supplierPower: { score: 1, rationale: string, sourceRefs: [1] }
-    buyerPower: { score: 1, rationale: string, sourceRefs: [1] }
-    threatOfEntrants: { score: 1, rationale: string, sourceRefs: [1] }
-    threatOfSubstitutes: { score: 1, rationale: string, sourceRefs: [1] }
-    competitiveRivalry: { score: 1, rationale: string, sourceRefs: [1] }
+    supplierPower:
+      score: 1
+      rationale: string
+      sourceRefs: [1]
+    buyerPower:
+      score: 1
+      rationale: string
+      sourceRefs: [1]
+    threatOfEntrants:
+      score: 1
+      rationale: string
+      sourceRefs: [1]
+    threatOfSubstitutes:
+      score: 1
+      rationale: string
+      sourceRefs: [1]
+    competitiveRivalry:
+      score: 1
+      rationale: string
+      sourceRefs: [1]
   pestle:
-    - { factor: political|economic|social|technological|legal|environmental, impact: positive|neutral|negative, point: string, sourceRefs: [1] }
+    - factor: political|economic|social|technological|legal|environmental
+      impact: positive|neutral|negative
+      point: string
+      sourceRefs: [1]
   adoptionFrictionMatrix:
-    - { friction: string, severity: low|medium|high, affectedBuyer: string, mitigation: string, sourceRefs: [1] }
+    - friction: string
+      severity: low|medium|high
+      affectedBuyer: string
+      mitigation: string
+      sourceRefs: [1]
 market:
-  tam: { value: "$X.XB", rationale: one-line method + calc, isEstimate: true, sourceRefs: [1, 2] }
-  sam: { value: "$X.XM", rationale: constraint applied, isEstimate: true, sourceRefs: [1] }
-  som: { value: "$X.XM", rationale: reachable share rationale, isEstimate: true, sourceRefs: [3] }
+  tam:
+    value: "$X.XB"
+    rationale: one-line method + calc
+    isEstimate: true
+    sourceRefs: [1, 2]
+  sam:
+    value: "$X.XM"
+    rationale: constraint applied
+    isEstimate: true
+    sourceRefs: [1]
+  som:
+    value: "$X.XM"
+    rationale: reachable share rationale
+    isEstimate: true
+    sourceRefs: [3]
 bottomUpSizingDrivers:
-  - { driver: Total addressable units, value: "…", source: "[1] or 'est.' or 'calc'" }
+  - driver: Total addressable units
+    value: "…"
+    source: "[1] or 'est.' or 'calc'"
 categoryDynamics:
   growthRate: e.g. 12.5% CAGR
   growthRateSourceRefs: [3]
   tailwinds:
-    - { point: string, sourceRefs: [1] }
+    - point: string
+      sourceRefs: [1]
   headwinds:
-    - { point: string, sourceRefs: [2] }
+    - point: string
+      sourceRefs: [2]
 competitors:
   - name: string
     stage: e.g. seed | scale-up | incumbent
@@ -196,9 +251,11 @@ competitors:
     weaknessVsUs: string
     sourceRefs: [4, 5]
 regulatoryTechnicalConstraints:
-  - { point: regulatory or technical constraint, sourceRefs: [6] }
+  - point: regulatory or technical constraint
+    sourceRefs: [6]
 validationSignals:
-  - { point: string, sourceRefs: [7] }
+  - point: string
+    sourceRefs: [7]
 openQuestions: [string]
 evidenceCorpus:
   - id: 1
@@ -213,7 +270,11 @@ evidenceCorpus:
     usedInMemo: true
     oneLineRelevance: string
 sources:
-  - { id: 1, publisher: string, title: string, date: YYYY-MM-DD, url: https://... }
+  - id: 1
+    publisher: string
+    title: string
+    date: YYYY-MM-DD
+    url: https://...
 ```
 
 Rules:

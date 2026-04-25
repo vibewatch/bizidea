@@ -71,6 +71,10 @@ Rationale writing rules:
 
 Compute `overall` = `round(0.30 * market + 0.30 * differentiation + 0.25 * execution + 0.15 * timeliness, 1)`. Always include all four dimensions even if you must default to `3` with rationale `"insufficient data"`.
 
+## YAML syntax rules
+
+Follow [yaml-syntax.md](./yaml-syntax.md). The website parses `index.yaml` with a strict YAML loader; quote any `pitch` or `rationale` scalar containing `: ` and prefer block style for nested mappings.
+
 ## Schema (exact)
 
 ```yaml
@@ -86,10 +90,18 @@ scan:
 rating:
   overall: 0.0
   dimensions:
-    market:          { score: 0, rationale: string }
-    differentiation: { score: 0, rationale: string }
-    execution:       { score: 0, rationale: string }
-    timeliness:      { score: 0, rationale: string }
+    market:
+      score: 0
+      rationale: string
+    differentiation:
+      score: 0
+      rationale: string
+    execution:
+      score: 0
+      rationale: string
+    timeliness:
+      score: 0
+      rationale: string
 files:
   news: news.yaml
   idea: idea.yaml
@@ -101,10 +113,22 @@ market:
   sam: string|null
   som: string|null
 financials:
-  y1: { revenueK: 0.0, ebitdaK: 0.0, cashEopK: 0.0 }
-  y2: { revenueK: 0.0, ebitdaK: 0.0, cashEopK: 0.0 }
-  y3: { revenueK: 0.0, ebitdaK: 0.0, cashEopK: 0.0 }
-  fundingAsk: { amountM: 0.0, round: string, runwayMonths: 0 }
+  y1:
+    revenueK: 0.0
+    ebitdaK: 0.0
+    cashEopK: 0.0
+  y2:
+    revenueK: 0.0
+    ebitdaK: 0.0
+    cashEopK: 0.0
+  y3:
+    revenueK: 0.0
+    ebitdaK: 0.0
+    cashEopK: 0.0
+  fundingAsk:
+    amountM: 0.0
+    round: string
+    runwayMonths: 0
 topRisks: [string, string, string]
 ```
 

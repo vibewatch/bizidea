@@ -19,4 +19,4 @@
 - All pipeline artifacts are YAML files (`news.yaml`, `idea.yaml`, `research.yaml`, `business-plan.yaml`, `financial-model.yaml`, `index.yaml`).
 - Prefer descriptive camelCase field names.
 - Include units in numeric field names where helpful, such as `fundingRangeUsd`, `revenueK`, `marginPct`, or `headcountEop`.
-- Use 2-space indentation. Use `null` (not empty strings) for genuinely missing optional values.
+- Follow [.github/agents/yaml-syntax.md](.github/agents/yaml-syntax.md) for indentation, quoting, block-vs-flow style, and multi-line string rules.

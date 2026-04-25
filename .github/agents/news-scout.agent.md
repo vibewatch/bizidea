@@ -168,6 +168,10 @@ Record meaningful duplicate clusters in `deduplication.duplicateClusters`.
 9. Write valid YAML to `<folder>/news.yaml` using 2-space indentation.
 10. Read the file back and confirm it is non-empty valid YAML before returning the handoff.
 
+## YAML syntax rules
+
+Follow [yaml-syntax.md](./yaml-syntax.md). The pipeline parses every artifact with a strict YAML loader; quote any scalar containing `: `, prefer block style for sequences of mappings, and use a `|` literal block scalar for the Mermaid `signalMap` string.
+
 ## Output schema
 
 Write exactly this structure to `<folder>/news.yaml`:

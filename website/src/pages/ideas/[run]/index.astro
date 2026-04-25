@@ -1,0 +1,354 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Kicker from '../../../components/Kicker.astro';
+import Headline from '../../../components/Headline.astro';
+import Ribbon from '../../../components/Ribbon.astro';
+import Rule from '../../../components/Rule.astro';
+import RatingBlock from '../../../components/RatingBlock.astro';
+import FactRow from '../../../components/FactRow.astro';
+import Mermaid from '../../../components/Mermaid.astro';
+import MermaidLoader from '../../../components/MermaidLoader.astro';
+import { loadStageFiles } from '../../../content/ideas-loader';
+
+export async function getStaticPaths() {
+  const all = await getCollection('ideas');
+  return all.map((entry) => ({
+    params: { run: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const stages = loadStageFiles(entry.id);
+const news = stages.news as any;
+const idea = stages.idea as any;
+const research = stages.research as any;
+const bp = stages.businessPlan as any;
+const fm = stages.financialModel as any;
+
+const fmtK = (k: number) =>
+  (k >= 1000 || k <= -1000)
+    ? `$${(k / 1000).toFixed(2)}M`
+    : `$${k.toFixed(0)}K`;
+---
+<BaseLayout
+  title={`${entry.data.pitch} — Bizidea`}
+  description={entry.data.pitch}
+>
+  <article class="bz-story">
+    <header class="bz-story__head bz-container">
+      <Kicker bold>{entry.data.kicker} · {entry.data.sector} · Scan {entry.data.scan.timeWindow}</Kicker>
+      <Headline as="h1" size="hero">{entry.data.pitch}</Headline>
+      {idea?.problem && (
+        <p class="bz-story__deck">{String(idea.problem).split(/(?<=\.)\s+/).slice(0, 2).join(' ')}</p>
+      )}
+      <p class="bz-story__byline bz-mono">
+        Generated {entry.data.date} · Run {entry.data.runTimestamp}
+      </p>
+    </header>
+
+    <div class="bz-container">
+      <RatingBlock overall={entry.data.rating.overall} dimensions={entry.data.rating.dimensions} />
+    </div>
+
+    <Ribbon label="Why now" id="why-now" />
+    <div class="bz-container bz-section">
+      {Array.isArray(idea?.whyNow) && (
+        <ol class="bz-list">
+          {idea.whyNow.map((w: any) => (
+            <li>{w.point}</li>
+          ))}
+        </ol>
+      )}
+      <p class="bz-story__lead"><strong>Catalyst.</strong> {idea?.startupThesis?.whyNowCatalyst}</p>
+    </div>
+
+    <Ribbon label="The idea" id="idea" />
+    <div class="bz-container bz-section">
+      <p class="bz-story__lead">{idea?.solution}</p>
+      <FactRow
+        rows={[
+          { label: 'Beachhead', value: idea?.startupThesis?.beachhead ?? null },
+          { label: 'Wedge', value: idea?.startupThesis?.wedge ?? null },
+          { label: 'Non-obvious insight', value: idea?.startupThesis?.nonObviousInsight ?? null },
+          { label: 'Venture-scale path', value: idea?.startupThesis?.ventureScalePath ?? null },
+        ]}
+      />
+      {idea?.conceptDiagram?.mermaid && (
+        <Mermaid title={idea.conceptDiagram.title} code={idea.conceptDiagram.mermaid} />
+      )}
+    </div>
+
+    <Ribbon label="Market" id="market" />
+    <div class="bz-container bz-section">
+      <FactRow
+        caption="Sizing"
+        rows={[
+          { label: 'TAM', value: research?.market?.tam?.value ?? null, sub: research?.market?.tam?.rationale },
+          { label: 'SAM', value: research?.market?.sam?.value ?? null, sub: research?.market?.sam?.rationale },
+          { label: 'SOM', value: research?.market?.som?.value ?? null, sub: research?.market?.som?.rationale },
+        ]}
+      />
+      {research?.reportMemo?.executiveTakeaways && (
+        <>
+          <h3 class="bz-section__head">Executive takeaways</h3>
+          <ul class="bz-list">
+            {research.reportMemo.executiveTakeaways.map((t: string) => <li>{t}</li>)}
+          </ul>
+        </>
+      )}
+      {research?.analysisModels?.marketMapDiagram?.mermaid && (
+        <Mermaid
+          title={research.analysisModels.marketMapDiagram.title}
+          code={research.analysisModels.marketMapDiagram.mermaid}
+        />
+      )}
+    </div>
+
+    <Ribbon label="Competition" id="competition" />
+    <div class="bz-container bz-section">
+      {Array.isArray(research?.competitors) && (
+        <table class="bz-comp">
+          <thead>
+            <tr>
+              <th class="bz-mono">Competitor</th>
+              <th class="bz-mono">Stage</th>
+              <th class="bz-mono">Wedge</th>
+              <th class="bz-mono">Weakness vs. us</th>
+            </tr>
+          </thead>
+          <tbody>
+            {research.competitors.map((c: any) => (
+              <tr>
+                <td>{c.name}</td>
+                <td>{c.stage}</td>
+                <td>{c.wedge}</td>
+                <td>{c.weaknessVsUs}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {Array.isArray(research?.reportMemo?.incumbentThesis) && (
+        <>
+          <h3 class="bz-section__head">Why incumbents do not win by default</h3>
+          <ul class="bz-list">
+            {research.reportMemo.incumbentThesis.map((i: any) => (
+              <li><strong>{i.incumbentClass}.</strong> {i.point}</li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+
+    <Ribbon label="Business plan" id="business-plan" />
+    <div class="bz-container bz-section">
+      <p class="bz-story__lead">{bp?.executiveSummary}</p>
+      {Array.isArray(bp?.strategicChoices?.notYet) && (
+        <FactRow
+          rows={[
+            { label: 'Beachhead', value: bp?.strategicChoices?.beachhead ?? null },
+            { label: 'Wedge rationale', value: bp?.strategicChoices?.wedgeRationale ?? null },
+            { label: 'Sequencing', value: bp?.strategicChoices?.sequencingRationale ?? null },
+            { label: 'Not yet', value: bp.strategicChoices.notYet.join(' · ') },
+          ]}
+        />
+      )}
+      {Array.isArray(bp?.milestones) && (
+        <>
+          <h3 class="bz-section__head">Milestones</h3>
+          {bp.milestones.map((m: any) => (
+            <section class="bz-milestone">
+              <span class="bz-mono bz-milestone__horizon">{m.horizon}</span>
+              <ul class="bz-list">
+                {(m.items ?? []).map((it: string) => <li>{it}</li>)}
+              </ul>
+            </section>
+          ))}
+        </>
+      )}
+      {bp?.strategyMap?.mermaid && (
+        <Mermaid title="Strategy map" code={bp.strategyMap.mermaid} />
+      )}
+      {bp?.investorMemo?.verdict && (
+        <FactRow
+          caption="Investor verdict"
+          rows={[
+            { label: 'Call', value: bp.investorMemo.verdict.call ?? null },
+            { label: 'Why believe', value: bp.investorMemo.verdict.whyBelieve ?? null },
+            { label: 'Why doubt', value: bp.investorMemo.verdict.whyDoubt ?? null },
+            { label: 'Next diligence', value: bp.investorMemo.verdict.nextDiligence ?? null },
+          ]}
+        />
+      )}
+    </div>
+
+    <Ribbon label="Financial model" id="financial-model" />
+    <div class="bz-container bz-section">
+      <FactRow
+        caption="3-year totals"
+        rows={[
+          { label: 'Year 1 revenue', value: fmtK(fm?.totals?.y1?.revenueK ?? 0), sub: `EBITDA ${fmtK(fm?.totals?.y1?.ebitdaK ?? 0)} · Cash EOP ${fmtK(fm?.totals?.y1?.cashEopK ?? 0)}` },
+          { label: 'Year 2 revenue', value: fmtK(fm?.totals?.y2?.revenueK ?? 0), sub: `EBITDA ${fmtK(fm?.totals?.y2?.ebitdaK ?? 0)} · Cash EOP ${fmtK(fm?.totals?.y2?.cashEopK ?? 0)}` },
+          { label: 'Year 3 revenue', value: fmtK(fm?.totals?.y3?.revenueK ?? 0), sub: `EBITDA ${fmtK(fm?.totals?.y3?.ebitdaK ?? 0)} · Cash EOP ${fmtK(fm?.totals?.y3?.cashEopK ?? 0)}` },
+        ]}
+      />
+      {fm?.unitEconomics && (
+        <FactRow
+          caption="Unit economics"
+          rows={[
+            { label: 'ARPU (annual)', value: fmtK(fm.unitEconomics.arpuAnnualK ?? 0) },
+            { label: 'Gross margin', value: `${(fm.unitEconomics.grossMarginPct ?? 0).toFixed(0)}%` },
+            { label: 'CAC', value: fmtK(fm.unitEconomics.cacK ?? 0), sub: `Payback ${(fm.unitEconomics.cacPaybackMonths ?? 0).toFixed(1)} months` },
+            { label: 'LTV / CAC', value: `${(fm.unitEconomics.ltvCacRatio ?? 0).toFixed(1)}x`, sub: `LTV ${fmtK(fm.unitEconomics.ltvK ?? 0)}` },
+          ]}
+        />
+      )}
+      {fm?.fundingAsk && (
+        <FactRow
+          caption="Funding ask"
+          rows={[
+            { label: 'Round', value: `${fm.fundingAsk.round} · $${fm.fundingAsk.amountM.toFixed(1)}M` },
+            { label: 'Runway', value: `${fm.fundingAsk.runwayMonths} months` },
+            { label: 'Milestone', value: fm.fundingAsk.milestone ?? null },
+          ]}
+        />
+      )}
+      {Array.isArray(fm?.modelSanity) && (
+        <>
+          <h3 class="bz-section__head">Model sanity</h3>
+          <ul class="bz-list">
+            {fm.modelSanity.map((s: any) => (
+              <li><strong>{s.checkName}.</strong> {s.finding}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      {fm?.modelDiagram?.mermaid && (
+        <Mermaid title={fm.modelDiagram.title ?? 'Model flow'} code={fm.modelDiagram.mermaid} />
+      )}
+      {Array.isArray(fm?.sanityChecks?.flags) && fm.sanityChecks.flags.length > 0 && (
+        <p class="bz-flags bz-mono">
+          Flags: {fm.sanityChecks.flags.join(' · ')}
+        </p>
+      )}
+    </div>
+
+    <Ribbon label="Top risks" id="risks" />
+    <div class="bz-container bz-section">
+      <ul class="bz-list">
+        {entry.data.topRisks.map((r) => <li>{r}</li>)}
+      </ul>
+    </div>
+
+    <Ribbon label="Evidence" id="evidence" />
+    <div class="bz-container bz-section">
+      {Array.isArray(research?.sources) && (
+        <>
+          <h3 class="bz-section__head">Cited sources ({research.sources.length})</h3>
+          <ol class="bz-bib">
+            {research.sources.map((s: any) => (
+              <li>
+                <strong>{s.publisher}.</strong> {s.title}
+                {s.date && <span class="bz-bib__date"> · {s.date}</span>}
+                {s.url && <span> · <a href={s.url} target="_blank" rel="noopener noreferrer">{s.url}</a></span>}
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
+      {Array.isArray(news?.sources) && (
+        <>
+          <Rule weight="hairline" />
+          <h3 class="bz-section__head">News scan ({news.sources.length})</h3>
+          <ol class="bz-bib">
+            {news.sources.map((s: any) => (
+              <li>
+                <strong>{s.publisher}.</strong> {s.title}
+                {s.publishedDate && <span class="bz-bib__date"> · {s.publishedDate}</span>}
+                {s.url && <span> · <a href={s.url} target="_blank" rel="noopener noreferrer">{s.url}</a></span>}
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
+    </div>
+  </article>
+  <MermaidLoader />
+</BaseLayout>
+
+<style>
+  .bz-story__head { padding: var(--space-8) 0 var(--space-4); }
+  .bz-story__deck {
+    font-family: var(--font-serif);
+    font-size: 1.1875rem;
+    line-height: 1.47;
+    color: var(--ink-page);
+    margin: var(--space-3) 0 var(--space-3);
+    max-width: 65ch;
+  }
+  .bz-story__byline { color: var(--caption-gray); margin: var(--space-2) 0 0; }
+  .bz-story__lead {
+    font-family: var(--font-serif);
+    font-size: 1.0625rem;
+    line-height: 1.55;
+    color: var(--ink-page);
+    margin: 0 0 var(--space-4);
+    max-width: 70ch;
+  }
+  .bz-section { padding: var(--space-2) 0 var(--space-5); }
+  .bz-section__head {
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    font-weight: 700;
+    letter-spacing: -0.144px;
+    margin: var(--space-5) 0 var(--space-3);
+    color: var(--ink-page);
+  }
+  .bz-list {
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    line-height: 1.55;
+    margin: 0 0 var(--space-4);
+    padding-left: 1.25em;
+  }
+  .bz-list li { margin-bottom: var(--space-2); }
+  .bz-comp {
+    width: 100%;
+    border-collapse: collapse;
+    margin: var(--space-3) 0 var(--space-5);
+    border-top: var(--rule-thin);
+    border-bottom: var(--rule-thin);
+    font-family: var(--font-serif);
+  }
+  .bz-comp th, .bz-comp td {
+    text-align: left;
+    vertical-align: top;
+    padding: var(--space-3);
+    border-top: var(--rule-hairline);
+  }
+  .bz-comp thead th {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.92px;
+    color: var(--caption-gray);
+    border-top: 0;
+    font-weight: 700;
+  }
+  .bz-comp tbody td:first-child { font-weight: 700; }
+  .bz-milestone { display: grid; grid-template-columns: 160px 1fr; gap: var(--space-4); margin-bottom: var(--space-4); border-top: var(--rule-hairline); padding-top: var(--space-3); }
+  @media (max-width: 599px) {
+    .bz-milestone { grid-template-columns: 1fr; }
+  }
+  .bz-milestone__horizon { color: var(--caption-gray); }
+  .bz-flags {
+    color: var(--ink-page);
+    border-top: var(--rule-thin);
+    border-bottom: var(--rule-thin);
+    padding: var(--space-3) 0;
+    margin: var(--space-4) 0;
+  }
+  .bz-bib__date { color: var(--caption-gray); }
+</style>

@@ -50,6 +50,10 @@ Before finalizing, ensure the plan answers these experienced-operator questions:
 - **Execution sequence:** What must be built, sold, hired, and partnered in the first 6–18 months, in what order?
 - **Board-level falsifiability:** Which measurable signals would make a serious founder or investor change their mind?
 
+## YAML syntax rules
+
+Follow [yaml-syntax.md](./yaml-syntax.md). The pipeline parses every artifact with a strict YAML loader; quote any scalar containing `: ` (milestone labels like `"Q3 2026: ship audit-ready release"` are common offenders), prefer block style for sequences of mappings, and use a `|` literal block scalar for the Mermaid `strategyMap` string.
+
 ## Output Format
 
 Write to `<folder>/business-plan.yaml`. Use YAML with 2-space indent. Schema:
@@ -114,20 +118,39 @@ investorMemo:
   mustBeTrue: [5 concise falsifiable investment-test bullets]
   diligenceQuestions: [4–6 diligence questions an investor should ask next]
   riskHeatmap:
-    - { risk: string, likelihood: Low|Medium|High, impact: Low|Medium|High, leadingIndicator: observable disconfirming signal, mitigation: string }
+    - risk: string
+      likelihood: Low|Medium|High
+      impact: Low|Medium|High
+      leadingIndicator: observable disconfirming signal
+      mitigation: string
 operatingAssumptions:
-  - { assumption: string, basis: idea.yaml|research.yaml|operator judgment, validationTest: specific test or evidence needed, decisionImpact: what changes if false }
+  - assumption: string
+    basis: idea.yaml|research.yaml|operator judgment
+    validationTest: specific test or evidence needed
+    decisionImpact: what changes if false
 experimentRoadmap:
-  - { horizon: 0–90 days, experiment: string, hypothesis: string, successMetric: string, owner: string }
+  - horizon: 0–90 days
+    experiment: string
+    hypothesis: string
+    successMetric: string
+    owner: string
 operations: [key process / tool / partner bullet]
 team:
-  - { role: Founding eng, startTiming: Month 0, rationale: string }
+  - role: Founding eng
+    startTiming: Month 0
+    rationale: string
 milestones:
-  - { horizon: 0–12 months, items: [string] }
-  - { horizon: 12–24 months, items: [string] }
-  - { horizon: 24–36 months, items: [string] }
+  - horizon: 0–12 months
+    items: [string]
+  - horizon: 12–24 months
+    items: [string]
+  - horizon: 24–36 months
+    items: [string]
 risks:
-  - { risk: string, likelihood: Low|Medium|High, impact: Low|Medium|High, mitigation: string }
+  - risk: string
+    likelihood: Low|Medium|High
+    impact: Low|Medium|High
+    mitigation: string
 fundingAsk:
   stage: pre-seed|seed
   targetFundingRangeUsd: "e.g. $2–4M"

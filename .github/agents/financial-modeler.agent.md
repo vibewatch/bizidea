@@ -40,6 +40,10 @@ Quality bar:
 7. Sanity check: rule-of-40 directionally, burn multiple, headcount-to-revenue ratio. Flag any red flags in `sanityChecks.flags`.
 8. Read `<folder>/financial-model.yaml` back from disk and confirm it is non-empty valid YAML with the required top-level fields before returning `HANDOFF`.
 
+## YAML syntax rules
+
+Follow [yaml-syntax.md](./yaml-syntax.md). The pipeline parses every artifact with a strict YAML loader; prefer block style for sequences of mappings (do not collapse `headcount`, `useOfFunds`, `y1Monthly`, etc. into flow style) and use a `|` literal block scalar for the Mermaid `modelDiagram` string.
+
 ## Output Format
 
 Write to `<folder>/financial-model.yaml`. Use YAML with 2-space indent. All money fields ending in `K` are thousands of USD; ending in `M` are millions of USD. Negatives represent losses or outflows. Schema:
@@ -50,20 +54,74 @@ date: YYYY-MM-DD
 currency: USD
 modelStartMonth: YYYY-MM
 assumptions:
-  - { id: A1, name: Starting customers (M1), value: "0", unit: count, source: "[BP exec summary]" }
+  - id: A1
+    name: Starting customers (M1)
+    value: "0"
+    unit: count
+    source: "[BP exec summary]"
 headcount:
-  - { role: Eng,   q1y1: 2, q2y1: 2, q3y1: 3, q4y1: 4, q4y2: 5, q4y3: 6 }
-  - { role: Sales, q1y1: 0, q2y1: 1, q3y1: 1, q4y1: 1, q4y2: 2, q4y3: 3 }
-headcountTotalsFte:          { q1y1: 3, q2y1: 4, q3y1: 6, q4y1: 8, q4y2: 11, q4y3: 15 }
-headcountAnnualizedPayrollK: { q1y1: 600.0, q2y1: 800.0, q3y1: 1200.0, q4y1: 1600.0, q4y2: 2200.0, q4y3: 3000.0 }
+  - role: Eng
+    q1y1: 2
+    q2y1: 2
+    q3y1: 3
+    q4y1: 4
+    q4y2: 5
+    q4y3: 6
+  - role: Sales
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 2
+    q4y3: 3
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 6
+  q4y1: 8
+  q4y2: 11
+  q4y3: 15
+headcountAnnualizedPayrollK:
+  q1y1: 600.0
+  q2y1: 800.0
+  q3y1: 1200.0
+  q4y1: 1600.0
+  q4y2: 2200.0
+  q4y3: 3000.0
 y1Monthly:
-  - { month: M1, customersEop: 0, newCustomers: 0, revenueK: 0.0, cogsK: 0.0, grossProfitK: 0.0, salesMarketingK: 0.0, researchDevelopmentK: 0.0, generalAdministrativeK: 0.0, opexK: 0.0, ebitdaK: 0.0, cashEopK: 0.0 }
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 0.0
+    researchDevelopmentK: 0.0
+    generalAdministrativeK: 0.0
+    opexK: 0.0
+    ebitdaK: 0.0
+    cashEopK: 0.0
 y2y3Quarterly:
-  - { quarter: Q1Y2, customersEop: 0, revenueK: 0.0, grossProfitK: 0.0, opexK: 0.0, ebitdaK: 0.0, cashEopK: 0.0 }
+  - quarter: Q1Y2
+    customersEop: 0
+    revenueK: 0.0
+    grossProfitK: 0.0
+    opexK: 0.0
+    ebitdaK: 0.0
+    cashEopK: 0.0
 totals:
-  y1: { revenueK: 0.0, ebitdaK: 0.0, cashEopK: 0.0 }
-  y2: { revenueK: 0.0, ebitdaK: 0.0, cashEopK: 0.0 }
-  y3: { revenueK: 0.0, ebitdaK: 0.0, cashEopK: 0.0 }
+  y1:
+    revenueK: 0.0
+    ebitdaK: 0.0
+    cashEopK: 0.0
+  y2:
+    revenueK: 0.0
+    ebitdaK: 0.0
+    cashEopK: 0.0
+  y3:
+    revenueK: 0.0
+    ebitdaK: 0.0
+    cashEopK: 0.0
 unitEconomics:
   arpuAnnualK: 0.0
   grossMarginPct: 0.0
@@ -79,10 +137,18 @@ fundingAsk:
   runwayMonths: 0
   milestone: string
   useOfFunds:
-    - { bucket: Engineering,    amountUsd: 0, percentage: 0 }
-    - { bucket: GTM,            amountUsd: 0, percentage: 0 }
-    - { bucket: "G&A",          amountUsd: 0, percentage: 0 }
-    - { bucket: "Buffer (6 mo)", amountUsd: 0, percentage: 0 }
+    - bucket: Engineering
+      amountUsd: 0
+      percentage: 0
+    - bucket: GTM
+      amountUsd: 0
+      percentage: 0
+    - bucket: "G&A"
+      amountUsd: 0
+      percentage: 0
+    - bucket: "Buffer (6 mo)"
+      amountUsd: 0
+      percentage: 0
 scenarios:
   downside:
     description: string
@@ -103,7 +169,12 @@ scenarios:
     cashLowPointK: 0.0
     keyAssumptionChanges: [string]
 sensitivity:
-  - { variable: "ARPU|CAC|churn|sales cycle|gross margin|hiring pace", downsideCase: string, baseCase: string, upsideCase: string, y3RevenueImpactK: 0.0, cashImpactK: 0.0 }
+  - variable: "ARPU|CAC|churn|sales cycle|gross margin|hiring pace"
+    downsideCase: string
+    baseCase: string
+    upsideCase: string
+    y3RevenueImpactK: 0.0
+    cashImpactK: 0.0
 modelDiagram:
   title: unit economics flow
   mermaid: |
@@ -113,10 +184,14 @@ modelDiagram:
       Revenue --> GrossProfit
       GrossProfit --> Cash
 modelSanity:
-  - { checkName: Revenue engine, finding: what drives revenue in the base case }
-  - { checkName: Must go right, finding: the most important operating condition }
-  - { checkName: Model breaks if, finding: the biggest downside sensitivity or cash-risk condition }
-  - { checkName: Next-round proof, finding: the milestone that justifies the next financing }
+  - checkName: Revenue engine
+    finding: what drives revenue in the base case
+  - checkName: Must go right
+    finding: the most important operating condition
+  - checkName: Model breaks if
+    finding: the biggest downside sensitivity or cash-risk condition
+  - checkName: Next-round proof
+    finding: the milestone that justifies the next financing
 sanityChecks:
   ruleOf40: "e.g. Y3 growth 73% + EBITDA margin 30% = 103%"
   burnMultiple: string

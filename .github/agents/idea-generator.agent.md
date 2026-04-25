@@ -46,6 +46,10 @@ Quality bar:
 
 `climate-tech` · `ai-infra` · `fintech` · `health-tech` · `dev-tools` · `consumer` · `industrial` · `defense` · `bio` · `crypto` · `edu` · `other`
 
+## YAML syntax rules
+
+Follow [yaml-syntax.md](./yaml-syntax.md). The pipeline parses every artifact with a strict YAML loader; quote any scalar containing `: `, prefer block style for sequences of mappings, and use a `|` literal block scalar for the Mermaid `conceptDiagram` string.
+
 ## Output Format
 
 Write to `<folder>/idea.yaml`. Use YAML with 2-space indent. Schema:
@@ -100,15 +104,31 @@ jobsToBeDone:
     currentAlternative: string
     successMetric: string
 ideaScorecard:
-  signalStrength: { score: 1, rationale: string }
-  painIntensity: { score: 1, rationale: string }
-  wedgeClarity: { score: 1, rationale: string }
-  defensibility: { score: 1, rationale: string }
-  ventureScale: { score: 1, rationale: string }
+  signalStrength:
+    score: 1
+    rationale: string
+  painIntensity:
+    score: 1
+    rationale: string
+  wedgeClarity:
+    score: 1
+    rationale: string
+  defensibility:
+    score: 1
+    rationale: string
+  ventureScale:
+    score: 1
+    rationale: string
 topRisks:
-  - { name: short label, description: one sentence, mitigation: one sentence }
-  - { name: "...", description: "...", mitigation: "..." }
-  - { name: "...", description: "...", mitigation: "..." }
+  - name: short label
+    description: one sentence
+    mitigation: one sentence
+  - name: "..."
+    description: "..."
+    mitigation: "..."
+  - name: "..."
+    description: "..."
+    mitigation: "..."
 ```
 
 Rules:
