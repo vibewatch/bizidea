@@ -31,7 +31,7 @@ Quality bar:
 - ONLY write `financial-model.json` in the folder you were given.
 
 ## Approach
-1. Read both inputs. Extract: pricing model, target gross margin, CAC/conversion goals, headcount plan, milestones.
+1. Read both inputs. Extract: pricing model, target gross margin, CAC/conversion goals, headcount plan, milestones, and any `business-plan.json.operatingAssumptions` that affect revenue, hiring, margin, CAC, runway, or funding ask.
 2. Lock down `assumptions[]` first. Every later number must trace back to an assumption `id`.
 3. Build a headcount plan by quarter for 3 years.
 4. Build the 3-year P&L: monthly for Year 1, quarterly summaries for Year 2 and Year 3, with annual totals.

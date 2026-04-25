@@ -23,7 +23,7 @@ Quality bar:
 
 ## Inputs
 - Absolute folder path from the orchestrator.
-- `<folder>/idea.json` containing the selected startup concept, target user, wedge, and risks.
+- `<folder>/idea.json` containing the selected startup concept, target user, `startupThesis`, `goToMarketSeed`, and risks.
 
 ## Constraints
 - DO NOT fabricate market figures, source URLs, or competitor facts. If a number is an estimate, set `isEstimate: true` and show the calculation in `rationale`.
@@ -73,7 +73,7 @@ Think like a diligence lead deciding whether this startup deserves a partner mee
 12. **Evidence coverage** — how many sources/pages were found, fetched, retained, used in the memo, rejected, and what source classes were represented.
 
 ## Approach
-1. Read `idea.json`. Extract the target user, wedge, and core hypothesis.
+1. Read `idea.json`. Extract the target user, `startupThesis.beachhead`, `startupThesis.wedge`, `goToMarketSeed.firstCustomer`, `goToMarketSeed.currentAlternative`, and core hypothesis.
   - Use `web_search` to discover candidate pages and `web_fetch` to open each retained URL for verification. These tools are declared in frontmatter for the Copilot CLI environment. Do not report missing web-search capability unless an actual `web_search` call is unavailable or fails in the run.
 2. Build a search plan before synthesizing. Run web searches concurrently where possible across these buckets:
   - market-size and analyst evidence;

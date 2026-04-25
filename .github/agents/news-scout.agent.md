@@ -22,6 +22,8 @@ Find news that reveals at least one of these:
 
 The output should give the downstream idea generator strong raw material for a venture-scale startup concept.
 
+Default depth: collect a broad, auditable news corpus before synthesis. Target **100+ fetched, verified articles/pages** when the topic and time window support it; if fewer credible fetchable sources exist, preserve as many as possible and explain the shortfall in `sourceStrategy.coverageGap`.
+
 ## Inputs
 
 Expect the orchestrator or user to provide:
@@ -74,7 +76,9 @@ If the answer is no, drop it — even if the story is objectively big news.
 
 ## Source strategy
 
-Search broadly enough to find 20–40 candidates, then retain only the best 3–5 fetched sources.
+Search broadly enough to find at least 120 candidate URLs, then target **100+ fetched, verified, de-duplicated sources/pages** for `evidenceCorpus`.
+
+After building the broad corpus, select the strongest **20–40 cited sources** into `sources` for downstream ideation. The `sources` array is the curated short list; `evidenceCorpus` is the broader audit trail and discovery base.
 
 Use query terms such as:
 
@@ -118,7 +122,7 @@ Do not ask the orchestrator to narrow the topic in broad mode.
 
 ## Candidate scoring
 
-Score candidates mentally before selecting the final 3–5. Prefer sources with high combined signal across:
+Score candidates mentally before selecting the top cited set. Prefer sources with high combined signal across:
 
 1. **Startup relevance** — Is a startup, emerging company, or new entrant involved?
 2. **Pain intensity** — Is there a real customer or operational pain?
@@ -154,13 +158,13 @@ Record meaningful duplicate clusters in `deduplication.duplicateClusters`.
 ## Workflow
 
 1. Confirm the topic, scope, time window, and output folder.
-2. Search for 20–40 candidate sources using startup-signal and pain-point terms.
+2. Search for 120+ candidate URLs using startup-signal and pain-point terms when the topic/time window supports it.
 3. Discard low-value big news before fetching where possible.
-4. Fetch the strongest candidates and verify each page contains real content.
+4. Fetch candidates until you have 100+ verified, de-duplicated, startup-relevant sources/pages in `evidenceCorpus`, or until credible fetchable sources are exhausted.
 5. Drop unfetchable pages, search pages, stale pages, duplicates, and weak-opportunity stories.
-6. Select 3–5 final sources from different events and, when possible, different publishers.
-7. Extract concise facts: title, URL, publisher, publication date, author, company, event, concrete startup signal, pain point, and why it matters.
-8. Synthesize 3–5 cross-source signals that downstream ideation can use.
+6. Select 20–40 top cited sources from different events and, when possible, different publishers into `sources`.
+7. Extract concise facts for both `sources` and `evidenceCorpus`: title, URL, publisher, publication date, author, company/event, concrete startup signal, pain point, source type, and why it matters.
+8. Synthesize 5–10 cross-source signals that downstream ideation can use.
 9. Write valid, pretty-printed JSON to `<folder>/news.json`.
 10. Read the file back and confirm it is non-empty valid JSON before returning the handoff.
 
@@ -175,6 +179,14 @@ Write exactly this structure to `<folder>/news.json`:
   "topicScope": "narrow|broad",
   "timeWindow": "YYYY-MM-DD to YYYY-MM-DD",
   "timeWindowLabel": "string|null",
+  "sourceStrategy": {
+    "sourceTarget": 100,
+    "candidateTarget": 120,
+    "mode": "broad|narrow",
+    "searchedQueries": ["string"],
+    "sourceClassesRepresented": ["startup press|primary company|regulatory|funding database|sector press|technical docs|customer pain"],
+    "coverageGap": "string|null"
+  },
   "deduplication": {
     "candidatesFound": 0,
     "candidatesFetched": 0,
@@ -202,6 +214,22 @@ Write exactly this structure to `<folder>/news.json`:
       "keyPoints": ["≤5 concise bullets in your own words"]
     }
   ],
+  "evidenceCorpus": [
+    {
+      "id": 1,
+      "title": "string",
+      "url": "https://...",
+      "publisher": "string",
+      "publishedDate": "YYYY-MM-DD|null",
+      "author": "string|null",
+      "sourceType": "startup-press|funding-deal|primary-company|regulatory-government|technical-docs|sector-press|customer-pain|other",
+      "topicBucket": "funding|product-launch|market-opening|regulation|technical-wedge|customer-pain|partnership|acquisition|other",
+      "reputationTier": "high|medium|low",
+      "fetchVerified": true,
+      "usedInSignals": true,
+      "oneLineRelevance": "why this source matters for startup ideation"
+    }
+  ],
   "signals": [
     {
       "title": "short signal name",
@@ -222,13 +250,17 @@ Write exactly this structure to `<folder>/news.json`:
 
 ## Output rules
 
-- `sources` must contain 3–5 entries unless the scan genuinely yields fewer verified, high-value sources.
+- `sourceStrategy.sourceTarget` must be `100` and `sourceStrategy.candidateTarget` must be at least `120`.
+- `deduplication.candidatesFetched` SHOULD be at least `100`. If it is less than `100`, `sourceStrategy.coverageGap` MUST explain why the topic/time window did not yield 100 credible fetchable sources.
+- `evidenceCorpus` SHOULD contain at least 100 entries. If fewer, explain the shortfall in `sourceStrategy.coverageGap`.
+- Every `evidenceCorpus[].fetchVerified` must be `true`; otherwise drop it.
+- `sources` should contain the 20–40 strongest cited sources from `evidenceCorpus`, unless the evidence base is smaller.
 - Every `sources[].fetchVerified` must be `true`.
-- Every source must be within `timeWindow`.
+- Every `sources[]` and `evidenceCorpus[]` entry must be within `timeWindow`, unless the entry is an undated evergreen primary source needed to understand a same-window event; mark such cases with `publishedDate: null` and explain briefly in `oneLineRelevance`.
 - `deduplication.uniqueEventsRetained` must equal `sources.length`.
 - `deduplication.duplicatesRemoved` must be `0` or greater.
 - `deduplication.duplicateClusters[].keptSourceId`, when present, must reference an existing `sources[].id`.
-- `signals` must contain 3–5 entries unless there are too few verified sources; explain any shortfall in `gaps`.
+- `signals` must contain 5–10 entries unless there are too few verified sources; explain any shortfall in `gaps`.
 - Every `signals[].sourceRefs[]` value must reference an existing `sources[].id`.
 - `signalMap.mermaid` must be valid Mermaid `flowchart` syntax as a plain JSON string; do not wrap it in Markdown fences.
 - `signalMap.opportunityThemes[].sourceRefs[]` must reference existing `sources[].id` values.

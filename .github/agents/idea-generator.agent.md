@@ -16,11 +16,14 @@ Quality bar:
 - Produce one venture-scale concept with a sharp customer, painful problem, believable wedge, and timely catalyst.
 - Make the pitch sound investable and specific, not generic “AI for X”.
 - Tie every “why now” point to the verified signals and sources from `news.json`.
+- State the non-obvious insight: what changed in the market that makes this idea newly possible or newly urgent.
+- Define a narrow beachhead customer and first use case that later agents can research and turn into a plan.
+- Include an initial GTM hypothesis: buyer, trigger, current alternative, and why the first customer would switch.
 - Surface risks like a founder who knows what can kill the company, then propose practical mitigations.
 
 ## Inputs
 - Absolute folder path from the orchestrator.
-- `<folder>/news.json` containing verified sources and cross-cutting signals.
+- `<folder>/news.json` containing `sourceStrategy`, verified top `sources`, broad `evidenceCorpus`, and cross-cutting `signals`.
 
 ## Constraints
 - DO NOT search the web. Work only from `news.json`.
@@ -30,13 +33,14 @@ Quality bar:
 - ONLY write `idea.json` in the folder you were given.
 
 ## Approach
-1. Read `news.json` end-to-end, paying special attention to `signals`.
-2. Brainstorm 3–5 candidate ideas privately. Score each against: signal strength, wedge specificity, founder-market plausibility, defensibility, and 5-year addressable market.
+1. Read `news.json` end-to-end, paying special attention to `signals`, top `sources`, and the broader `evidenceCorpus`.
+2. Brainstorm 3–5 candidate ideas privately. Score each against: signal strength, wedge specificity, customer pain, first-customer clarity, defensibility, and 5-year addressable market.
 3. Pick the single highest-scoring idea. Discard the others; do not include runner-up ideas in the output.
 4. **Pick a sector** from the closed vocabulary below — exactly one entry. If nothing fits, use `other`.
 5. Propose a short kebab-case slug (3–5 words) derived from the idea — recorded inside `idea.json` for downstream stages. The folder name is set by the orchestrator and does not change.
-6. Write the file using the schema below.
-7. Read `<folder>/idea.json` back from disk and confirm it is non-empty valid JSON with the required top-level fields before returning `HANDOFF`.
+6. Before writing, run a founder sanity check: if the first customer, buying trigger, current alternative, and wedge are not specific, sharpen or choose a different idea.
+7. Write the file using the schema below.
+8. Read `<folder>/idea.json` back from disk and confirm it is non-empty valid JSON with the required top-level fields before returning `HANDOFF`.
 
 ## Sector vocabulary (closed — pick exactly one)
 
@@ -58,7 +62,21 @@ Write to `<folder>/idea.json`. Pretty-print with 2-space indent. Schema:
     "secondary": "string|null",
     "buyer": "string|null"
   },
+  "startupThesis": {
+    "nonObviousInsight": "what changed or what most people are missing",
+    "beachhead": "specific first customer segment / workflow",
+    "wedge": "narrow entry product or workflow",
+    "whyNowCatalyst": "one sentence connecting the news signal to urgency",
+    "ventureScalePath": "how the beachhead can expand into a large company"
+  },
   "solution": "3–6 sentences",
+  "goToMarketSeed": {
+    "firstCustomer": "specific first customer profile",
+    "buyingTrigger": "event that creates budget or urgency",
+    "currentAlternative": "what they use today instead",
+    "switchingReason": "why this wedge beats the current alternative",
+    "pricingHypothesis": "initial pricing basis or value metric"
+  },
   "whyNow": [
     { "point": "one bullet", "signalRefs": ["signal title"], "sourceRefs": [1, 4] }
   ],
@@ -99,6 +117,8 @@ Write to `<folder>/idea.json`. Pretty-print with 2-space indent. Schema:
 Rules:
 - Exactly 3 risks.
 - 3–5 `whyNow` entries; each cites at least one signal or source from `news.json`.
+- `startupThesis.beachhead` and `goToMarketSeed.firstCustomer` must be narrow enough for the Market Researcher to investigate directly.
+- `goToMarketSeed.currentAlternative` must name a real category of alternative, such as manual workflow, incumbent software, internal build, agency/services firm, open-source stack, or status quo.
 - `conceptDiagram.mermaid` must be valid Mermaid `flowchart` syntax as a plain JSON string; do not wrap it in Markdown fences.
 - `ideaScorecard` scores are integers from 1–5, where 5 is strongest.
 - Use `null` (not empty string) for missing optional values.

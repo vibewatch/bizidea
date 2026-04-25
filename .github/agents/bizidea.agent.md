@@ -53,10 +53,10 @@ After **every** subagent invocation:
 
 | Stage | File | Minimum fields |
 |---|---|---|
-| 1 | `news.json` | `topic`, `sources`, `signals`, `deduplication` |
-| 2 | `idea.json` | `slug`, `date`, `pitch`, `solution` |
+| 1 | `news.json` | `topic`, `sourceStrategy`, `sources`, `evidenceCorpus`, `signals`, `deduplication` |
+| 2 | `idea.json` | `slug`, `date`, `pitch`, `startupThesis`, `goToMarketSeed`, `solution` |
 | 3 | `research.json` | `slug`, `date`, `market`, `competitors`, `researchCoverage`, `deduplication`, `evidenceCorpus`, `sources`, `reportMemo.incumbentThesis` |
-| 4 | `business-plan.json` | `slug`, `date`, `executiveSummary`, `market`, `product`, `gtm`, `milestones`, `fundingAsk`, `investorMemo` |
+| 4 | `business-plan.json` | `slug`, `date`, `executiveSummary`, `strategicChoices`, `market`, `product`, `gtm`, `milestones`, `fundingAsk`, `investorMemo`, `operatingAssumptions` |
 | 5 | `financial-model.json` | `slug`, `date`, `totals`, `unitEconomics`, `fundingAsk`, `modelSanity` |
 | 6 | `index.json` | `slug`, `date`, `pitch`, `rating`, `files`, `financials` |
 
@@ -94,6 +94,8 @@ Use the todo tool to track these stages so the user can see progress.
 
 ### Stage 1 — News scout
 6. Invoke `News Scout` with: the topic, `topicScope` (`"broad"` when no explicit topic/industry was given; otherwise `"narrow"`), the resolved `timeWindow` (ISO range), the `timeWindowLabel` (natural-language phrase), and the absolute folder path. It writes `news.json` and returns a `HANDOFF` block. If it reports zero verified sources, stop and tell the user.
+   - Require a broad collection pass before ideation: target `sourceStrategy.sourceTarget = 100`, `deduplication.candidatesFetched >= 100`, and `evidenceCorpus.length >= 100` when the topic/time window supports it.
+   - Do not proceed if fewer than 100 credible fetchable sources were retained without a clear `sourceStrategy.coverageGap` explanation.
    - Validate `news.json` using the artifact validation gate before Stage 2.
 
 ### Stage 2 — Idea generation

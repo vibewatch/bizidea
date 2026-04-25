@@ -16,6 +16,9 @@ Quality bar:
 - Write in specific, falsifiable business language rather than motivational prose.
 - Connect the plan directly to the researched market, buyer, competitors, and constraints.
 - Make GTM, product sequencing, hiring, milestones, and risks mutually consistent.
+- Surface strategic tradeoffs: why this beachhead, why this wedge, why this sequencing, and what the company is deliberately not doing yet.
+- Treat the first customer, buying trigger, pricing basis, and distribution channel as one coherent go-to-market system, not separate sections.
+- Separate evidence-backed claims from operating assumptions; when an assumption is necessary, make it explicit and testable.
 - Generate investor-decision fields explicitly so the website can render the top-page investor memo from JSON, not hardcoded UI copy.
 - Prefer concise bullets and concrete operating choices over broad claims.
 
@@ -33,8 +36,19 @@ Quality bar:
 
 ## Approach
 1. Read both inputs in full.
-2. Draft section-by-section in the schema order. Keep entries tight; prefer short bullets over long paragraphs.
-3. Do not add provenance fields unless they appear in the schema. When an assumption depends on one input file, mention the basis in natural language (e.g. "based on the researched SOM"), but keep each field in the exact type shown below.
+2. Identify the planning anchors before drafting: ICP, urgent pain, `idea.json.startupThesis`, `idea.json.goToMarketSeed`, defensible advantage, first proof point, and biggest disconfirming risk.
+3. Draft section-by-section in the schema order. Keep entries tight; prefer short bullets over long paragraphs.
+4. Run a coherence check before writing: product roadmap, GTM, pricing, team, milestones, risks, and funding ask must describe the same company at the same stage.
+5. Do not add provenance fields unless they appear in the schema. When an assumption depends on one input file, mention the basis in natural language (e.g. "based on the researched SOM"), but keep each field in the exact type shown below.
+
+## Professional judgment checklist
+
+Before finalizing, ensure the plan answers these experienced-operator questions:
+- **Customer truth:** Who feels the pain first, what event triggers budget, and why would they act now instead of waiting?
+- **Wedge discipline:** What narrow beachhead creates proof fast, and which tempting adjacent markets should wait?
+- **Competitive realism:** Why do incumbents, services firms, open-source tools, or internal teams not win by default?
+- **Execution sequence:** What must be built, sold, hired, and partnered in the first 6–18 months, in what order?
+- **Board-level falsifiability:** Which measurable signals would make a serious founder or investor change their mind?
 
 ## Output Format
 
@@ -48,6 +62,12 @@ Write to `<folder>/business-plan.json`. Pretty-print with 2-space indent. Schema
   "problem": ["bullet", "bullet"],
   "solution": ["bullet", "bullet"],
   "whyWeWin": ["bullet", "bullet"],
+  "strategicChoices": {
+    "beachhead": "specific first market / workflow / customer slice",
+    "wedgeRationale": "why this narrow entry point creates faster proof than broader alternatives",
+    "sequencingRationale": "why the product, GTM, hiring, and partnership sequence is ordered this way",
+    "notYet": ["tempting adjacent market or feature deliberately deferred"]
+  },
   "market": {
     "tam": "string|null",
     "sam": "string|null",
@@ -102,6 +122,9 @@ Write to `<folder>/business-plan.json`. Pretty-print with 2-space indent. Schema
       { "risk": "string", "likelihood": "Low|Medium|High", "impact": "Low|Medium|High", "leadingIndicator": "observable disconfirming signal", "mitigation": "string" }
     ]
   },
+  "operatingAssumptions": [
+    { "assumption": "string", "basis": "idea.json|research.json|operator judgment", "validationTest": "specific test or evidence needed", "decisionImpact": "what changes if false" }
+  ],
   "experimentRoadmap": [
     { "horizon": "0–90 days", "experiment": "string", "hypothesis": "string", "successMetric": "string", "owner": "string" }
   ],
@@ -129,6 +152,8 @@ Write to `<folder>/business-plan.json`. Pretty-print with 2-space indent. Schema
 Rules:
 - Use `null` (not empty string) when a value is genuinely missing.
 - Specific dollar amounts will be set by the financial model; here `fundingAsk.targetFundingRangeUsd` is the target band.
+- `strategicChoices` should explain the hard choices behind the plan, especially what is intentionally deferred.
+- `operatingAssumptions` should contain 3–6 assumptions that materially affect GTM, product scope, hiring, pricing, or funding; every entry must include a concrete validation test and decision impact.
 - `strategyMap.mermaid` must be valid Mermaid `flowchart` syntax as a plain JSON string; do not wrap it in Markdown fences.
 - `experimentRoadmap` should contain 4–8 concrete validation, build, sales, or partnership experiments across the first 12–18 months.
 - `investorMemo.verdict.call` should be candid. Use `Meet / investigate further` only when the evidence supports a plausible partner meeting; use `Watch` or `Pass` when customer timing, differentiation, or market size is weak.
