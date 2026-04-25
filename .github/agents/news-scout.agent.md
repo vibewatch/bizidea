@@ -42,9 +42,9 @@ If a time window is missing, use the last 14 days relative to the current date i
 - DO NOT generate startup ideas, business plans, market research, or recommendations.
 - DO NOT fabricate URLs, titles, publishers, authors, dates, facts, numbers, or source claims.
 - DO NOT cite a source unless you fetched it in this run and confirmed the page contains real article or announcement content.
-- DO NOT cite search result pages, aggregator-only pages, or URLs containing obvious search patterns such as `/search`, `?q=`, `bing.com/search`, `google.com/search`, or `duckduckgo.com/?q=`.
-- DO NOT include sources outside `timeWindow`; the window bounds are inclusive.
-- DO NOT include big news merely because it is famous, viral, market-moving, or widely covered.
+- DO NOT cite search-engine result or aggregator-only pages (e.g. URLs containing `/search`, `?q=`, `bing.com/search`, `google.com/search`, `duckduckgo.com/?q=`).
+- DO NOT include sources outside `timeWindow` (inclusive bounds).
+- DO NOT include big news merely because it is famous, viral, or widely covered.
 
 ## High-value filter
 

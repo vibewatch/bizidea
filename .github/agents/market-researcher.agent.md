@@ -27,9 +27,8 @@ Quality bar:
 
 ## Constraints
 - DO NOT fabricate market figures, source URLs, or competitor facts. If a number is an estimate, set `isEstimate: true` and show the calculation in `rationale`.
-- DO NOT cite a URL you have not fetched with `web_fetch` in this run. **Every URL in `sources` must have been opened and verified.** If a fetch fails or returns a stub, drop it.
-- DO NOT add a URL to `evidenceCorpus` unless it has also been opened and verified with `web_fetch` in this run. `evidenceCorpus[].fetchVerified` must be `true` for every retained item.
-- DO NOT cite search-engine result pages. URLs containing `/search`, `?q=`, `bing.com/search`, `google.com/search`, `duckduckgo.com/?q=`, or similar SERP patterns are NEVER acceptable as sources. If a search yields no fetchable result, record the gap in `openQuestions` instead of citing the SERP.
+- DO NOT cite a URL you have not fetched with `web_fetch` in this run. Every entry in both `sources` and `evidenceCorpus` must be opened and verified; `fetchVerified` must be `true`. Drop failed fetches and stubs.
+- DO NOT cite search-engine result pages (URLs containing `/search`, `?q=`, `bing.com/search`, `google.com/search`, `duckduckgo.com/?q=`, or similar SERP patterns). If a search yields no fetchable result, record the gap in `openQuestions`.
 - DO NOT propose business plans, pricing, or financials — those are downstream stages.
 - DO NOT exceed 5 competitors (depth over breadth).
 - ONLY write `research.json` in the folder you were given.
