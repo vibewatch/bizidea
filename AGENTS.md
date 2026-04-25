@@ -15,6 +15,8 @@
 - Use `website/` for frontend work.
 - After changing website code or report schemas, validate from `website/` with `npm run build` when dependencies are installed.
 
-## JSON schema conventions
+## YAML schema conventions
+- All pipeline artifacts are YAML files (`news.yaml`, `idea.yaml`, `research.yaml`, `business-plan.yaml`, `financial-model.yaml`, `index.yaml`).
 - Prefer descriptive camelCase field names.
 - Include units in numeric field names where helpful, such as `fundingRangeUsd`, `revenueK`, `marginPct`, or `headcountEop`.
+- Use 2-space indentation. Use `null` (not empty strings) for genuinely missing optional values.
