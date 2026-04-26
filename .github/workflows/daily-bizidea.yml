@@ -40,7 +40,6 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          token: ${{ secrets.COPILOT_PAT }}
 
       - uses: actions/setup-node@v6
         with:
@@ -71,14 +70,12 @@ jobs:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
         run: |
           set -euo pipefail
-          copilot --yolo --agent Bizidea -p "Scan ${{ steps.inputs.outputs.window }}'s startup news and generate up to ${{ steps.inputs.outputs.cap }} non-duplicate startup reports into dated ideas/ folders, deduping against ideas/_index.yaml. Do NOT run git add or git commit."
+          copilot --yolo --no-ask-user --agent Bizidea -p "Scan ${{ steps.inputs.outputs.window }}'s startup news and generate up to ${{ steps.inputs.outputs.cap }} non-duplicate startup reports into dated ideas/ folders, deduping against ideas/_index.yaml. Do NOT run git add or git commit."
 
       - name: Rebuild ideas/_index.yaml (belt-and-suspenders)
         run: node scripts/build-ideas-index.mjs
 
       - name: Commit and push new reports
-        env:
-          GH_TOKEN: ${{ secrets.COPILOT_PAT }}
         run: |
           set -euo pipefail
           git config user.name "bizidea-bot"
