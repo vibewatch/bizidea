@@ -1,7 +1,8 @@
 # Bizidea website
 
 Static site (Astro) that renders the YAML dossiers under `../ideas/<run>/` using
-the WIRED-inspired design system in [`../DESIGN.md`](../DESIGN.md).
+an FT.com-inspired editorial design system (salmon paper, claret accent, Source
+Serif 4 / Inter type stack) defined in [`src/styles/tokens.css`](src/styles/tokens.css).
 
 ## Local
 
@@ -26,11 +27,12 @@ and update `SITE_URL` in the workflow.
 
 ## Fonts
 
-Defaults to OSS fallbacks (Playfair Display, Lora, Inter, JetBrains Mono — all
-documented in `DESIGN.md`). To use the proprietary Wired families, drop the
-licensed font files into `public/fonts/` and add `@font-face` declarations
-that point at them; the CSS variables in `src/styles/tokens.css` already list
-the proprietary names first in each stack.
+Loaded from Google Fonts in [`src/layouts/BaseLayout.astro`](src/layouts/BaseLayout.astro):
+Source Serif 4 (display) and Inter (UI). Body text falls through to Georgia,
+which is FT's own production fallback for Financier Text and is universally
+installed. Token stacks live in [`src/styles/tokens.css`](src/styles/tokens.css)
+and can be swapped to licensed faces by dropping `@font-face` declarations into
+the layout.
 
 ## Architecture
 

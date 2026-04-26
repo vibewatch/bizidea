@@ -17,7 +17,7 @@ import { linkifyCitations } from '../../../lib/citations';
 export async function getStaticPaths() {
   const all = await getCollection('ideas');
   return all.map((entry) => ({
-    params: { run: entry.id },
+    params: { run: entry.data.folderSlug },
     props: { entry },
   }));
 }
@@ -46,8 +46,12 @@ const fmtK = (k: number) =>
       {idea?.problem && (
         <p class="bz-story__deck">{String(idea.problem).split(/(?<=\.)\s+/).slice(0, 2).join(' ')}</p>
       )}
-      <p class="bz-story__byline bz-mono">
-        Generated {entry.data.date} · Run {entry.data.runTimestamp}
+      <p class="bz-story__byline">
+        <span class="bz-story__author">By Bizidea Research</span>
+        <span class="bz-story__sep" aria-hidden="true">/</span>
+        <time datetime={entry.data.date}>{entry.data.date}</time>
+        <span class="bz-story__sep" aria-hidden="true">/</span>
+        <span class="bz-story__runid">Run {entry.data.runTimestamp}</span>
       </p>
     </header>
 
@@ -248,35 +252,36 @@ const fmtK = (k: number) =>
 
     <Ribbon label="Evidence" id="evidence" />
     <div class="bz-container bz-section">
-      {Array.isArray(research?.sources) && (
-        <>
-          <h3 class="bz-section__head">Cited sources ({research.sources.length})</h3>
-          <ol class="bz-bib">
-            {research.sources.map((s: any) => (
-              <li id={`cite-${s.id}`}>
-                <strong>{s.publisher}.</strong> {s.title}
-                {s.date && <span class="bz-bib__date"> · {s.date}</span>}
-                {s.url && <span> · <a href={s.url} target="_blank" rel="noopener noreferrer">{s.url}</a></span>}
-              </li>
-            ))}
-          </ol>
-        </>
-      )}
-      {Array.isArray(news?.sources) && (
-        <>
-          <Rule weight="hairline" />
-          <h3 class="bz-section__head">News scan ({news.sources.length})</h3>
-          <ol class="bz-bib">
-            {news.sources.map((s: any) => (
-              <li>
-                <strong>{s.publisher}.</strong> {s.title}
-                {s.publishedDate && <span class="bz-bib__date"> · {s.publishedDate}</span>}
-                {s.url && <span> · <a href={s.url} target="_blank" rel="noopener noreferrer">{s.url}</a></span>}
-              </li>
-            ))}
-          </ol>
-        </>
-      )}
+      <div class="bz-evidence-grid">
+        {Array.isArray(research?.sources) && (
+          <section>
+            <h3 class="bz-section__head">Cited sources ({research.sources.length})</h3>
+            <ol class="bz-bib">
+              {research.sources.map((s: any) => (
+                <li id={`cite-${s.id}`}>
+                  <strong>{s.publisher}.</strong> {s.title}
+                  {s.date && <span class="bz-bib__date"> · {s.date}</span>}
+                  {s.url && <span> · <a href={s.url} target="_blank" rel="noopener noreferrer">{s.url}</a></span>}
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+        {Array.isArray(news?.sources) && (
+          <section>
+            <h3 class="bz-section__head">News scan ({news.sources.length})</h3>
+            <ol class="bz-bib">
+              {news.sources.map((s: any) => (
+                <li>
+                  <strong>{s.publisher}.</strong> {s.title}
+                  {s.publishedDate && <span class="bz-bib__date"> · {s.publishedDate}</span>}
+                  {s.url && <span> · <a href={s.url} target="_blank" rel="noopener noreferrer">{s.url}</a></span>}
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+      </div>
     </div>
   </article>
   <MermaidLoader />
@@ -285,18 +290,30 @@ const fmtK = (k: number) =>
 <style>
   .bz-story__head { padding-block: var(--space-8) var(--space-4); }
   .bz-story__deck {
-    font-family: var(--font-serif);
-    font-size: 1.1875rem;
-    line-height: 1.47;
+    font-family: var(--font-sans);
+    font-size: var(--fs-md);
+    line-height: 1.55;
     color: var(--ink-page);
     margin: var(--space-3) 0 var(--space-3);
     max-width: 65ch;
   }
-  .bz-story__byline { color: var(--caption-gray); margin: var(--space-2) 0 0; }
+  .bz-story__byline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+    margin: var(--space-4) 0 0;
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    color: var(--caption-gray);
+  }
+  .bz-story__author { color: var(--ink-page); font-weight: 600; }
+  .bz-story__sep { color: var(--hairline); }
+  .bz-story__runid { font-family: var(--font-mono); font-size: var(--fs-xs); }
   .bz-story__lead {
-    font-family: var(--font-serif);
-    font-size: 1.0625rem;
-    line-height: 1.55;
+    font-family: var(--font-sans);
+    font-size: var(--fs-base);
+    line-height: 1.6;
     color: var(--ink-page);
     margin: 0 0 var(--space-4);
     max-width: 70ch;
@@ -308,21 +325,31 @@ const fmtK = (k: number) =>
     max-width: 72ch;
   }
   .bz-section__head {
-    font-family: var(--font-sans);
-    font-size: 1.0625rem;
-    font-weight: 700;
-    letter-spacing: -0.144px;
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    font-weight: 600;
+    letter-spacing: var(--tracking-display-snug);
     margin: var(--space-5) 0 var(--space-3);
     color: var(--ink-page);
   }
   .bz-list {
-    font-family: var(--font-serif);
-    font-size: 1rem;
-    line-height: 1.55;
+    font-family: var(--font-sans);
+    font-size: var(--fs-base);
+    line-height: 1.6;
     margin: 0 0 var(--space-4);
     padding-left: 1.25em;
   }
   .bz-list li { margin-bottom: var(--space-2); }
+  .bz-evidence-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+  .bz-evidence-grid > section { min-width: 0; }
+  .bz-evidence-grid > section > .bz-section__head { margin-top: 0; }
+  @media (min-width: 900px) {
+    .bz-evidence-grid { grid-template-columns: 1fr 1fr; gap: var(--space-7); }
+  }
   .bz-comp {
     width: 100%;
     border-collapse: collapse;
@@ -338,13 +365,13 @@ const fmtK = (k: number) =>
     border-top: var(--rule-hairline);
   }
   .bz-comp thead th {
-    font-family: var(--font-mono);
-    font-size: 0.8125rem;
-    text-transform: uppercase;
-    letter-spacing: 0.92px;
+    font-family: var(--font-sans);
+    font-variant-caps: all-small-caps;
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    font-size: var(--fs-sm);
     color: var(--caption-gray);
     border-top: 0;
-    font-weight: 700;
   }
   .bz-comp tbody td:first-child { font-weight: 700; }
   .bz-milestone { display: grid; grid-template-columns: 160px 1fr; gap: var(--space-4); margin-bottom: var(--space-4); border-top: var(--rule-hairline); padding-top: var(--space-3); }

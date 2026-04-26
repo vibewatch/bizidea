@@ -1,32 +1,60 @@
-/* WIRED-inspired design tokens — see DESIGN.md */
+/* FT.com-inspired design tokens.
+ *
+ * Signature moves:
+ *  - Salmon "newsprint" paper (#fff1e5) — FT's Pantone 1485 page color.
+ *  - Warm near-black ink (#33302e) for text, never pure #000 (would clash with the warm paper).
+ *  - Claret accent (#990f3d) for links and the only brand color on the page.
+ *  - Warm hairline rules (#ccc1b7) instead of cool gray, so dividers blend into the salmon.
+ *  - Serif workhorse: Georgia for body — FT actually ships Georgia as a Financier Text fallback.
+ *  - Display headlines lean on Source Serif 4 / Georgia stack; sans (Inter) substitutes for FT's Metric.
+ *  - Footer/header use a dark gunmetal (#262a33), not pure black, to harmonize with salmon.
+ */
 
 :root {
-  /* Palette */
-  --ink-black: #000000;
-  --ink-page: #1a1a1a;
-  --paper: #ffffff;
-  --caption-gray: #757575;
-  --disabled-gray: #999999;
-  --hairline: #e2e8f0;
-  --link-blue: #057dbc;
+  /* Palette — FT */
+  --paper: #fff1e5;            /* salmon newsprint */
+  --paper-wheat: #f2dfce;      /* tinted band / hover wash */
+  --ink-page: #33302e;         /* warm near-black body ink */
+  --ink-black: #262a33;        /* dark gunmetal — used for inverted header/footer surfaces */
+  --caption-gray: #66605c;     /* warm caption / metadata */
+  --disabled-gray: #807973;    /* low-emphasis */
+  --hairline: #ccc1b7;         /* warm hairline rule on salmon */
+  --claret: #990f3d;           /* FT brand accent */
+  --link-blue: var(--claret);  /* alias kept so existing components keep working */
+  --teal: #0d7680;             /* secondary accent (used sparingly, e.g. premium markers) */
 
-  /* Type stack — proprietary names first, OSS fallbacks documented in DESIGN.md */
-  --font-display: 'WiredDisplay', 'Playfair Display', 'Libre Caslon Text', Georgia, 'Times New Roman', serif;
-  --font-serif:   'BreveText', 'Lora', 'Source Serif 4', Georgia, 'Times New Roman', serif;
-  --font-sans:    'Apercu', 'Inter', 'Work Sans', 'Manrope', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
-  --font-mono:    'WiredMono', 'JetBrains Mono', 'IBM Plex Mono', Menlo, Monaco, 'Courier New', monospace;
+  /* Type stack — modern web: Bricolage Grotesque (display) + Inter (body & UI) + JetBrains Mono */
+  --font-display: 'Bricolage Grotesque', 'Inter', 'Helvetica Neue', system-ui, -apple-system, Arial, sans-serif;
+  --font-serif:   'Inter', 'Helvetica Neue', system-ui, -apple-system, Arial, sans-serif;
+  --font-sans:    'Inter', 'Helvetica Neue', system-ui, -apple-system, Arial, sans-serif;
+  --font-mono:    'JetBrains Mono', 'IBM Plex Mono', Menlo, Monaco, 'Courier New', monospace;
 
-  /* Type — line-heights loosened by +0.10 for OSS serif fallbacks per DESIGN.md */
-  --lh-display-hero: 1.05;
-  --lh-display-block: 1.18;
+  /* Modern display: tight tracking, comfortable leading */
+  --lh-display-hero: 1.02;
+  --lh-display-block: 1.12;
+  --tracking-display-tight: -0.022em;
+  --tracking-display-snug: -0.015em;
+  --tracking-body: -0.005em;
+  --tracking-eyebrow: 0.06em;
+
+  /* Type scale — 1.125 ratio anchored at 16px. One source of truth, used everywhere. */
+  --fs-2xs:  0.625rem;   /* 10px — SVG ticks, smallest axis labels */
+  --fs-xs:   0.6875rem;  /* 11px — chart legend, fact-row meta */
+  --fs-sm:   0.8125rem;  /* 13px — eyebrow, ribbon, byline, bibliography */
+  --fs-base: 1rem;       /* 16px — body */
+  --fs-md:   1.125rem;   /* 18px — lead paragraph, story deck */
+  --fs-lg:   1.375rem;   /* 22px — section h3 */
+  --fs-xl:   1.75rem;    /* 28px — h2 / sub-headline */
+  --fs-2xl:  clamp(1.625rem, 2.4vw + 0.85rem, 2.125rem); /* 26–34 — story headline */
+  --fs-3xl:  clamp(2rem, 3vw + 0.9rem, 2.75rem);         /* 32–44 — hero */
 
   /* Rules / borders */
   --radius-square: 0;
   --radius-pill: 1920px;
   --radius-circle: 50%;
   --rule-hairline: 1px solid var(--hairline);
-  --rule-thin: 1px solid var(--ink-black);
-  --rule-hard: 2px solid var(--ink-black);
+  --rule-thin: 1px solid var(--ink-page);
+  --rule-hard: 2px solid var(--ink-page);
 
   /* Spacing scale (8px base) */
   --space-1: 4px;
@@ -58,16 +86,35 @@ html {
   color: var(--ink-page);
   font-family: var(--font-serif);
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.55;
+  letter-spacing: var(--tracking-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
+}
+
+/* Tabular numerals on data-heavy contexts so digits line up in tables, KPIs and charts. */
+.bz-tnum,
+table,
+dd,
+.bz-fact__value,
+.bz-rating__score,
+.bz-rating__num,
+.bz-hero__facts dd,
+.bz-comp,
+.bz-chart,
+.bz-chart__table,
+.bz-chart__bar-num {
+  font-feature-settings: 'tnum' on, 'lnum' on;
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
 body {
   margin: 0;
   background: var(--paper);
   color: var(--ink-page);
+  counter-reset: bz-section;
 }
 
 img,
@@ -109,9 +156,13 @@ h1, h2, h3, h4 {
   margin: 0;
   font-family: var(--font-display);
   color: var(--ink-page);
-  font-weight: 400;
-  letter-spacing: -0.144px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-display-tight);
+  line-height: var(--lh-display-block);
 }
+h1 { letter-spacing: var(--tracking-display-tight); }
+h2, h3 { letter-spacing: var(--tracking-display-snug); }
+h4 { font-weight: 600; letter-spacing: var(--tracking-display-snug); }
 
 .bz-container {
   width: 100%;
@@ -124,22 +175,25 @@ h1, h2, h3, h4 {
   :root { --gutter: 16px; }
 }
 
-/* Mono caps utility */
+/* Eyebrow / kicker — modern sans small-caps, claret accent.
+ * Class name kept as `.bz-mono` so existing components keep working. */
 .bz-mono {
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.92px;
-  font-size: 0.8125rem;
-  line-height: 1.23;
-  color: var(--ink-page);
+  font-family: var(--font-sans);
+  font-feature-settings: 'cv11';
+  font-variant-caps: all-small-caps;
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  line-height: 1.2;
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--claret);
 }
 
-/* Print bibliography */
+/* Bibliography */
 .bz-bib {
   list-style: decimal;
-  font-family: var(--font-serif);
-  font-size: 0.875rem;
-  line-height: 1.55;
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
   color: var(--ink-page);
 }
 .bz-bib li { margin-bottom: var(--space-2); }

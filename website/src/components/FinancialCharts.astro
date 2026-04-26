@@ -33,17 +33,32 @@ const fmtK = (k: number) =>
   Math.abs(k) >= 1000 ? `$${(k / 1000).toFixed(2)}M` : `$${k.toFixed(0)}K`;
 const fmtSigned = (k: number) => (k >= 0 ? fmtK(k) : `-${fmtK(-k)}`);
 
+// FT palette — mirrors src/styles/tokens.css. Inline so the static SVG attributes resolve at build time.
+const C = {
+  ink: '#33302e',
+  inkMuted: '#66605c',
+  inkDim: '#807973',
+  hairline: '#ccc1b7',
+  wheat: '#f2dfce',
+  paper: '#fff1e5',
+  claret: '#990f3d',
+  teal: '#0d7680',
+};
+// Stacked-bar tone ramp: warm-near-black -> warm grays -> wheat. 7 stops cover the headcount roles.
+const TONES = [C.ink, C.inkMuted, C.inkDim, '#9c948e', '#b6aca5', C.hairline, C.wheat];
+
 // --- Trajectory chart (combined revenue line + cash line + EBITDA bars) ---
 const W = 720;
 const H = 280;
-const PAD = { l: 56, r: 16, t: 16, b: 36 };
+const PAD = { l: 50, r: 14, t: 18, b: 28 };
 const innerW = W - PAD.l - PAD.r;
 const innerH = H - PAD.t - PAD.b;
 const n = series.length;
 
 const allRevCash = series.flatMap((p) => [p.revenueK, p.cashEopK]);
+// Domain must include negative cash (post-funding burn) and zero baseline.
 const yMax = Math.max(0, ...allRevCash);
-const yMin = 0;
+const yMin = Math.min(0, ...allRevCash);
 const ebitdaVals = series.map((p) => p.ebitdaK);
 const eMin = Math.min(0, ...ebitdaVals);
 const eMax = Math.max(0, ...ebitdaVals);
@@ -59,18 +74,20 @@ const yBarBase = PAD.t + lineH + 8;
 const eRange = eMax - eMin || 1;
 const yBar = (v: number) => yBarBase + (1 - (v - eMin) / eRange) * barH;
 
-// Y-axis ticks for the line panel
-function niceTicks(max: number, count = 4): number[] {
-  if (max <= 0) return [0];
-  const raw = max / count;
+// Y-axis ticks for the line panel — symmetric around zero when domain crosses it.
+function niceTicks(min: number, max: number, count = 4): number[] {
+  if (max <= min) return [0];
+  const raw = (max - min) / count;
   const pow = Math.pow(10, Math.floor(Math.log10(raw)));
   const norm = raw / pow;
   const step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * pow;
+  const start = Math.floor(min / step) * step;
+  const end = Math.ceil(max / step) * step;
   const ticks: number[] = [];
-  for (let v = 0; v <= max + step / 2; v += step) ticks.push(v);
+  for (let v = start; v <= end + step / 2; v += step) ticks.push(v);
   return ticks;
 }
-const yTicks = niceTicks(yMax);
+const yTicks = niceTicks(yMin, yMax);
 
 // Line paths
 const revPath = series
@@ -93,10 +110,23 @@ const uofTotal = uof.reduce((s, b) => s + b.pct, 0) || 100;
 // --- Headcount stacked bars ---
 const quarters = ['q1y1', 'q2y1', 'q3y1', 'q4y1', 'q1y2', 'q2y2', 'q3y2', 'q4y2', 'q1y3', 'q2y3', 'q3y3', 'q4y3'] as const;
 const qLabels = ['Q1Y1', 'Q2Y1', 'Q3Y1', 'Q4Y1', 'Q1Y2', 'Q2Y2', 'Q3Y2', 'Q4Y2', 'Q1Y3', 'Q2Y3', 'Q3Y3', 'Q4Y3'];
+// Forward-fill missing quarter values so milestone-only headcount data
+// (e.g. q1y1, q4y1, q4y2, q4y3) doesn't render as zero between snapshots.
+function fillForward(row: any): number[] {
+  const out: number[] = [];
+  let last = 0;
+  for (const k of quarters) {
+    if (row[k] !== undefined && row[k] !== null && row[k] !== '') {
+      last = Number(row[k]) || 0;
+    }
+    out.push(last);
+  }
+  return out;
+}
 const headcountRoles: { role: string; values: number[] }[] = Array.isArray(fm?.headcount)
   ? fm.headcount.map((row: any) => ({
       role: String(row.role),
-      values: quarters.map((k) => Number(row[k] ?? 0)),
+      values: fillForward(row),
     }))
   : [];
 const hcQuartersWithData = quarters
@@ -144,19 +174,19 @@ const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)),
       {/* y grid + labels (line panel) */}
       {yTicks.map((t) => (
         <g>
-          <line x1={PAD.l} x2={W - PAD.r} y1={yLine(t)} y2={yLine(t)} stroke="#e2e8f0" stroke-width="1" />
+          <line x1={PAD.l} x2={W - PAD.r} y1={yLine(t)} y2={yLine(t)} stroke={C.hairline} stroke-width="1" />
           <text x={PAD.l - 8} y={yLine(t) + 4} text-anchor="end" class="bz-chart__tick">{fmtK(t)}</text>
         </g>
       ))}
       {/* zero baseline for bars */}
-      <line x1={PAD.l} x2={W - PAD.r} y1={yBar(0)} y2={yBar(0)} stroke="#1a1a1a" stroke-width="1" />
+      <line x1={PAD.l} x2={W - PAD.r} y1={yBar(0)} y2={yBar(0)} stroke={C.ink} stroke-width="1" />
       {/* ebitda bars */}
       {series.map((p, i) => {
         const w = Math.max(2, innerW / n - 4);
         const x = xAt(i) - w / 2;
         const top = yBar(Math.max(0, p.ebitdaK));
         const bot = yBar(Math.min(0, p.ebitdaK));
-        const fill = p.ebitdaK >= 0 ? '#1a1a1a' : '#a3a3a3';
+        const fill = p.ebitdaK >= 0 ? C.ink : C.inkDim;
         return (
           <rect
             x={x}
@@ -169,15 +199,15 @@ const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)),
         );
       })}
       {/* revenue area + line */}
-      <path d={`${revPath} L ${xAt(n - 1)} ${yLine(0)} L ${xAt(0)} ${yLine(0)} Z`} fill="#1a1a1a" fill-opacity="0.08" />
-      <path d={revPath} fill="none" stroke="#1a1a1a" stroke-width="2" />
-      {/* cash line (accent) */}
-      <path d={cashPath} fill="none" stroke="#057dbc" stroke-width="2" stroke-dasharray="4 3" />
+      <path d={`${revPath} L ${xAt(n - 1)} ${yLine(0)} L ${xAt(0)} ${yLine(0)} Z`} fill={C.ink} fill-opacity="0.08" />
+      <path d={revPath} fill="none" stroke={C.ink} stroke-width="2" />
+      {/* cash line (claret accent) */}
+      <path d={cashPath} fill="none" stroke={C.claret} stroke-width="2" stroke-dasharray="4 3" />
       {/* point markers (revenue) for tooltip targets */}
       {series.map((p, i) => (
         <g>
-          <circle cx={xAt(i)} cy={yLine(p.revenueK)} r="3" fill="#1a1a1a" />
-          <circle cx={xAt(i)} cy={yLine(p.cashEopK)} r="3" fill="#057dbc" />
+          <circle cx={xAt(i)} cy={yLine(p.revenueK)} r="3" fill={C.ink} />
+          <circle cx={xAt(i)} cy={yLine(p.cashEopK)} r="3" fill={C.claret} />
           <rect
             x={xAt(i) - Math.max(8, innerW / n / 2)}
             y={PAD.t}
@@ -192,7 +222,7 @@ const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)),
       {series.map((p, i) => {
         const step = n > 16 ? 3 : n > 10 ? 2 : 1;
         if (i % step !== 0 && i !== n - 1) return null;
-        return <text x={xAt(i)} y={H - 14} text-anchor="middle" class="bz-chart__tick">{p.label}</text>;
+        return <text x={xAt(i)} y={H - 12} text-anchor="middle" class="bz-chart__tick">{p.label}</text>;
       })}
     </svg>
     <ul class="bz-chart__legend bz-mono">
@@ -215,7 +245,7 @@ const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)),
           const w = (b.pct / uofTotal) * 720;
           const x = acc;
           acc += w;
-          const fillTones = ['#1a1a1a', '#3d3d3d', '#666666', '#999999'];
+          const fillTones = [C.ink, C.inkMuted, C.inkDim, '#b6aca5'];
           const fill = fillTones[i % fillTones.length];
           return (
             <rect
@@ -256,7 +286,7 @@ const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)),
         const w = 720 - 36 - 16;
         const h = 220 - 24 - 28;
         const bw = w / hcQuartersWithData.length - 8;
-        const tones = ['#1a1a1a', '#3d3d3d', '#5c5c5c', '#7a7a7a', '#9a9a9a', '#bfbfbf', '#dcdcdc'];
+        const tones = TONES;
         return hcQuartersWithData.map((q, qi) => {
           const xBar = 36 + qi * (w / hcQuartersWithData.length) + 4;
           let yAcc = 24 + h;
@@ -287,7 +317,7 @@ const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)),
     </svg>
     <ul class="bz-chart__legend bz-mono">
       {headcountRoles.map((r, ri) => {
-        const tones = ['#1a1a1a', '#3d3d3d', '#5c5c5c', '#7a7a7a', '#9a9a9a', '#bfbfbf', '#dcdcdc'];
+        const tones = TONES;
         return (
           <li>
             <span class="bz-chart__swatch" style={`background:${tones[ri % tones.length]};`}></span>
@@ -410,7 +440,7 @@ const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)),
   }
   .bz-chart__caption {
     color: var(--caption-gray);
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-4);
     display: block;
   }
   .bz-chart svg {
@@ -418,17 +448,22 @@ const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)),
     height: auto;
     display: block;
     overflow: visible;
+    /* Cap at native viewBox width so 1u = 1px on screen — keeps SVG text crisp
+     * at its declared px size and prevents font-scale blow-up on wide containers. */
+    max-width: 720px;
+    margin: 0 auto;
   }
   .bz-chart__tick {
-    font-family: var(--font-mono);
-    font-size: 11px;
+    font-family: var(--font-sans);
+    font-size: 10px;
+    font-weight: 500;
     fill: var(--caption-gray);
-    letter-spacing: 0.4px;
-    text-transform: uppercase;
+    letter-spacing: 0;
   }
   .bz-chart__tick--bold {
     fill: var(--ink-page);
-    font-size: 12px;
+    font-size: 11px;
+    font-weight: 600;
   }
   .bz-chart__legend {
     list-style: none;
@@ -438,6 +473,8 @@ const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)),
     flex-wrap: wrap;
     gap: var(--space-2) var(--space-4);
     color: var(--caption-gray);
+    font-size: var(--fs-xs);
+    font-weight: 500;
   }
   .bz-chart__legend li { display: inline-flex; align-items: center; gap: 6px; }
   .bz-chart__swatch {
@@ -452,9 +489,9 @@ const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)),
   .bz-chart__table {
     width: 100%;
     border-collapse: collapse;
-    font-family: var(--font-serif);
-    font-size: 0.9375rem;
-    line-height: 1.4;
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    line-height: 1.45;
   }
   .bz-chart__table th,
   .bz-chart__table td {
@@ -495,26 +532,27 @@ const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)),
       135deg,
       var(--caption-gray) 0,
       var(--caption-gray) 6px,
-      #b9b9b9 6px,
-      #b9b9b9 12px
+      var(--hairline) 6px,
+      var(--hairline) 12px
     );
   }
   .bz-chart__bar-num {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-family: var(--font-sans);
+    font-feature-settings: 'tnum';
+    font-size: var(--fs-xs);
+    font-weight: 600;
     color: var(--ink-page);
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
+    letter-spacing: 0;
   }
   .bz-chart__cell-tight {
     color: var(--caption-gray);
-    font-size: 0.875rem;
+    font-size: var(--fs-xs);
     width: 18%;
   }
   .bz-chart__desc {
     color: var(--caption-gray);
-    font-size: 0.875rem;
-    line-height: 1.4;
+    font-size: var(--fs-xs);
+    line-height: 1.5;
     width: 38%;
   }
 
@@ -525,10 +563,10 @@ const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)),
     pointer-events: none;
     background: var(--ink-page);
     color: var(--paper);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.4px;
-    text-transform: uppercase;
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    letter-spacing: 0;
     padding: 6px 10px;
     z-index: 1000;
     opacity: 0;
