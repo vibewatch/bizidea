@@ -20,6 +20,31 @@ function shortHash(input: string): string {
   return createHash('sha1').update(input).digest('hex').slice(0, 6);
 }
 
+// Recursively repair "colon-paste" YAML accidents: an unquoted scalar like
+// `- Some sentence: more text` is parsed by YAML as `{ "Some sentence": "more text" }`
+// instead of the intended string. We detect this by finding plain objects with
+// exactly one key whose key contains a space (real YAML keys never do) and
+// coerce them back to `"<key>: <value>"` strings.
+function fixColonPaste(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(fixColonPaste);
+  if (value && typeof value === 'object') {
+    // Skip non-plain objects (Date, etc.) so we don't strip their internals.
+    const proto = Object.getPrototypeOf(value);
+    if (proto !== Object.prototype && proto !== null) return value;
+    const keys = Object.keys(value as Record<string, unknown>);
+    if (keys.length === 1 && /\s/.test(keys[0]!)) {
+      const k = keys[0]!;
+      const v = (value as Record<string, unknown>)[k];
+      if (typeof v === 'string') return `${k}: ${v}`;
+      if (v == null) return k;
+    }
+    const out: Record<string, unknown> = {};
+    for (const k of keys) out[k] = fixColonPaste((value as Record<string, unknown>)[k]);
+    return out;
+  }
+  return value;
+}
+
 function parseRunId(runId: string): { runTimestamp: string; folderSlug: string } {
   const m = runId.match(/^(\d{14})-(.+)$/);
   if (m) return { runTimestamp: m[1]!, folderSlug: `${m[2]!}-${shortHash(runId)}` };
@@ -43,7 +68,7 @@ export function ideasLoader(): Loader {
           continue;
         }
         const raw = readFileSync(indexPath, 'utf8');
-        const parsed = yaml.load(raw) as Record<string, unknown>;
+        const parsed = fixColonPaste(yaml.load(raw)) as Record<string, unknown>;
         const { runTimestamp, folderSlug } = parseRunId(runId);
         const data = await parseData({
           id: runId,
@@ -65,7 +90,7 @@ export interface StageFiles {
 
 export function loadStageFiles(runId: string): StageFiles {
   const folder = join(IDEAS_DIR, runId);
-  const read = (name: string) => yaml.load(readFileSync(join(folder, name), 'utf8'));
+  const read = (name: string) => fixColonPaste(yaml.load(readFileSync(join(folder, name), 'utf8')));
   return {
     news: read('news.yaml'),
     idea: read('idea.yaml'),
