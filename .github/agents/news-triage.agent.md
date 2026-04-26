@@ -2,7 +2,7 @@
 description: "Use when: doing one broad startup-news scan, clustering candidate opportunities by event/company, scoring them, and deduping against the historical ideas/_index.yaml so the orchestrator can fan out into multiple non-duplicate reports per day. Trigger phrases: news triage, daily news scan, candidate clusters, dedupe news, opportunity ranking, daily opportunity shortlist."
 name: "News Triage"
 model: "GPT-5.4 mini (copilot)"
-tools: [web_search, web_fetch, read, edit]
+tools: [web_search, web_fetch, read, edit, execute, write]
 user-invocable: false
 ---
 

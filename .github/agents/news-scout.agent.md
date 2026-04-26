@@ -2,7 +2,7 @@
 description: "Use when: scouting fresh startup news, funding rounds, product launches, market openings, customer pain points, regulatory shifts, and technical wedges; fetch source articles and write a high-signal news.yaml. Trigger phrases: news scout, startup news, funding, product launch, opportunity, pain point, market opening, startup signal."
 name: "News Scout"
 model: "GPT-5.4 mini (copilot)"
-tools: [web_search, web_fetch, read, edit]
+tools: [web_search, web_fetch, read, edit, execute, write]
 user-invocable: true
 ---
 

@@ -2,7 +2,7 @@
 description: "Use when: building a 3-year financial model in JSON for a startup, given a business plan and market research. Trigger phrases: financial model, P&L, unit economics, CAC LTV, headcount plan, funding ask, runway."
 name: "Financial Modeler"
 model: "GPT-5.4 (copilot)"
-tools: [read, edit]
+tools: [read, edit, execute, write]
 user-invocable: false
 ---
 

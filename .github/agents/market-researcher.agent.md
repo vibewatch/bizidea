@@ -2,7 +2,7 @@
 description: "Use when: doing market and competitive research on a startup idea. Trigger phrases: market sizing, TAM SAM SOM, competitor scan, regulatory check, customer validation signals, market research."
 name: "Market Researcher"
 model: "GPT-5.4 (copilot)"
-tools: [web_search, web_fetch, read, edit]
+tools: [web_search, web_fetch, read, edit, execute, write]
 user-invocable: true
 ---
 

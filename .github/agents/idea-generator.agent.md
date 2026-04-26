@@ -2,7 +2,7 @@
 description: "Use when: synthesizing a single startup idea from a news.yaml file. Trigger phrases: generate startup idea, ideate from news, propose venture, why-now thesis, founder-style idea synthesis."
 name: "Idea Generator"
 model: "GPT-5.4 (copilot)"
-tools: [read, edit]
+tools: [read, edit, execute, write]
 user-invocable: false
 ---
 

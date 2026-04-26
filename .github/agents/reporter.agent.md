@@ -2,7 +2,7 @@
 description: "Use when: emitting a structured index.yaml sidecar that summarizes a completed bizidea run for the website to consume. Trigger phrases: reporter, sidecar yaml, structured summary, website index, machine-readable report."
 name: "Reporter"
 model: "GPT-5.4 (copilot)"
-tools: [read, edit]
+tools: [read, edit, execute, write]
 user-invocable: false
 ---
 

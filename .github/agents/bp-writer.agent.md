@@ -2,7 +2,7 @@
 description: "Use when: writing a complete business plan for a startup idea given prior idea + market research files. Trigger phrases: business plan, BP draft, GTM plan, operating plan, executive summary, milestones."
 name: "Business Plan Writer"
 model: "GPT-5.4 (copilot)"
-tools: [read, edit]
+tools: [read, edit, execute, write]
 user-invocable: false
 ---
 
