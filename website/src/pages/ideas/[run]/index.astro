@@ -59,15 +59,18 @@ const tocItems = [
 >
   <article class="bz-story">
     <header class="bz-story__head bz-container">
-      <p class="bz-story__strap bz-mono">
-        <span class="bz-story__strap-section">{entry.data.kicker}</span>
-        <span class="bz-story__strap-sep" aria-hidden="true">·</span>
-        <span>{entry.data.sector}</span>
-        <span class="bz-story__strap-sep" aria-hidden="true">·</span>
-        <span>Scan {entry.data.scan.timeWindow}</span>
-        <span class="bz-story__strap-sep" aria-hidden="true">·</span>
-        <span>Run {entry.data.runTimestamp}</span>
-      </p>
+      <div class="bz-story__topbar">
+        <p class="bz-story__strap bz-mono">
+          <span class="bz-story__strap-section">{entry.data.kicker}</span>
+          <span class="bz-story__strap-sep" aria-hidden="true">·</span>
+          <span>{entry.data.sector}</span>
+          <span class="bz-story__strap-sep" aria-hidden="true">·</span>
+          <span>Scan {entry.data.scan.timeWindow}</span>
+          <span class="bz-story__strap-sep" aria-hidden="true">·</span>
+          <span>Run {entry.data.runTimestamp}</span>
+        </p>
+        <button class="bz-print-btn" type="button" data-print-dossier>Export PDF</button>
+      </div>
       <div class="bz-story__masthead">
         <div class="bz-story__masthead-main">
           <Headline as="h1" size="hero">{entry.data.pitch}</Headline>
@@ -840,23 +843,57 @@ const tocItems = [
       </div>
     </div>
   </article>
+  <script is:inline>
+    document.querySelector('[data-print-dossier]')?.addEventListener('click', () => window.print());
+  </script>
   <MermaidLoader />
 </BaseLayout>
 
 <style>
   .bz-story__head { padding-block: var(--space-7) var(--space-4); }
+  .bz-story__topbar {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin: 0 0 var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: var(--rule-hairline);
+  }
   .bz-story__strap {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     gap: var(--space-2);
-    margin: 0 0 var(--space-4);
-    padding-bottom: var(--space-3);
-    border-bottom: var(--rule-hairline);
+    margin: 0;
     color: var(--caption-gray);
   }
   .bz-story__strap-section { color: var(--claret); }
   .bz-story__strap-sep { color: var(--hairline); }
+  .bz-print-btn {
+    flex: 0 0 auto;
+    appearance: none;
+    border: var(--rule-hairline);
+    background: rgba(153, 15, 61, 0.07);
+    color: var(--claret);
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-variant-caps: all-small-caps;
+    font-weight: 700;
+    font-size: var(--fs-sm);
+    letter-spacing: var(--tracking-display-snug);
+    line-height: 1;
+    padding: var(--space-2) var(--space-3);
+  }
+  .bz-print-btn:hover,
+  .bz-print-btn:focus-visible {
+    background: var(--claret);
+    color: var(--paper);
+  }
+  @media (max-width: 640px) {
+    .bz-story__topbar { align-items: stretch; flex-direction: column; }
+    .bz-print-btn { align-self: flex-start; }
+  }
   .bz-story__masthead {
     display: grid;
     grid-template-columns: 1fr;
@@ -1282,4 +1319,58 @@ const tocItems = [
     margin-left: var(--space-2);
   }
   .bz-assumptions[open] > summary::after { content: "  ▴"; }
+
+  @page { margin: 14mm 12mm; }
+  @media print {
+    :global(.bz-utility),
+    :global(.bz-footer),
+    :global(.bz-toc),
+    .bz-print-btn,
+    .bz-story__kpis,
+    :global(.mermaid-loader) {
+      display: none !important;
+    }
+    :global(html),
+    :global(body) {
+      background: #fff !important;
+      color: #111 !important;
+    }
+    .bz-story__head,
+    .bz-container,
+    .bz-story__layout {
+      max-width: none !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+    .bz-story__layout,
+    .bz-story__main {
+      display: block !important;
+    }
+    .bz-story__head {
+      padding-top: 0;
+      padding-bottom: var(--space-4);
+    }
+    .bz-story__topbar {
+      border-bottom-color: #bbb;
+    }
+    .bz-story__deck,
+    .bz-story__lead,
+    .bz-list,
+    .bz-comp,
+    .bz-fact,
+    :global(.bz-chart__table),
+    :global(.bz-canvas__cell) {
+      break-inside: avoid;
+    }
+    :global(.bz-ribbon),
+    .bz-section__head {
+      break-after: avoid;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+  }
 </style>
