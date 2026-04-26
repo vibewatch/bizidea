@@ -70,11 +70,16 @@ const circles = [
   { key: 'SOM', r: radiusFor(parsed[2]!.value), fill: TONES.som,  textOn: '#fff1e5' },
 ];
 
-// Labels to the right with leader lines. Anchor each line at the right edge
-// of its circle along the horizontal axis.
+// Labels to the right with leader lines. Each line anchors at the
+// intersection of its own circle's perimeter on the ray toward its label,
+// so the three lines fan out instead of stacking on the center axis.
 const LABEL_X = CX + R_MAX + 60;
 const LABEL_GAP = 56;
 const LABEL_Y0 = CY - LABEL_GAP;
+
+// Inner-text padding inside the TAM and SAM rings (distance from perimeter
+// to the baseline of the chip text).
+const CHIP_PAD = 14;
 ---
 <figure class="bz-marketviz" aria-label="Market sizing nested circles">
   <figcaption class="bz-mono bz-marketviz__title">Market sizing</figcaption>
@@ -97,34 +102,44 @@ const LABEL_Y0 = CY - LABEL_GAP;
     ))}
 
     {circles.map((c, i) => {
-      const yOffset = i === 0 ? -(c.r - 16) : i === 1 ? -(circles[1]!.r - 18) : 4;
+      // TAM and SAM sit inside the top of their ring with breathing room;
+      // SOM is centered inside the solid disc.
+      const innerR = i < 2 ? c.r - circles[i + 1]!.r : 0;
+      const ringTop = i < 2
+        ? CY - c.r + Math.max(CHIP_PAD, innerR / 2)
+        : CY + 5;
       return (
-        <g>
-          <text
-            x={CX}
-            y={CY + yOffset}
-            text-anchor="middle"
-            class="bz-marketviz__chip"
-            fill={c.textOn}
-          >{c.key}</text>
-        </g>
+        <text
+          x={CX}
+          y={ringTop}
+          text-anchor="middle"
+          class="bz-marketviz__chip"
+          fill={c.textOn}
+        >{c.key}</text>
       );
     })}
 
     {parsed.map((t, i) => {
       const ly = LABEL_Y0 + i * LABEL_GAP;
       const cr = circles[i]!.r;
+      // Anchor the leader line on this circle's perimeter along the ray
+      // pointing at the label, so the three lines diverge.
+      const dx = (LABEL_X - 14) - CX;
+      const dy = ly - CY;
+      const len = Math.hypot(dx, dy) || 1;
+      const ax = CX + (dx / len) * cr;
+      const ay = CY + (dy / len) * cr;
       return (
         <g>
           <line
-            x1={CX + cr}
-            y1={CY}
+            x1={ax}
+            y1={ay}
             x2={LABEL_X - 14}
             y2={ly}
             stroke={TONES.stroke}
             stroke-width="1"
           />
-          <circle cx={CX + cr} cy={CY} r="2.5" fill={TONES.stroke} />
+          <circle cx={ax} cy={ay} r="2.5" fill={TONES.stroke} />
           <text
             x={LABEL_X}
             y={ly - 8}
@@ -167,8 +182,8 @@ const LABEL_Y0 = CY - LABEL_GAP;
   .bz-marketviz__chip {
     font-family: var(--font-display, 'Bricolage Grotesque', system-ui, sans-serif);
     font-weight: 700;
-    font-size: 22px;
-    letter-spacing: 0.02em;
+    font-size: 15px;
+    letter-spacing: 0.04em;
   }
   .bz-marketviz__label {
     font-family: var(--font-mono, 'Inter', system-ui, sans-serif);
