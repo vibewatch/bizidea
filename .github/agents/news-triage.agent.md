@@ -56,9 +56,12 @@ A "cluster" is the unit a downstream Bizidea pipeline run will work on. Two stor
    - Famous news with no startup wedge (macro, public-company earnings recaps, celebrity drama, generic AI hype, opinion pieces with no underlying event).
    - Duplicates by canonical URL (after stripping tracking params + fragment).
 6. **Cluster** the survivors. Group items that share the same `(primaryCompany, eventType, YYYY-MM)` tuple OR the same regulation/standard/incident. One cluster per distinct opportunity.
-7. **Score** each cluster on a 1–5 integer:
-   - **signalStrength** — combined startup relevance + pain intensity + opportunity clarity + non-obviousness.
-   - Drop clusters with `signalStrength < 2`.
+7. **Score** each cluster. Assign four sub-scores (each integer 1–5) using the rubric in [Scoring rubric](#scoring-rubric):
+   - `startupRelevance`
+   - `painIntensity`
+   - `opportunityClarity`
+   - `nonObviousness`
+   Then compute `signalStrength = round(mean(sub-scores))` (banker's rounding is fine; ties round up). Drop clusters with `signalStrength < 2` OR with **any** sub-score `= 1`. Write a one-sentence `scoreRationale` that names the strongest and weakest sub-score (e.g. "strong opportunity clarity, weak non-obviousness").
 8. **Dedupe** each cluster against history:
    - For each cluster, build candidate `eventKeys[]` (`<companyLowercased>|<eventType>|<YYYY-MM>` per primary item) and `keywords[]` (≤16 lowercase nouns from `headline` + cluster items).
    - If any candidate `eventKey` is in `historicalEventKeys` AND the matching history entry's `date` is within 90 days of `runDate` → `dedupeStatus: duplicate-of:<runFolder>`.
@@ -67,7 +70,7 @@ A "cluster" is the unit a downstream Bizidea pipeline run will work on. Two stor
    - Else if `keywords[]` overlap with any single history entry's `keywords[]` is `>= 6` items → `dedupeStatus: near-duplicate-of:<runFolder>`.
    - Else → `dedupeStatus: new`.
    - Record a one-sentence `dedupeRationale` for every status (including `new`).
-9. Sort clusters by `signalStrength` descending, then by item count descending. Mark the top `cap` clusters with `dedupeStatus: new` as `selected: true`. All others `selected: false`.
+9. Sort clusters by `signalStrength` descending, then `opportunityClarity` descending, then `itemCount` descending. Mark the top `cap` clusters with `dedupeStatus: new` as `selected: true`. All others `selected: false`.
 10. Write `<triageFolder>/triage.yaml`.
 11. Read the file back and confirm it is non-empty valid YAML before returning the handoff.
 
@@ -78,6 +81,27 @@ A "cluster" is the unit a downstream Bizidea pipeline run will work on. Two stor
 ## Sector vocabulary (closed — pick one per cluster)
 
 `climate-tech` · `ai-infra` · `fintech` · `health-tech` · `dev-tools` · `consumer` · `industrial` · `defense` · `bio` · `crypto` · `edu` · `other`
+
+## Scoring rubric
+
+Each sub-score is an integer 1–5 with this anchor. Use the lowest level the cluster clearly meets; do not stretch.
+
+| Score | Anchor (applies independently to each sub-score) |
+|---|---|
+| 5 | Strongest evidence: hard event + named buyer or budget movement; specific, defensible signal. |
+| 4 | Clear event with at least one specific buyer, customer quote, or pain detail; signal is concrete in one sentence. |
+| 3 | Real event but the signal requires inference; details are partially generic. |
+| 2 | Weak event (single source, vague claim, no buyer signal); only marginally supports this dimension. |
+| 1 | Hype, opinion, macro recap, or no underlying event for this dimension — disqualifying. |
+
+Sub-score definitions:
+
+- **startupRelevance** — is a startup, emerging company, or new entrant materially involved (as actor, target, or beneficiary)?
+- **painIntensity** — is there a real, current customer or operational pain visible in the cluster (lawsuit, outage, RFP, complaint, churn, hiring spike, manual workaround, breach)?
+- **opportunityClarity** — can a venture-stage product, wedge, buyer, or market opening be named in one sentence from this cluster alone?
+- **nonObviousness** — does the cluster reveal more than the headline everyone already saw (insight, second-order effect, overlooked buyer, hidden bottleneck)?
+
+A cluster with **any sub-score `= 1`** is dropped before sorting, regardless of `signalStrength`. This keeps a cluster from sneaking in on the strength of one dimension while being disqualifying on another.
 
 ## YAML syntax rules
 
@@ -112,7 +136,12 @@ clusters:
     eventKeys:
       - companylowercased|eventType|YYYY-MM
     itemCount: 0
+    startupRelevance: 1
+    painIntensity: 1
+    opportunityClarity: 1
+    nonObviousness: 1
     signalStrength: 1
+    scoreRationale: one sentence naming the strongest and weakest sub-score
     selectionRationale: one sentence on why this cluster is investable
     dedupeStatus: new|duplicate-of:<runFolder>|near-duplicate-of:<runFolder>
     dedupeRationale: one sentence
@@ -121,11 +150,13 @@ clusters:
 
 Rules:
 
-- `clusters` is sorted by `signalStrength` descending.
+- `clusters` is sorted by `signalStrength` descending, then by `opportunityClarity` descending as a tiebreaker, then by `itemCount` descending.
 - `clusterId` is `c1`, `c2`, … in sorted order.
 - `selectedCount` equals the number of clusters with `selected: true` and is `<= cap`.
 - `topSourceUrls` are canonicalized (no tracking params, no fragments, lowercased host, trimmed trailing slash).
 - Each `eventKeys` value uses the `<companyLowercased>|<eventType>|<YYYY-MM>` shape with `eventType ∈ {funding, launch, mna, regulation, incident, news}`.
+- All four sub-scores AND `signalStrength` are integers in `[1, 5]`. `signalStrength` MUST equal `round(mean(sub-scores))`.
+- A cluster MUST NOT appear in `clusters` if any sub-score is `1` OR `signalStrength < 2`. Filter before sorting.
 - `selected: true` only when `dedupeStatus: new`.
 
 ## Handoff
