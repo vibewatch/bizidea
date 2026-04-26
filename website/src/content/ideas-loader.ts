@@ -1,5 +1,6 @@
 import { readdirSync, statSync, readFileSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { createHash } from 'node:crypto';
 import yaml from 'js-yaml';
 import type { Loader } from 'astro/loaders';
 
@@ -15,12 +16,16 @@ function listRuns(): string[] {
     .reverse();
 }
 
+function shortHash(input: string): string {
+  return createHash('sha1').update(input).digest('hex').slice(0, 6);
+}
+
 function parseRunId(runId: string): { runTimestamp: string; folderSlug: string } {
   const m = runId.match(/^(\d{14})-(.+)$/);
-  if (m) return { runTimestamp: m[1]!, folderSlug: m[2]! };
+  if (m) return { runTimestamp: m[1]!, folderSlug: `${m[2]!}-${shortHash(runId)}` };
   // legacy fallback: <YYYY-MM-DD>-<slug>
   const m2 = runId.match(/^(\d{4}-\d{2}-\d{2})-(.+)$/);
-  if (m2) return { runTimestamp: m2[1]!.replace(/-/g, '') + '000000', folderSlug: m2[2]! };
+  if (m2) return { runTimestamp: m2[1]!.replace(/-/g, '') + '000000', folderSlug: `${m2[2]!}-${shortHash(runId)}` };
   return { runTimestamp: '00000000000000', folderSlug: runId };
 }
 
