@@ -1,0 +1,334 @@
+---
+// Custom-rendered quadrant chart (a.k.a. "Market map") built from the same
+// Mermaid `quadrantChart` source so the dossier source-of-truth doesn't
+// change. Falls back to nothing if parsing fails.
+
+interface Props {
+  title?: string;
+  /** Raw mermaid quadrantChart source. */
+  mermaid: string;
+  /** Optional explicit highlight label, default 'Proposed startup'. */
+  highlight?: string;
+}
+
+const { title, mermaid, highlight = 'Proposed startup' } = Astro.props as Props;
+
+interface Point { label: string; x: number; y: number }
+interface Parsed {
+  title?: string;
+  xLeft?: string; xRight?: string;
+  yBottom?: string; yTop?: string;
+  points: Point[];
+}
+
+function parseQuadrant(src: string): Parsed {
+  const out: Parsed = { points: [] };
+  if (!src) return out;
+  const lines = src.split('\n').map((l) => l.trim()).filter(Boolean);
+  for (const line of lines) {
+    if (line.startsWith('quadrantChart')) continue;
+    let m;
+    if ((m = line.match(/^title\s+(.+)$/i))) { out.title = m[1]; continue; }
+    if ((m = line.match(/^x-axis\s+(.+?)\s*-->\s*(.+)$/i))) { out.xLeft = m[1]; out.xRight = m[2]; continue; }
+    if ((m = line.match(/^y-axis\s+(.+?)\s*-->\s*(.+)$/i))) { out.yBottom = m[1]; out.yTop = m[2]; continue; }
+    if ((m = line.match(/^"?([^"]+?)"?\s*:\s*\[\s*([0-9.]+)\s*,\s*([0-9.]+)\s*\]\s*$/))) {
+      out.points.push({ label: m[1]!.trim(), x: parseFloat(m[2]!), y: parseFloat(m[3]!) });
+    }
+  }
+  return out;
+}
+
+const data = parseQuadrant(mermaid);
+const heading = title || data.title;
+
+// Layout (viewBox units = px when SVG width is capped via CSS).
+const VB_W = 720;
+const VB_H = 480;
+const PAD = { l: 80, r: 60, t: 56, b: 64 };
+const plot = {
+  x: PAD.l,
+  y: PAD.t,
+  w: VB_W - PAD.l - PAD.r,
+  h: VB_H - PAD.t - PAD.b,
+};
+const cx = plot.x + plot.w / 2;
+const cy = plot.y + plot.h / 2;
+
+const TONES = {
+  paper: '#fff1e5',
+  ink: '#33302e',
+  inkMuted: '#66605c',
+  inkDim: '#807973',
+  hairline: '#ccc1b7',
+  wheat: '#f7e8d8',
+  cream: '#fff8ef',
+  claret: '#990f3d',
+  claretSoft: 'rgba(153, 15, 61, 0.10)',
+};
+
+// Map data coords (0..1, y up) to SVG pixel coords (y down).
+const px = (x: number) => plot.x + x * plot.w;
+const py = (y: number) => plot.y + (1 - y) * plot.h;
+
+// Quadrant background tints. Top-right is the "winning" quadrant.
+const quads = [
+  { x: plot.x,             y: plot.y,             w: plot.w / 2, h: plot.h / 2, fill: TONES.cream  }, // top-left
+  { x: plot.x + plot.w/2,  y: plot.y,             w: plot.w / 2, h: plot.h / 2, fill: TONES.wheat  }, // top-right
+  { x: plot.x,             y: plot.y + plot.h/2,  w: plot.w / 2, h: plot.h / 2, fill: TONES.paper  }, // bottom-left
+  { x: plot.x + plot.w/2,  y: plot.y + plot.h/2,  w: plot.w / 2, h: plot.h / 2, fill: TONES.cream  }, // bottom-right
+];
+
+// Place labels INSIDE the plot, near each point, avoiding overlap with
+// other labels and with other point dots. We try candidate offsets around
+// the point in priority order (right, left, top, bottom, then diagonals).
+const annotated = data.points
+  .map((p) => ({
+    ...p,
+    sx: px(p.x),
+    sy: py(p.y),
+    highlight: p.label.toLowerCase() === highlight.toLowerCase(),
+  }));
+
+const FONT_PX = 12;
+const CHAR_W = 6.4;        // approximate Inter 12px advance
+const LABEL_H = 14;
+const LABEL_PAD_X = 4;
+const DOT_GAP = 8;         // distance between dot edge and label box
+const PLOT_INSET = 4;
+
+interface Box { x: number; y: number; w: number; h: number }
+interface Placed {
+  sx: number; sy: number;     // point on canvas
+  lx: number; ly: number;     // label baseline coords
+  anchor: 'start' | 'end' | 'middle';
+  box: Box;                    // label bounding box
+  label: string;
+  highlight: boolean;
+}
+
+function rectsOverlap(a: Box, b: Box): boolean {
+  return !(a.x + a.w < b.x || b.x + b.w < a.x || a.y + a.h < b.y || b.y + b.h < a.y);
+}
+function circleHitsRect(cx0: number, cy0: number, r: number, b: Box): boolean {
+  // axis-aligned closest point
+  const nx = Math.max(b.x, Math.min(cx0, b.x + b.w));
+  const ny = Math.max(b.y, Math.min(cy0, b.y + b.h));
+  const dx = cx0 - nx;
+  const dy = cy0 - ny;
+  return dx * dx + dy * dy < r * r;
+}
+
+// Eight candidate positions around the point (dx, dy of the label box's
+// top-left relative to the point). dy uses SVG coords (y down).
+function candidates(sx: number, sy: number, w: number, h: number) {
+  const r = 6 + DOT_GAP; // dot radius + gap
+  const halfH = h / 2;
+  return [
+    // right of dot
+    { x: sx + r,            y: sy - halfH,  anchor: 'start' as const,  lx: sx + r + LABEL_PAD_X, ly: sy + 4 },
+    // left of dot
+    { x: sx - r - w,        y: sy - halfH,  anchor: 'end' as const,    lx: sx - r - LABEL_PAD_X, ly: sy + 4 },
+    // above dot
+    { x: sx - w / 2,        y: sy - r - h,  anchor: 'middle' as const, lx: sx,                   ly: sy - r - 3 },
+    // below dot
+    { x: sx - w / 2,        y: sy + r,      anchor: 'middle' as const, lx: sx,                   ly: sy + r + h - 3 },
+    // top-right
+    { x: sx + r * 0.6,      y: sy - r - h,  anchor: 'start' as const,  lx: sx + r * 0.6 + LABEL_PAD_X, ly: sy - r - 3 },
+    // top-left
+    { x: sx - r * 0.6 - w,  y: sy - r - h,  anchor: 'end' as const,    lx: sx - r * 0.6 - LABEL_PAD_X, ly: sy - r - 3 },
+    // bottom-right
+    { x: sx + r * 0.6,      y: sy + r,      anchor: 'start' as const,  lx: sx + r * 0.6 + LABEL_PAD_X, ly: sy + r + h - 3 },
+    // bottom-left
+    { x: sx - r * 0.6 - w,  y: sy + r,      anchor: 'end' as const,    lx: sx - r * 0.6 - LABEL_PAD_X, ly: sy + r + h - 3 },
+  ];
+}
+
+const plotBox: Box = {
+  x: plot.x + PLOT_INSET,
+  y: plot.y + PLOT_INSET,
+  w: plot.w - PLOT_INSET * 2,
+  h: plot.h - PLOT_INSET * 2,
+};
+function insidePlot(b: Box): boolean {
+  return b.x >= plotBox.x
+    && b.y >= plotBox.y
+    && b.x + b.w <= plotBox.x + plotBox.w
+    && b.y + b.h <= plotBox.y + plotBox.h;
+}
+
+// Place highlighted points first (so the "Proposed startup" label gets its
+// best slot), then by leftover point density.
+const order = annotated
+  .map((p, i) => ({ p, i }))
+  .sort((a, b) => Number(b.p.highlight) - Number(a.p.highlight));
+
+const placed: Placed[] = [];
+const dots = annotated.map((p) => ({ x: p.sx, y: p.sy }));
+
+for (const { p } of order) {
+  const w = Math.max(LABEL_H * 2, p.label.length * CHAR_W + LABEL_PAD_X * 2);
+  const h = LABEL_H;
+  const cands = candidates(p.sx, p.sy, w, h);
+  let chosen = cands[0]!;
+  let bestPenalty = Infinity;
+  for (const c of cands) {
+    const box: Box = { x: c.x, y: c.y, w, h };
+    let penalty = 0;
+    if (!insidePlot(box)) penalty += 1000;
+    for (const q of placed) if (rectsOverlap(box, q.box)) penalty += 200;
+    for (const d of dots) {
+      if (d.x === p.sx && d.y === p.sy) continue;
+      if (circleHitsRect(d.x, d.y, 7, box)) penalty += 150;
+    }
+    if (penalty < bestPenalty) {
+      bestPenalty = penalty;
+      chosen = c;
+      if (penalty === 0) break;
+    }
+  }
+  placed.push({
+    sx: p.sx, sy: p.sy,
+    lx: chosen.lx, ly: chosen.ly,
+    anchor: chosen.anchor,
+    box: { x: chosen.x, y: chosen.y, w, h },
+    label: p.label,
+    highlight: p.highlight,
+  });
+}
+---
+<figure class="bz-marketmap" aria-label={heading || 'Market map'}>
+  {heading && <figcaption class="bz-mono bz-marketmap__title">{heading}</figcaption>}
+  <svg
+    class="bz-marketmap__svg"
+    viewBox={`0 0 ${VB_W} ${VB_H}`}
+    preserveAspectRatio="xMidYMid meet"
+    role="img"
+  >
+    <!-- quadrant backgrounds -->
+    {quads.map((q) => (
+      <rect x={q.x} y={q.y} width={q.w} height={q.h} fill={q.fill} />
+    ))}
+
+    <!-- outer frame & median crosshairs -->
+    <rect
+      x={plot.x} y={plot.y}
+      width={plot.w} height={plot.h}
+      fill="none"
+      stroke={TONES.ink}
+      stroke-width="1"
+    />
+    <line x1={cx} y1={plot.y} x2={cx} y2={plot.y + plot.h} stroke={TONES.hairline} stroke-width="1" stroke-dasharray="3 4" />
+    <line x1={plot.x} y1={cy} x2={plot.x + plot.w} y2={cy} stroke={TONES.hairline} stroke-width="1" stroke-dasharray="3 4" />
+
+    <!-- axis end-labels -->
+    {data.xLeft && (
+      <text x={plot.x} y={plot.y + plot.h + 22} class="bz-marketmap__axis" fill={TONES.inkMuted}>← {data.xLeft}</text>
+    )}
+    {data.xRight && (
+      <text x={plot.x + plot.w} y={plot.y + plot.h + 22} text-anchor="end" class="bz-marketmap__axis" fill={TONES.inkMuted}>{data.xRight} →</text>
+    )}
+    {data.yBottom && (
+      <text
+        transform={`translate(${plot.x - 18}, ${plot.y + plot.h}) rotate(-90)`}
+        class="bz-marketmap__axis"
+        fill={TONES.inkMuted}
+      >← {data.yBottom}</text>
+    )}
+    {data.yTop && (
+      <text
+        transform={`translate(${plot.x - 18}, ${plot.y}) rotate(-90)`}
+        text-anchor="end"
+        class="bz-marketmap__axis"
+        fill={TONES.inkMuted}
+      >{data.yTop} →</text>
+    )}
+
+    <!-- quadrant headings (corner whispers) -->
+    <text x={plot.x + 10} y={plot.y + 18} class="bz-marketmap__corner" fill={TONES.inkDim}>Q2</text>
+    <text x={plot.x + plot.w - 10} y={plot.y + 18} text-anchor="end" class="bz-marketmap__corner" fill={TONES.inkDim}>Q1 · winning zone</text>
+    <text x={plot.x + 10} y={plot.y + plot.h - 8} class="bz-marketmap__corner" fill={TONES.inkDim}>Q3</text>
+    <text x={plot.x + plot.w - 10} y={plot.y + plot.h - 8} text-anchor="end" class="bz-marketmap__corner" fill={TONES.inkDim}>Q4</text>
+
+    <!-- highlight ring on the winning quadrant point -->
+    {placed.filter((p) => p.highlight).map((p) => (
+      <circle cx={p.sx} cy={p.sy} r="14" fill={TONES.claretSoft} />
+    ))}
+
+    <!-- point dots -->
+    {placed.map((p) => (
+      <circle
+        cx={p.sx} cy={p.sy}
+        r={p.highlight ? 5 : 4}
+        fill={p.highlight ? TONES.claret : TONES.ink}
+        stroke={TONES.paper}
+        stroke-width="1.5"
+      />
+    ))}
+
+    <!-- label backgrounds (paper halo for legibility) + label text -->
+    {placed.map((p) => (
+      <g>
+        <rect
+          x={p.box.x - 2}
+          y={p.box.y + 1}
+          width={p.box.w + 4}
+          height={p.box.h - 2}
+          fill={TONES.paper}
+          fill-opacity="0.85"
+          rx="2"
+        />
+        <text
+          x={p.lx}
+          y={p.ly}
+          text-anchor={p.anchor}
+          class={p.highlight ? 'bz-marketmap__label bz-marketmap__label--hi' : 'bz-marketmap__label'}
+          fill={p.highlight ? TONES.claret : TONES.ink}
+        >{p.label}</text>
+      </g>
+    ))}
+  </svg>
+</figure>
+
+<style>
+  .bz-marketmap {
+    margin: var(--space-5) 0;
+    padding: var(--space-4) 0;
+    border-top: var(--rule-thin);
+    border-bottom: var(--rule-thin);
+  }
+  .bz-marketmap__title {
+    color: var(--caption-gray);
+    margin-bottom: var(--space-3);
+    display: block;
+  }
+  .bz-marketmap__svg {
+    display: block;
+    width: 100%;
+    max-width: 720px;
+    height: auto;
+    margin: 0 auto;
+  }
+  .bz-marketmap__axis {
+    font-family: var(--font-mono, 'Inter', system-ui, sans-serif);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .bz-marketmap__corner {
+    font-family: var(--font-mono, 'Inter', system-ui, sans-serif);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .bz-marketmap__label {
+    font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .bz-marketmap__label--hi {
+    font-weight: 700;
+  }
+  @media (max-width: 560px) {
+    .bz-marketmap__svg { max-width: 100%; }
+  }
+</style>
