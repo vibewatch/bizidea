@@ -22,7 +22,7 @@ if (!existsSync(IDEAS_DIR)) {
 
 const runs = readdirSync(IDEAS_DIR).filter((name) => {
   const p = join(IDEAS_DIR, name);
-  return statSync(p).isDirectory() && !name.startsWith('.');
+  return statSync(p).isDirectory() && !name.startsWith('.') && !name.startsWith('_');
 });
 
 const failures = [];
