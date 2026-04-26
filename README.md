@@ -1,6 +1,6 @@
 # Bizidea
 
-Bizidea is a daily, fully-automated startup-research factory. A scheduled GitHub Actions workflow runs the **Bizidea** orchestrator agent (via the GitHub Copilot CLI), which scans the day's startup news, dedupes against previously generated reports, and produces up to N self-contained startup packages — each one a folder of YAML artifacts spanning news triage, idea synthesis, market research, business plan, 3-year financial model, and a machine-readable index. The companion Astro site renders those YAMLs as a WIRED-style editorial reading experience and ships to GitHub Pages on every push.
+Bizidea is a daily, fully-automated startup-research factory. A scheduled GitHub Actions workflow runs the **Bizidea** orchestrator agent (via the GitHub Copilot CLI), which scans the day's startup news, dedupes against previously generated reports, and produces up to N self-contained startup packages — each one a folder of YAML artifacts spanning news triage, idea synthesis, market research, business plan, 3-year financial model, and a machine-readable index. The companion Astro site renders those YAMLs as an FT-style editorial reading experience and ships to GitHub Pages on every push.
 
 Live site: <https://bizidea.genisisiq.com>
 
