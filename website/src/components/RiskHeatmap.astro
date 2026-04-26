@@ -1,0 +1,194 @@
+---
+// 3x3 risk heatmap for Low/Medium/High likelihood × impact.
+// Accepts arbitrary risk arrays where each item has { risk?|name?, likelihood, impact, mitigation? }.
+interface Props {
+  risks: any[];
+  caption?: string;
+}
+const { risks, caption } = Astro.props as Props;
+
+const norm = (v: any): 0 | 1 | 2 | -1 => {
+  const s = String(v ?? '').trim().toLowerCase();
+  if (s.startsWith('l')) return 0;
+  if (s.startsWith('m')) return 1;
+  if (s.startsWith('h')) return 2;
+  return -1;
+};
+
+type Cell = { x: number; y: number; items: { label: string; mitigation: string; idx: number }[] };
+const cells: Cell[][] = [0, 1, 2].map((y) => [0, 1, 2].map((x) => ({ x, y, items: [] })));
+const orphans: { label: string; mitigation: string; idx: number }[] = [];
+
+(risks ?? []).forEach((r: any, i: number) => {
+  const x = norm(r?.likelihood);
+  const y = norm(r?.impact);
+  const label = String(r?.risk ?? r?.name ?? `Risk ${i + 1}`);
+  const mit = String(r?.mitigation ?? '');
+  if (x < 0 || y < 0) orphans.push({ label, mitigation: mit, idx: i + 1 });
+  else cells[y][x].items.push({ label, mitigation: mit, idx: i + 1 });
+});
+
+// Visual: severity score = likelihood + impact (0..4). 0-1 = paper, 2 = wheat, 3 = ink, 4 = claret.
+const severityFill = (s: number) => {
+  if (s >= 4) return '#990f3d';
+  if (s === 3) return '#33302e';
+  if (s === 2) return '#e3b89c';
+  return '#fff1e5';
+};
+const severityInk = (s: number) => (s >= 3 ? '#fff1e5' : '#33302e');
+
+const xLabels = ['Low', 'Medium', 'High'];
+const yLabels = ['Low', 'Medium', 'High']; // displayed bottom-up
+---
+
+{(risks?.length ?? 0) > 0 && (
+  <figure class="bz-chart bz-heatmap" data-bz-chart>
+    <figcaption class="bz-chart__caption bz-mono">
+      {caption ?? `Risk heatmap — ${risks.length} risk${risks.length === 1 ? '' : 's'}`}
+    </figcaption>
+    <div class="bz-heatmap__layout">
+      <div class="bz-heatmap__grid-wrap">
+        <div class="bz-heatmap__y-label bz-mono">Impact →</div>
+        <div class="bz-heatmap__grid">
+          {/* render top to bottom: high impact at top */}
+          {[2, 1, 0].map((y) => (
+            <>
+              <div class="bz-heatmap__y-tick bz-mono">{yLabels[y]}</div>
+              {[0, 1, 2].map((x) => {
+                const c = cells[y][x];
+                const sev = x + y;
+                const fill = severityFill(sev);
+                const ink = severityInk(sev);
+                return (
+                  <div
+                    class="bz-heatmap__cell"
+                    style={`background:${fill}; color:${ink};`}
+                    data-bz-tip={`${yLabels[y]} impact · ${xLabels[x]} likelihood — ${c.items.length} risk${c.items.length === 1 ? '' : 's'}`}
+                  >
+                    {c.items.map((it) => (
+                      <span class="bz-heatmap__chip" data-bz-tip={`${it.label}${it.mitigation ? ' — Mitigation: ' + it.mitigation : ''}`}>
+                        R{it.idx}
+                      </span>
+                    ))}
+                  </div>
+                );
+              })}
+            </>
+          ))}
+          <div></div>
+          {[0, 1, 2].map((x) => <div class="bz-heatmap__x-tick bz-mono">{xLabels[x]}</div>)}
+        </div>
+      </div>
+      <div class="bz-heatmap__x-label bz-mono">Likelihood →</div>
+      <ol class="bz-heatmap__legend">
+        {(risks ?? []).map((r: any, i: number) => (
+          <li>
+            <span class="bz-heatmap__legend-id bz-mono">R{i + 1}</span>
+            <span>
+              <strong>{r.risk ?? r.name}</strong>
+              {r.likelihood && r.impact && (
+                <span class="bz-heatmap__legend-meta"> · {r.likelihood} likelihood / {r.impact} impact</span>
+              )}
+              {r.mitigation && <span class="bz-heatmap__legend-mit"> — {r.mitigation}</span>}
+            </span>
+          </li>
+        ))}
+        {orphans.map((o) => (
+          <li>
+            <span class="bz-heatmap__legend-id bz-mono">R{o.idx}</span>
+            <span><strong>{o.label}</strong> <span class="bz-heatmap__legend-meta">(unscored)</span></span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </figure>
+)}
+
+<style>
+  .bz-heatmap__layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+  .bz-heatmap__grid-wrap {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-2);
+    align-items: center;
+  }
+  .bz-heatmap__y-label,
+  .bz-heatmap__x-label {
+    font-variant-caps: all-small-caps;
+    letter-spacing: var(--tracking-eyebrow);
+    font-size: var(--fs-xs);
+    color: var(--caption-gray);
+  }
+  .bz-heatmap__y-label {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    align-self: stretch;
+    text-align: center;
+  }
+  .bz-heatmap__x-label {
+    text-align: center;
+    margin-top: 2px;
+  }
+  .bz-heatmap__grid {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr 1fr;
+    gap: 2px;
+    max-width: 540px;
+  }
+  .bz-heatmap__y-tick,
+  .bz-heatmap__x-tick {
+    font-variant-caps: all-small-caps;
+    letter-spacing: var(--tracking-eyebrow);
+    font-size: var(--fs-xs);
+    color: var(--caption-gray);
+    text-align: center;
+    padding: 4px 6px;
+  }
+  .bz-heatmap__y-tick { text-align: right; padding-right: var(--space-2); }
+  .bz-heatmap__cell {
+    min-height: 80px;
+    padding: var(--space-2);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-content: flex-start;
+    border: 1px solid var(--hairline);
+  }
+  .bz-heatmap__chip {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    padding: 2px 6px;
+    background: rgba(255, 241, 229, 0.85);
+    color: var(--ink-page);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    cursor: default;
+  }
+  .bz-heatmap__legend {
+    list-style: none;
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+  }
+  .bz-heatmap__legend li {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: var(--space-2);
+    padding: var(--space-2) 0;
+    border-top: var(--rule-hairline);
+  }
+  .bz-heatmap__legend li:first-child { border-top: 0; }
+  .bz-heatmap__legend-id {
+    font-weight: 700;
+    color: var(--claret);
+  }
+  .bz-heatmap__legend-meta { color: var(--caption-gray); }
+  .bz-heatmap__legend-mit { color: var(--caption-gray); }
+</style>

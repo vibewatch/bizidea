@@ -1,0 +1,170 @@
+---
+// Pentagon radar for idea.ideaScorecard. Five axes, each scored 1-5.
+// Hover any axis label or vertex to see the rationale.
+interface Props {
+  scorecard: any;
+}
+const { scorecard } = Astro.props as Props;
+
+const axes = [
+  { key: 'signalStrength', label: 'Signal' },
+  { key: 'painIntensity', label: 'Pain' },
+  { key: 'wedgeClarity', label: 'Wedge' },
+  { key: 'defensibility', label: 'Defense' },
+  { key: 'ventureScale', label: 'Scale' },
+] as const;
+
+const data = axes
+  .map((a) => {
+    const node = scorecard?.[a.key];
+    if (!node) return null;
+    return {
+      label: a.label,
+      score: Math.max(0, Math.min(5, Number(node.score ?? 0))),
+      rationale: String(node.rationale ?? ''),
+    };
+  })
+  .filter(Boolean) as { label: string; score: number; rationale: string }[];
+
+const W = 360;
+const H = 320;
+const cx = W / 2;
+const cy = H / 2 + 4;
+const R = 110;
+
+const C = {
+  ink: '#33302e',
+  inkMuted: '#66605c',
+  hairline: '#ccc1b7',
+  wheat: '#f2dfce',
+  claret: '#990f3d',
+};
+
+// 5 axes => angles at -90, -90+72, ...
+const N = data.length;
+const angle = (i: number) => (-Math.PI / 2) + (i * 2 * Math.PI) / N;
+const point = (i: number, r: number) => ({
+  x: cx + Math.cos(angle(i)) * r,
+  y: cy + Math.sin(angle(i)) * r,
+});
+
+const rings = [1, 2, 3, 4, 5];
+const ringPath = (r: number) =>
+  data.map((_, i) => {
+    const p = point(i, (r / 5) * R);
+    return `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
+  }).join(' ') + ' Z';
+
+const dataPath = data
+  .map((d, i) => {
+    const p = point(i, (d.score / 5) * R);
+    return `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
+  })
+  .join(' ') + ' Z';
+
+const avg = data.length ? data.reduce((s, d) => s + d.score, 0) / data.length : 0;
+---
+
+{data.length > 0 && (
+  <figure class="bz-chart bz-radar" data-bz-chart>
+    <figcaption class="bz-chart__caption bz-mono">
+      Idea scorecard — average {avg.toFixed(1)} / 5 across {data.length} axes
+    </figcaption>
+    <div class="bz-radar__layout">
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Idea scorecard radar" preserveAspectRatio="xMidYMid meet">
+        {/* concentric pentagons */}
+        {rings.map((r) => (
+          <path d={ringPath(r)} fill="none" stroke={C.hairline} stroke-width="1" />
+        ))}
+        {/* axes spokes */}
+        {data.map((_, i) => {
+          const p = point(i, R);
+          return <line x1={cx} y1={cy} x2={p.x} y2={p.y} stroke={C.hairline} stroke-width="1" />;
+        })}
+        {/* data polygon */}
+        <path d={dataPath} fill={C.claret} fill-opacity="0.18" stroke={C.claret} stroke-width="2" />
+        {/* vertices */}
+        {data.map((d, i) => {
+          const p = point(i, (d.score / 5) * R);
+          return (
+            <circle
+              cx={p.x}
+              cy={p.y}
+              r="4"
+              fill={C.claret}
+              data-bz-tip={`${d.label} · ${d.score}/5 — ${d.rationale}`}
+            />
+          );
+        })}
+        {/* axis labels */}
+        {data.map((d, i) => {
+          const p = point(i, R + 22);
+          const anchor = Math.abs(p.x - cx) < 2 ? 'middle' : p.x < cx ? 'end' : 'start';
+          return (
+            <g>
+              <text x={p.x} y={p.y + 4} text-anchor={anchor} class="bz-radar__label">{d.label}</text>
+              <text x={p.x} y={p.y + 18} text-anchor={anchor} class="bz-radar__score">{d.score}/5</text>
+            </g>
+          );
+        })}
+      </svg>
+      <ul class="bz-radar__legend">
+        {data.map((d) => (
+          <li>
+            <span class="bz-radar__legend-label bz-mono">{d.label} · {d.score}/5</span>
+            <span class="bz-radar__legend-note">{d.rationale}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </figure>
+)}
+
+<style>
+  .bz-radar__layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+    align-items: start;
+  }
+  @media (min-width: 800px) {
+    .bz-radar__layout { grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: var(--space-7); }
+  }
+  .bz-radar svg { max-width: 360px; }
+  .bz-radar__label {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    fill: var(--ink-page);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .bz-radar__score {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    fill: var(--caption-gray);
+  }
+  .bz-radar__legend {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+  }
+  .bz-radar__legend li {
+    border-top: var(--rule-hairline);
+    padding: var(--space-2) 0;
+  }
+  .bz-radar__legend li:first-child { border-top: 0; padding-top: 0; }
+  .bz-radar__legend-label {
+    display: block;
+    font-variant-caps: all-small-caps;
+    letter-spacing: var(--tracking-eyebrow);
+    color: var(--ink-page);
+    margin-bottom: 2px;
+  }
+  .bz-radar__legend-note {
+    color: var(--caption-gray);
+  }
+</style>
