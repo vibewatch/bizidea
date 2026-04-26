@@ -16,6 +16,8 @@ import IdeaScorecard from '../../../components/IdeaScorecard.astro';
 import RiskHeatmap from '../../../components/RiskHeatmap.astro';
 import BusinessModelCanvas from '../../../components/BusinessModelCanvas.astro';
 import CitedText from '../../../components/CitedText.astro';
+import RatingSparkline from '../../../components/RatingSparkline.astro';
+import DossierToc from '../../../components/DossierToc.astro';
 import { loadStageFiles } from '../../../content/ideas-loader';
 import { linkifyCitations } from '../../../lib/citations';
 
@@ -39,6 +41,17 @@ const fmtK = (k: number) =>
   (k >= 1000 || k <= -1000)
     ? `$${(k / 1000).toFixed(2)}M`
     : `$${k.toFixed(0)}K`;
+
+const tocItems = [
+  { id: 'why-now', label: 'Why now' },
+  { id: 'idea', label: 'The idea' },
+  { id: 'market', label: 'Market' },
+  { id: 'competition', label: 'Competition' },
+  { id: 'business-plan', label: 'Business plan' },
+  { id: 'financial-model', label: 'Financial model' },
+  { id: 'risks', label: 'Top risks' },
+  { id: 'evidence', label: 'Evidence' },
+];
 ---
 <BaseLayout
   title={`${entry.data.pitch} — Bizidea`}
@@ -46,23 +59,62 @@ const fmtK = (k: number) =>
 >
   <article class="bz-story">
     <header class="bz-story__head bz-container">
-      <Kicker bold>{entry.data.kicker} · {entry.data.sector} · Scan {entry.data.scan.timeWindow}</Kicker>
-      <Headline as="h1" size="hero">{entry.data.pitch}</Headline>
-      {idea?.problem && (
-        <p class="bz-story__deck">{String(idea.problem).split(/(?<=\.)\s+/).slice(0, 2).join(' ')}</p>
-      )}
-      <p class="bz-story__byline">
-        <span class="bz-story__author">By Bizidea Research</span>
-        <span class="bz-story__sep" aria-hidden="true">/</span>
-        <time datetime={entry.data.date}>{entry.data.date}</time>
-        <span class="bz-story__sep" aria-hidden="true">/</span>
-        <span class="bz-story__runid">Run {entry.data.runTimestamp}</span>
+      <p class="bz-story__strap bz-mono">
+        <span class="bz-story__strap-section">{entry.data.kicker}</span>
+        <span class="bz-story__strap-sep" aria-hidden="true">·</span>
+        <span>{entry.data.sector}</span>
+        <span class="bz-story__strap-sep" aria-hidden="true">·</span>
+        <span>Scan {entry.data.scan.timeWindow}</span>
+        <span class="bz-story__strap-sep" aria-hidden="true">·</span>
+        <span>Run {entry.data.runTimestamp}</span>
       </p>
+      <div class="bz-story__masthead">
+        <div class="bz-story__masthead-main">
+          <Headline as="h1" size="hero">{entry.data.pitch}</Headline>
+          {idea?.problem && (
+            <p class="bz-story__deck">{String(idea.problem).split(/(?<=\.)\s+/).slice(0, 2).join(' ')}</p>
+          )}
+          <p class="bz-story__byline">
+            <span class="bz-story__author">By Bizidea Research</span>
+            <span class="bz-story__sep" aria-hidden="true">/</span>
+            <time datetime={entry.data.date}>{entry.data.date}</time>
+          </p>
+        </div>
+        <aside class="bz-story__kpis" aria-label="At a glance">
+          <div class="bz-story__kpi bz-story__kpi--rating">
+            <span class="bz-mono">Rating</span>
+            <RatingSparkline
+              dimensions={entry.data.rating.dimensions}
+              overall={entry.data.rating.overall}
+              size="md"
+            />
+            <span class="bz-story__kpi-legend bz-mono">Mkt · Diff · Exec · Time</span>
+          </div>
+          <div class="bz-story__kpi">
+            <span class="bz-mono">SOM</span>
+            <span class="bz-story__kpi-num">{entry.data.market?.som ?? '—'}</span>
+          </div>
+          <div class="bz-story__kpi">
+            <span class="bz-mono">Funding ask</span>
+            <span class="bz-story__kpi-num">${entry.data.financials?.fundingAsk?.amountM?.toFixed(1) ?? '—'}M</span>
+            <span class="bz-story__kpi-sub">{entry.data.financials?.fundingAsk?.round}</span>
+          </div>
+          <div class="bz-story__kpi">
+            <span class="bz-mono">Y3 revenue</span>
+            <span class="bz-story__kpi-num">{fmtK(entry.data.financials?.y3?.revenueK ?? 0)}</span>
+            <span class="bz-story__kpi-sub">EBITDA {fmtK(entry.data.financials?.y3?.ebitdaK ?? 0)}</span>
+          </div>
+        </aside>
+      </div>
     </header>
 
     <div class="bz-container">
       <RatingBlock overall={entry.data.rating.overall} dimensions={entry.data.rating.dimensions} />
     </div>
+
+    <div class="bz-story__layout">
+      <DossierToc items={tocItems} />
+      <div class="bz-story__main">
 
     <Ribbon label="Why now" id="why-now" />
     <div class="bz-container bz-section">
@@ -787,12 +839,72 @@ const fmtK = (k: number) =>
         )}
       </div>
     </div>
+      </div>
+    </div>
   </article>
   <MermaidLoader />
 </BaseLayout>
 
 <style>
-  .bz-story__head { padding-block: var(--space-8) var(--space-4); }
+  .bz-story__head { padding-block: var(--space-7) var(--space-4); }
+  .bz-story__strap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: var(--rule-hairline);
+    color: var(--caption-gray);
+  }
+  .bz-story__strap-section { color: var(--claret); }
+  .bz-story__strap-sep { color: var(--hairline); }
+  .bz-story__masthead {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+    align-items: end;
+  }
+  @media (min-width: 900px) {
+    .bz-story__masthead {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+      gap: var(--space-7);
+    }
+  }
+  .bz-story__masthead-main { min-width: 0; }
+  .bz-story__kpis {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4) var(--space-5);
+    padding: var(--space-4);
+    background: var(--paper-wheat);
+    border-top: 3px solid var(--claret);
+  }
+  .bz-story__kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .bz-story__kpi--rating { grid-column: span 2; }
+  .bz-story__kpi .bz-mono { color: var(--caption-gray); }
+  .bz-story__kpi-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-xl);
+    line-height: 1.05;
+    color: var(--ink-page);
+    font-feature-settings: 'tnum';
+  }
+  .bz-story__kpi-sub {
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    color: var(--caption-gray);
+  }
+  .bz-story__kpi-legend {
+    color: var(--caption-gray);
+    font-size: var(--fs-xs);
+  }
   .bz-story__deck {
     font-family: var(--font-sans);
     font-size: var(--fs-md);
@@ -814,6 +926,40 @@ const fmtK = (k: number) =>
   .bz-story__author { color: var(--ink-page); font-weight: 600; }
   .bz-story__sep { color: var(--hairline); }
   .bz-story__runid { font-family: var(--font-mono); font-size: var(--fs-xs); }
+
+  /* TOC + main split: TOC sits to the right of body content on >=1180px. */
+  .bz-story__layout { display: contents; }
+  .bz-story__main { display: contents; }
+  @media (min-width: 1180px) {
+    .bz-story__layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 220px;
+      gap: var(--space-7);
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 var(--gutter);
+      align-items: start;
+    }
+    .bz-story__main { display: block; min-width: 0; grid-column: 1; grid-row: 1; }
+    .bz-story__layout > :global(.bz-toc) { grid-column: 2; grid-row: 1; }
+    /* Inside the layout the wrapper already provides gutters, so strip per-element containers. */
+    .bz-story__main .bz-container { padding-left: 0; padding-right: 0; max-width: none; }
+    .bz-story__main > :global(.bz-ribbon) {
+      margin: 0;
+      text-align: left;
+    }
+    .bz-story__main > :global(.bz-ribbon) :global(.bz-container) {
+      max-width: none;
+      margin: 0;
+      padding: 0;
+    }
+    .bz-story__main > :global(.bz-ribbon) :global(.bz-ribbon__num),
+    .bz-story__main > :global(.bz-ribbon) :global(.bz-ribbon__label) {
+      margin: 0;
+      padding: 0;
+      text-align: left;
+    }
+  }
   .bz-story__lead {
     font-family: var(--font-sans);
     font-size: var(--fs-base);
@@ -871,8 +1017,8 @@ const fmtK = (k: number) =>
     border-top: var(--rule-thin);
     border-bottom: var(--rule-thin);
     font-family: var(--font-sans);
-    font-size: var(--fs-base);
-    line-height: 1.45;
+    font-size: 0.875rem;
+    line-height: 1.5;
   }
   .bz-comp th, .bz-comp td {
     text-align: left;
@@ -885,7 +1031,7 @@ const fmtK = (k: number) =>
     font-variant-caps: all-small-caps;
     font-weight: 600;
     letter-spacing: var(--tracking-eyebrow);
-    font-size: var(--fs-sm);
+    font-size: inherit;
     color: var(--caption-gray);
     border-top: 0;
   }

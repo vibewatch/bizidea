@@ -1,6 +1,7 @@
 ---
 import Kicker from './Kicker.astro';
 import Headline from './Headline.astro';
+import RatingSparkline from './RatingSparkline.astro';
 
 interface Props {
   href: string;
@@ -9,29 +10,55 @@ interface Props {
   deck?: string;
   meta?: string;
   size?: 'block' | 'feature';
+  rating?: { overall: number; dimensions: any };
 }
-const { href, kicker, headline, deck, meta, size = 'block' } = Astro.props as Props;
+const { href, kicker, headline, deck, meta, size = 'block', rating } = Astro.props as Props;
+const tier = !rating ? 'na'
+  : rating.overall >= 3.8 ? 'hi'
+  : rating.overall >= 2.8 ? 'mid'
+  : 'lo';
 ---
-<article class:list={['bz-tile', `bz-tile--${size}`]}>
+<article class:list={['bz-tile', `bz-tile--${size}`, `bz-tile--${tier}`]}>
   <Kicker bold={size === 'feature'}>{kicker}</Kicker>
   <Headline size={size === 'feature' ? 'feature' : 'block'} href={href}>{headline}</Headline>
   {deck && <p class="bz-tile__deck">{deck}</p>}
-  {meta && <p class="bz-tile__meta bz-mono">{meta}</p>}
+  <div class="bz-tile__foot">
+    {rating && (
+      <RatingSparkline dimensions={rating.dimensions} overall={rating.overall} size="sm" />
+    )}
+    {meta && <p class="bz-tile__meta bz-mono">{meta}</p>}
+  </div>
 </article>
 <style>
   .bz-tile {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-    padding: var(--space-4) 0;
+    padding: var(--space-4) 0 var(--space-4) var(--space-3);
+    border-left: 3px solid transparent;
+    transition: border-left-color 120ms ease, background 120ms ease;
   }
-  .bz-tile--feature { padding: var(--space-5) 0 var(--space-6); }
+  .bz-tile:hover { background: rgba(242, 223, 206, 0.35); }
+  .bz-tile--hi { border-left-color: var(--ink-page); }
+  .bz-tile--mid { border-left-color: #e3b89c; }
+  .bz-tile--lo { border-left-color: var(--claret); }
+  .bz-tile--na { border-left-color: var(--hairline); }
+  .bz-tile--feature { padding: var(--space-5) 0 var(--space-6) var(--space-4); border-left-width: 4px; }
   .bz-tile__deck {
     font-family: var(--font-sans);
     font-size: var(--fs-base);
     line-height: 1.45;
     color: var(--ink-page);
     margin: 0;
+  }
+  .bz-tile__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    margin-top: auto;
+    padding-top: var(--space-2);
   }
   .bz-tile__meta {
     color: var(--caption-gray);

@@ -6,6 +6,7 @@ import Headline from '../components/Headline.astro';
 import Ribbon from '../components/Ribbon.astro';
 import Rule from '../components/Rule.astro';
 import StoryTile from '../components/StoryTile.astro';
+import RatingSparkline from '../components/RatingSparkline.astro';
 
 const all = await getCollection('ideas');
 const sorted = all.sort((a, b) => b.data.runTimestamp.localeCompare(a.data.runTimestamp));
@@ -21,6 +22,7 @@ function fmtRunDate(ts: string): string {
 }
 
 const latestLabel = hero ? fmtRunDate(hero.data.runTimestamp) : '';
+const issueNo = sorted.length;
 ---
 <BaseLayout
   title="Bizidea — Startup Dossiers"
@@ -28,7 +30,10 @@ const latestLabel = hero ? fmtRunDate(hero.data.runTimestamp) : '';
 >
   <section class="bz-masthead">
     <div class="bz-container">
-      <Kicker class="bz-masthead__eyebrow">Bizidea Dossiers · Updated {latestLabel}</Kicker>
+      <div class="bz-masthead__strap">
+        <span class="bz-mono">Vol. I · No. {issueNo} · {latestLabel}</span>
+        <span class="bz-mono bz-masthead__strap-right">{sorted.length} dossier{sorted.length === 1 ? '' : 's'}</span>
+      </div>
       <h1 class="bz-masthead__title">
         <span>Startup news,</span>
         <span>read like a venture memo.</span>
@@ -45,23 +50,36 @@ const latestLabel = hero ? fmtRunDate(hero.data.runTimestamp) : '';
 
   {hero && (
     <section class="bz-hero">
-      <div class="bz-container bz-hero__copy">
-        <Kicker bold>{hero.data.kicker} · {hero.data.sector}</Kicker>
-        <Headline as="h2" size="hero" href={hrefFor(hero)}>
-          {hero.data.pitch}
-        </Headline>
-        <p class="bz-hero__deck">{hero.data.topic}</p>
-        <dl class="bz-hero__facts">
-          <div><dt class="bz-mono">Rating</dt><dd>{hero.data.rating.overall.toFixed(1)} / 5.0</dd></div>
-          <div><dt class="bz-mono">SOM</dt><dd>{hero.data.market.som ?? '—'}</dd></div>
-          <div><dt class="bz-mono">Funding ask</dt><dd>${hero.data.financials.fundingAsk.amountM.toFixed(1)}M {hero.data.financials.fundingAsk.round}</dd></div>
-          <div><dt class="bz-mono">Scan</dt><dd>{hero.data.scan.timeWindow}</dd></div>
-        </dl>
+      <div class="bz-container bz-hero__layout">
+        <div class="bz-hero__copy">
+          <Kicker bold>{hero.data.kicker} · {hero.data.sector}</Kicker>
+          <Headline as="h2" size="hero" href={hrefFor(hero)}>
+            {hero.data.pitch}
+          </Headline>
+          <p class="bz-hero__deck">{hero.data.topic}</p>
+        </div>
+        <aside class="bz-hero__panel" aria-label="At a glance">
+          <div class="bz-hero__panel-head">
+            <span class="bz-mono">Rating</span>
+            <RatingSparkline
+              dimensions={hero.data.rating.dimensions}
+              overall={hero.data.rating.overall}
+              size="md"
+            />
+            <span class="bz-hero__panel-legend bz-mono">Mkt · Diff · Exec · Time</span>
+          </div>
+          <dl class="bz-hero__facts">
+            <div><dt class="bz-mono">SOM</dt><dd>{hero.data.market.som ?? '—'}</dd></div>
+            <div><dt class="bz-mono">Funding ask</dt><dd>${hero.data.financials.fundingAsk.amountM.toFixed(1)}M <span class="bz-hero__facts-sub">{hero.data.financials.fundingAsk.round}</span></dd></div>
+            <div><dt class="bz-mono">Scan</dt><dd>{hero.data.scan.timeWindow}</dd></div>
+          </dl>
+          <a href={hrefFor(hero)} class="bz-hero__panel-cta bz-mono">Read full dossier →</a>
+        </aside>
       </div>
     </section>
   )}
 
-  <Ribbon label="More dossiers" />
+  <Ribbon label="More dossiers" id="more-dossiers" />
 
   {rest.length === 0 ? (
     <div class="bz-container">
@@ -76,7 +94,8 @@ const latestLabel = hero ? fmtRunDate(hero.data.runTimestamp) : '';
             kicker={`${entry.data.kicker} · ${entry.data.sector}`}
             headline={entry.data.pitch}
             deck={entry.data.topic}
-            meta={`Rated ${entry.data.rating.overall.toFixed(1)} · ${fmtRunDate(entry.data.runTimestamp)}`}
+            meta={fmtRunDate(entry.data.runTimestamp)}
+            rating={entry.data.rating}
           />
         ))}
       </div>
@@ -86,7 +105,18 @@ const latestLabel = hero ? fmtRunDate(hero.data.runTimestamp) : '';
 
 <style>
   .bz-masthead { padding-block: var(--space-8) var(--space-5); }
-  .bz-masthead__eyebrow { color: var(--caption-gray); }
+  .bz-masthead__strap {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-4);
+    border-bottom: var(--rule-thin);
+    color: var(--caption-gray);
+  }
+  .bz-masthead__strap .bz-mono { color: var(--caption-gray); }
+  .bz-masthead__strap-right { color: var(--ink-page); }
   .bz-masthead__title {
     font-family: var(--font-display);
     font-size: var(--fs-3xl);
@@ -107,7 +137,16 @@ const latestLabel = hero ? fmtRunDate(hero.data.runTimestamp) : '';
   }
 
   .bz-hero { padding-block: var(--space-6) var(--space-7); }
-  .bz-hero__copy { display: flex; flex-direction: column; gap: var(--space-3); }
+  .bz-hero__layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+    align-items: start;
+  }
+  @media (min-width: 900px) {
+    .bz-hero__layout { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: var(--space-7); }
+  }
+  .bz-hero__copy { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
   .bz-hero__deck {
     font-family: var(--font-sans);
     font-size: var(--fs-md);
@@ -116,15 +155,35 @@ const latestLabel = hero ? fmtRunDate(hero.data.runTimestamp) : '';
     margin: 0;
     max-width: 65ch;
   }
+  .bz-hero__panel {
+    background: var(--paper-wheat);
+    border-top: 3px solid var(--claret);
+    padding: var(--space-4) var(--space-4) var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .bz-hero__panel-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .bz-hero__panel-head .bz-mono { color: var(--caption-gray); }
+  .bz-hero__panel-legend { color: var(--caption-gray); font-size: var(--fs-xs); }
   .bz-hero__facts {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-3) var(--space-4);
-    margin: var(--space-3) 0 0;
-    padding: var(--space-4) 0 0;
-    border-top: var(--rule-thin);
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    margin: 0;
+    padding: var(--space-3) 0 0;
+    border-top: var(--rule-hairline);
   }
-  .bz-hero__facts > div { display: flex; flex-direction: column; gap: 2px; }
+  .bz-hero__facts > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
   .bz-hero__facts dt { color: var(--caption-gray); }
   .bz-hero__facts dd {
     margin: 0;
@@ -132,7 +191,24 @@ const latestLabel = hero ? fmtRunDate(hero.data.runTimestamp) : '';
     font-size: var(--fs-lg);
     line-height: 1.15;
     color: var(--ink-page);
+    font-feature-settings: 'tnum';
+    text-align: right;
   }
+  .bz-hero__facts-sub {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: var(--fs-xs);
+    color: var(--caption-gray);
+    text-transform: lowercase;
+  }
+  .bz-hero__panel-cta {
+    display: inline-block;
+    color: var(--claret);
+    text-decoration: none;
+    border-top: var(--rule-hairline);
+    padding-top: var(--space-3);
+  }
+  .bz-hero__panel-cta:hover { color: var(--ink-page); }
 
   .bz-grid {
     display: grid;

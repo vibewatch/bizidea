@@ -1,0 +1,84 @@
+---
+// Tiny 4-bar sparkline for rating.dimensions. Used on home tiles + dossier masthead.
+interface Props {
+  dimensions: {
+    market?: { score: number };
+    differentiation?: { score: number };
+    execution?: { score: number };
+    timeliness?: { score: number };
+  };
+  overall?: number;
+  size?: 'sm' | 'md';
+  showLabels?: boolean;
+}
+const { dimensions, overall, size = 'sm', showLabels = false } = Astro.props as Props;
+
+const items = [
+  { key: 'M', label: 'Market', score: Number(dimensions.market?.score ?? 0) },
+  { key: 'D', label: 'Diff', score: Number(dimensions.differentiation?.score ?? 0) },
+  { key: 'E', label: 'Exec', score: Number(dimensions.execution?.score ?? 0) },
+  { key: 'T', label: 'Time', score: Number(dimensions.timeliness?.score ?? 0) },
+];
+
+// Bar tone scales with score: 1-2 muted, 3 mid, 4-5 ink. The accent claret marks score=5.
+const fill = (s: number) => {
+  if (s >= 5) return '#990f3d';
+  if (s >= 4) return '#33302e';
+  if (s >= 3) return '#807973';
+  return '#ccc1b7';
+};
+
+const W = size === 'md' ? 96 : 56;
+const H = size === 'md' ? 36 : 22;
+const PAD = 1;
+const bw = (W - PAD * 2) / 4 - 2;
+const innerH = H - PAD * 2;
+---
+<span class:list={['bz-spark', `bz-spark--${size}`]} aria-label={`Rating ${overall?.toFixed?.(1) ?? ''} of 5`}>
+  <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
+    {items.map((it, i) => {
+      const x = PAD + i * (bw + 2);
+      const h = (it.score / 5) * innerH;
+      const y = PAD + (innerH - h);
+      return (
+        <g>
+          <rect x={x} y={PAD} width={bw} height={innerH} fill="#f2dfce" />
+          <rect x={x} y={y} width={bw} height={h} fill={fill(it.score)} />
+        </g>
+      );
+    })}
+  </svg>
+  {overall != null && (
+    <span class="bz-spark__num">{overall.toFixed(1)}</span>
+  )}
+  {showLabels && (
+    <span class="bz-spark__legend bz-mono">
+      {items.map((it) => (<span>{it.key}{it.score}</span>))}
+    </span>
+  )}
+</span>
+<style>
+  .bz-spark {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    line-height: 1;
+  }
+  .bz-spark svg { display: block; }
+  .bz-spark--sm svg { width: 56px; height: 22px; }
+  .bz-spark--md svg { width: 96px; height: 36px; }
+  .bz-spark__num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--ink-page);
+    font-feature-settings: 'tnum';
+  }
+  .bz-spark--sm .bz-spark__num { font-size: var(--fs-base); }
+  .bz-spark--md .bz-spark__num { font-size: var(--fs-xl); }
+  .bz-spark__legend {
+    color: var(--caption-gray);
+    display: inline-flex;
+    gap: var(--space-2);
+    font-size: var(--fs-xs);
+  }
+</style>
