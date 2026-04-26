@@ -8,6 +8,8 @@
 # Required secrets / setup:
 # - COPILOT_PAT — a PAT for a Copilot-licensed account, with `repo` scope.
 #   Used to authenticate the Copilot CLI in CI via COPILOT_GITHUB_TOKEN.
+# - BIZIDEA_PAT — a PAT with repo write access used for checkout/push so the
+#   resulting commit can trigger downstream workflows such as Pages deploy.
 
 name: Daily Bizidea run
 
@@ -40,6 +42,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          token: ${{ secrets.BIZIDEA_PAT }}
 
       - uses: actions/setup-node@v6
         with:
@@ -80,6 +83,9 @@ jobs:
           set -euo pipefail
           git config user.name "bizidea-bot"
           git config user.email "bizidea-bot@users.noreply.github.com"
+          git fetch origin "${{ github.ref_name }}"
+          git rebase --autostash "origin/${{ github.ref_name }}"
+          node scripts/build-ideas-index.mjs
           git add ideas/
           if git diff --cached --quiet; then
             echo "No new reports today."
@@ -87,5 +93,4 @@ jobs:
           fi
           STAMP="$(date -u +%F)"
           git commit -m "chore(ideas): daily run $STAMP"
-          git pull --rebase
           git push origin HEAD:${{ github.ref_name }}
