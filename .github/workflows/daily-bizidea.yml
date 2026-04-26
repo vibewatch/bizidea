@@ -1,0 +1,106 @@
+# Scheduled daily Bizidea run.
+#
+# Runs the `Bizidea` orchestrator headlessly via the GitHub Copilot CLI (gh copilot),
+# rebuilds ideas/_index.yaml, and commits any new reports to main. The existing
+# deploy-website.yml workflow then republishes the site (its `paths:` filter on
+# `ideas/**` picks up the commit).
+#
+# Required secrets / setup:
+# - COPILOT_GH_TOKEN — a PAT for a Copilot-licensed account, with `repo` scope.
+#   Used to authenticate the Copilot CLI in CI. The default GITHUB_TOKEN cannot
+#   call Copilot endpoints.
+#
+# Open risk (see /memories/session/plan.md, Risk #1): `gh copilot` historically
+# only ships `suggest` and `explain` subcommands. If a custom-agent run command
+# is unavailable at the time this workflow first executes, replace the
+# `Run Bizidea orchestrator` step with the LLM-API fallback documented in the plan.
+
+name: Daily Bizidea run
+
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+    inputs:
+      cap:
+        description: "Max reports per run (1-5)"
+        required: false
+        default: "5"
+      timeWindow:
+        description: "Time window phrase (e.g. 'yesterday', 'last 7 days')"
+        required: false
+        default: "yesterday"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bizidea-daily
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.COPILOT_GH_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: |
+            package-lock.json
+            website/package-lock.json
+
+      - name: Install root deps (js-yaml for index script)
+        run: npm ci || npm install --no-audit --no-fund
+
+      - name: Install GitHub Copilot CLI
+        env:
+          GH_TOKEN: ${{ secrets.COPILOT_GH_TOKEN }}
+        run: |
+          gh extension install github/gh-copilot || gh extension upgrade gh-copilot
+
+      - name: Resolve run inputs
+        id: inputs
+        run: |
+          CAP="${{ github.event.inputs.cap }}"
+          WINDOW="${{ github.event.inputs.timeWindow }}"
+          if [ -z "$CAP" ]; then CAP="5"; fi
+          if [ -z "$WINDOW" ]; then WINDOW="yesterday"; fi
+          echo "cap=$CAP" >> "$GITHUB_OUTPUT"
+          echo "window=$WINDOW" >> "$GITHUB_OUTPUT"
+
+      - name: Run Bizidea orchestrator
+        env:
+          GH_TOKEN: ${{ secrets.COPILOT_GH_TOKEN }}
+        run: |
+          set -euo pipefail
+          PROMPT="Run the Bizidea orchestrator. Scan ${{ steps.inputs.outputs.window }}'s news and generate up to ${{ steps.inputs.outputs.cap }} non-duplicate startup reports. Default cap is ${{ steps.inputs.outputs.cap }}."
+          # NOTE: confirm the exact `gh copilot` invocation supported by your
+          # CLI version. As of writing, `gh copilot agent run` is the expected
+          # command. If unavailable, swap in the LLM-API fallback runner.
+          gh copilot agent run "Bizidea" --prompt "$PROMPT"
+
+      - name: Rebuild ideas/_index.yaml (belt-and-suspenders)
+        run: node scripts/build-ideas-index.mjs
+
+      - name: Commit and push new reports
+        env:
+          GH_TOKEN: ${{ secrets.COPILOT_GH_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name "bizidea-bot"
+          git config user.email "bizidea-bot@users.noreply.github.com"
+          git add ideas/
+          if git diff --cached --quiet; then
+            echo "No new reports today."
+            exit 0
+          fi
+          STAMP="$(date -u +%F)"
+          git commit -m "chore(ideas): daily run $STAMP"
+          git push origin HEAD:${{ github.ref_name }}

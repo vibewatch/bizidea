@@ -22,17 +22,23 @@ Find news that reveals at least one of these:
 
 The output should give the downstream idea generator strong raw material for a venture-scale startup concept.
 
-Default depth: collect a broad, auditable news corpus before synthesis. Target **100+ fetched, verified articles/pages** when the topic and time window support it; if fewer credible fetchable sources exist, preserve as many as possible and explain the shortfall in `sourceStrategy.coverageGap`.
+Default depth depends on `mode`:
+
+- `mode: broad` (default) — collect a broad, auditable news corpus before synthesis. Target **100+ fetched, verified articles/pages** when the topic and time window support it; if fewer credible fetchable sources exist, preserve as many as possible and explain the shortfall in `sourceStrategy.coverageGap`.
+- `mode: focused` — the orchestrator has already triaged the day and hands you one **opportunity cluster** (a specific company/event/round/launch/regulation). Do a deep dive on that cluster only. Target **50+ fetched, verified articles/pages** centered on the cluster's `primaryCompanies` and `seedSourceUrls`, expanding outward for context (competitors, customers, regulators, sector backdrop). Lower targets reflect the narrower scope.
 
 ## Inputs
 
 Expect the orchestrator or user to provide:
 
-- `topic`: topic or industry to scan;
-- `topicScope`: `"narrow"` or `"broad"`;
+- `mode`: `"broad"` (default) or `"focused"`;
+- `topic`: topic or industry to scan (in `focused` mode, this is the cluster's `proposedTopic`);
+- `topicScope`: `"narrow"` or `"broad"` (in `focused` mode, treat as `"narrow"`);
 - `timeWindow`: inclusive range, formatted `YYYY-MM-DD to YYYY-MM-DD`;
 - `timeWindowLabel`: natural-language label such as `"yesterday"`, `"last 7 days"`, or `null`;
-- `folder`: absolute path where `news.yaml` must be written.
+- `folder`: absolute path where `news.yaml` must be written;
+- `clusterBrief` (focused mode only): an object with `clusterId`, `proposedTopic`, `primaryCompanies[]`, `seedSourceUrls[]` (canonical), `eventKeys[]`, and `headline` — the cluster handed off by `News Triage`;
+- `historyBlocklist` (focused mode only): an array of canonical source URLs already cited by past `news.yaml` files. Skip any candidate URL whose canonical form is in this list — past reports already used it.
 
 If a time window is missing, use the last 14 days relative to the current date in system context and set `timeWindowLabel` to `null`.
 
@@ -76,9 +82,9 @@ If the answer is no, drop it — even if the story is objectively big news.
 
 ## Source strategy
 
-Search broadly enough to find at least 120 candidate URLs, then target **100+ fetched, verified, de-duplicated sources/pages** for `evidenceCorpus`.
+In `mode: broad`: search broadly enough to find at least 120 candidate URLs, then target **100+ fetched, verified, de-duplicated sources/pages** for `evidenceCorpus`. After building the broad corpus, select the strongest **20–40 cited sources** into `sources`.
 
-After building the broad corpus, select the strongest **20–40 cited sources** into `sources` for downstream ideation. The `sources` array is the curated short list; `evidenceCorpus` is the broader audit trail and discovery base.
+In `mode: focused`: start from `clusterBrief.seedSourceUrls` and `clusterBrief.primaryCompanies`. Search for at least 70 candidate URLs centered on the cluster (deeper company coverage, competitors, customers, regulators, sector backdrop), then target **50+ fetched, verified, de-duplicated sources/pages** for `evidenceCorpus`. Select **15–30 cited sources** into `sources`. Skip any candidate URL whose canonical form appears in `historyBlocklist` — past reports already cited it. The `sources` array is the curated short list; `evidenceCorpus` is the broader audit trail and discovery base.
 
 Use query terms such as:
 
@@ -94,6 +100,8 @@ Preferred source classes:
 Press releases are acceptable only when fetched directly and treated as company-stated facts. Prefer pairing them with independent reporting when available.
 
 ## Topic scope
+
+In `mode: focused`, always treat scope as narrow and center every query on `clusterBrief.primaryCompanies` + cluster keywords. Do not pull in unrelated sectors.
 
 ### Narrow scope
 
@@ -157,12 +165,12 @@ Record meaningful duplicate clusters in `deduplication.duplicateClusters`.
 
 ## Workflow
 
-1. Confirm the topic, scope, time window, and output folder.
-2. Search for 120+ candidate URLs using startup-signal and pain-point terms when the topic/time window supports it.
-3. Discard low-value big news before fetching where possible.
-4. Fetch candidates until you have 100+ verified, de-duplicated, startup-relevant sources/pages in `evidenceCorpus`, or until credible fetchable sources are exhausted.
+1. Confirm the `mode`, topic, scope, time window, output folder, and (if focused) `clusterBrief` + `historyBlocklist`.
+2. In `mode: broad`, search for 120+ candidate URLs using startup-signal and pain-point terms when the topic/time window supports it. In `mode: focused`, search for 70+ candidate URLs centered on `clusterBrief.primaryCompanies` and the cluster's keywords; always include the `seedSourceUrls` as starting points.
+3. Discard low-value big news before fetching where possible. In focused mode, also discard URLs whose canonical form is in `historyBlocklist`.
+4. Fetch candidates until you have the target evidence count (100+ broad / 50+ focused), or until credible fetchable sources are exhausted.
 5. Drop unfetchable pages, search pages, stale pages, duplicates, and weak-opportunity stories.
-6. Select 20–40 top cited sources from different events and, when possible, different publishers into `sources`.
+6. Select cited sources into `sources`: 20–40 in broad mode, 15–30 in focused mode. Pull from different events and, when possible, different publishers.
 7. Extract concise facts for both `sources` and `evidenceCorpus`: title, URL, publisher, publication date, author, company/event, concrete startup signal, pain point, source type, and why it matters.
 8. Synthesize 5–10 cross-source signals that downstream ideation can use.
 9. Write valid YAML to `<folder>/news.yaml` using 2-space indentation.
@@ -185,7 +193,8 @@ timeWindowLabel: string|null
 sourceStrategy:
   sourceTarget: 100
   candidateTarget: 120
-  mode: broad|narrow
+  mode: broad|focused
+  clusterId: string|null
   searchedQueries:
     - string
   sourceClassesRepresented:
@@ -245,9 +254,9 @@ gaps: string|null
 
 ## Output rules
 
-- `sourceStrategy.sourceTarget` must be `100` and `sourceStrategy.candidateTarget` must be at least `120`.
-- `deduplication.candidatesFetched` SHOULD be at least `100`. If it is less than `100`, `sourceStrategy.coverageGap` MUST explain why the topic/time window did not yield 100 credible fetchable sources.
-- `evidenceCorpus` SHOULD contain at least 100 entries. If fewer, explain the shortfall in `sourceStrategy.coverageGap`.
+- In `mode: broad`: `sourceStrategy.sourceTarget` must be `100` and `sourceStrategy.candidateTarget` must be at least `120`. `deduplication.candidatesFetched` SHOULD be at least `100`; if less, `sourceStrategy.coverageGap` MUST explain why. `evidenceCorpus` SHOULD contain at least 100 entries.
+- In `mode: focused`: `sourceStrategy.sourceTarget` must be `50` and `sourceStrategy.candidateTarget` must be at least `70`. `deduplication.candidatesFetched` SHOULD be at least `50`; if less, `sourceStrategy.coverageGap` MUST explain why. `evidenceCorpus` SHOULD contain at least 50 entries.
+- Record `sourceStrategy.mode` (`broad` or `focused`) and, in focused mode, `sourceStrategy.clusterId` matching `clusterBrief.clusterId`.
 - Every `evidenceCorpus[].fetchVerified` must be `true`; otherwise drop it.
 - `sources` should contain the 20–40 strongest cited sources from `evidenceCorpus`, unless the evidence base is smaller.
 - Every `sources[].fetchVerified` must be `true`.

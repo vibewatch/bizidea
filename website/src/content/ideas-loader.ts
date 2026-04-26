@@ -9,7 +9,7 @@ const IDEAS_DIR = resolve(process.cwd(), '..', 'ideas');
 function listRuns(): string[] {
   if (!existsSync(IDEAS_DIR)) return [];
   return readdirSync(IDEAS_DIR)
-    .filter((name) => !name.startsWith('.'))
+    .filter((name) => !name.startsWith('.') && !name.startsWith('_'))
     .filter((name) => statSync(join(IDEAS_DIR, name)).isDirectory())
     .sort()
     .reverse();
