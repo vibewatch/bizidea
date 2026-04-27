@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Resolve and create a stable report folder for one matrix cluster.
+// Resolve and create a stable report folder for one selected cluster.
 
 import { mkdirSync, existsSync } from 'node:fs';
 import { resolve, join, dirname } from 'node:path';

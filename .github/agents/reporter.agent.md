@@ -38,7 +38,7 @@ Quality bar:
 4. From `research.yaml`: `market.tam.value`, `market.sam.value`, `market.som.value` (preserve units like `$0.37B–$0.66B`, `$10M`).
 5. From `financial-model.yaml`: `totals.y1`/`y2`/`y3` for revenue, EBITDA, ending cash; `fundingAsk.amountM`, `fundingAsk.round`, `fundingAsk.runwayMonths`.
 6. Derive `kicker` from the topic: ALL CAPS, hyphens preserved (e.g. `climate-tech news` → `CLIMATE-TECH`).
-7. **Apply the rating rubric** (next section) using the five stage YAML files you just read.
+7. **Apply the rating rubric** (next section) using the four stage YAML files you just read.
 8. Write `index.yaml` matching the schema exactly. Use YAML with 2-space indent. If newer upstream fields such as `topicScope`, diagrams, canvases, analysis models, scenarios, or sensitivity tables are present but not in this schema, ignore them; they remain available in the stage YAML files.
 9. Read `<folder>/index.yaml` back from disk and confirm it is non-empty valid YAML with the required top-level fields before returning `HANDOFF`.
 

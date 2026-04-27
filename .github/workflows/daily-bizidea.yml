@@ -1,16 +1,14 @@
 # Scheduled daily Bizidea run.
 #
-# Runs the Bizidea pipeline headlessly via the GitHub Copilot CLI
-# (`@github/copilot` npm package). The workflow performs one News Triage scan,
-# fans selected topics out through concurrent per-topic agent pipelines, then
-# rebuilds ideas/_index.yaml and commits once from the finalize job. The existing
-# deploy-website.yml workflow republishes the site when `ideas/**` changes.
+# This workflow is intentionally a thin CI wrapper. The `Bizidea` agent owns
+# orchestration: one News Triage scan, idea generation + dedupe, then parallel
+# per-idea report pipelines when the Copilot runtime supports concurrent
+# subagents. CI installs dependencies, invokes the orchestrator, validates, and
+# commits any completed reports.
 #
 # Required secrets / setup:
-# - COPILOT_PAT — a PAT for a Copilot-licensed account, with `repo` scope.
-#   Used to authenticate the Copilot CLI in CI via COPILOT_GITHUB_TOKEN.
-# - BIZIDEA_PAT — a PAT with repo write access used for checkout/push so the
-#   resulting commit can trigger downstream workflows such as Pages deploy.
+# - COPILOT_PAT — PAT for a Copilot-licensed account; passed to the Copilot CLI.
+# - BIZIDEA_PAT — PAT with repo write access for checkout/push and downstream deploy triggers.
 
 name: Daily Bizidea run
 
@@ -36,14 +34,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  triage:
+  run:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
-    outputs:
-      clusters: ${{ steps.matrix.outputs.clusters }}
-      hasClusters: ${{ steps.matrix.outputs.hasClusters }}
-      runTimestamp: ${{ steps.inputs.outputs.runTimestamp }}
-      triagePath: ${{ steps.inputs.outputs.triagePath }}
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
         with:
@@ -58,7 +51,11 @@ jobs:
             package-lock.json
             website/package-lock.json
 
-      - name: Install root deps (js-yaml for index script)
+      - name: Install root deps
+        run: npm ci || npm install --no-audit --no-fund
+
+      - name: Install website deps
+        working-directory: website
         run: npm ci || npm install --no-audit --no-fund
 
       - name: Install GitHub Copilot CLI
@@ -72,187 +69,22 @@ jobs:
           WINDOW="${{ github.event.inputs.timeWindow }}"
           if [ -z "$CAP" ]; then CAP="5"; fi
           if [ -z "$WINDOW" ]; then WINDOW="yesterday"; fi
-          RUN_TIMESTAMP="$(date -u +%Y%m%d%H%M%S)"
-          TRIAGE_PATH="$PWD/ideas/_triage/$RUN_TIMESTAMP/triage.yaml"
           echo "cap=$CAP" >> "$GITHUB_OUTPUT"
           echo "window=$WINDOW" >> "$GITHUB_OUTPUT"
-          echo "runTimestamp=$RUN_TIMESTAMP" >> "$GITHUB_OUTPUT"
-          echo "triagePath=$TRIAGE_PATH" >> "$GITHUB_OUTPUT"
 
-      - name: Run News Triage
+      - name: Run Bizidea orchestrator
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
         run: |
           set -euo pipefail
-          copilot --yolo --no-ask-user --agent "News Triage" -p "Run daily News Triage for ${{ steps.inputs.outputs.window }}. topic: startup news. topicScope: broad. cap: ${{ steps.inputs.outputs.cap }}. historyIndexPath: $PWD/ideas/_index.yaml. triageFolder: $PWD/ideas/_triage/${{ steps.inputs.outputs.runTimestamp }}. Write only triage.yaml. Do NOT run git add or git commit."
+          copilot --yolo --no-ask-user --agent "Bizidea" -p "Run the full Bizidea pipeline for ${{ steps.inputs.outputs.window }}. topic: startup news. cap: ${{ steps.inputs.outputs.cap }}. Orchestrate all stages yourself: News Triage once, generate and dedupe ideas from selected clusters, then run each surviving idea through research -> business plan -> financial model -> reporter. Do not invoke Bizidea recursively. Delete duplicate or failed partial report folders before final validation. Do not run git add or git commit."
 
-      - name: Build topic matrix
-        id: matrix
-        run: |
-          set -euo pipefail
-          CLUSTERS="$(node scripts/extract-selected-clusters.mjs '${{ steps.inputs.outputs.triagePath }}')"
-          echo "clusters=$CLUSTERS" >> "$GITHUB_OUTPUT"
-          if [ "$CLUSTERS" = "[]" ]; then
-            echo "hasClusters=false" >> "$GITHUB_OUTPUT"
-            echo "No new clusters selected by triage."
-          else
-            echo "hasClusters=true" >> "$GITHUB_OUTPUT"
-            echo "Selected clusters: $CLUSTERS"
-          fi
-
-      - uses: actions/upload-artifact@v5
-        with:
-          name: triage-${{ steps.inputs.outputs.runTimestamp }}
-          path: ideas/_triage/${{ steps.inputs.outputs.runTimestamp }}/
-          if-no-files-found: error
-
-  generate:
-    needs: triage
-    if: needs.triage.outputs.hasClusters == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 240
-    continue-on-error: true
-    strategy:
-      fail-fast: false
-      max-parallel: 3
-      matrix:
-        cluster: ${{ fromJSON(needs.triage.outputs.clusters) }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.BIZIDEA_PAT }}
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: |
-            package-lock.json
-            website/package-lock.json
-
-      - name: Install root deps (js-yaml for scripts)
-        run: npm ci || npm install --no-audit --no-fund
-
-      - name: Install GitHub Copilot CLI
-        run: npm install -g @github/copilot
-
-      - uses: actions/download-artifact@v5
-        with:
-          name: triage-${{ needs.triage.outputs.runTimestamp }}
-          path: ideas/_triage/${{ needs.triage.outputs.runTimestamp }}
-
-      - name: Prepare report folder
-        id: folder
-        run: |
-          set -euo pipefail
-          REPORT_FOLDER="$(node scripts/prepare-report-folder.mjs '${{ needs.triage.outputs.runTimestamp }}' '${{ matrix.cluster.proposedSlug }}')"
-          echo "path=$REPORT_FOLDER" >> "$GITHUB_OUTPUT"
-          echo "name=$(basename "$REPORT_FOLDER")" >> "$GITHUB_OUTPUT"
-
-      - name: Generate and dedup idea
-        env:
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
-        run: |
-          set -euo pipefail
-          copilot --yolo --no-ask-user --agent "Idea Generator" -p "Use daily triage mode. folder: ${{ steps.folder.outputs.path }}. triagePath: $PWD/ideas/_triage/${{ needs.triage.outputs.runTimestamp }}/triage.yaml. clusterId: ${{ matrix.cluster.clusterId }}. historyIndexPath: $PWD/ideas/_index.yaml. Write idea.yaml only, with sourceContext embedded from the selected triage cluster. Generate one sharp startup idea and dedup candidates against the history index before choosing. Do NOT run git add or git commit."
-
-      - name: Deterministic idea dedup gate
-        id: dedupe
-        run: |
-          set -euo pipefail
-          node scripts/check-idea-dedup.mjs '${{ steps.folder.outputs.path }}' "$PWD/ideas/_index.yaml" --delete-on-duplicate --github-output "$GITHUB_OUTPUT"
-
-      - name: Run Market Researcher
-        if: steps.dedupe.outputs.duplicate != 'true'
-        env:
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
-        run: |
-          set -euo pipefail
-          copilot --yolo --no-ask-user --agent "Market Researcher" -p "Run market research for reportFolder: ${{ steps.folder.outputs.path }}. Read idea.yaml and write research.yaml only. Do NOT run git add or git commit."
-
-      - name: Run Business Plan Writer
-        if: steps.dedupe.outputs.duplicate != 'true'
-        env:
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
-        run: |
-          set -euo pipefail
-          copilot --yolo --no-ask-user --agent "Business Plan Writer" -p "Write business-plan.yaml for reportFolder: ${{ steps.folder.outputs.path }}. Read idea.yaml and research.yaml only. Do NOT run git add or git commit."
-
-      - name: Run Financial Modeler
-        if: steps.dedupe.outputs.duplicate != 'true'
-        env:
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
-        run: |
-          set -euo pipefail
-          copilot --yolo --no-ask-user --agent "Financial Modeler" -p "Write financial-model.yaml for reportFolder: ${{ steps.folder.outputs.path }}. Read business-plan.yaml and research.yaml only. Do NOT run git add or git commit."
-
-      - name: Run Reporter
-        if: steps.dedupe.outputs.duplicate != 'true'
-        env:
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
-        run: |
-          set -euo pipefail
-          copilot --yolo --no-ask-user --agent "Reporter" -p "Write index.yaml for reportFolder: ${{ steps.folder.outputs.path }}. Read idea.yaml, research.yaml, business-plan.yaml, and financial-model.yaml only. Use idea.yaml.sourceContext for topic, scan, and timeliness context. Do NOT run git add or git commit."
-
-      - name: Validate report folder
-        if: steps.dedupe.outputs.duplicate != 'true'
-        run: node scripts/validate-idea-folder.mjs '${{ steps.folder.outputs.path }}'
-
-      - uses: actions/upload-artifact@v5
-        if: steps.dedupe.outputs.duplicate != 'true'
-        with:
-          name: ${{ steps.folder.outputs.name }}
-          path: ideas/${{ steps.folder.outputs.name }}/
-          if-no-files-found: error
-
-  finalize:
-    needs: [triage, generate]
-    if: always() && needs.triage.result == 'success'
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.BIZIDEA_PAT }}
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: |
-            package-lock.json
-            website/package-lock.json
-
-      - name: Install root deps (js-yaml for index script)
-        run: npm ci || npm install --no-audit --no-fund
-
-      - uses: actions/download-artifact@v5
-        with:
-          pattern: triage-${{ needs.triage.outputs.runTimestamp }}
-          path: ideas/_triage/${{ needs.triage.outputs.runTimestamp }}
-          merge-multiple: true
-
-      - uses: actions/download-artifact@v5
-        if: needs.generate.result != 'skipped'
-        continue-on-error: true
-        with:
-          pattern: ${{ needs.triage.outputs.runTimestamp }}-*
-          path: ideas/
-          merge-multiple: false
-
-      - name: Rebuild ideas/_index.yaml (belt-and-suspenders)
+      - name: Rebuild ideas/_index.yaml
         run: node scripts/build-ideas-index.mjs
 
       - name: Validate generated ideas
-        run: |
-          set -euo pipefail
-          if [ -d website ]; then
-            cd website
-            npm ci || npm install --no-audit --no-fund
-            npm run check:ideas
-          fi
+        working-directory: website
+        run: npm run check:ideas
 
       - name: Commit and push new reports
         run: |

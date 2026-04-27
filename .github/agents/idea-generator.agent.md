@@ -25,7 +25,7 @@ Quality bar:
 
 ## Inputs
 
-- Absolute folder path from the orchestrator/workflow.
+- Absolute folder path from the Bizidea orchestrator.
 - `triagePath`: absolute path to `ideas/_triage/<runTimestamp>/triage.yaml`.
 - `clusterId`: selected cluster id, such as `c1`.
 - `historyIndexPath`: absolute path to `ideas/_index.yaml` for duplicate avoidance. It may be missing on a first run.
@@ -54,7 +54,7 @@ Quality bar:
 5. Load `historyIndexPath` if present. Reject candidate ideas that would clearly duplicate an existing history entry by exact slug, same sector + beachhead keyword overlap, or highly similar pitch. If all candidates are duplicate-risk, write the strongest idea anyway but return `ideaDedupStatus: duplicate-risk` in the handoff so the deterministic dedup gate can skip downstream stages.
 6. Pick the single highest-scoring non-duplicate idea. Discard the others; do not include runner-up ideas in the output.
 7. **Pick a sector** from the closed vocabulary below — exactly one entry. Prefer `cluster.sectorHint` when it fits. If nothing fits, use `other`.
-8. Propose a short kebab-case slug (3–5 words) derived from the idea — recorded inside `idea.yaml` for downstream stages. The folder name is set by the workflow and does not change.
+8. Propose a short kebab-case slug (3–5 words) derived from the idea — recorded inside `idea.yaml` for downstream stages. The folder name is set by the orchestrator and does not change.
 9. Before writing, run a founder sanity check: if the first customer, buying trigger, current alternative, and wedge are not specific, sharpen or choose a different idea.
 10. Write `idea.yaml` using the schema below.
 11. Read `<folder>/idea.yaml` back from disk and confirm it is non-empty valid YAML with the required top-level fields before returning `HANDOFF`.
