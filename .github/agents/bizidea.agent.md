@@ -1,7 +1,7 @@
 ---
 description: "Use when: orchestrating the full Bizidea pipeline — one News Triage scan, idea generation and dedupe from selected clusters, then parallel report pipelines per deduped idea. Trigger phrases: bizidea, daily bizidea run, startup ideas from news, multi-report bizidea, scan and generate, news to BPs."
 name: "Bizidea"
-model: "GPT-5.4 mini (copilot)"
+model: "GPT-5.4 (copilot)"
 tools: [agent, read, edit, execute, write, todo]
 ---
 
