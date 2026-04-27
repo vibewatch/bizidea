@@ -16,6 +16,8 @@ import IdeaScorecard from '../../../components/IdeaScorecard.astro';
 import RiskHeatmap from '../../../components/RiskHeatmap.astro';
 import BusinessModelCanvas from '../../../components/BusinessModelCanvas.astro';
 import CitedText from '../../../components/CitedText.astro';
+import RatingSparkline from '../../../components/RatingSparkline.astro';
+import DossierToc from '../../../components/DossierToc.astro';
 import { loadStageFiles } from '../../../content/ideas-loader';
 import { linkifyCitations } from '../../../lib/citations';
 
@@ -38,6 +40,17 @@ const fmtK = (k: number) =>
   (k >= 1000 || k <= -1000)
     ? `$${(k / 1000).toFixed(2)}M`
     : `$${k.toFixed(0)}K`;
+
+const tocItems = [
+  { id: 'why-now', label: 'Why now' },
+  { id: 'idea', label: 'The idea' },
+  { id: 'market', label: 'Market' },
+  { id: 'competition', label: 'Competition' },
+  { id: 'business-plan', label: 'Business plan' },
+  { id: 'financial-model', label: 'Financial model' },
+  { id: 'risks', label: 'Top risks' },
+  { id: 'evidence', label: 'Evidence' },
+];
 ---
 <BaseLayout
   title={`${entry.data.pitch} — Bizidea`}
@@ -45,23 +58,65 @@ const fmtK = (k: number) =>
 >
   <article class="bz-story">
     <header class="bz-story__head bz-container">
-      <Kicker bold>{entry.data.kicker} · {entry.data.sector} · Scan {entry.data.scan.timeWindow}</Kicker>
-      <Headline as="h1" size="hero">{entry.data.pitch}</Headline>
-      {idea?.problem && (
-        <p class="bz-story__deck">{String(idea.problem).split(/(?<=\.)\s+/).slice(0, 2).join(' ')}</p>
-      )}
-      <p class="bz-story__byline">
-        <span class="bz-story__author">By Bizidea Research</span>
-        <span class="bz-story__sep" aria-hidden="true">/</span>
-        <time datetime={entry.data.date}>{entry.data.date}</time>
-        <span class="bz-story__sep" aria-hidden="true">/</span>
-        <span class="bz-story__runid">Run {entry.data.runTimestamp}</span>
-      </p>
+      <div class="bz-story__topbar">
+        <p class="bz-story__strap bz-mono">
+          <span class="bz-story__strap-section">{entry.data.kicker}</span>
+          <span class="bz-story__strap-sep" aria-hidden="true">·</span>
+          <span>{entry.data.sector}</span>
+          <span class="bz-story__strap-sep" aria-hidden="true">·</span>
+          <span>Scan {entry.data.scan.timeWindow}</span>
+          <span class="bz-story__strap-sep" aria-hidden="true">·</span>
+          <span>Run {entry.data.runTimestamp}</span>
+        </p>
+        <button class="bz-print-btn" type="button" data-print-dossier>Export PDF</button>
+      </div>
+      <div class="bz-story__masthead">
+        <div class="bz-story__masthead-main">
+          <Headline as="h1" size="hero">{entry.data.pitch}</Headline>
+          {idea?.problem && (
+            <p class="bz-story__deck">{String(idea.problem).split(/(?<=\.)\s+/).slice(0, 2).join(' ')}</p>
+          )}
+          <p class="bz-story__byline">
+            <span class="bz-story__author">By Bizidea Research</span>
+            <span class="bz-story__sep" aria-hidden="true">/</span>
+            <time datetime={entry.data.date}>{entry.data.date}</time>
+          </p>
+        </div>
+        <aside class="bz-story__kpis" aria-label="At a glance">
+          <div class="bz-story__kpi bz-story__kpi--rating">
+            <span class="bz-mono">Rating</span>
+            <RatingSparkline
+              dimensions={entry.data.rating.dimensions}
+              overall={entry.data.rating.overall}
+              size="md"
+            />
+            <span class="bz-story__kpi-legend bz-mono">Mkt · Diff · Exec · Time</span>
+          </div>
+          <div class="bz-story__kpi">
+            <span class="bz-mono">SOM</span>
+            <span class="bz-story__kpi-num">{entry.data.market?.som ?? '—'}</span>
+          </div>
+          <div class="bz-story__kpi">
+            <span class="bz-mono">Funding ask</span>
+            <span class="bz-story__kpi-num">${entry.data.financials?.fundingAsk?.amountM?.toFixed(1) ?? '—'}M</span>
+            <span class="bz-story__kpi-sub">{entry.data.financials?.fundingAsk?.round}</span>
+          </div>
+          <div class="bz-story__kpi">
+            <span class="bz-mono">Y3 revenue</span>
+            <span class="bz-story__kpi-num">{fmtK(entry.data.financials?.y3?.revenueK ?? 0)}</span>
+            <span class="bz-story__kpi-sub">EBITDA {fmtK(entry.data.financials?.y3?.ebitdaK ?? 0)}</span>
+          </div>
+        </aside>
+      </div>
     </header>
 
     <div class="bz-container">
       <RatingBlock overall={entry.data.rating.overall} dimensions={entry.data.rating.dimensions} />
     </div>
+
+    <div class="bz-story__layout">
+      <DossierToc items={tocItems} />
+      <div class="bz-story__main">
 
     <Ribbon label="Why now" id="why-now" />
     <div class="bz-container bz-section">
@@ -763,7 +818,6 @@ const fmtK = (k: number) =>
               {research.sources.map((s: any) => (
                 <li id={`cite-${s.id}`}>
                   <strong>{s.publisher}.</strong> {s.title}
-                  {s.date && <span class="bz-bib__date"> · {s.date}</span>}
                   {s.url && <span> · <a href={s.url} target="_blank" rel="noopener noreferrer">{s.url}</a></span>}
                 </li>
               ))}
@@ -772,26 +826,132 @@ const fmtK = (k: number) =>
         )}
       </div>
     </div>
+      </div>
+    </div>
   </article>
+  <script is:inline>
+    document.querySelector('[data-print-dossier]')?.addEventListener('click', () => window.print());
+  </script>
   <MermaidLoader />
 </BaseLayout>
 
 <style>
-  .bz-story__head { padding-block: var(--space-8) var(--space-4); }
-  .bz-story__deck {
+  .bz-story__head { padding-block: var(--space-7) var(--space-4); }
+  .bz-story__topbar {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin: 0 0 var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: var(--rule-hairline);
+  }
+  .bz-story__strap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+    margin: 0;
+    color: var(--caption-gray);
+  }
+  .bz-story__strap-section { color: var(--claret); }
+  .bz-story__strap-sep { color: var(--hairline); }
+  .bz-print-btn {
+    flex: 0 0 auto;
+    appearance: none;
+    border: var(--rule-hairline);
+    background: rgba(153, 15, 61, 0.07);
+    color: var(--claret);
+    cursor: pointer;
     font-family: var(--font-sans);
-    font-size: var(--fs-md);
-    line-height: 1.55;
+    font-variant-caps: all-small-caps;
+    font-weight: 700;
+    font-size: var(--fs-sm);
+    letter-spacing: var(--tracking-display-snug);
+    line-height: 1;
+    padding: var(--space-2) var(--space-3);
+  }
+  .bz-print-btn:hover,
+  .bz-print-btn:focus-visible {
+    background: var(--claret);
+    color: var(--paper);
+  }
+  @media (max-width: 640px) {
+    .bz-story__topbar { align-items: stretch; flex-direction: column; }
+    .bz-print-btn { align-self: flex-start; }
+  }
+  .bz-story__masthead {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+    align-items: end;
+  }
+  @media (min-width: 900px) {
+    .bz-story__masthead {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+      gap: var(--space-7);
+    }
+  }
+  .bz-story__masthead-main { min-width: 0; }
+  .bz-story__kpis {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4) var(--space-5);
+    padding: var(--space-4);
+    background: var(--paper-wheat);
+    border-top: 3px solid var(--claret);
+  }
+  .bz-story__kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .bz-story__kpi--rating { grid-column: span 2; }
+  .bz-story__kpi .bz-mono { color: var(--caption-gray); }
+  .bz-story__kpi-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-xl);
+    line-height: 1.05;
     color: var(--ink-page);
-    margin: var(--space-3) 0 var(--space-3);
-    max-width: 65ch;
+    font-feature-settings: 'tnum';
+  }
+  .bz-story__kpi-sub {
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    color: var(--caption-gray);
+  }
+  .bz-story__kpi-legend {
+    color: var(--caption-gray);
+    font-size: var(--fs-xs);
+  }
+  .bz-story__deck {
+    position: relative;
+    font-family: var(--font-sans);
+    font-size: clamp(1.0625rem, 0.98rem + 0.35vw, 1.25rem);
+    line-height: 1.48;
+    color: var(--caption-gray);
+    margin: var(--space-4) 0 0;
+    max-width: 58ch;
+    padding-left: var(--space-4);
+    text-wrap: pretty;
+  }
+  .bz-story__deck::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.32em;
+    bottom: 0.28em;
+    width: 3px;
+    background: var(--claret);
   }
   .bz-story__byline {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
     gap: var(--space-2);
-    margin: var(--space-4) 0 0;
+    margin: var(--space-5) 0 0;
     font-family: var(--font-sans);
     font-size: var(--fs-sm);
     color: var(--caption-gray);
@@ -799,6 +959,83 @@ const fmtK = (k: number) =>
   .bz-story__author { color: var(--ink-page); font-weight: 600; }
   .bz-story__sep { color: var(--hairline); }
   .bz-story__runid { font-family: var(--font-mono); font-size: var(--fs-xs); }
+
+  /* TOC + main split: TOC sits to the right of body content on >=1180px. */
+  .bz-story__layout { display: contents; }
+  .bz-story__main { display: contents; }
+  .bz-story__main > :global(.bz-ribbon) {
+    margin: var(--space-8) 0 var(--space-5);
+    padding: 0;
+    text-align: left;
+  }
+  .bz-story__main > :global(.bz-ribbon:first-child) { margin-top: 0; }
+  .bz-story__main > :global(.bz-ribbon) :global(.bz-container) {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+  .bz-story__main > :global(.bz-ribbon) :global(.bz-ribbon__num) {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    flex: 0 0 auto;
+    margin: 0;
+    width: 2.25em;
+    height: 2.25em;
+    text-align: left;
+    color: var(--claret);
+    background: rgba(153, 15, 61, 0.07);
+    border: var(--rule-hairline);
+    line-height: 1;
+    font-size: 0;
+  }
+  .bz-story__main > :global(.bz-ribbon) :global(.bz-ribbon__num)::after {
+    content: counter(bz-section, decimal-leading-zero);
+    font-size: clamp(1.25rem, 0.95rem + 0.75vw, 1.6rem);
+    font-feature-settings: 'tnum';
+  }
+  .bz-story__main > :global(.bz-ribbon) :global(.bz-ribbon__label) {
+    position: relative;
+    display: inline-block;
+    margin: 0;
+    padding: 0 0 var(--space-2);
+    text-align: left;
+    border-bottom: 0;
+    color: var(--ink-page);
+    font-size: clamp(1.75rem, 1.3rem + 1.1vw, 2.35rem);
+    line-height: 1;
+    letter-spacing: var(--tracking-display-tight);
+  }
+  .bz-story__main > :global(.bz-ribbon) :global(.bz-ribbon__label)::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: min(72px, 38%);
+    height: 3px;
+    background: var(--teal);
+  }
+  @media (min-width: 1180px) {
+    .bz-story__layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 220px;
+      gap: var(--space-7);
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 var(--gutter);
+      align-items: start;
+    }
+    .bz-story__main { display: block; min-width: 0; grid-column: 1; grid-row: 1; }
+    .bz-story__layout > :global(.bz-toc) { grid-column: 2; grid-row: 1; }
+    /* Inside the layout the wrapper already provides gutters, so strip per-element containers. */
+    .bz-story__main .bz-container { padding-left: 0; padding-right: 0; max-width: none; }
+    .bz-story__main > :global(.bz-ribbon) :global(.bz-container) {
+      max-width: none;
+      margin: 0;
+      padding: 0;
+    }
+  }
   .bz-story__lead {
     font-family: var(--font-sans);
     font-size: var(--fs-base);
@@ -810,13 +1047,28 @@ const fmtK = (k: number) =>
   .bz-section .bz-story__lead { max-width: none; }
   .bz-section { padding-block: var(--space-2) var(--space-1); }
   .bz-section__head {
-    font-family: var(--font-display);
-    font-size: var(--fs-lg);
-    font-weight: 600;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-sans);
+    font-size: 1.25rem;
+    font-weight: 700;
     letter-spacing: var(--tracking-display-snug);
+    line-height: 1.25;
     margin: var(--space-5) 0 var(--space-3);
+    padding: 0 0 var(--space-1);
     color: var(--ink-page);
     text-transform: uppercase;
+    background: transparent;
+    border-bottom: 3px solid var(--teal);
+  }
+  .bz-section__head::before {
+    content: '';
+    flex: 0 0 10px;
+    width: 10px;
+    height: 10px;
+    background: var(--claret);
   }
   .bz-list {
     font-family: var(--font-sans);
@@ -851,18 +1103,20 @@ const fmtK = (k: number) =>
   }
   .bz-comp {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     margin: var(--space-3) 0 var(--space-5);
-    border-top: var(--rule-thin);
-    border-bottom: var(--rule-thin);
+    background: rgba(255, 241, 229, 0.72);
+    border: var(--rule-hairline);
+    box-shadow: inset 6px 0 0 rgba(13, 118, 128, 0.18);
     font-family: var(--font-sans);
-    font-size: var(--fs-base);
-    line-height: 1.45;
+    font-size: 0.875rem;
+    line-height: 1.5;
   }
   .bz-comp th, .bz-comp td {
     text-align: left;
     vertical-align: top;
-    padding: var(--space-3);
+    padding: var(--space-3) var(--space-4);
     border-top: var(--rule-hairline);
   }
   .bz-comp thead th {
@@ -870,10 +1124,13 @@ const fmtK = (k: number) =>
     font-variant-caps: all-small-caps;
     font-weight: 600;
     letter-spacing: var(--tracking-eyebrow);
-    font-size: var(--fs-sm);
-    color: var(--caption-gray);
+    font-size: inherit;
+    color: var(--claret);
+    background: var(--paper-wheat);
     border-top: 0;
   }
+  .bz-comp tbody tr:nth-child(even) td { background: rgba(242, 223, 206, 0.24); }
+  .bz-comp tbody tr:hover td { background: rgba(13, 118, 128, 0.07); }
   .bz-comp tbody td:first-child { font-weight: 700; }
   .bz-milestone { display: grid; grid-template-columns: 160px 1fr; gap: var(--space-4); margin-bottom: var(--space-4); border-top: var(--rule-hairline); padding-top: var(--space-3); }
   @media (max-width: 599px) {
@@ -910,12 +1167,14 @@ const fmtK = (k: number) =>
   /* Citation inline link */
   .bz-cite-trail { white-space: nowrap; }
   .bz-cite {
+    position: relative;
+    top: -0.45em;
     font-family: var(--font-mono);
-    font-size: 0.78em;
+    font-size: 0.62em;
     color: var(--claret);
     text-decoration: none;
-    margin-left: 2px;
-    vertical-align: super;
+    margin-left: 1px;
+    vertical-align: baseline;
     line-height: 0;
   }
   .bz-cite:hover { text-decoration: underline; }
@@ -1046,4 +1305,58 @@ const fmtK = (k: number) =>
     margin-left: var(--space-2);
   }
   .bz-assumptions[open] > summary::after { content: "  ▴"; }
+
+  @page { margin: 14mm 12mm; }
+  @media print {
+    :global(.bz-utility),
+    :global(.bz-footer),
+    :global(.bz-toc),
+    .bz-print-btn,
+    .bz-story__kpis,
+    :global(.mermaid-loader) {
+      display: none !important;
+    }
+    :global(html),
+    :global(body) {
+      background: #fff !important;
+      color: #111 !important;
+    }
+    .bz-story__head,
+    .bz-container,
+    .bz-story__layout {
+      max-width: none !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+    }
+    .bz-story__layout,
+    .bz-story__main {
+      display: block !important;
+    }
+    .bz-story__head {
+      padding-top: 0;
+      padding-bottom: var(--space-4);
+    }
+    .bz-story__topbar {
+      border-bottom-color: #bbb;
+    }
+    .bz-story__deck,
+    .bz-story__lead,
+    .bz-list,
+    .bz-comp,
+    .bz-fact,
+    :global(.bz-chart__table),
+    :global(.bz-canvas__cell) {
+      break-inside: avoid;
+    }
+    :global(.bz-ribbon),
+    .bz-section__head {
+      break-after: avoid;
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+  }
 </style>
