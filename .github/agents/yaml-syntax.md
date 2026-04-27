@@ -1,7 +1,8 @@
 # YAML syntax rules
 
-All Bizidea pipeline artifacts (`news.yaml`, `idea.yaml`, `research.yaml`,
-`business-plan.yaml`, `financial-model.yaml`, `index.yaml`) are parsed by a
+All Bizidea pipeline artifacts (`idea.yaml`, `research.yaml`,
+`business-plan.yaml`, `financial-model.yaml`, `index.yaml`, and per-run
+`triage.yaml`) are parsed by a
 strict YAML loader (`js-yaml`) at website build time. A single malformed
 scalar will fail the build for the whole repo.
 

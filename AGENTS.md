@@ -18,7 +18,7 @@
 - After changing website code or report schemas, validate from `website/` with `npm run build` when dependencies are installed.
 
 ## YAML schema conventions
-- All pipeline artifacts are YAML files (`news.yaml`, `idea.yaml`, `research.yaml`, `business-plan.yaml`, `financial-model.yaml`, `index.yaml`, plus per-run `_triage/<ts>/triage.yaml` and the aggregated `_index.yaml`).
+- All pipeline artifacts are YAML files (`idea.yaml`, `research.yaml`, `business-plan.yaml`, `financial-model.yaml`, `index.yaml`, plus per-run `_triage/<ts>/triage.yaml` and the aggregated `_index.yaml`). Per-report source context belongs in `idea.yaml.sourceContext`.
 - Prefer descriptive camelCase field names.
 - Include units in numeric field names where helpful, such as `fundingRangeUsd`, `revenueK`, `marginPct`, or `headcountEop`.
 - Follow [.github/agents/yaml-syntax.md](.github/agents/yaml-syntax.md) for indentation, quoting, block-vs-flow style, and multi-line string rules.

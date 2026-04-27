@@ -39,7 +39,6 @@ const ideas = defineCollection({
       }),
     }),
     files: z.object({
-      news: z.string(),
       idea: z.string(),
       research: z.string(),
       businessPlan: z.string(),

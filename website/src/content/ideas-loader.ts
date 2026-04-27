@@ -81,7 +81,6 @@ export function ideasLoader(): Loader {
 }
 
 export interface StageFiles {
-  news: unknown;
   idea: unknown;
   research: unknown;
   businessPlan: unknown;
@@ -92,7 +91,6 @@ export function loadStageFiles(runId: string): StageFiles {
   const folder = join(IDEAS_DIR, runId);
   const read = (name: string) => fixColonPaste(yaml.load(readFileSync(join(folder, name), 'utf8')));
   return {
-    news: read('news.yaml'),
     idea: read('idea.yaml'),
     research: read('research.yaml'),
     businessPlan: read('business-plan.yaml'),

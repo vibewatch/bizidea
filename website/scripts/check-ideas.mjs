@@ -7,7 +7,6 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const IDEAS_DIR = resolve(__dirname, '../../ideas');
 const REQUIRED = [
-  'news.yaml',
   'idea.yaml',
   'research.yaml',
   'business-plan.yaml',

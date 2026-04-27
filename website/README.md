@@ -13,7 +13,7 @@ npm run build    # outputs to dist/
 ```
 
 `npm run build` first runs `scripts/check-ideas.mjs`, which fails fast if any
-`ideas/<run>/` folder is missing one of the six required YAML files.
+`ideas/<run>/` folder is missing one of the five required YAML files.
 
 ## Deploy
 
@@ -42,7 +42,7 @@ the layout.
   loader in `src/content/ideas-loader.ts` walks `../ideas/*/index.yaml`,
   parses each with `js-yaml`, and validates against the Zod schema mirroring
   the `Reporter` agent's output.
-- Stage YAMLs (`news`, `idea`, `research`, `business-plan`, `financial-model`)
+- Stage YAMLs (`idea`, `research`, `business-plan`, `financial-model`)
   are loaded lazily inside the detail page via `loadStageFiles(runId)`.
 - Visual primitives live in `src/components/` (Kicker, Headline, Ribbon, Rule,
   StoryTile, RatingBlock, FactRow, Mermaid).

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Walk ideas/<run>/{index,news,idea}.yaml and write ideas/_index.yaml — the
+// Walk ideas/<run>/{index,idea}.yaml and write ideas/_index.yaml — the
 // aggregated history catalog used by News Triage to dedupe across runs.
 //
 // Run from the repo root or any cwd; resolves the ideas/ folder relative to
@@ -70,9 +70,9 @@ function ymOf(date) {
   return m ? `${m[1]}-${m[2]}` : null;
 }
 
-function eventKeysFrom(news, fallbackDate) {
+function eventKeysFrom(context, fallbackDate) {
   const keys = new Set();
-  const sources = Array.isArray(news?.sources) ? news.sources : [];
+  const sources = Array.isArray(context?.sources) ? context.sources : [];
   for (const s of sources.slice(0, 30)) {
     const company = (s.company || s.publisher || '').toString().toLowerCase().trim();
     const ym = ymOf(s.publishedDate) || ymOf(fallbackDate);
@@ -92,9 +92,9 @@ function inferEventType(src) {
   return 'news';
 }
 
-function topCompanies(news) {
+function topCompanies(context) {
   const counts = new Map();
-  for (const s of (news?.sources || []).slice(0, 50)) {
+  for (const s of (context?.sources || []).slice(0, 50)) {
     const c = (s.company || '').toString().trim();
     if (!c) continue;
     counts.set(c, (counts.get(c) || 0) + 1);
@@ -105,10 +105,10 @@ function topCompanies(news) {
     .map(([c]) => c);
 }
 
-function topSourceUrls(news, max = 20) {
+function topSourceUrls(context, max = 20) {
   const out = [];
   const seen = new Set();
-  for (const s of (news?.sources || [])) {
+  for (const s of (context?.sources || [])) {
     const u = canonicalUrl(s.url);
     if (!u || seen.has(u)) continue;
     seen.add(u);
@@ -152,7 +152,7 @@ function build() {
     const index = safeLoad(join(dir, 'index.yaml'));
     if (!index) continue;
     const idea = safeLoad(join(dir, 'idea.yaml')) || {};
-    const news = safeLoad(join(dir, 'news.yaml')) || {};
+    const sourceContext = idea?.sourceContext || {};
     const date = dateString(index.date || idea.date);
     const pitch = String(index.pitch || idea.pitch || '');
     const beachhead = String(idea?.startupThesis?.beachhead || '');
@@ -166,9 +166,9 @@ function build() {
       pitch,
       beachhead,
       targetUserPrimary,
-      topCompanies: topCompanies(news),
-      topSourceUrls: topSourceUrls(news),
-      eventKeys: eventKeysFrom(news, date),
+      topCompanies: topCompanies(sourceContext),
+      topSourceUrls: topSourceUrls(sourceContext),
+      eventKeys: eventKeysFrom(sourceContext, date),
       keywords: keywords(`${pitch} ${beachhead} ${targetUserPrimary}`, 16),
     });
   }
