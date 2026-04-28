@@ -10,20 +10,16 @@ import RatingSparkline from '../../components/RatingSparkline.astro';
 import { loadLocalizedIndex } from '../../content/ideas-loader';
 import { t, type Lang } from '../../lib/i18n';
 
-export async function getStaticPaths() {
-  return [{ params: { lang: 'en' } }, { params: { lang: 'zh' } }];
-}
-
-const langParam = String(Astro.params.lang ?? 'en');
-const lang: Lang = langParam === 'zh' ? 'zh' : 'en';
-const otherLang: Lang = lang === 'en' ? 'zh' : 'en';
+const lang: Lang = 'zh';
+const otherLang: Lang = 'en';
 
 const all = await getCollection('ideas');
 const sorted = all.sort((a, b) => b.data.runTimestamp.localeCompare(a.data.runTimestamp));
 const [hero, ...rest] = sorted;
 
 const base = import.meta.env.BASE_URL;
-const hrefFor = (entry: any) => `${base}${lang}/ideas/${entry.data.folderSlug}/`;
+const prefixFor = (l: Lang) => (l === 'zh' ? `${base}zh/` : base);
+const hrefFor = (entry: any) => `${base}${lang}/${entry.data.folderSlug}/`;
 
 function fmtRunDate(ts: string): string {
   if (!/^\d{14}$/.test(ts)) return ts;
@@ -49,7 +45,7 @@ const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
   title={t('home.title', lang)}
   description={t('home.description', lang)}
   lang={lang}
-  langSwitchHref={`${base}${otherLang}/`}
+  langSwitchHref={prefixFor(otherLang)}
 >
   <section class="bz-masthead">
     <div class="bz-container">
