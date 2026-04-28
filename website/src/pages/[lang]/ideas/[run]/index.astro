@@ -1,0 +1,30 @@
+---
+import { getCollection } from 'astro:content';
+import DossierPage from '../../../../pages/ideas/[run]/index.astro';
+import { hasZhTranslation } from '../../../../content/ideas-loader';
+import type { Lang } from '../../../../lib/i18n';
+
+export async function getStaticPaths() {
+  const all = await getCollection('ideas');
+  const paths: Array<{ params: { lang: Lang; run: string }; props: { entry: any; lang: Lang } }> = [];
+
+  for (const entry of all) {
+    paths.push({
+      params: { lang: 'en', run: entry.data.folderSlug },
+      props: { entry, lang: 'en' },
+    });
+    if (hasZhTranslation(entry.id)) {
+      paths.push({
+        params: { lang: 'zh', run: entry.data.folderSlug },
+        props: { entry, lang: 'zh' },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { entry, lang } = Astro.props;
+---
+
+<DossierPage entry={entry} lang={lang} />

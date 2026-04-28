@@ -20,6 +20,7 @@ import RatingSparkline from '../../../components/RatingSparkline.astro';
 import DossierToc from '../../../components/DossierToc.astro';
 import { loadStageFiles } from '../../../content/ideas-loader';
 import { linkifyCitations } from '../../../lib/citations';
+import { t, type Lang } from '../../../lib/i18n';
 
 export async function getStaticPaths() {
   const all = await getCollection('ideas');
@@ -29,8 +30,11 @@ export async function getStaticPaths() {
   }));
 }
 
-const { entry } = Astro.props;
-const stages = loadStageFiles(entry.id);
+const { entry, lang: rawLang = 'en' } = Astro.props;
+const lang: Lang = rawLang === 'zh' ? 'zh' : 'en';
+const otherLang: Lang = lang === 'en' ? 'zh' : 'en';
+const base = import.meta.env.BASE_URL;
+const stages = loadStageFiles(entry.id, lang);
 const idea = stages.idea as any;
 const research = stages.research as any;
 const bp = stages.businessPlan as any;
@@ -42,19 +46,21 @@ const fmtK = (k: number) =>
     : `$${k.toFixed(0)}K`;
 
 const tocItems = [
-  { id: 'why-now', label: 'Why now' },
-  { id: 'idea', label: 'The idea' },
-  { id: 'market', label: 'Market' },
-  { id: 'competition', label: 'Competition' },
-  { id: 'business-plan', label: 'Business plan' },
-  { id: 'financial-model', label: 'Financial model' },
-  { id: 'risks', label: 'Top risks' },
-  { id: 'evidence', label: 'Evidence' },
+  { id: 'why-now', label: t('section.whyNow', lang) },
+  { id: 'idea', label: t('section.idea', lang) },
+  { id: 'market', label: t('section.market', lang) },
+  { id: 'competition', label: t('section.competition', lang) },
+  { id: 'business-plan', label: t('section.businessPlan', lang) },
+  { id: 'financial-model', label: t('section.financialModel', lang) },
+  { id: 'risks', label: t('section.topRisks', lang) },
+  { id: 'evidence', label: t('section.evidence', lang) },
 ];
 ---
 <BaseLayout
-  title={`${entry.data.pitch} — Bizidea`}
-  description={entry.data.pitch}
+  title={`${(idea?.pitch ?? entry.data.pitch)} — Bizidea`}
+  description={idea?.pitch ?? entry.data.pitch}
+  lang={lang}
+  langSwitchHref={`${base}${otherLang}/ideas/${entry.data.folderSlug}/`}
 >
   <article class="bz-story">
     <header class="bz-story__head bz-container">
@@ -68,7 +74,7 @@ const tocItems = [
           <span class="bz-story__strap-sep" aria-hidden="true">·</span>
           <span>Run {entry.data.runTimestamp}</span>
         </p>
-        <button class="bz-print-btn" type="button" data-print-dossier>Export PDF</button>
+        <button class="bz-print-btn" type="button" data-print-dossier>{t('dossier.export', lang)}</button>
       </div>
       <div class="bz-story__masthead">
         <div class="bz-story__masthead-main">
@@ -77,32 +83,32 @@ const tocItems = [
             <p class="bz-story__deck">{String(idea.problem).split(/(?<=\.)\s+/).slice(0, 2).join(' ')}</p>
           )}
           <p class="bz-story__byline">
-            <span class="bz-story__author">By Bizidea Research</span>
+            <span class="bz-story__author">{t('dossier.byline', lang)}</span>
             <span class="bz-story__sep" aria-hidden="true">/</span>
             <time datetime={entry.data.date}>{entry.data.date}</time>
           </p>
         </div>
         <aside class="bz-story__kpis" aria-label="At a glance">
           <div class="bz-story__kpi bz-story__kpi--rating">
-            <span class="bz-mono">Rating</span>
+            <span class="bz-mono">{t('dossier.rating', lang)}</span>
             <RatingSparkline
               dimensions={entry.data.rating.dimensions}
               overall={entry.data.rating.overall}
               size="md"
             />
-            <span class="bz-story__kpi-legend bz-mono">Mkt · Diff · Exec · Time</span>
+            <span class="bz-story__kpi-legend bz-mono">{t('dossier.rating.legend', lang)}</span>
           </div>
           <div class="bz-story__kpi">
-            <span class="bz-mono">SOM</span>
+            <span class="bz-mono">{t('dossier.som', lang)}</span>
             <span class="bz-story__kpi-num">{entry.data.market?.som ?? '—'}</span>
           </div>
           <div class="bz-story__kpi">
-            <span class="bz-mono">Funding ask</span>
+            <span class="bz-mono">{t('dossier.funding', lang)}</span>
             <span class="bz-story__kpi-num">${entry.data.financials?.fundingAsk?.amountM?.toFixed(1) ?? '—'}M</span>
             <span class="bz-story__kpi-sub">{entry.data.financials?.fundingAsk?.round}</span>
           </div>
           <div class="bz-story__kpi">
-            <span class="bz-mono">Y3 revenue</span>
+            <span class="bz-mono">{t('dossier.y3Revenue', lang)}</span>
             <span class="bz-story__kpi-num">{fmtK(entry.data.financials?.y3?.revenueK ?? 0)}</span>
             <span class="bz-story__kpi-sub">EBITDA {fmtK(entry.data.financials?.y3?.ebitdaK ?? 0)}</span>
           </div>
@@ -111,14 +117,14 @@ const tocItems = [
     </header>
 
     <div class="bz-container">
-      <RatingBlock overall={entry.data.rating.overall} dimensions={entry.data.rating.dimensions} />
+      <RatingBlock overall={entry.data.rating.overall} dimensions={entry.data.rating.dimensions} lang={lang} />
     </div>
 
     <div class="bz-story__layout">
-      <DossierToc items={tocItems} />
+      <DossierToc items={tocItems} heading={t('dossier.toc', lang)} />
       <div class="bz-story__main">
 
-    <Ribbon label="Why now" id="why-now" />
+    <Ribbon label={t('section.whyNow', lang)} id="why-now" />
     <div class="bz-container bz-section">
       {Array.isArray(idea?.whyNow) && (
         <ol class="bz-list">
@@ -127,17 +133,17 @@ const tocItems = [
           ))}
         </ol>
       )}
-      <p class="bz-story__lead"><strong>Catalyst.</strong> <CitedText text={idea?.startupThesis?.whyNowCatalyst} /></p>
+      <p class="bz-story__lead"><strong>{t('label.catalyst', lang)}</strong> <CitedText text={idea?.startupThesis?.whyNowCatalyst} /></p>
     </div>
 
-    <Ribbon label="The idea" id="idea" />
+    <Ribbon label={t('section.idea', lang)} id="idea" />
     <div class="bz-container bz-section">
       <p class="bz-story__lead">{idea?.solution}</p>
       {idea?.differentiator && (
-        <p class="bz-story__lead bz-lead--quiet"><strong>What's different.</strong> {idea.differentiator}</p>
+        <p class="bz-story__lead bz-lead--quiet"><strong>{t('label.whatsDifferent', lang)}</strong> {idea.differentiator}</p>
       )}
       <FactRow
-        caption="Startup thesis"
+        caption={t('label.startupThesis', lang)}
         rows={[
           { label: 'Beachhead', value: idea?.startupThesis?.beachhead ?? null },
           { label: 'Wedge', value: idea?.startupThesis?.wedge ?? null },
@@ -147,7 +153,7 @@ const tocItems = [
       />
       {idea?.targetUser && (
         <FactRow
-          caption="Target user"
+          caption={t('label.targetUser', lang)}
           rows={[
             { label: 'Primary user', value: idea.targetUser.primary ?? null },
             { label: 'Secondary user', value: idea.targetUser.secondary ?? null },
@@ -157,7 +163,7 @@ const tocItems = [
       )}
       {idea?.goToMarketSeed && (
         <FactRow
-          caption="Go-to-market seed"
+          caption={t('label.gtmSeed', lang)}
           rows={[
             { label: 'First customer', value: idea.goToMarketSeed.firstCustomer ?? null },
             { label: 'Buying trigger', value: idea.goToMarketSeed.buyingTrigger ?? null },
@@ -201,7 +207,7 @@ const tocItems = [
       )}
     </div>
 
-    <Ribbon label="Market" id="market" />
+    <Ribbon label={t('section.market', lang)} id="market" />
     <div class="bz-container bz-section">
       <div class="bz-market-grid">
         <MarketSizing
@@ -210,7 +216,7 @@ const tocItems = [
           som={research?.market?.som?.value ?? null}
         />
         <FactRow
-          caption="Market sizing overview"
+          caption={t('label.marketSizing', lang)}
           rows={[
             { label: 'TAM', value: research?.market?.tam?.value ?? null, subHtml: linkifyCitations(research?.market?.tam?.rationale) },
             { label: 'SAM', value: research?.market?.sam?.value ?? null, subHtml: linkifyCitations(research?.market?.sam?.rationale) },
@@ -364,7 +370,7 @@ const tocItems = [
       )}
     </div>
 
-    <Ribbon label="Competition" id="competition" />
+    <Ribbon label={t('section.competition', lang)} id="competition" />
     <div class="bz-container bz-section">
       {research?.reportMemo?.competitiveLandscape && (
         <p class="bz-story__lead"><CitedText text={research.reportMemo.competitiveLandscape} /></p>
@@ -432,7 +438,7 @@ const tocItems = [
       )}
     </div>
 
-    <Ribbon label="Business plan" id="business-plan" />
+    <Ribbon label={t('section.businessPlan', lang)} id="business-plan" />
     <div class="bz-container bz-section">
       <p class="bz-story__lead">{bp?.executiveSummary}</p>
       {Array.isArray(bp?.problem) && bp.problem.length > 0 && (
@@ -584,7 +590,7 @@ const tocItems = [
       {Array.isArray(bp?.risks) && bp.risks.length > 0 && (
         <>
           <h3 class="bz-section__head">Risk assessment</h3>
-          <RiskHeatmap risks={bp.risks} caption={`Business plan risks — ${bp.risks.length} mapped`} />
+          <RiskHeatmap risks={bp.risks} caption={`Business plan risks — ${bp.risks.length} mapped`} lang={lang} />
           <table class="bz-comp">
             <thead>
               <tr>
@@ -649,7 +655,7 @@ const tocItems = [
       )}
     </div>
 
-    <Ribbon label="Financial model" id="financial-model" />
+    <Ribbon label={t('section.financialModel', lang)} id="financial-model" />
     <div class="bz-container bz-section">
       <FactRow
         caption="3-year totals"
@@ -690,7 +696,7 @@ const tocItems = [
           </ul>
         </>
       )}
-      <FinancialCharts fm={fm} />
+      <FinancialCharts fm={fm} lang={lang} />
       {fm?.scenarios && (
         <>
           <h3 class="bz-section__head">Scenarios</h3>
@@ -791,7 +797,7 @@ const tocItems = [
       )}
     </div>
 
-    <Ribbon label="Top risks" id="risks" />
+    <Ribbon label={t('section.topRisks', lang)} id="risks" />
     <div class="bz-container bz-section">
       {Array.isArray(idea?.topRisks) && idea.topRisks.length > 0 && typeof idea.topRisks[0] === 'object' ? (
         <ul class="bz-list">
@@ -808,12 +814,12 @@ const tocItems = [
       )}
     </div>
 
-    <Ribbon label="Evidence" id="evidence" />
+    <Ribbon label={t('section.evidence', lang)} id="evidence" />
     <div class="bz-container bz-section">
       <div class="bz-evidence-grid">
         {Array.isArray(research?.sources) && (
           <section>
-            <h3 class="bz-section__head">Cited sources ({research.sources.length})</h3>
+            <h3 class="bz-section__head">{t('dossier.citedSources', lang)} ({research.sources.length})</h3>
             <ol class="bz-bib">
               {research.sources.map((s: any) => (
                 <li id={`cite-${s.id}`}>

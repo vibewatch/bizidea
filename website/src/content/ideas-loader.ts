@@ -3,6 +3,7 @@ import { join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import yaml from 'js-yaml';
 import type { Loader } from 'astro/loaders';
+import type { Lang } from '../lib/i18n';
 
 // Resolve relative to the Astro project (website/) which is process.cwd() during build.
 const IDEAS_DIR = resolve(process.cwd(), '..', 'ideas');
@@ -87,13 +88,37 @@ export interface StageFiles {
   financialModel: unknown;
 }
 
-export function loadStageFiles(runId: string): StageFiles {
+function readLocalizedYaml(folder: string, basename: string, lang: Lang): unknown {
+  const localized = join(folder, `${basename}.${lang}.yaml`);
+  const fallback = join(folder, `${basename}.yaml`);
+  if (lang === 'zh' && existsSync(localized)) {
+    return fixColonPaste(yaml.load(readFileSync(localized, 'utf8')));
+  }
+  return fixColonPaste(yaml.load(readFileSync(fallback, 'utf8')));
+}
+
+export function hasZhTranslation(runId: string): boolean {
   const folder = join(IDEAS_DIR, runId);
-  const read = (name: string) => fixColonPaste(yaml.load(readFileSync(join(folder, name), 'utf8')));
+  return existsSync(join(folder, 'idea.zh.yaml'));
+}
+
+export function loadLocalizedIndex(runId: string, lang: Lang = 'en'): Record<string, unknown> | null {
+  const folder = join(IDEAS_DIR, runId);
+  const localized = join(folder, `index.${lang}.yaml`);
+  const fallback = join(folder, 'index.yaml');
+  if (lang === 'zh' && existsSync(localized)) {
+    return fixColonPaste(yaml.load(readFileSync(localized, 'utf8'))) as Record<string, unknown>;
+  }
+  if (!existsSync(fallback)) return null;
+  return fixColonPaste(yaml.load(readFileSync(fallback, 'utf8'))) as Record<string, unknown>;
+}
+
+export function loadStageFiles(runId: string, lang: Lang = 'en'): StageFiles {
+  const folder = join(IDEAS_DIR, runId);
   return {
-    idea: read('idea.yaml'),
-    research: read('research.yaml'),
-    businessPlan: read('business-plan.yaml'),
-    financialModel: read('financial-model.yaml'),
+    idea: readLocalizedYaml(folder, 'idea', lang),
+    research: readLocalizedYaml(folder, 'research', lang),
+    businessPlan: readLocalizedYaml(folder, 'business-plan', lang),
+    financialModel: readLocalizedYaml(folder, 'financial-model', lang),
   };
 }
