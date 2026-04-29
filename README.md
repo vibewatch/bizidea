@@ -70,12 +70,24 @@ npm run dev      # http://localhost:4321/
 npm run build    # static output → website/dist/
 ```
 
-The build pipeline runs `check-ideas`, `expand-flow`, and `quote-colons` before `astro build`. See [website/scripts/](website/scripts/).
+The website build is intentionally read-only with respect to `ideas/`: it runs `check-ideas` before `astro build`. YAML repair scripts are available through `npm --prefix website run repair:yaml`, but the daily generation workflow runs them before committing artifacts rather than during website rendering.
 
 ### Rebuild the dedupe index
 
 ```bash
 npm run build:ideas-index
+```
+
+To validate without rewriting `ideas/_index.yaml`:
+
+```bash
+npm run check:ideas-index
+```
+
+To run the full local validation gate:
+
+```bash
+npm run validate
 ```
 
 ### Helper scripts

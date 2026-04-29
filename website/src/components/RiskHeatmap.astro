@@ -1,11 +1,13 @@
 ---
 // 3x3 risk heatmap for Low/Medium/High likelihood × impact.
 // Accepts arbitrary risk arrays where each item has { risk?|name?, likelihood, impact, mitigation? }.
+import { t, type Lang } from '../lib/i18n';
 interface Props {
   risks: any[];
   caption?: string;
+  lang?: Lang;
 }
-const { risks, caption } = Astro.props as Props;
+const { risks, caption, lang = 'en' } = Astro.props as Props;
 
 const norm = (v: any): 0 | 1 | 2 | -1 => {
   const s = String(v ?? '').trim().toLowerCase();
@@ -37,18 +39,18 @@ const severityFill = (s: number) => {
 };
 const severityInk = (s: number) => (s >= 3 ? '#fff1e5' : '#33302e');
 
-const xLabels = ['Low', 'Medium', 'High'];
-const yLabels = ['Low', 'Medium', 'High']; // displayed bottom-up
+const xLabels = [t('heatmap.low', lang), t('heatmap.medium', lang), t('heatmap.high', lang)];
+const yLabels = [t('heatmap.low', lang), t('heatmap.medium', lang), t('heatmap.high', lang)]; // displayed bottom-up
 ---
 
 {(risks?.length ?? 0) > 0 && (
   <figure class="bz-chart bz-heatmap" data-bz-chart>
     <figcaption class="bz-chart__caption bz-mono">
-      {caption ?? `Risk heatmap — ${risks.length} risk${risks.length === 1 ? '' : 's'}`}
+      {caption ?? `${t('risk.heatmap', lang)} — ${risks.length} ${t(risks.length === 1 ? 'risk.count.one' : 'risk.count.other', lang)}`}
     </figcaption>
     <div class="bz-heatmap__layout">
       <div class="bz-heatmap__grid-wrap">
-        <div class="bz-heatmap__y-label bz-mono">Impact →</div>
+        <div class="bz-heatmap__y-label bz-mono">{t('heatmap.impact', lang)}</div>
         <div class="bz-heatmap__grid">
           {/* render top to bottom: high impact at top */}
           {[2, 1, 0].map((y) => (
@@ -63,10 +65,10 @@ const yLabels = ['Low', 'Medium', 'High']; // displayed bottom-up
                   <div
                     class="bz-heatmap__cell"
                     style={`background:${fill}; color:${ink};`}
-                    data-bz-tip={`${yLabels[y]} impact · ${xLabels[x]} likelihood — ${c.items.length} risk${c.items.length === 1 ? '' : 's'}`}
+                    data-bz-tip={`${yLabels[y]} ${t('heatmap.impact.label', lang)} · ${xLabels[x]} ${t('heatmap.likelihood.label', lang)} — ${c.items.length} ${t(c.items.length === 1 ? 'risk.count.one' : 'risk.count.other', lang)}`}
                   >
                     {c.items.map((it) => (
-                      <span class="bz-heatmap__chip" data-bz-tip={`${it.label}${it.mitigation ? ' — Mitigation: ' + it.mitigation : ''}`}>
+                      <span class="bz-heatmap__chip" data-bz-tip={`${it.label}${it.mitigation ? ` — ${t('risk.mitigation', lang)}: ` + it.mitigation : ''}`}>
                         R{it.idx}
                       </span>
                     ))}
@@ -79,7 +81,7 @@ const yLabels = ['Low', 'Medium', 'High']; // displayed bottom-up
           {[0, 1, 2].map((x) => <div class="bz-heatmap__x-tick bz-mono">{xLabels[x]}</div>)}
         </div>
       </div>
-      <div class="bz-heatmap__x-label bz-mono">Likelihood →</div>
+      <div class="bz-heatmap__x-label bz-mono">{t('heatmap.likelihood', lang)}</div>
       <ol class="bz-heatmap__legend">
         {(risks ?? []).map((r: any, i: number) => (
           <li>
@@ -87,7 +89,7 @@ const yLabels = ['Low', 'Medium', 'High']; // displayed bottom-up
             <span>
               <strong>{r.risk ?? r.name}</strong>
               {r.likelihood && r.impact && (
-                <span class="bz-heatmap__legend-meta"> · {r.likelihood} likelihood / {r.impact} impact</span>
+                <span class="bz-heatmap__legend-meta"> · {r.likelihood} {t('heatmap.likelihood.label', lang)} / {r.impact} {t('heatmap.impact.label', lang)}</span>
               )}
               {r.mitigation && <span class="bz-heatmap__legend-mit"> — {r.mitigation}</span>}
             </span>
@@ -96,7 +98,7 @@ const yLabels = ['Low', 'Medium', 'High']; // displayed bottom-up
         {orphans.map((o) => (
           <li>
             <span class="bz-heatmap__legend-id bz-mono">R{o.idx}</span>
-            <span><strong>{o.label}</strong> <span class="bz-heatmap__legend-meta">(unscored)</span></span>
+            <span><strong>{o.label}</strong> <span class="bz-heatmap__legend-meta">{t('heatmap.unscored', lang)}</span></span>
           </li>
         ))}
       </ol>

@@ -10,18 +10,15 @@ import { readdirSync, statSync, readFileSync, writeFileSync, existsSync } from '
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
+import { STOPWORDS } from './text-utils.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(HERE, '..');
 const IDEAS_DIR = resolve(REPO_ROOT, 'ideas');
 const OUT_PATH = join(IDEAS_DIR, '_index.yaml');
-
-const STOPWORDS = new Set([
-  'the','a','an','of','for','to','in','on','and','or','with','by','from','as',
-  'is','are','be','that','this','it','at','into','vs','via','using','use','using',
-  'new','first','second','third','startup','startups','company','companies',
-  'platform','product','tool','tools','solution','service','services','use',
-]);
+const ARGS = new Set(process.argv.slice(2));
+const STRICT = ARGS.has('--strict');
+const CHECK_ONLY = ARGS.has('--check');
 
 function canonicalUrl(raw) {
   if (typeof raw !== 'string') return null;
@@ -118,12 +115,15 @@ function topSourceUrls(context, max = 20) {
   return out;
 }
 
-function safeLoad(path) {
-  if (!existsSync(path)) return null;
+function safeLoad(path, errors) {
+  if (!existsSync(path)) {
+    errors.push(`missing ${path}`);
+    return null;
+  }
   try {
     return yaml.load(readFileSync(path, 'utf8'));
   } catch (err) {
-    console.warn(`[build-ideas-index] failed to parse ${path}: ${err.message}`);
+    errors.push(`failed to parse ${path}: ${err.message}`);
     return null;
   }
 }
@@ -147,11 +147,12 @@ function dateString(v) {
 function build() {
   const runs = listRuns();
   const entries = [];
+  const errors = [];
   for (const runFolder of runs) {
     const dir = join(IDEAS_DIR, runFolder);
-    const index = safeLoad(join(dir, 'index.yaml'));
+    const index = safeLoad(join(dir, 'index.yaml'), errors);
     if (!index) continue;
-    const idea = safeLoad(join(dir, 'idea.yaml')) || {};
+    const idea = safeLoad(join(dir, 'idea.yaml'), errors) || {};
     const sourceContext = idea?.sourceContext || {};
     const date = dateString(index.date || idea.date);
     const pitch = String(index.pitch || idea.pitch || '');
@@ -178,11 +179,27 @@ function build() {
     entryCount: entries.length,
     entries,
   };
-  writeFileSync(
-    OUT_PATH,
-    yaml.dump(out, { lineWidth: 120, noRefs: true, sortKeys: false }),
-    'utf8',
-  );
+  const dumped = yaml.dump(out, { lineWidth: 120, noRefs: true, sortKeys: false });
+  try {
+    yaml.load(dumped);
+  } catch (err) {
+    errors.push(`generated _index.yaml failed validation: ${err.message}`);
+  }
+
+  if (errors.length) {
+    for (const err of errors) console.warn(`[build-ideas-index] ${err}`);
+    if (STRICT) {
+      console.error(`[build-ideas-index] strict mode failed with ${errors.length} issue(s)`);
+      process.exit(1);
+    }
+  }
+
+  if (CHECK_ONLY) {
+    console.log(`[build-ideas-index] ✓ validated ${entries.length}/${runs.length} entries; no files written`);
+    return;
+  }
+
+  writeFileSync(OUT_PATH, dumped, 'utf8');
   console.log(`[build-ideas-index] wrote ${OUT_PATH} with ${entries.length} entries`);
 }
 

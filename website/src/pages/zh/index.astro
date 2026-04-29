@@ -1,0 +1,251 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Kicker from '../../components/Kicker.astro';
+import Headline from '../../components/Headline.astro';
+import Ribbon from '../../components/Ribbon.astro';
+import Rule from '../../components/Rule.astro';
+import StoryTile from '../../components/StoryTile.astro';
+import RatingSparkline from '../../components/RatingSparkline.astro';
+import { loadLocalizedIndex } from '../../content/ideas-loader';
+import { t, type Lang } from '../../lib/i18n';
+
+const lang: Lang = 'zh';
+const otherLang: Lang = 'en';
+
+const all = await getCollection('ideas');
+const sorted = all.sort((a, b) => b.data.runTimestamp.localeCompare(a.data.runTimestamp));
+const [hero, ...rest] = sorted;
+
+const base = import.meta.env.BASE_URL;
+const prefixFor = (l: Lang) => (l === 'zh' ? `${base}zh/` : base);
+const hrefFor = (entry: any) => `${base}${lang}/${entry.data.folderSlug}/`;
+
+function fmtRunDate(ts: string): string {
+  if (!/^\d{14}$/.test(ts)) return ts;
+  return `${ts.slice(0, 4)}-${ts.slice(4, 6)}-${ts.slice(6, 8)} ${ts.slice(8, 10)}:${ts.slice(10, 12)}`;
+}
+
+const latestLabel = hero ? fmtRunDate(hero.data.runTimestamp) : '';
+const issueNo = sorted.length;
+const dossierCountLabel = issueNo === 1 ? t('home.dossierCount.one', lang) : t('home.dossierCount.other', lang);
+
+const localized = new Map<string, Record<string, unknown> | null>();
+for (const entry of sorted) {
+  localized.set(entry.id, loadLocalizedIndex(entry.id, lang));
+}
+
+const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
+  const idx = localized.get(entry.id);
+  const val = idx?.[field];
+  return typeof val === 'string' && val.length > 0 ? val : entry.data[field];
+};
+---
+<BaseLayout
+  title={t('home.title', lang)}
+  description={t('home.description', lang)}
+  lang={lang}
+  langSwitchHref={prefixFor(otherLang)}
+>
+  <section class="bz-masthead">
+    <div class="bz-container">
+      <div class="bz-masthead__strap">
+        <span class="bz-mono">Vol. I · No. {issueNo} · {latestLabel}</span>
+        <span class="bz-mono bz-masthead__strap-right">{sorted.length} {dossierCountLabel}</span>
+      </div>
+      <h1 class="bz-masthead__title">
+        <span>{t('home.headline.line1', lang)}</span>
+        <span>{t('home.headline.line2', lang)}</span>
+      </h1>
+      <p class="bz-masthead__deck">
+        {t('home.deck', lang)}
+      </p>
+    </div>
+  </section>
+
+  <Rule weight="thin" />
+
+  {hero && (
+    <section class="bz-hero">
+      <div class="bz-container bz-hero__layout">
+        <div class="bz-hero__copy">
+          <Kicker bold>{localText(hero, 'kicker')} · {hero.data.sector}</Kicker>
+          <Headline as="h2" size="hero" href={hrefFor(hero)}>
+            {localText(hero, 'pitch')}
+          </Headline>
+          <p class="bz-hero__deck">{localText(hero, 'topic')}</p>
+        </div>
+        <aside class="bz-hero__panel" aria-label="At a glance">
+          <div class="bz-hero__panel-head">
+            <span class="bz-mono">{t('home.rating', lang)}</span>
+            <RatingSparkline
+              dimensions={hero.data.rating.dimensions}
+              overall={hero.data.rating.overall}
+              size="md"
+            />
+            <span class="bz-hero__panel-legend bz-mono">{t('home.rating.legend', lang)}</span>
+          </div>
+          <dl class="bz-hero__facts">
+            <div><dt class="bz-mono">{t('home.som', lang)}</dt><dd>{hero.data.market.som ?? '—'}</dd></div>
+            <div><dt class="bz-mono">{t('home.funding', lang)}</dt><dd>${hero.data.financials.fundingAsk.amountM.toFixed(1)}M <span class="bz-hero__facts-sub">{hero.data.financials.fundingAsk.round}</span></dd></div>
+            <div><dt class="bz-mono">{t('home.scan', lang)}</dt><dd>{hero.data.scan.timeWindow}</dd></div>
+          </dl>
+          <a href={hrefFor(hero)} class="bz-hero__panel-cta bz-mono">{t('home.read', lang)}</a>
+        </aside>
+      </div>
+    </section>
+  )}
+
+  <Ribbon label={t('home.more', lang)} id="more-dossiers" />
+
+  {rest.length === 0 ? (
+    <div class="bz-container">
+      <p class="bz-empty bz-mono">{t('home.empty', lang)}</p>
+    </div>
+  ) : (
+    <div class="bz-container">
+      <div class="bz-grid">
+        {rest.map((entry) => (
+          <StoryTile
+            href={hrefFor(entry)}
+            kicker={`${localText(entry, 'kicker')} · ${entry.data.sector}`}
+            headline={localText(entry, 'pitch')}
+            deck={localText(entry, 'topic')}
+            meta={fmtRunDate(entry.data.runTimestamp)}
+            rating={entry.data.rating}
+          />
+        ))}
+      </div>
+    </div>
+  )}
+</BaseLayout>
+
+<style>
+  .bz-masthead { padding-block: var(--space-8) var(--space-5); }
+  .bz-masthead__strap {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-4);
+    border-bottom: var(--rule-thin);
+    color: var(--caption-gray);
+  }
+  .bz-masthead__strap .bz-mono { color: var(--caption-gray); }
+  .bz-masthead__strap-right { color: var(--ink-page); }
+  .bz-masthead__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-3xl);
+    line-height: var(--lh-display-hero);
+    letter-spacing: var(--tracking-display-tight);
+    font-weight: 600;
+    color: var(--ink-page);
+    margin: var(--space-3) 0;
+    max-width: 22ch;
+  }
+  .bz-masthead__title span { display: block; }
+  .bz-masthead__deck {
+    font-family: var(--font-sans);
+    font-size: var(--fs-md);
+    line-height: 1.55;
+    max-width: 60ch;
+    color: var(--ink-page);
+  }
+
+  .bz-hero { padding-block: var(--space-6) var(--space-7); }
+  .bz-hero__layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+    align-items: start;
+  }
+  @media (min-width: 900px) {
+    .bz-hero__layout { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: var(--space-7); }
+  }
+  .bz-hero__copy { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+  .bz-hero__deck {
+    font-family: var(--font-sans);
+    font-size: var(--fs-md);
+    line-height: 1.55;
+    color: var(--ink-page);
+    margin: 0;
+    max-width: 65ch;
+  }
+  .bz-hero__panel {
+    background: var(--paper-wheat);
+    border-top: 3px solid var(--claret);
+    padding: var(--space-4) var(--space-4) var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .bz-hero__panel-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .bz-hero__panel-head .bz-mono { color: var(--caption-gray); }
+  .bz-hero__panel-legend { color: var(--caption-gray); font-size: var(--fs-xs); }
+  .bz-hero__facts {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    margin: 0;
+    padding: var(--space-3) 0 0;
+    border-top: var(--rule-hairline);
+  }
+  .bz-hero__facts > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .bz-hero__facts dt { color: var(--caption-gray); }
+  .bz-hero__facts dd {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+    line-height: 1.15;
+    color: var(--ink-page);
+    font-feature-settings: 'tnum';
+    text-align: right;
+  }
+  .bz-hero__facts-sub {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: var(--fs-xs);
+    color: var(--caption-gray);
+    text-transform: lowercase;
+  }
+  .bz-hero__panel-cta {
+    display: inline-block;
+    color: var(--claret);
+    text-decoration: none;
+    border-top: var(--rule-hairline);
+    padding-top: var(--space-3);
+  }
+  .bz-hero__panel-cta:hover { color: var(--ink-page); }
+
+  .bz-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0 var(--space-6);
+  }
+  .bz-grid > :global(*) {
+    border-top: var(--rule-thin);
+    padding-top: var(--space-4);
+  }
+  @media (max-width: 1023px) {
+    .bz-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 599px) {
+    .bz-grid { grid-template-columns: 1fr; }
+  }
+
+  .bz-empty {
+    color: var(--caption-gray);
+    padding-block: var(--space-7);
+    text-align: center;
+  }
+</style>

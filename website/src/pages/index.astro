@@ -7,41 +7,55 @@ import Ribbon from '../components/Ribbon.astro';
 import Rule from '../components/Rule.astro';
 import StoryTile from '../components/StoryTile.astro';
 import RatingSparkline from '../components/RatingSparkline.astro';
+import { loadLocalizedIndex } from '../content/ideas-loader';
+import { t, type Lang } from '../lib/i18n';
 
+const lang: Lang = 'en';
 const all = await getCollection('ideas');
 const sorted = all.sort((a, b) => b.data.runTimestamp.localeCompare(a.data.runTimestamp));
 const [hero, ...rest] = sorted;
 
 const base = import.meta.env.BASE_URL;
-const hrefFor = (entry: any) => `${base}ideas/${entry.data.folderSlug}/`;
+const hrefFor = (entry: any) => `${base}${entry.data.folderSlug}/`;
 
 function fmtRunDate(ts: string): string {
-  // YYYYMMDDHHmmss → "YYYY-MM-DD HH:mm UTC"
   if (!/^\d{14}$/.test(ts)) return ts;
   return `${ts.slice(0, 4)}-${ts.slice(4, 6)}-${ts.slice(6, 8)} ${ts.slice(8, 10)}:${ts.slice(10, 12)}`;
 }
 
 const latestLabel = hero ? fmtRunDate(hero.data.runTimestamp) : '';
 const issueNo = sorted.length;
+const dossierCountLabel = issueNo === 1 ? t('home.dossierCount.one', lang) : t('home.dossierCount.other', lang);
+
+const localized = new Map<string, Record<string, unknown> | null>();
+for (const entry of sorted) {
+  localized.set(entry.id, loadLocalizedIndex(entry.id, lang));
+}
+
+const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
+  const idx = localized.get(entry.id);
+  const val = idx?.[field];
+  return typeof val === 'string' && val.length > 0 ? val : entry.data[field];
+};
 ---
 <BaseLayout
-  title="Bizidea — Startup Dossiers"
-  description="AI-generated startup research dossiers — triage, idea, market, plan, financial model."
+  title={t('home.title', lang)}
+  description={t('home.description', lang)}
+  lang={lang}
+  langSwitchHref={`${base}zh/`}
 >
   <section class="bz-masthead">
     <div class="bz-container">
       <div class="bz-masthead__strap">
         <span class="bz-mono">Vol. I · No. {issueNo} · {latestLabel}</span>
-        <span class="bz-mono bz-masthead__strap-right">{sorted.length} dossier{sorted.length === 1 ? '' : 's'}</span>
+        <span class="bz-mono bz-masthead__strap-right">{sorted.length} {dossierCountLabel}</span>
       </div>
       <h1 class="bz-masthead__title">
-        <span>Startup news,</span>
-        <span>read like a venture memo.</span>
+        <span>{t('home.headline.line1', lang)}</span>
+        <span>{t('home.headline.line2', lang)}</span>
       </h1>
       <p class="bz-masthead__deck">
-        Each dossier walks a triaged news topic through idea synthesis, market
-        research, business plan, financial model, and a structured rating — all
-        generated end-to-end by specialist agents.
+        {t('home.deck', lang)}
       </p>
     </div>
   </section>
@@ -52,38 +66,38 @@ const issueNo = sorted.length;
     <section class="bz-hero">
       <div class="bz-container bz-hero__layout">
         <div class="bz-hero__copy">
-          <Kicker bold>{hero.data.kicker} · {hero.data.sector}</Kicker>
+          <Kicker bold>{localText(hero, 'kicker')} · {hero.data.sector}</Kicker>
           <Headline as="h2" size="hero" href={hrefFor(hero)}>
-            {hero.data.pitch}
+            {localText(hero, 'pitch')}
           </Headline>
-          <p class="bz-hero__deck">{hero.data.topic}</p>
+          <p class="bz-hero__deck">{localText(hero, 'topic')}</p>
         </div>
         <aside class="bz-hero__panel" aria-label="At a glance">
           <div class="bz-hero__panel-head">
-            <span class="bz-mono">Rating</span>
+            <span class="bz-mono">{t('home.rating', lang)}</span>
             <RatingSparkline
               dimensions={hero.data.rating.dimensions}
               overall={hero.data.rating.overall}
               size="md"
             />
-            <span class="bz-hero__panel-legend bz-mono">Mkt · Diff · Exec · Time</span>
+            <span class="bz-hero__panel-legend bz-mono">{t('home.rating.legend', lang)}</span>
           </div>
           <dl class="bz-hero__facts">
-            <div><dt class="bz-mono">SOM</dt><dd>{hero.data.market.som ?? '—'}</dd></div>
-            <div><dt class="bz-mono">Funding ask</dt><dd>${hero.data.financials.fundingAsk.amountM.toFixed(1)}M <span class="bz-hero__facts-sub">{hero.data.financials.fundingAsk.round}</span></dd></div>
-            <div><dt class="bz-mono">Scan</dt><dd>{hero.data.scan.timeWindow}</dd></div>
+            <div><dt class="bz-mono">{t('home.som', lang)}</dt><dd>{hero.data.market.som ?? '—'}</dd></div>
+            <div><dt class="bz-mono">{t('home.funding', lang)}</dt><dd>${hero.data.financials.fundingAsk.amountM.toFixed(1)}M <span class="bz-hero__facts-sub">{hero.data.financials.fundingAsk.round}</span></dd></div>
+            <div><dt class="bz-mono">{t('home.scan', lang)}</dt><dd>{hero.data.scan.timeWindow}</dd></div>
           </dl>
-          <a href={hrefFor(hero)} class="bz-hero__panel-cta bz-mono">Read full dossier →</a>
+          <a href={hrefFor(hero)} class="bz-hero__panel-cta bz-mono">{t('home.read', lang)}</a>
         </aside>
       </div>
     </section>
   )}
 
-  <Ribbon label="More dossiers" id="more-dossiers" />
+  <Ribbon label={t('home.more', lang)} id="more-dossiers" />
 
   {rest.length === 0 ? (
     <div class="bz-container">
-      <p class="bz-empty bz-mono">No additional dossiers yet — generate one with the Bizidea agent.</p>
+      <p class="bz-empty bz-mono">{t('home.empty', lang)}</p>
     </div>
   ) : (
     <div class="bz-container">
@@ -91,9 +105,9 @@ const issueNo = sorted.length;
         {rest.map((entry) => (
           <StoryTile
             href={hrefFor(entry)}
-            kicker={`${entry.data.kicker} · ${entry.data.sector}`}
-            headline={entry.data.pitch}
-            deck={entry.data.topic}
+            kicker={`${localText(entry, 'kicker')} · ${entry.data.sector}`}
+            headline={localText(entry, 'pitch')}
+            deck={localText(entry, 'topic')}
             meta={fmtRunDate(entry.data.runTimestamp)}
             rating={entry.data.rating}
           />

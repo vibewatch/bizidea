@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Convert `- { id: N, publisher: P, title: T, date: D, url: U }` flow-style citation
 // entries to block style with quoted strings, since unquoted titles often contain `: `.
-import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
@@ -9,6 +9,12 @@ import yaml from 'js-yaml';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const IDEAS_DIR = resolve(__dirname, '../../ideas');
 
+/**
+ * Repair YAML parsing errors from unquoted colons in values.
+ * Problem: `key: value: more` YAML interprets as { "key": "value: more" }
+ * Solution: Detect single-key objects where key contains spaces (invalid YAML key)
+ *          and coerce back to proper string format.
+ */
 function splitFlow(inner) {
   const out = [];
   let depth = 0, cur = '';
@@ -48,26 +54,56 @@ function convertLine(line) {
   return lines.join('\n');
 }
 
-let fixed = 0;
 function* walk(dir) {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
-    const s = statSync(p);
-    if (s.isDirectory()) yield* walk(p);
-    else if (p.endsWith('.yaml')) yield p;
+    try {
+      const s = statSync(p);
+      if (s.isDirectory()) yield* walk(p);
+      else if (p.endsWith('.yaml')) yield p;
+    } catch (e) {
+      console.warn(`[expand-flow] skipped ${p}: ${e.message}`);
+    }
   }
 }
 
-for (const file of walk(IDEAS_DIR)) {
-  const before = readFileSync(file, 'utf8');
-  const after = before.split('\n').map(convertLine).join('\n');
-  if (before === after) continue;
-  try { yaml.load(after); } catch (e) {
-    console.error(`[skip] ${file}: ${e.message.split('\n')[0]}`);
-    continue;
+try {
+  if (!existsSync(IDEAS_DIR)) {
+    console.warn(`[expand-flow] ${IDEAS_DIR} not found; nothing to process.`);
+    process.exit(0);
   }
-  writeFileSync(file, after);
-  fixed++;
-  console.log(`fixed ${file}`);
+
+  let fixed = 0;
+  let skipped = 0;
+  let errors = 0;
+
+  for (const file of walk(IDEAS_DIR)) {
+    try {
+      const before = readFileSync(file, 'utf8');
+      const after = before.split('\n').map(convertLine).join('\n');
+      if (before === after) {
+        skipped++;
+        continue;
+      }
+      try {
+        yaml.load(after);
+      } catch (parseErr) {
+        console.warn(`[expand-flow] skipped ${file}: YAML validation failed — ${parseErr.message.split('\n')[0]}`);
+        skipped++;
+        continue;
+      }
+      writeFileSync(file, after);
+      fixed++;
+      console.log(`[expand-flow] ✓ fixed ${file}`);
+    } catch (e) {
+      console.error(`[expand-flow] error processing ${file}: ${e.message}`);
+      errors++;
+    }
+  }
+
+  console.log(`[expand-flow] ✓ complete — ${fixed} fixed, ${skipped} unchanged, ${errors} error(s)`);
+  process.exit(errors > 0 ? 1 : 0);
+} catch (e) {
+  console.error(`[expand-flow] fatal error: ${e.message}`);
+  process.exit(1);
 }
-console.log(`done (${fixed} file(s))`);

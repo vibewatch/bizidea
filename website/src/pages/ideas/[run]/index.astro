@@ -18,19 +18,22 @@ import BusinessModelCanvas from '../../../components/BusinessModelCanvas.astro';
 import CitedText from '../../../components/CitedText.astro';
 import RatingSparkline from '../../../components/RatingSparkline.astro';
 import DossierToc from '../../../components/DossierToc.astro';
-import { loadStageFiles } from '../../../content/ideas-loader';
+import { loadLocalizedIndex, loadStageFiles } from '../../../content/ideas-loader';
 import { linkifyCitations } from '../../../lib/citations';
+import { t, type Lang } from '../../../lib/i18n';
 
 export async function getStaticPaths() {
-  const all = await getCollection('ideas');
-  return all.map((entry) => ({
-    params: { run: entry.data.folderSlug },
-    props: { entry },
-  }));
+  return [];
 }
 
-const { entry } = Astro.props;
-const stages = loadStageFiles(entry.id);
+const { entry: rawEntry, lang: rawLang = 'en' } = Astro.props;
+const lang: Lang = rawLang === 'zh' ? 'zh' : 'en';
+const otherLang: Lang = lang === 'en' ? 'zh' : 'en';
+const localizedIndex = loadLocalizedIndex(rawEntry.id, lang);
+const entry = { ...rawEntry, data: { ...rawEntry.data, ...(localizedIndex ?? {}) } };
+const base = import.meta.env.BASE_URL;
+const prefixFor = (l: Lang) => (l === 'zh' ? `${base}zh/` : base);
+const stages = loadStageFiles(entry.id, lang);
 const idea = stages.idea as any;
 const research = stages.research as any;
 const bp = stages.businessPlan as any;
@@ -42,19 +45,151 @@ const fmtK = (k: number) =>
     : `$${k.toFixed(0)}K`;
 
 const tocItems = [
-  { id: 'why-now', label: 'Why now' },
-  { id: 'idea', label: 'The idea' },
-  { id: 'market', label: 'Market' },
-  { id: 'competition', label: 'Competition' },
-  { id: 'business-plan', label: 'Business plan' },
-  { id: 'financial-model', label: 'Financial model' },
-  { id: 'risks', label: 'Top risks' },
-  { id: 'evidence', label: 'Evidence' },
+  { id: 'why-now', label: t('section.whyNow', lang) },
+  { id: 'idea', label: t('section.idea', lang) },
+  { id: 'market', label: t('section.market', lang) },
+  { id: 'competition', label: t('section.competition', lang) },
+  { id: 'business-plan', label: t('section.businessPlan', lang) },
+  { id: 'financial-model', label: t('section.financialModel', lang) },
+  { id: 'risks', label: t('section.topRisks', lang) },
+  { id: 'evidence', label: t('section.evidence', lang) },
 ];
+
+const zhUiLabels: Record<string, string> = {
+  'Beachhead': '滩头市场',
+  'Wedge': '切入点',
+  'Non-obvious insight': '非显而易见洞察',
+  'Venture-scale path': '风险投资级路径',
+  'Primary user': '主要用户',
+  'Secondary user': '次要用户',
+  'Economic buyer': '经济买方',
+  'First customer': '首个客户',
+  'Buying trigger': '购买触发点',
+  'Current alternative': '当前替代方案',
+  'Switching reason': '切换理由',
+  'Pricing hypothesis': '定价假设',
+  'Jobs to be done': '待完成任务',
+  'Job': '任务',
+  'Success metric': '成功指标',
+  'Executive takeaways': '高管要点',
+  'Market definition': '市场定义',
+  'Customer and buyer': '用户与买方',
+  'Buying triggers': '购买触发点',
+  'Willingness to pay': '支付意愿',
+  'Category dynamics': '品类动态',
+  'Growth signal': '增长信号',
+  'Tailwinds': '顺风因素',
+  'Headwinds': '逆风因素',
+  'Validation signals': '验证信号',
+  'Regulatory & technical constraints': '监管与技术约束',
+  'Adoption friction': '采用阻力',
+  'Friction': '阻力',
+  'Severity': '严重度',
+  'Affected buyer': '受影响买方',
+  'Mitigation': '缓解措施',
+  'Competitor': '竞争对手',
+  'Stage': '阶段',
+  'Pricing': '定价',
+  'Strength': '优势',
+  'Weakness vs. us': '相对劣势',
+  'Why incumbents do not win by default': '为什么现有厂商不会默认胜出',
+  'Problem': '问题',
+  'Solution': '解决方案',
+  'Why we win': '为什么我们会赢',
+  'Strategic choices': '战略选择',
+  'Wedge rationale': '切入点理由',
+  'Sequencing': '推进顺序',
+  'Not yet': '暂不进入',
+  'Go-to-market': '进入市场',
+  'Channels': '渠道',
+  'Funnel targets': '漏斗目标',
+  'Product roadmap': '产品路线图',
+  '6 months': '6 个月',
+  '12 months': '12 个月',
+  '24 months': '24 个月',
+  'Key bets': '关键押注',
+  'Business model': '商业模式',
+  'Revenue streams': '收入来源',
+  'Unit of value': '价值单位',
+  'Target gross margin': '目标毛利率',
+  'Expansion levers': '扩张杠杆',
+  'Strategy map': '战略地图',
+  'North-star metric': '北极星指标',
+  'Input metrics': '输入指标',
+  'Moats to build': '待构建护城河',
+  'Kill criteria': '终止标准',
+  'Milestones': '里程碑',
+  'Founding team': '创始团队',
+  'Role': '角色',
+  'Start timing': '入职时间',
+  'Rationale': '理由',
+  'Experiment roadmap': '实验路线图',
+  'Horizon': '阶段',
+  'Experiment': '实验',
+  'Hypothesis': '假设',
+  'Owner': '负责人',
+  'Risk assessment': '风险评估',
+  'Risk': '风险',
+  'Likelihood': '可能性',
+  'Impact': '影响',
+  'Title': '标题',
+  'Profile': '画像',
+  'Trigger': '触发点',
+  'Buyer': '买方',
+  'Initial contract': '初始合同',
+  'What must be true': '必须成立的条件',
+  'Open diligence questions': '待尽调问题',
+  'Investor verdict': '投资人判断',
+  'Call': '结论',
+  'Conviction': '信心',
+  'Why believe': '相信的理由',
+  'Why doubt': '怀疑的理由',
+  'Next diligence': '下一步尽调',
+  '3-year totals': '三年合计',
+  'Year 1 revenue': '第 1 年收入',
+  'Year 2 revenue': '第 2 年收入',
+  'Year 3 revenue': '第 3 年收入',
+  'Unit economics': '单位经济',
+  'ARPU (annual)': '年 ARPU',
+  'Gross margin': '毛利率',
+  'Payback': '回本期',
+  'LTV': '生命周期价值',
+  'Funding ask': '融资需求',
+  'Round': '轮次',
+  'Runway': '跑道',
+  'Milestone': '里程碑',
+  'Model sanity': '模型合理性',
+  'Scenarios': '情景',
+  'Scenario': '情景',
+  'Y3 revenue': '第 3 年收入',
+  'Y3 EBITDA': '第 3 年 EBITDA',
+  'Cash low point': '现金低点',
+  'Description': '说明',
+  'Key changes': '关键变化',
+  'Sensitivity': '敏感性',
+  'Variable': '变量',
+  'Downside': '下行情景',
+  'Base': '基准情景',
+  'Upside': '上行情景',
+  'Key assumptions': '关键假设',
+  'ID': 'ID',
+  'Name': '名称',
+  'Value': '数值',
+  'Unit': '单位',
+  'Source': '来源',
+  'Flags': '警示项',
+  'Business plan risks': '商业计划风险',
+  'mapped': '已映射',
+  'Scan': '扫描',
+  'Run': '运行',
+};
+const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : label;
 ---
 <BaseLayout
-  title={`${entry.data.pitch} — Bizidea`}
-  description={entry.data.pitch}
+  title={`${(idea?.pitch ?? entry.data.pitch)} — Bizidea`}
+  description={idea?.pitch ?? entry.data.pitch}
+  lang={lang}
+  langSwitchHref={`${prefixFor(otherLang)}${entry.data.folderSlug}/`}
 >
   <article class="bz-story">
     <header class="bz-story__head bz-container">
@@ -64,11 +199,11 @@ const tocItems = [
           <span class="bz-story__strap-sep" aria-hidden="true">·</span>
           <span>{entry.data.sector}</span>
           <span class="bz-story__strap-sep" aria-hidden="true">·</span>
-          <span>Scan {entry.data.scan.timeWindow}</span>
+          <span>{ui('Scan')} {entry.data.scan.timeWindow}</span>
           <span class="bz-story__strap-sep" aria-hidden="true">·</span>
-          <span>Run {entry.data.runTimestamp}</span>
+          <span>{ui('Run')} {entry.data.runTimestamp}</span>
         </p>
-        <button class="bz-print-btn" type="button" data-print-dossier>Export PDF</button>
+        <button class="bz-print-btn" type="button" data-print-dossier>{t('dossier.export', lang)}</button>
       </div>
       <div class="bz-story__masthead">
         <div class="bz-story__masthead-main">
@@ -77,32 +212,32 @@ const tocItems = [
             <p class="bz-story__deck">{String(idea.problem).split(/(?<=\.)\s+/).slice(0, 2).join(' ')}</p>
           )}
           <p class="bz-story__byline">
-            <span class="bz-story__author">By Bizidea Research</span>
+            <span class="bz-story__author">{t('dossier.byline', lang)}</span>
             <span class="bz-story__sep" aria-hidden="true">/</span>
             <time datetime={entry.data.date}>{entry.data.date}</time>
           </p>
         </div>
         <aside class="bz-story__kpis" aria-label="At a glance">
           <div class="bz-story__kpi bz-story__kpi--rating">
-            <span class="bz-mono">Rating</span>
+            <span class="bz-mono">{t('dossier.rating', lang)}</span>
             <RatingSparkline
               dimensions={entry.data.rating.dimensions}
               overall={entry.data.rating.overall}
               size="md"
             />
-            <span class="bz-story__kpi-legend bz-mono">Mkt · Diff · Exec · Time</span>
+            <span class="bz-story__kpi-legend bz-mono">{t('dossier.rating.legend', lang)}</span>
           </div>
           <div class="bz-story__kpi">
-            <span class="bz-mono">SOM</span>
+            <span class="bz-mono">{t('dossier.som', lang)}</span>
             <span class="bz-story__kpi-num">{entry.data.market?.som ?? '—'}</span>
           </div>
           <div class="bz-story__kpi">
-            <span class="bz-mono">Funding ask</span>
+            <span class="bz-mono">{t('dossier.funding', lang)}</span>
             <span class="bz-story__kpi-num">${entry.data.financials?.fundingAsk?.amountM?.toFixed(1) ?? '—'}M</span>
             <span class="bz-story__kpi-sub">{entry.data.financials?.fundingAsk?.round}</span>
           </div>
           <div class="bz-story__kpi">
-            <span class="bz-mono">Y3 revenue</span>
+            <span class="bz-mono">{t('dossier.y3Revenue', lang)}</span>
             <span class="bz-story__kpi-num">{fmtK(entry.data.financials?.y3?.revenueK ?? 0)}</span>
             <span class="bz-story__kpi-sub">EBITDA {fmtK(entry.data.financials?.y3?.ebitdaK ?? 0)}</span>
           </div>
@@ -111,14 +246,14 @@ const tocItems = [
     </header>
 
     <div class="bz-container">
-      <RatingBlock overall={entry.data.rating.overall} dimensions={entry.data.rating.dimensions} />
+      <RatingBlock overall={entry.data.rating.overall} dimensions={entry.data.rating.dimensions} lang={lang} />
     </div>
 
     <div class="bz-story__layout">
-      <DossierToc items={tocItems} />
+      <DossierToc items={tocItems} heading={t('dossier.toc', lang)} />
       <div class="bz-story__main">
 
-    <Ribbon label="Why now" id="why-now" />
+    <Ribbon label={t('section.whyNow', lang)} id="why-now" />
     <div class="bz-container bz-section">
       {Array.isArray(idea?.whyNow) && (
         <ol class="bz-list">
@@ -127,55 +262,55 @@ const tocItems = [
           ))}
         </ol>
       )}
-      <p class="bz-story__lead"><strong>Catalyst.</strong> <CitedText text={idea?.startupThesis?.whyNowCatalyst} /></p>
+      <p class="bz-story__lead"><strong>{t('label.catalyst', lang)}</strong> <CitedText text={idea?.startupThesis?.whyNowCatalyst} /></p>
     </div>
 
-    <Ribbon label="The idea" id="idea" />
+    <Ribbon label={t('section.idea', lang)} id="idea" />
     <div class="bz-container bz-section">
       <p class="bz-story__lead">{idea?.solution}</p>
       {idea?.differentiator && (
-        <p class="bz-story__lead bz-lead--quiet"><strong>What's different.</strong> {idea.differentiator}</p>
+        <p class="bz-story__lead bz-lead--quiet"><strong>{t('label.whatsDifferent', lang)}</strong> {idea.differentiator}</p>
       )}
       <FactRow
-        caption="Startup thesis"
+        caption={t('label.startupThesis', lang)}
         rows={[
-          { label: 'Beachhead', value: idea?.startupThesis?.beachhead ?? null },
-          { label: 'Wedge', value: idea?.startupThesis?.wedge ?? null },
-          { label: 'Non-obvious insight', value: idea?.startupThesis?.nonObviousInsight ?? null },
-          { label: 'Venture-scale path', value: idea?.startupThesis?.ventureScalePath ?? null },
+          { label: ui('Beachhead'), value: idea?.startupThesis?.beachhead ?? null },
+          { label: ui('Wedge'), value: idea?.startupThesis?.wedge ?? null },
+          { label: ui('Non-obvious insight'), value: idea?.startupThesis?.nonObviousInsight ?? null },
+          { label: ui('Venture-scale path'), value: idea?.startupThesis?.ventureScalePath ?? null },
         ]}
       />
       {idea?.targetUser && (
         <FactRow
-          caption="Target user"
+          caption={t('label.targetUser', lang)}
           rows={[
-            { label: 'Primary user', value: idea.targetUser.primary ?? null },
-            { label: 'Secondary user', value: idea.targetUser.secondary ?? null },
-            { label: 'Economic buyer', value: idea.targetUser.buyer ?? null },
+            { label: ui('Primary user'), value: idea.targetUser.primary ?? null },
+            { label: ui('Secondary user'), value: idea.targetUser.secondary ?? null },
+            { label: ui('Economic buyer'), value: idea.targetUser.buyer ?? null },
           ]}
         />
       )}
       {idea?.goToMarketSeed && (
         <FactRow
-          caption="Go-to-market seed"
+          caption={t('label.gtmSeed', lang)}
           rows={[
-            { label: 'First customer', value: idea.goToMarketSeed.firstCustomer ?? null },
-            { label: 'Buying trigger', value: idea.goToMarketSeed.buyingTrigger ?? null },
-            { label: 'Current alternative', value: idea.goToMarketSeed.currentAlternative ?? null },
-            { label: 'Switching reason', value: idea.goToMarketSeed.switchingReason ?? null },
-            { label: 'Pricing hypothesis', value: idea.goToMarketSeed.pricingHypothesis ?? null },
+            { label: ui('First customer'), value: idea.goToMarketSeed.firstCustomer ?? null },
+            { label: ui('Buying trigger'), value: idea.goToMarketSeed.buyingTrigger ?? null },
+            { label: ui('Current alternative'), value: idea.goToMarketSeed.currentAlternative ?? null },
+            { label: ui('Switching reason'), value: idea.goToMarketSeed.switchingReason ?? null },
+            { label: ui('Pricing hypothesis'), value: idea.goToMarketSeed.pricingHypothesis ?? null },
           ]}
         />
       )}
       {Array.isArray(idea?.jobsToBeDone) && idea.jobsToBeDone.length > 0 && (
         <>
-          <h3 class="bz-section__head">Jobs to be done</h3>
+          <h3 class="bz-section__head">{ui('Jobs to be done')}</h3>
           <table class="bz-comp">
             <thead>
               <tr>
-                <th class="bz-mono">Job</th>
-                <th class="bz-mono">Current alternative</th>
-                <th class="bz-mono">Success metric</th>
+                <th class="bz-mono">{ui('Job')}</th>
+                <th class="bz-mono">{ui('Current alternative')}</th>
+                <th class="bz-mono">{ui('Success metric')}</th>
               </tr>
             </thead>
             <tbody>
@@ -194,23 +329,24 @@ const tocItems = [
         <Mermaid title={idea.conceptDiagram.title} code={idea.conceptDiagram.mermaid} />
       )}
       {idea?.ideaScorecard && (
-        <IdeaScorecard scorecard={idea.ideaScorecard} />
+        <IdeaScorecard scorecard={idea.ideaScorecard} lang={lang} />
       )}
       {idea?.businessModelCanvas && (
-        <BusinessModelCanvas canvas={idea.businessModelCanvas} />
+        <BusinessModelCanvas canvas={idea.businessModelCanvas} lang={lang} />
       )}
     </div>
 
-    <Ribbon label="Market" id="market" />
+    <Ribbon label={t('section.market', lang)} id="market" />
     <div class="bz-container bz-section">
       <div class="bz-market-grid">
         <MarketSizing
           tam={research?.market?.tam?.value ?? null}
           sam={research?.market?.sam?.value ?? null}
           som={research?.market?.som?.value ?? null}
+          lang={lang}
         />
         <FactRow
-          caption="Market sizing overview"
+          caption={t('label.marketSizing', lang)}
           rows={[
             { label: 'TAM', value: research?.market?.tam?.value ?? null, subHtml: linkifyCitations(research?.market?.tam?.rationale) },
             { label: 'SAM', value: research?.market?.sam?.value ?? null, subHtml: linkifyCitations(research?.market?.sam?.rationale) },
@@ -220,7 +356,7 @@ const tocItems = [
       </div>
       {research?.reportMemo?.executiveTakeaways && (
         <>
-          <h3 class="bz-section__head">Executive takeaways</h3>
+          <h3 class="bz-section__head">{ui('Executive takeaways')}</h3>
           <ul class="bz-list">
             {research.reportMemo.executiveTakeaways.map((t: string) => <li><CitedText text={t} /></li>)}
           </ul>
@@ -228,19 +364,19 @@ const tocItems = [
       )}
       {research?.reportMemo?.marketDefinition && (
         <>
-          <h3 class="bz-section__head">Market definition</h3>
+          <h3 class="bz-section__head">{ui('Market definition')}</h3>
           <p class="bz-story__lead"><CitedText text={research.reportMemo.marketDefinition} /></p>
         </>
       )}
       {research?.reportMemo?.customerAndBuyer && (
         <>
-          <h3 class="bz-section__head">Customer and buyer</h3>
+          <h3 class="bz-section__head">{ui('Customer and buyer')}</h3>
           <p class="bz-story__lead"><CitedText text={research.reportMemo.customerAndBuyer} /></p>
         </>
       )}
       {Array.isArray(research?.reportMemo?.buyingTriggers) && research.reportMemo.buyingTriggers.length > 0 && (
         <>
-          <h3 class="bz-section__head">Buying triggers</h3>
+          <h3 class="bz-section__head">{ui('Buying triggers')}</h3>
           <ul class="bz-list">
             {research.reportMemo.buyingTriggers.map((t: any) => (
               <li>
@@ -257,7 +393,7 @@ const tocItems = [
       )}
       {research?.reportMemo?.willingnessToPay?.summary && (
         <>
-          <h3 class="bz-section__head">Willingness to pay</h3>
+          <h3 class="bz-section__head">{ui('Willingness to pay')}</h3>
           <p class="bz-story__lead">
             <CitedText text={research.reportMemo.willingnessToPay.summary} />
             {Array.isArray(research.reportMemo.willingnessToPay.sourceRefs) && research.reportMemo.willingnessToPay.sourceRefs.length > 0 && (
@@ -270,14 +406,14 @@ const tocItems = [
       )}
       {research?.categoryDynamics && (research.categoryDynamics.tailwinds || research.categoryDynamics.headwinds) && (
         <>
-          <h3 class="bz-section__head">Category dynamics</h3>
+          <h3 class="bz-section__head">{ui('Category dynamics')}</h3>
           {research.categoryDynamics.growthRate && (
-            <p class="bz-mini-meta"><span class="bz-mono">Growth signal</span> {research.categoryDynamics.growthRate}</p>
+            <p class="bz-mini-meta"><span class="bz-mono">{ui('Growth signal')}</span> {research.categoryDynamics.growthRate}</p>
           )}
           <div class="bz-twocol">
             {Array.isArray(research.categoryDynamics.tailwinds) && (
               <section>
-                <h4 class="bz-mini-head bz-mini-head--up">Tailwinds</h4>
+                <h4 class="bz-mini-head bz-mini-head--up">{ui('Tailwinds')}</h4>
                 <ul class="bz-list">
                   {research.categoryDynamics.tailwinds.map((t: any) => (
                     <li><CitedText text={t.point} /></li>
@@ -287,7 +423,7 @@ const tocItems = [
             )}
             {Array.isArray(research.categoryDynamics.headwinds) && (
               <section>
-                <h4 class="bz-mini-head bz-mini-head--down">Headwinds</h4>
+                <h4 class="bz-mini-head bz-mini-head--down">{ui('Headwinds')}</h4>
                 <ul class="bz-list">
                   {research.categoryDynamics.headwinds.map((t: any) => (
                     <li><CitedText text={t.point} /></li>
@@ -300,7 +436,7 @@ const tocItems = [
       )}
       {Array.isArray(research?.validationSignals) && research.validationSignals.length > 0 && (
         <>
-          <h3 class="bz-section__head">Validation signals</h3>
+          <h3 class="bz-section__head">{ui('Validation signals')}</h3>
           <ul class="bz-list">
             {research.validationSignals.map((s: any) => (
               <li><CitedText text={s.point} /></li>
@@ -310,7 +446,7 @@ const tocItems = [
       )}
       {Array.isArray(research?.regulatoryTechnicalConstraints) && research.regulatoryTechnicalConstraints.length > 0 && (
         <>
-          <h3 class="bz-section__head">Regulatory & technical constraints</h3>
+          <h3 class="bz-section__head">{ui('Regulatory & technical constraints')}</h3>
           <ul class="bz-list">
             {research.regulatoryTechnicalConstraints.map((c: any) => (
               <li><CitedText text={c.point} /></li>
@@ -320,14 +456,14 @@ const tocItems = [
       )}
       {Array.isArray(research?.adoptionFrictionMatrix) && research.adoptionFrictionMatrix.length > 0 && (
         <>
-          <h3 class="bz-section__head">Adoption friction</h3>
+          <h3 class="bz-section__head">{ui('Adoption friction')}</h3>
           <table class="bz-comp">
             <thead>
               <tr>
-                <th class="bz-mono">Friction</th>
-                <th class="bz-mono">Severity</th>
-                <th class="bz-mono">Affected buyer</th>
-                <th class="bz-mono">Mitigation</th>
+                <th class="bz-mono">{ui('Friction')}</th>
+                <th class="bz-mono">{ui('Severity')}</th>
+                <th class="bz-mono">{ui('Affected buyer')}</th>
+                <th class="bz-mono">{ui('Mitigation')}</th>
               </tr>
             </thead>
             <tbody>
@@ -360,11 +496,12 @@ const tocItems = [
         <MarketMap
           title={research.analysisModels.marketMapDiagram.title}
           mermaid={research.analysisModels.marketMapDiagram.mermaid}
+          lang={lang}
         />
       )}
     </div>
 
-    <Ribbon label="Competition" id="competition" />
+    <Ribbon label={t('section.competition', lang)} id="competition" />
     <div class="bz-container bz-section">
       {research?.reportMemo?.competitiveLandscape && (
         <p class="bz-story__lead"><CitedText text={research.reportMemo.competitiveLandscape} /></p>
@@ -373,12 +510,12 @@ const tocItems = [
         <table class="bz-comp">
           <thead>
             <tr>
-              <th class="bz-mono">Competitor</th>
-              <th class="bz-mono">Stage</th>
-              <th class="bz-mono">Wedge</th>
-              <th class="bz-mono">Pricing</th>
-              <th class="bz-mono">Strength</th>
-              <th class="bz-mono">Weakness vs. us</th>
+              <th class="bz-mono">{ui('Competitor')}</th>
+              <th class="bz-mono">{ui('Stage')}</th>
+              <th class="bz-mono">{ui('Wedge')}</th>
+              <th class="bz-mono">{ui('Pricing')}</th>
+              <th class="bz-mono">{ui('Strength')}</th>
+              <th class="bz-mono">{ui('Weakness vs. us')}</th>
             </tr>
           </thead>
           <tbody>
@@ -397,7 +534,7 @@ const tocItems = [
       )}
       {Array.isArray(research?.reportMemo?.incumbentThesis) && (
         <>
-          <h3 class="bz-section__head">Why incumbents do not win by default</h3>
+          <h3 class="bz-section__head">{ui('Why incumbents do not win by default')}</h3>
           <ul class="bz-list">
             {research.reportMemo.incumbentThesis.map((i: any) => (
               <li><strong>{i.incumbentClass}.</strong> <CitedText text={i.point} /></li>
@@ -432,12 +569,12 @@ const tocItems = [
       )}
     </div>
 
-    <Ribbon label="Business plan" id="business-plan" />
+    <Ribbon label={t('section.businessPlan', lang)} id="business-plan" />
     <div class="bz-container bz-section">
       <p class="bz-story__lead">{bp?.executiveSummary}</p>
       {Array.isArray(bp?.problem) && bp.problem.length > 0 && (
         <>
-          <h3 class="bz-section__head">Problem</h3>
+          <h3 class="bz-section__head">{ui('Problem')}</h3>
           <ul class="bz-list">
             {bp.problem.map((p: string) => <li>{p}</li>)}
           </ul>
@@ -445,7 +582,7 @@ const tocItems = [
       )}
       {Array.isArray(bp?.solution) && bp.solution.length > 0 && (
         <>
-          <h3 class="bz-section__head">Solution</h3>
+          <h3 class="bz-section__head">{ui('Solution')}</h3>
           <ul class="bz-list">
             {bp.solution.map((s: string) => <li>{s}</li>)}
           </ul>
@@ -453,7 +590,7 @@ const tocItems = [
       )}
       {Array.isArray(bp?.whyWeWin) && bp.whyWeWin.length > 0 && (
         <>
-          <h3 class="bz-section__head">Why we win</h3>
+          <h3 class="bz-section__head">{ui('Why we win')}</h3>
           <ul class="bz-list">
             {bp.whyWeWin.map((w: string) => <li>{w}</li>)}
           </ul>
@@ -461,63 +598,63 @@ const tocItems = [
       )}
       {Array.isArray(bp?.strategicChoices?.notYet) && (
         <FactRow
-          caption="Strategic choices"
+          caption={ui('Strategic choices')}
           rows={[
-            { label: 'Beachhead', value: bp?.strategicChoices?.beachhead ?? null },
-            { label: 'Wedge rationale', value: bp?.strategicChoices?.wedgeRationale ?? null },
-            { label: 'Sequencing', value: bp?.strategicChoices?.sequencingRationale ?? null },
-            { label: 'Not yet', value: bp.strategicChoices.notYet.join(' · ') },
+            { label: ui('Beachhead'), value: bp?.strategicChoices?.beachhead ?? null },
+            { label: ui('Wedge rationale'), value: bp?.strategicChoices?.wedgeRationale ?? null },
+            { label: ui('Sequencing'), value: bp?.strategicChoices?.sequencingRationale ?? null },
+            { label: ui('Not yet'), value: bp.strategicChoices.notYet.join(' · ') },
           ]}
         />
       )}
       {bp?.gtm && (
         <FactRow
-          caption="Go-to-market"
+          caption={ui('Go-to-market')}
           rows={[
-            { label: 'Wedge', value: bp.gtm.wedge ?? null },
-            { label: 'Channels', value: Array.isArray(bp.gtm.channels) ? bp.gtm.channels.join(' · ') : (bp.gtm.channels ?? null) },
-            { label: 'Funnel targets', value: bp.gtm.funnelTargets ?? null },
-            { label: 'Pricing', value: bp.gtm.pricing ?? null },
+            { label: ui('Wedge'), value: bp.gtm.wedge ?? null },
+            { label: ui('Channels'), value: Array.isArray(bp.gtm.channels) ? bp.gtm.channels.join(' · ') : (bp.gtm.channels ?? null) },
+            { label: ui('Funnel targets'), value: bp.gtm.funnelTargets ?? null },
+            { label: ui('Pricing'), value: bp.gtm.pricing ?? null },
           ]}
         />
       )}
       {bp?.product && (bp.product.mvp || bp.product.sixMonth || bp.product.twelveMonth || bp.product.twentyFourMonth) && (
         <FactRow
-          caption="Product roadmap"
+          caption={ui('Product roadmap')}
           rows={[
             { label: 'MVP', value: bp.product.mvp ?? null },
-            { label: '6 months', value: bp.product.sixMonth ?? null },
-            { label: '12 months', value: bp.product.twelveMonth ?? null },
-            { label: '24 months', value: bp.product.twentyFourMonth ?? null },
-            ...(Array.isArray(bp.product.keyBets) ? [{ label: 'Key bets', value: bp.product.keyBets.join(' · ') }] : []),
+            { label: ui('6 months'), value: bp.product.sixMonth ?? null },
+            { label: ui('12 months'), value: bp.product.twelveMonth ?? null },
+            { label: ui('24 months'), value: bp.product.twentyFourMonth ?? null },
+            ...(Array.isArray(bp.product.keyBets) ? [{ label: ui('Key bets'), value: bp.product.keyBets.join(' · ') }] : []),
           ]}
         />
       )}
       {bp?.businessModel && (
         <FactRow
-          caption="Business model"
+          caption={ui('Business model')}
           rows={[
-            { label: 'Revenue streams', value: Array.isArray(bp.businessModel.revenueStreams) ? bp.businessModel.revenueStreams.join(' · ') : null },
-            { label: 'Unit of value', value: bp.businessModel.unitOfValue ?? null },
-            { label: 'Target gross margin', value: bp.businessModel.targetGrossMarginPct != null ? `${bp.businessModel.targetGrossMarginPct}%` : null },
-            { label: 'Expansion levers', value: Array.isArray(bp.businessModel.expansionLevers) ? bp.businessModel.expansionLevers.join(' · ') : null },
+            { label: ui('Revenue streams'), value: Array.isArray(bp.businessModel.revenueStreams) ? bp.businessModel.revenueStreams.join(' · ') : null },
+            { label: ui('Unit of value'), value: bp.businessModel.unitOfValue ?? null },
+            { label: ui('Target gross margin'), value: bp.businessModel.targetGrossMarginPct != null ? `${bp.businessModel.targetGrossMarginPct}%` : null },
+            { label: ui('Expansion levers'), value: Array.isArray(bp.businessModel.expansionLevers) ? bp.businessModel.expansionLevers.join(' · ') : null },
           ]}
         />
       )}
       {bp?.strategyMap && (bp.strategyMap.northStarMetric || bp.strategyMap.inputMetrics || bp.strategyMap.moatsToBuild || bp.strategyMap.killCriteria) && (
         <FactRow
-          caption="Strategy map"
+          caption={ui('Strategy map')}
           rows={[
-            { label: 'North-star metric', value: bp.strategyMap.northStarMetric ?? null },
-            { label: 'Input metrics', value: Array.isArray(bp.strategyMap.inputMetrics) ? bp.strategyMap.inputMetrics.join(' · ') : null },
-            { label: 'Moats to build', value: Array.isArray(bp.strategyMap.moatsToBuild) ? bp.strategyMap.moatsToBuild.join(' · ') : null },
-            { label: 'Kill criteria', value: Array.isArray(bp.strategyMap.killCriteria) ? bp.strategyMap.killCriteria.join(' · ') : null },
+            { label: ui('North-star metric'), value: bp.strategyMap.northStarMetric ?? null },
+            { label: ui('Input metrics'), value: Array.isArray(bp.strategyMap.inputMetrics) ? bp.strategyMap.inputMetrics.join(' · ') : null },
+            { label: ui('Moats to build'), value: Array.isArray(bp.strategyMap.moatsToBuild) ? bp.strategyMap.moatsToBuild.join(' · ') : null },
+            { label: ui('Kill criteria'), value: Array.isArray(bp.strategyMap.killCriteria) ? bp.strategyMap.killCriteria.join(' · ') : null },
           ]}
         />
       )}
       {Array.isArray(bp?.milestones) && (
         <>
-          <h3 class="bz-section__head">Milestones</h3>
+          <h3 class="bz-section__head">{ui('Milestones')}</h3>
           {bp.milestones.map((m: any) => (
             <section class="bz-milestone">
               <span class="bz-mono bz-milestone__horizon">{m.horizon}</span>
@@ -529,17 +666,17 @@ const tocItems = [
         </>
       )}
       {bp?.strategyMap?.mermaid && (
-        <Mermaid title="Strategy map" code={bp.strategyMap.mermaid} />
+        <Mermaid title={ui('Strategy map')} code={bp.strategyMap.mermaid} />
       )}
       {Array.isArray(bp?.team) && bp.team.length > 0 && (
         <>
-          <h3 class="bz-section__head">Founding team</h3>
+          <h3 class="bz-section__head">{ui('Founding team')}</h3>
           <table class="bz-comp">
             <thead>
               <tr>
-                <th class="bz-mono">Role</th>
-                <th class="bz-mono">Start timing</th>
-                <th class="bz-mono">Rationale</th>
+                <th class="bz-mono">{ui('Role')}</th>
+                <th class="bz-mono">{ui('Start timing')}</th>
+                <th class="bz-mono">{ui('Rationale')}</th>
               </tr>
             </thead>
             <tbody>
@@ -556,15 +693,15 @@ const tocItems = [
       )}
       {Array.isArray(bp?.experimentRoadmap) && bp.experimentRoadmap.length > 0 && (
         <>
-          <h3 class="bz-section__head">Experiment roadmap</h3>
+          <h3 class="bz-section__head">{ui('Experiment roadmap')}</h3>
           <table class="bz-comp">
             <thead>
               <tr>
-                <th class="bz-mono">Horizon</th>
-                <th class="bz-mono">Experiment</th>
-                <th class="bz-mono">Hypothesis</th>
-                <th class="bz-mono">Success metric</th>
-                <th class="bz-mono">Owner</th>
+                <th class="bz-mono">{ui('Horizon')}</th>
+                <th class="bz-mono">{ui('Experiment')}</th>
+                <th class="bz-mono">{ui('Hypothesis')}</th>
+                <th class="bz-mono">{ui('Success metric')}</th>
+                <th class="bz-mono">{ui('Owner')}</th>
               </tr>
             </thead>
             <tbody>
@@ -583,15 +720,15 @@ const tocItems = [
       )}
       {Array.isArray(bp?.risks) && bp.risks.length > 0 && (
         <>
-          <h3 class="bz-section__head">Risk assessment</h3>
-          <RiskHeatmap risks={bp.risks} caption={`Business plan risks — ${bp.risks.length} mapped`} />
+          <h3 class="bz-section__head">{ui('Risk assessment')}</h3>
+          <RiskHeatmap risks={bp.risks} caption={`${ui('Business plan risks')} — ${bp.risks.length} ${ui('mapped')}`} lang={lang} />
           <table class="bz-comp">
             <thead>
               <tr>
-                <th class="bz-mono">Risk</th>
-                <th class="bz-mono">Likelihood</th>
-                <th class="bz-mono">Impact</th>
-                <th class="bz-mono">Mitigation</th>
+                <th class="bz-mono">{ui('Risk')}</th>
+                <th class="bz-mono">{ui('Likelihood')}</th>
+                <th class="bz-mono">{ui('Impact')}</th>
+                <th class="bz-mono">{ui('Mitigation')}</th>
               </tr>
             </thead>
             <tbody>
@@ -609,19 +746,19 @@ const tocItems = [
       )}
       {bp?.investorMemo?.firstCustomer && (
         <FactRow
-          caption="First customer"
+          caption={ui('First customer')}
           rows={[
-            { label: 'Title', value: bp.investorMemo.firstCustomer.title ?? null },
-            { label: 'Profile', value: bp.investorMemo.firstCustomer.profile ?? null },
-            { label: 'Trigger', value: bp.investorMemo.firstCustomer.trigger ?? null },
-            { label: 'Buyer', value: bp.investorMemo.firstCustomer.buyer ?? null },
-            { label: 'Initial contract', value: bp.investorMemo.firstCustomer.initialContract ?? null },
+            { label: ui('Title'), value: bp.investorMemo.firstCustomer.title ?? null },
+            { label: ui('Profile'), value: bp.investorMemo.firstCustomer.profile ?? null },
+            { label: ui('Trigger'), value: bp.investorMemo.firstCustomer.trigger ?? null },
+            { label: ui('Buyer'), value: bp.investorMemo.firstCustomer.buyer ?? null },
+            { label: ui('Initial contract'), value: bp.investorMemo.firstCustomer.initialContract ?? null },
           ]}
         />
       )}
       {Array.isArray(bp?.investorMemo?.mustBeTrue) && bp.investorMemo.mustBeTrue.length > 0 && (
         <>
-          <h3 class="bz-section__head">What must be true</h3>
+          <h3 class="bz-section__head">{ui('What must be true')}</h3>
           <ul class="bz-list">
             {bp.investorMemo.mustBeTrue.map((s: string) => <li>{s}</li>)}
           </ul>
@@ -629,7 +766,7 @@ const tocItems = [
       )}
       {Array.isArray(bp?.investorMemo?.diligenceQuestions) && bp.investorMemo.diligenceQuestions.length > 0 && (
         <>
-          <h3 class="bz-section__head">Open diligence questions</h3>
+          <h3 class="bz-section__head">{ui('Open diligence questions')}</h3>
           <ul class="bz-list">
             {bp.investorMemo.diligenceQuestions.map((q: string) => <li>{q}</li>)}
           </ul>
@@ -637,52 +774,52 @@ const tocItems = [
       )}
       {bp?.investorMemo?.verdict && (
         <FactRow
-          caption="Investor verdict"
+          caption={ui('Investor verdict')}
           rows={[
-            { label: 'Call', value: bp.investorMemo.verdict.call ?? null },
-            { label: 'Conviction', value: bp.investorMemo.verdict.conviction ?? null },
-            { label: 'Why believe', value: bp.investorMemo.verdict.whyBelieve ?? null },
-            { label: 'Why doubt', value: bp.investorMemo.verdict.whyDoubt ?? null },
-            { label: 'Next diligence', value: bp.investorMemo.verdict.nextDiligence ?? null },
+            { label: ui('Call'), value: bp.investorMemo.verdict.call ?? null },
+            { label: ui('Conviction'), value: bp.investorMemo.verdict.conviction ?? null },
+            { label: ui('Why believe'), value: bp.investorMemo.verdict.whyBelieve ?? null },
+            { label: ui('Why doubt'), value: bp.investorMemo.verdict.whyDoubt ?? null },
+            { label: ui('Next diligence'), value: bp.investorMemo.verdict.nextDiligence ?? null },
           ]}
         />
       )}
     </div>
 
-    <Ribbon label="Financial model" id="financial-model" />
+    <Ribbon label={t('section.financialModel', lang)} id="financial-model" />
     <div class="bz-container bz-section">
       <FactRow
-        caption="3-year totals"
+        caption={ui('3-year totals')}
         rows={[
-          { label: 'Year 1 revenue', value: fmtK(fm?.totals?.y1?.revenueK ?? 0), sub: `EBITDA ${fmtK(fm?.totals?.y1?.ebitdaK ?? 0)} · Cash EOP ${fmtK(fm?.totals?.y1?.cashEopK ?? 0)}` },
-          { label: 'Year 2 revenue', value: fmtK(fm?.totals?.y2?.revenueK ?? 0), sub: `EBITDA ${fmtK(fm?.totals?.y2?.ebitdaK ?? 0)} · Cash EOP ${fmtK(fm?.totals?.y2?.cashEopK ?? 0)}` },
-          { label: 'Year 3 revenue', value: fmtK(fm?.totals?.y3?.revenueK ?? 0), sub: `EBITDA ${fmtK(fm?.totals?.y3?.ebitdaK ?? 0)} · Cash EOP ${fmtK(fm?.totals?.y3?.cashEopK ?? 0)}` },
+          { label: ui('Year 1 revenue'), value: fmtK(fm?.totals?.y1?.revenueK ?? 0), sub: `EBITDA ${fmtK(fm?.totals?.y1?.ebitdaK ?? 0)} · Cash EOP ${fmtK(fm?.totals?.y1?.cashEopK ?? 0)}` },
+          { label: ui('Year 2 revenue'), value: fmtK(fm?.totals?.y2?.revenueK ?? 0), sub: `EBITDA ${fmtK(fm?.totals?.y2?.ebitdaK ?? 0)} · Cash EOP ${fmtK(fm?.totals?.y2?.cashEopK ?? 0)}` },
+          { label: ui('Year 3 revenue'), value: fmtK(fm?.totals?.y3?.revenueK ?? 0), sub: `EBITDA ${fmtK(fm?.totals?.y3?.ebitdaK ?? 0)} · Cash EOP ${fmtK(fm?.totals?.y3?.cashEopK ?? 0)}` },
         ]}
       />
       {fm?.unitEconomics && (
         <FactRow
-          caption="Unit economics"
+          caption={ui('Unit economics')}
           rows={[
-            { label: 'ARPU (annual)', value: fmtK(fm.unitEconomics.arpuAnnualK ?? 0) },
-            { label: 'Gross margin', value: `${(fm.unitEconomics.grossMarginPct ?? 0).toFixed(0)}%` },
-            { label: 'CAC', value: fmtK(fm.unitEconomics.cacK ?? 0), sub: `Payback ${(fm.unitEconomics.cacPaybackMonths ?? 0).toFixed(1)} months` },
-            { label: 'LTV / CAC', value: `${(fm.unitEconomics.ltvCacRatio ?? 0).toFixed(1)}x`, sub: `LTV ${fmtK(fm.unitEconomics.ltvK ?? 0)}` },
+            { label: ui('ARPU (annual)'), value: fmtK(fm.unitEconomics.arpuAnnualK ?? 0) },
+            { label: ui('Gross margin'), value: `${(fm.unitEconomics.grossMarginPct ?? 0).toFixed(0)}%` },
+            { label: 'CAC', value: fmtK(fm.unitEconomics.cacK ?? 0), sub: `${ui('Payback')} ${(fm.unitEconomics.cacPaybackMonths ?? 0).toFixed(1)} months` },
+            { label: 'LTV / CAC', value: `${(fm.unitEconomics.ltvCacRatio ?? 0).toFixed(1)}x`, sub: `${ui('LTV')} ${fmtK(fm.unitEconomics.ltvK ?? 0)}` },
           ]}
         />
       )}
       {fm?.fundingAsk && (
         <FactRow
-          caption="Funding ask"
+          caption={ui('Funding ask')}
           rows={[
-            { label: 'Round', value: `${fm.fundingAsk.round} · $${fm.fundingAsk.amountM.toFixed(1)}M` },
-            { label: 'Runway', value: `${fm.fundingAsk.runwayMonths} months` },
-            { label: 'Milestone', value: fm.fundingAsk.milestone ?? null },
+            { label: ui('Round'), value: `${fm.fundingAsk.round} · $${fm.fundingAsk.amountM.toFixed(1)}M` },
+            { label: ui('Runway'), value: `${fm.fundingAsk.runwayMonths} months` },
+            { label: ui('Milestone'), value: fm.fundingAsk.milestone ?? null },
           ]}
         />
       )}
       {Array.isArray(fm?.modelSanity) && (
         <>
-          <h3 class="bz-section__head">Model sanity</h3>
+          <h3 class="bz-section__head">{ui('Model sanity')}</h3>
           <ul class="bz-list">
             {fm.modelSanity.map((s: any) => (
               <li><strong>{s.checkName}.</strong> {s.finding}</li>
@@ -690,19 +827,19 @@ const tocItems = [
           </ul>
         </>
       )}
-      <FinancialCharts fm={fm} />
+      <FinancialCharts fm={fm} lang={lang} />
       {fm?.scenarios && (
         <>
-          <h3 class="bz-section__head">Scenarios</h3>
+          <h3 class="bz-section__head">{ui('Scenarios')}</h3>
           <table class="bz-comp">
             <thead>
               <tr>
-                <th class="bz-mono">Scenario</th>
-                <th class="bz-mono">Y3 revenue</th>
-                <th class="bz-mono">Y3 EBITDA</th>
-                <th class="bz-mono">Cash low point</th>
-                <th class="bz-mono">Description</th>
-                <th class="bz-mono">Key changes</th>
+                <th class="bz-mono">{ui('Scenario')}</th>
+                <th class="bz-mono">{ui('Y3 revenue')}</th>
+                <th class="bz-mono">{ui('Y3 EBITDA')}</th>
+                <th class="bz-mono">{ui('Cash low point')}</th>
+                <th class="bz-mono">{ui('Description')}</th>
+                <th class="bz-mono">{ui('Key changes')}</th>
               </tr>
             </thead>
             <tbody>
@@ -731,14 +868,14 @@ const tocItems = [
       )}
       {Array.isArray(fm?.sensitivity) && fm.sensitivity.length > 0 && (
         <>
-          <h3 class="bz-section__head">Sensitivity</h3>
+          <h3 class="bz-section__head">{ui('Sensitivity')}</h3>
           <table class="bz-comp">
             <thead>
               <tr>
-                <th class="bz-mono">Variable</th>
-                <th class="bz-mono">Downside</th>
-                <th class="bz-mono">Base</th>
-                <th class="bz-mono">Upside</th>
+                <th class="bz-mono">{ui('Variable')}</th>
+                <th class="bz-mono">{ui('Downside')}</th>
+                <th class="bz-mono">{ui('Base')}</th>
+                <th class="bz-mono">{ui('Upside')}</th>
               </tr>
             </thead>
             <tbody>
@@ -756,15 +893,15 @@ const tocItems = [
       )}
       {Array.isArray(fm?.assumptions) && fm.assumptions.length > 0 && (
         <details class="bz-assumptions">
-          <summary class="bz-section__head">Key assumptions ({fm.assumptions.length})</summary>
+          <summary class="bz-section__head">{ui('Key assumptions')} ({fm.assumptions.length})</summary>
           <table class="bz-comp">
             <thead>
               <tr>
-                <th class="bz-mono">ID</th>
-                <th class="bz-mono">Name</th>
-                <th class="bz-mono">Value</th>
-                <th class="bz-mono">Unit</th>
-                <th class="bz-mono">Source</th>
+                <th class="bz-mono">{ui('ID')}</th>
+                <th class="bz-mono">{ui('Name')}</th>
+                <th class="bz-mono">{ui('Value')}</th>
+                <th class="bz-mono">{ui('Unit')}</th>
+                <th class="bz-mono">{ui('Source')}</th>
               </tr>
             </thead>
             <tbody>
@@ -782,22 +919,22 @@ const tocItems = [
         </details>
       )}
       {fm?.modelDiagram?.mermaid && (
-        <Mermaid title={fm.modelDiagram.title ?? 'Model flow'} code={fm.modelDiagram.mermaid} />
+        <Mermaid title={fm.modelDiagram.title ?? ui('Model sanity')} code={fm.modelDiagram.mermaid} />
       )}
       {Array.isArray(fm?.sanityChecks?.flags) && fm.sanityChecks.flags.length > 0 && (
         <p class="bz-flags bz-mono">
-          Flags: {fm.sanityChecks.flags.join(' · ')}
+          {ui('Flags')}: {fm.sanityChecks.flags.join(' · ')}
         </p>
       )}
     </div>
 
-    <Ribbon label="Top risks" id="risks" />
+    <Ribbon label={t('section.topRisks', lang)} id="risks" />
     <div class="bz-container bz-section">
       {Array.isArray(idea?.topRisks) && idea.topRisks.length > 0 && typeof idea.topRisks[0] === 'object' ? (
         <ul class="bz-list">
           {idea.topRisks.map((r: any) => (
             <li>
-              <strong>{r.name}.</strong> {r.description} {r.mitigation && (<><em class="bz-mute">Mitigation:</em> {r.mitigation}</>)}
+              <strong>{r.name}.</strong> {r.description} {r.mitigation && (<><em class="bz-mute">{ui('Mitigation')}:</em> {r.mitigation}</>)}
             </li>
           ))}
         </ul>
@@ -808,12 +945,12 @@ const tocItems = [
       )}
     </div>
 
-    <Ribbon label="Evidence" id="evidence" />
+    <Ribbon label={t('section.evidence', lang)} id="evidence" />
     <div class="bz-container bz-section">
       <div class="bz-evidence-grid">
         {Array.isArray(research?.sources) && (
           <section>
-            <h3 class="bz-section__head">Cited sources ({research.sources.length})</h3>
+            <h3 class="bz-section__head">{t('dossier.citedSources', lang)} ({research.sources.length})</h3>
             <ol class="bz-bib">
               {research.sources.map((s: any) => (
                 <li id={`cite-${s.id}`}>

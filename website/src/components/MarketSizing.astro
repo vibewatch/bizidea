@@ -2,6 +2,7 @@
 // Nested-circle visualization of TAM / SAM / SOM, with circle area
 // proportional to the parsed numeric value. Falls back gracefully when
 // values can't be parsed.
+import { t, type Lang } from '../lib/i18n';
 
 interface Tier {
   key: 'TAM' | 'SAM' | 'SOM';
@@ -13,9 +14,10 @@ interface Props {
   tam?: string | null;
   sam?: string | null;
   som?: string | null;
+  lang?: Lang;
 }
 
-const { tam, sam, som } = Astro.props as Props;
+const { tam, sam, som, lang = 'en' } = Astro.props as Props;
 
 // Parse strings like "$37.5M", "1.2B", "450K", "$2,400" into a number.
 function parseValue(s?: string | null): number | null {
@@ -30,9 +32,9 @@ function parseValue(s?: string | null): number | null {
 }
 
 const tiers: Tier[] = [
-  { key: 'TAM', label: 'Total addressable', raw: tam },
-  { key: 'SAM', label: 'Serviceable available', raw: sam },
-  { key: 'SOM', label: 'Serviceable obtainable', raw: som },
+  { key: 'TAM', label: t('market.tam.long', lang), raw: tam },
+  { key: 'SAM', label: t('market.sam.long', lang), raw: sam },
+  { key: 'SOM', label: t('market.som.long', lang), raw: som },
 ];
 
 const parsed = tiers.map((t) => ({ ...t, value: parseValue(t.raw) }));
@@ -81,8 +83,8 @@ const LABEL_Y0 = CY - LABEL_GAP;
 // to the baseline of the chip text).
 const CHIP_PAD = 14;
 ---
-<figure class="bz-marketviz" aria-label="Market sizing nested circles">
-  <figcaption class="bz-mono bz-marketviz__title">Market sizing</figcaption>
+<figure class="bz-marketviz" aria-label={t('market.sizing.aria', lang)}>
+  <figcaption class="bz-mono bz-marketviz__title">{t('market.sizing', lang)}</figcaption>
   <svg
     class="bz-marketviz__svg"
     viewBox={`0 0 ${VB_W} ${VB_H}`}
@@ -180,19 +182,19 @@ const CHIP_PAD = 14;
     padding-top: var(--space-3);
   }
   .bz-marketviz__chip {
-    font-family: var(--font-display, 'Bricolage Grotesque', system-ui, sans-serif);
+    font-family: var(--font-display);
     font-weight: 700;
     font-size: 15px;
     letter-spacing: 0.04em;
   }
   .bz-marketviz__label {
-    font-family: var(--font-mono, 'Inter', system-ui, sans-serif);
+    font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
   .bz-marketviz__value {
-    font-family: var(--font-display, 'Bricolage Grotesque', system-ui, sans-serif);
+    font-family: var(--font-display);
     font-weight: 600;
     font-size: 18px;
     font-variant-numeric: tabular-nums;

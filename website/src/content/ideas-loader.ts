@@ -3,28 +3,53 @@ import { join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import yaml from 'js-yaml';
 import type { Loader } from 'astro/loaders';
+import type { Lang } from '../lib/i18n';
 
 // Resolve relative to the Astro project (website/) which is process.cwd() during build.
 const IDEAS_DIR = resolve(process.cwd(), '..', 'ideas');
 
+/**
+ * List all valid idea run folders.
+ * Filters out hidden/system folders (., _) and non-directories.
+ * Returns in reverse chronological order (newest first).
+ */
 function listRuns(): string[] {
   if (!existsSync(IDEAS_DIR)) return [];
   return readdirSync(IDEAS_DIR)
     .filter((name) => !name.startsWith('.') && !name.startsWith('_'))
-    .filter((name) => statSync(join(IDEAS_DIR, name)).isDirectory())
+    .filter((name) => {
+      try {
+        return statSync(join(IDEAS_DIR, name)).isDirectory();
+      } catch {
+        return false;
+      }
+    })
     .sort()
     .reverse();
 }
 
+/**
+ * Generate a short SHA-1 hash for disambiguation.
+ * Used to create unique slugs when multiple runs have similar names.
+ */
 function shortHash(input: string): string {
   return createHash('sha1').update(input).digest('hex').slice(0, 6);
 }
 
-// Recursively repair "colon-paste" YAML accidents: an unquoted scalar like
-// `- Some sentence: more text` is parsed by YAML as `{ "Some sentence": "more text" }`
-// instead of the intended string. We detect this by finding plain objects with
-// exactly one key whose key contains a space (real YAML keys never do) and
-// coerce them back to `"<key>: <value>"` strings.
+/**
+ * Recursively repair "colon-paste" YAML accidents: an unquoted scalar like
+ * `- Some sentence: more text` is parsed by YAML as `{ "Some sentence": "more text" }`
+ * instead of the intended string. We detect this by finding plain objects with
+ * exactly one key whose key contains a space (real YAML keys never do) and
+ * coerce them back to `"<key>: <value>"` strings.
+ *
+ * This is a workaround for agents that paste values with colons without quoting them.
+ * The build-time quote-colons.mjs and expand-flow.mjs scripts handle most cases,
+ * but this provides a safety net.
+ *
+ * @param value - Raw parsed YAML value (any type)
+ * @returns - Repaired value with colon-paste fixed recursively
+ */
 function fixColonPaste(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(fixColonPaste);
   if (value && typeof value === 'object') {
@@ -45,6 +70,13 @@ function fixColonPaste(value: unknown): unknown {
   return value;
 }
 
+/**
+ * Parse run folder name to extract timestamp and generate slug.
+ * Handles both new format (14-digit-timestamp-slug) and legacy (YYYY-MM-DD-slug).
+ *
+ * @param runId - Folder name
+ * @returns Object with runTimestamp and folderSlug
+ */
 function parseRunId(runId: string): { runTimestamp: string; folderSlug: string } {
   const m = runId.match(/^(\d{14})-(.+)$/);
   if (m) return { runTimestamp: m[1]!, folderSlug: `${m[2]!}-${shortHash(runId)}` };
@@ -54,46 +86,177 @@ function parseRunId(runId: string): { runTimestamp: string; folderSlug: string }
   return { runTimestamp: '00000000000000', folderSlug: runId };
 }
 
+/**
+ * Astro Content Collection Loader for ideas.
+ * Loads all index.yaml files from ideas/<run>/ directories and validates them.
+ * Reports warnings for missing/malformed files but continues building.
+ */
 export function ideasLoader(): Loader {
   return {
     name: 'bizidea-ideas-loader',
     load: async ({ store, parseData, logger }) => {
       store.clear();
       const runs = listRuns();
-      logger.info(`Loading ${runs.length} idea run(s) from ${IDEAS_DIR}`);
+
+      if (runs.length === 0) {
+        logger.info(`[ideas-loader] No idea runs found in ${IDEAS_DIR}`);
+        return;
+      }
+
+      logger.info(`[ideas-loader] Loading ${runs.length} idea run(s) from ${IDEAS_DIR}`);
+
+      let loaded = 0;
+      let skipped = 0;
+
       for (const runId of runs) {
         const indexPath = join(IDEAS_DIR, runId, 'index.yaml');
+
         if (!existsSync(indexPath)) {
-          logger.warn(`skip ${runId}: missing index.yaml`);
+          logger.warn(`[ideas-loader] skipped ${runId}: missing index.yaml`);
+          skipped++;
           continue;
         }
-        const raw = readFileSync(indexPath, 'utf8');
-        const parsed = fixColonPaste(yaml.load(raw)) as Record<string, unknown>;
-        const { runTimestamp, folderSlug } = parseRunId(runId);
-        const data = await parseData({
-          id: runId,
-          data: { ...parsed, runId, runTimestamp, folderSlug },
-        });
-        store.set({ id: runId, data });
+
+        try {
+          const raw = readFileSync(indexPath, 'utf8');
+          let parsed: unknown;
+
+          try {
+            parsed = yaml.load(raw);
+          } catch (yamlErr) {
+            logger.error(`[ideas-loader] ${runId}: YAML parsing failed — ${yamlErr instanceof Error ? yamlErr.message : String(yamlErr)}`);
+            skipped++;
+            continue;
+          }
+
+          const repaired = fixColonPaste(parsed) as Record<string, unknown>;
+          const { runTimestamp, folderSlug } = parseRunId(runId);
+
+          try {
+            const data = await parseData({
+              id: runId,
+              data: { ...repaired, runId, runTimestamp, folderSlug },
+            });
+            store.set({ id: runId, data });
+            loaded++;
+          } catch (validationErr) {
+            logger.error(`[ideas-loader] ${runId}: Zod validation failed — ${validationErr instanceof Error ? validationErr.message : String(validationErr)}`);
+            skipped++;
+          }
+        } catch (err) {
+          logger.error(`[ideas-loader] ${runId}: unexpected error — ${err instanceof Error ? err.message : String(err)}`);
+          skipped++;
+        }
       }
+
+      logger.info(`[ideas-loader] ✓ loaded ${loaded}/${runs.length} run(s), skipped ${skipped}`);
     },
   };
 }
 
-export interface StageFiles {
+interface StageFiles {
   idea: unknown;
   research: unknown;
   businessPlan: unknown;
   financialModel: unknown;
 }
 
-export function loadStageFiles(runId: string): StageFiles {
+/**
+ * Read a YAML file with language fallback.
+ * Tries localized version (e.g., idea.zh.yaml) first, then falls back to English (idea.yaml).
+ *
+ * @param folder - Path to the idea run folder
+ * @param basename - Base filename without extension (e.g., "idea", "research")
+ * @param lang - Language code ('en' or 'zh')
+ * @returns - Parsed and repaired YAML content, or throws on read/parse error
+ */
+function readLocalizedYaml(folder: string, basename: string, lang: Lang): unknown {
+  const localized = join(folder, `${basename}.${lang}.yaml`);
+  const fallback = join(folder, `${basename}.yaml`);
+
+  if (lang === 'zh' && existsSync(localized)) {
+    try {
+      const raw = readFileSync(localized, 'utf8');
+      const parsed = yaml.load(raw);
+      return fixColonPaste(parsed);
+    } catch (err) {
+      throw new Error(`Failed to load ${localized}: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  try {
+    const raw = readFileSync(fallback, 'utf8');
+    const parsed = yaml.load(raw);
+    return fixColonPaste(parsed);
+  } catch (err) {
+    throw new Error(`Failed to load ${fallback}: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
+/**
+ * Check if a run has Chinese translation files.
+ * Returns true only if idea.zh.yaml exists.
+ *
+ * @param runId - The run folder name
+ * @returns - true if zh translation exists, false otherwise
+ */
+export function hasZhTranslation(runId: string): boolean {
   const folder = join(IDEAS_DIR, runId);
-  const read = (name: string) => fixColonPaste(yaml.load(readFileSync(join(folder, name), 'utf8')));
+  return existsSync(join(folder, 'idea.zh.yaml'));
+}
+
+/**
+ * Load the index.yaml for a run with language support.
+ * Tries localized version first (e.g., index.zh.yaml), then English (index.yaml).
+ *
+ * @param runId - The run folder name
+ * @param lang - Language code ('en' or 'zh'), defaults to 'en'
+ * @returns - Parsed index object, or null if no file found
+ */
+export function loadLocalizedIndex(runId: string, lang: Lang = 'en'): Record<string, unknown> | null {
+  const folder = join(IDEAS_DIR, runId);
+  const localized = join(folder, `index.${lang}.yaml`);
+  const fallback = join(folder, 'index.yaml');
+
+  if (lang === 'zh' && existsSync(localized)) {
+    try {
+      const raw = readFileSync(localized, 'utf8');
+      const parsed = yaml.load(raw);
+      return fixColonPaste(parsed) as Record<string, unknown>;
+    } catch (err) {
+      console.error(`[loadLocalizedIndex] ${runId}: failed to load zh — ${err instanceof Error ? err.message : String(err)}`);
+      return null;
+    }
+  }
+
+  if (!existsSync(fallback)) return null;
+
+  try {
+    const raw = readFileSync(fallback, 'utf8');
+    const parsed = yaml.load(raw);
+    return fixColonPaste(parsed) as Record<string, unknown>;
+  } catch (err) {
+    console.error(`[loadLocalizedIndex] ${runId}: failed to load en — ${err instanceof Error ? err.message : String(err)}`);
+    return null;
+  }
+}
+
+/**
+ * Load all stage files (idea, research, business-plan, financial-model) for a run.
+ * Supports language fallback (zh → en).
+ * Throws on missing files; call functions above to pre-check existence if needed.
+ *
+ * @param runId - The run folder name
+ * @param lang - Language code ('en' or 'zh'), defaults to 'en'
+ * @returns - Object with all four stage files as parsed YAML
+ * @throws - On file read or YAML parse errors
+ */
+export function loadStageFiles(runId: string, lang: Lang = 'en'): StageFiles {
+  const folder = join(IDEAS_DIR, runId);
   return {
-    idea: read('idea.yaml'),
-    research: read('research.yaml'),
-    businessPlan: read('business-plan.yaml'),
-    financialModel: read('financial-model.yaml'),
+    idea: readLocalizedYaml(folder, 'idea', lang),
+    research: readLocalizedYaml(folder, 'research', lang),
+    businessPlan: readLocalizedYaml(folder, 'business-plan', lang),
+    financialModel: readLocalizedYaml(folder, 'financial-model', lang),
   };
 }
