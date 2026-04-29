@@ -1,6 +1,6 @@
 export type Lang = 'en' | 'zh';
 
-export const translations: Record<Lang, Record<string, string>> = {
+const translations: Record<Lang, Record<string, string>> = {
   en: {
     'header.tag': 'Startup Dossiers',
     'header.home': 'Home',

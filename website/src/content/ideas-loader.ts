@@ -4,7 +4,6 @@ import { createHash } from 'node:crypto';
 import yaml from 'js-yaml';
 import type { Loader } from 'astro/loaders';
 import type { Lang } from '../lib/i18n';
-import type { IdeaReport, StageFiles as StageFilesType } from '../types/ideas';
 
 // Resolve relative to the Astro project (website/) which is process.cwd() during build.
 const IDEAS_DIR = resolve(process.cwd(), '..', 'ideas');
@@ -155,7 +154,7 @@ export function ideasLoader(): Loader {
   };
 }
 
-export interface StageFiles {
+interface StageFiles {
   idea: unknown;
   research: unknown;
   businessPlan: unknown;
