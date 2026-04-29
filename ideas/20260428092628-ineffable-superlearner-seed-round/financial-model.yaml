@@ -1,0 +1,551 @@
+slug: workflow-rl-sandbox
+date: '2026-04-28'
+currency: USD
+modelStartMonth: '2026-05'
+assumptions:
+  - id: A1
+    name: Opening cash after seed close
+    value: '2400'
+    unit: usdK
+    source: '[BP fundingAsk targetFundingRangeUsd $2–4M]; base case uses $2.4M to reach proof milestone plus 6-month buffer'
+  - id: A2
+    name: Modeled customer unit
+    value: paid workflow environment under management
+    unit: definition
+    source: '[BP businessModel.unitOfValue] Workflow environment under management'
+  - id: A3
+    name: Base annual ARPU per workflow environment
+    value: '150.0'
+    unit: usdK/year
+    source: '[BP firstCustomer initialContract + production spend, Research market.sam] production workflow modeled at ~$150K ARR'
+  - id: A4
+    name: Revenue ramp
+    value: 'First paid workflow in M5, second in M8, 14 workflows by Q4Y2, 40 by Q4Y3'
+    unit: count
+    source: '[BP milestones, BP gtm funnelTargets, Startup heuristic] conservative founder-led enterprise ramp with expansion after trust is proven'
+  - id: A5
+    name: Gross margin
+    value: '72.0'
+    unit: pct
+    source: '[BP businessModel.targetGrossMarginPct 70] modeled at 72% to reflect software mix and limited usage upside once connectors are reused'
+  - id: A6
+    name: Monthly churn
+    value: '1.8'
+    unit: pct
+    source: '[Startup heuristic] early enterprise infrastructure sold by workflow has low logo churn but moderate workflow churn/replacement risk'
+  - id: A7
+    name: Average customer life
+    value: '55.6'
+    unit: months
+    source: '[Calc from A6] 1 / monthly churn'
+  - id: A8
+    name: CAC per workflow environment
+    value: '60.0'
+    unit: usdK
+    source: '[Startup heuristic] implies roughly ~$100K CAC per logo at ~1.7 workflows per retained logo by Y3'
+  - id: A9
+    name: Enterprise sales cycle
+    value: '6'
+    unit: months
+    source: '[BP product.sixMonth, BP riskHeatmap security review, Startup heuristic] combines pilot scoping, security review, and production conversion'
+  - id: A10
+    name: Initial hiring from business plan
+    value: 'Founding Eng, Applied RL, and CEO at M0; Product/Solutions at M3; Security/Platform at M6'
+    unit: timing
+    source: '[BP team]'
+  - id: A11
+    name: Post-proof hiring ramp
+    value: 'First GTM hire in Q1Y2, first G&A hire in Q4Y2, additional engineering and GTM hires only after production conversions'
+    unit: timing
+    source: '[BP milestones + Startup heuristic] hiring held behind revenue proof to preserve seed-stage burn discipline'
+  - id: A12
+    name: Fully loaded annual compensation by role
+    value: 'CEO 144K; Founding Eng 204K; Applied RL 216K; Platform Eng 198K; Product/Solutions 180K; Security/Platform 210K; Sales/GTM 168K; G&A/Admin 132K'
+    unit: usdK/year
+    source: '[Startup heuristic] includes ~20% payroll tax and benefits on seed-stage US cash comp'
+  - id: A13
+    name: Non-payroll operating spend ramp
+    value: 'From ~20K/month in Q1Y1 to ~123K/month in Q4Y3 across cloud tools, travel, security, legal, and GTM systems'
+    unit: usdK/month
+    source: '[Startup heuristic] sized to support enterprise pilots without assuming heavy marketing spend before PMF'
+  - id: A14
+    name: Cash conversion method
+    value: EBITDA approximates cash burn
+    unit: policy
+    source: '[Startup heuristic] model assumes no debt, no capex, and no explicit deferred-revenue or working-capital build'
+  - id: A15
+    name: Next financing proof milestone
+    value: '24 paid workflow environments by Q2Y3 with offline-to-live error under 15 points and visible second-workflow expansion'
+    unit: milestone
+    source: '[BP milestones, BP strategyMap.killCriteria]'
+  - id: A16
+    name: Use of funds mix
+    value: Engineering 45%; GTM 25%; G&A 15%; Buffer 15%
+    unit: pct
+    source: '[Startup heuristic] consistent with integration-heavy AI infrastructure company before broad sales scale'
+headcount:
+  - role: CEO
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q1y2: 1
+    q2y2: 1
+    q3y2: 1
+    q4y2: 1
+    q1y3: 1
+    q2y3: 1
+    q3y3: 1
+    q4y3: 1
+  - role: FoundingEng
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q1y2: 1
+    q2y2: 1
+    q3y2: 1
+    q4y2: 1
+    q1y3: 1
+    q2y3: 1
+    q3y3: 1
+    q4y3: 1
+  - role: AppliedRL
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q1y2: 1
+    q2y2: 1
+    q3y2: 2
+    q4y2: 2
+    q1y3: 2
+    q2y3: 2
+    q3y3: 2
+    q4y3: 2
+  - role: PlatformEng
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q1y2: 1
+    q2y2: 1
+    q3y2: 1
+    q4y2: 2
+    q1y3: 2
+    q2y3: 2
+    q3y3: 3
+    q4y3: 3
+  - role: ProductSolutions
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q1y2: 1
+    q2y2: 1
+    q3y2: 1
+    q4y2: 1
+    q1y3: 1
+    q2y3: 2
+    q3y3: 2
+    q4y3: 2
+  - role: SecurityPlatform
+    q1y1: 0
+    q2y1: 0
+    q3y1: 1
+    q4y1: 1
+    q1y2: 1
+    q2y2: 1
+    q3y2: 1
+    q4y2: 1
+    q1y3: 1
+    q2y3: 1
+    q3y3: 1
+    q4y3: 2
+  - role: SalesGTM
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q1y2: 1
+    q2y2: 1
+    q3y2: 1
+    q4y2: 2
+    q1y3: 2
+    q2y3: 2
+    q3y3: 2
+    q4y3: 3
+  - role: GAAdmin
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q1y2: 0
+    q2y2: 0
+    q3y2: 0
+    q4y2: 1
+    q1y3: 1
+    q2y3: 1
+    q3y3: 1
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 5
+  q4y1: 6
+  q1y2: 7
+  q2y2: 7
+  q3y2: 8
+  q4y2: 11
+  q1y3: 11
+  q2y3: 12
+  q3y3: 13
+  q4y3: 15
+headcountAnnualizedPayrollK:
+  q1y1: 564.0
+  q2y1: 744.0
+  q3y1: 954.0
+  q4y1: 1152.0
+  q1y2: 1320.0
+  q2y2: 1320.0
+  q3y2: 1536.0
+  q4y2: 2034.0
+  q1y3: 2034.0
+  q2y3: 2214.0
+  q3y3: 2412.0
+  q4y3: 2790.0
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 6.0
+    researchDevelopmentK: 43.0
+    generalAdministrativeK: 18.0
+    opexK: 67.0
+    ebitdaK: -67.0
+    cashEopK: 2333.0
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 6.0
+    researchDevelopmentK: 43.0
+    generalAdministrativeK: 18.0
+    opexK: 67.0
+    ebitdaK: -67.0
+    cashEopK: 2266.0
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 6.0
+    researchDevelopmentK: 43.0
+    generalAdministrativeK: 18.0
+    opexK: 67.0
+    ebitdaK: -67.0
+    cashEopK: 2199.0
+  - month: M4
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 7.0
+    researchDevelopmentK: 60.0
+    generalAdministrativeK: 19.0
+    opexK: 86.0
+    ebitdaK: -86.0
+    cashEopK: 2113.0
+  - month: M5
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 12.5
+    cogsK: 3.5
+    grossProfitK: 9.0
+    salesMarketingK: 7.0
+    researchDevelopmentK: 60.0
+    generalAdministrativeK: 19.0
+    opexK: 86.0
+    ebitdaK: -77.0
+    cashEopK: 2036.0
+  - month: M6
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 12.5
+    cogsK: 3.5
+    grossProfitK: 9.0
+    salesMarketingK: 7.0
+    researchDevelopmentK: 60.0
+    generalAdministrativeK: 19.0
+    opexK: 86.0
+    ebitdaK: -77.0
+    cashEopK: 1959.0
+  - month: M7
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 12.5
+    cogsK: 3.5
+    grossProfitK: 9.0
+    salesMarketingK: 8.0
+    researchDevelopmentK: 79.5
+    generalAdministrativeK: 20.0
+    opexK: 107.5
+    ebitdaK: -98.5
+    cashEopK: 1860.5
+  - month: M8
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 25.0
+    cogsK: 7.0
+    grossProfitK: 18.0
+    salesMarketingK: 8.0
+    researchDevelopmentK: 79.5
+    generalAdministrativeK: 20.0
+    opexK: 107.5
+    ebitdaK: -89.5
+    cashEopK: 1771.0
+  - month: M9
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 25.0
+    cogsK: 7.0
+    grossProfitK: 18.0
+    salesMarketingK: 8.0
+    researchDevelopmentK: 79.5
+    generalAdministrativeK: 20.0
+    opexK: 107.5
+    ebitdaK: -89.5
+    cashEopK: 1681.5
+  - month: M10
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 25.0
+    cogsK: 7.0
+    grossProfitK: 18.0
+    salesMarketingK: 9.0
+    researchDevelopmentK: 98.0
+    generalAdministrativeK: 21.0
+    opexK: 128.0
+    ebitdaK: -110.0
+    cashEopK: 1571.5
+  - month: M11
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 25.0
+    cogsK: 7.0
+    grossProfitK: 18.0
+    salesMarketingK: 9.0
+    researchDevelopmentK: 98.0
+    generalAdministrativeK: 21.0
+    opexK: 128.0
+    ebitdaK: -110.0
+    cashEopK: 1461.5
+  - month: M12
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 25.0
+    cogsK: 7.0
+    grossProfitK: 18.0
+    salesMarketingK: 9.0
+    researchDevelopmentK: 98.0
+    generalAdministrativeK: 21.0
+    opexK: 128.0
+    ebitdaK: -110.0
+    cashEopK: 1351.5
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 4
+    revenueK: 150.0
+    grossProfitK: 108.0
+    opexK: 390.0
+    ebitdaK: -282.0
+    cashEopK: 1069.5
+  - quarter: Q2Y2
+    customersEop: 7
+    revenueK: 262.5
+    grossProfitK: 189.0
+    opexK: 402.0
+    ebitdaK: -213.0
+    cashEopK: 856.5
+  - quarter: Q3Y2
+    customersEop: 10
+    revenueK: 375.0
+    grossProfitK: 270.0
+    opexK: 459.0
+    ebitdaK: -189.0
+    cashEopK: 667.5
+  - quarter: Q4Y2
+    customersEop: 14
+    revenueK: 525.0
+    grossProfitK: 378.0
+    opexK: 594.0
+    ebitdaK: -216.0
+    cashEopK: 451.5
+  - quarter: Q1Y3
+    customersEop: 18
+    revenueK: 675.0
+    grossProfitK: 486.0
+    opexK: 597.0
+    ebitdaK: -111.0
+    cashEopK: 340.5
+  - quarter: Q2Y3
+    customersEop: 24
+    revenueK: 900.0
+    grossProfitK: 648.0
+    opexK: 648.0
+    ebitdaK: 0.0
+    cashEopK: 340.5
+  - quarter: Q3Y3
+    customersEop: 30
+    revenueK: 1125.0
+    grossProfitK: 810.0
+    opexK: 709.5
+    ebitdaK: 100.5
+    cashEopK: 441.0
+  - quarter: Q4Y3
+    customersEop: 40
+    revenueK: 1500.0
+    grossProfitK: 1080.0
+    opexK: 820.5
+    ebitdaK: 259.5
+    cashEopK: 700.5
+totals:
+  y1:
+    revenueK: 162.5
+    ebitdaK: -1048.5
+    cashEopK: 1351.5
+  y2:
+    revenueK: 1312.5
+    ebitdaK: -900.0
+    cashEopK: 451.5
+  y3:
+    revenueK: 4200.0
+    ebitdaK: 249.0
+    cashEopK: 700.5
+unitEconomics:
+  arpuAnnualK: 150.0
+  grossMarginPct: 72.0
+  cacK: 60.0
+  monthlyChurnPct: 1.8
+  avgCustomerLifeMonths: 55.6
+  ltvK: 500.4
+  ltvCacRatio: 8.3
+  cacPaybackMonths: 6.7
+fundingAsk:
+  round: seed
+  amountM: 2.4
+  runwayMonths: 24
+  milestone: Reach 24 paid workflow environments by Q2Y3, prove offline-to-live error below 15 points, and show repeatable second-workflow expansion before the next round.
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 1080000
+      percentage: 45
+    - bucket: GTM
+      amountUsd: 600000
+      percentage: 25
+    - bucket: G&A
+      amountUsd: 360000
+      percentage: 15
+    - bucket: Buffer (6 mo)
+      amountUsd: 360000
+      percentage: 15
+scenarios:
+  downside:
+    description: Security review and buyer education stretch the sales cycle to 9 months, delaying conversions and second-workflow expansion.
+    y3RevenueK: 2850.0
+    y3EbitdaK: -620.0
+    cashLowPointK: -190.0
+    keyAssumptionChanges:
+      - New workflow adds shift back by roughly 2 quarters versus base
+      - Gross margin compresses to 68% from heavier support and cloud costs
+      - Hiring through Q2Y3 is unchanged, so burn does not flex down quickly enough
+  base:
+    description: Two paid design partners convert into a trusted release-gate motion and expansion drives most of the Y3 growth.
+    y3RevenueK: 4200.0
+    y3EbitdaK: 249.0
+    cashLowPointK: 340.5
+    keyAssumptionChanges:
+      - Base case uses $150K annual ARPU per workflow environment
+      - Customers are modeled as paid workflow environments, not logos
+      - Expansion accelerates once the offline gate affects real release decisions
+  upside:
+    description: Simulator fidelity is validated earlier, enabling faster conversions and more second-workflow expansion inside retained accounts.
+    y3RevenueK: 5000.0
+    y3EbitdaK: 520.0
+    cashLowPointK: 520.0
+    keyAssumptionChanges:
+      - Paid pilot to production conversion improves faster than base
+      - Retained accounts reach higher multi-workflow adoption by Y3
+      - Gross margin improves to 74% from better connector reuse and usage mix
+sensitivity:
+  - variable: ARPU
+    downsideCase: $135K annual revenue per workflow
+    baseCase: $150K annual revenue per workflow
+    upsideCase: $165K annual revenue per workflow
+    y3RevenueImpactK: -420.0
+    cashImpactK: -302.0
+  - variable: CAC
+    downsideCase: $80K CAC per workflow environment
+    baseCase: $60K CAC per workflow environment
+    upsideCase: $45K CAC per workflow environment
+    y3RevenueImpactK: 0.0
+    cashImpactK: -240.0
+  - variable: churn
+    downsideCase: 2.5% monthly workflow churn
+    baseCase: 1.8% monthly workflow churn
+    upsideCase: 1.2% monthly workflow churn
+    y3RevenueImpactK: -300.0
+    cashImpactK: -225.0
+  - variable: sales cycle
+    downsideCase: 9 months from pilot start to production conversion
+    baseCase: 6 months
+    upsideCase: 4 months
+    y3RevenueImpactK: -900.0
+    cashImpactK: -430.0
+  - variable: gross margin
+    downsideCase: 68% from higher support and cloud burden
+    baseCase: 72%
+    upsideCase: 75%
+    y3RevenueImpactK: 0.0
+    cashImpactK: -168.0
+  - variable: hiring pace
+    downsideCase: GTM and platform hires land 2 quarters before proof
+    baseCase: Hiring follows production proof milestones
+    upsideCase: Non-core hires slip 1 quarter without harming delivery
+    y3RevenueImpactK: 0.0
+    cashImpactK: -220.0
+modelDiagram:
+  title: unit economics flow
+  mermaid: |
+    flowchart LR
+      Logs[Workflow logs + APIs] --> Sandbox[Workflow RL Sandbox]
+      Sandbox --> Episodes[Simulated episodes]
+      Sandbox --> Gate[Offline release gate]
+      Gate --> Customers[Paid workflow environments]
+      Customers --> Revenue[Subscription + usage revenue]
+      Revenue --> GrossProfit[Gross profit]
+      GrossProfit --> Cash[Cash runway]
+modelSanity:
+  - checkName: Revenue engine
+    finding: Base-case revenue is driven by growing from 2 paid workflow environments in Y1 to 40 by Q4Y3 at roughly $150K ARPU with most growth coming from multi-workflow expansion after trust is earned.
+  - checkName: Must go right
+    finding: The offline gate has to change real release decisions, because that proof is what unlocks production conversion and second-workflow expansion in the base and upside cases.
+  - checkName: Model breaks if
+    finding: If the sales cycle drifts toward 9 months or gross margin drops below 68%, the downside case turns cash negative before the model reaches Y3 self-funding.
+  - checkName: Next-round proof
+    finding: Reaching 24 paid workflow environments by Q2Y3 with sub-15-point offline-to-live error creates the evidence package for a Series A around trusted training infrastructure.
+sanityChecks:
+  ruleOf40: Y3 growth 220% + EBITDA margin 6% = 226%
+  burnMultiple: Y2 burn multiple 0.50x = $0.90M net burn / $1.80M net new ARR; Y3 turns EBITDA positive on the same headcount base.
+  revenuePerFte: $329K Y3 using 12.75 average quarter-end FTE (benchmark $200–400K SaaS)
+  flags:
+    - Customers are modeled as paid workflow environments rather than logos so revenue can reconcile cleanly to ARPU despite multi-workflow expansion.
+    - Cash is approximated from EBITDA and opening financing; annual prepayments, deferred revenue, and working-capital swings are not explicitly modeled.
+    - The model assumes incumbents do not bundle a comparable neutral training loop before the company earns trusted release-gate status.
