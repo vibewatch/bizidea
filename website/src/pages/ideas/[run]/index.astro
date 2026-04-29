@@ -18,7 +18,7 @@ import BusinessModelCanvas from '../../../components/BusinessModelCanvas.astro';
 import CitedText from '../../../components/CitedText.astro';
 import RatingSparkline from '../../../components/RatingSparkline.astro';
 import DossierToc from '../../../components/DossierToc.astro';
-import { loadStageFiles } from '../../../content/ideas-loader';
+import { loadLocalizedIndex, loadStageFiles } from '../../../content/ideas-loader';
 import { linkifyCitations } from '../../../lib/citations';
 import { t, type Lang } from '../../../lib/i18n';
 
@@ -26,9 +26,11 @@ export async function getStaticPaths() {
   return [];
 }
 
-const { entry, lang: rawLang = 'en' } = Astro.props;
+const { entry: rawEntry, lang: rawLang = 'en' } = Astro.props;
 const lang: Lang = rawLang === 'zh' ? 'zh' : 'en';
 const otherLang: Lang = lang === 'en' ? 'zh' : 'en';
+const localizedIndex = loadLocalizedIndex(rawEntry.id, lang);
+const entry = { ...rawEntry, data: { ...rawEntry.data, ...(localizedIndex ?? {}) } };
 const base = import.meta.env.BASE_URL;
 const prefixFor = (l: Lang) => (l === 'zh' ? `${base}zh/` : base);
 const stages = loadStageFiles(entry.id, lang);
@@ -52,6 +54,134 @@ const tocItems = [
   { id: 'risks', label: t('section.topRisks', lang) },
   { id: 'evidence', label: t('section.evidence', lang) },
 ];
+
+const zhUiLabels: Record<string, string> = {
+  'Beachhead': '滩头市场',
+  'Wedge': '切入点',
+  'Non-obvious insight': '非显而易见洞察',
+  'Venture-scale path': '风险投资级路径',
+  'Primary user': '主要用户',
+  'Secondary user': '次要用户',
+  'Economic buyer': '经济买方',
+  'First customer': '首个客户',
+  'Buying trigger': '购买触发点',
+  'Current alternative': '当前替代方案',
+  'Switching reason': '切换理由',
+  'Pricing hypothesis': '定价假设',
+  'Jobs to be done': '待完成任务',
+  'Job': '任务',
+  'Success metric': '成功指标',
+  'Executive takeaways': '高管要点',
+  'Market definition': '市场定义',
+  'Customer and buyer': '用户与买方',
+  'Buying triggers': '购买触发点',
+  'Willingness to pay': '支付意愿',
+  'Category dynamics': '品类动态',
+  'Growth signal': '增长信号',
+  'Tailwinds': '顺风因素',
+  'Headwinds': '逆风因素',
+  'Validation signals': '验证信号',
+  'Regulatory & technical constraints': '监管与技术约束',
+  'Adoption friction': '采用阻力',
+  'Friction': '阻力',
+  'Severity': '严重度',
+  'Affected buyer': '受影响买方',
+  'Mitigation': '缓解措施',
+  'Competitor': '竞争对手',
+  'Stage': '阶段',
+  'Pricing': '定价',
+  'Strength': '优势',
+  'Weakness vs. us': '相对劣势',
+  'Why incumbents do not win by default': '为什么现有厂商不会默认胜出',
+  'Problem': '问题',
+  'Solution': '解决方案',
+  'Why we win': '为什么我们会赢',
+  'Strategic choices': '战略选择',
+  'Wedge rationale': '切入点理由',
+  'Sequencing': '推进顺序',
+  'Not yet': '暂不进入',
+  'Go-to-market': '进入市场',
+  'Channels': '渠道',
+  'Funnel targets': '漏斗目标',
+  'Product roadmap': '产品路线图',
+  '6 months': '6 个月',
+  '12 months': '12 个月',
+  '24 months': '24 个月',
+  'Key bets': '关键押注',
+  'Business model': '商业模式',
+  'Revenue streams': '收入来源',
+  'Unit of value': '价值单位',
+  'Target gross margin': '目标毛利率',
+  'Expansion levers': '扩张杠杆',
+  'Strategy map': '战略地图',
+  'North-star metric': '北极星指标',
+  'Input metrics': '输入指标',
+  'Moats to build': '待构建护城河',
+  'Kill criteria': '终止标准',
+  'Milestones': '里程碑',
+  'Founding team': '创始团队',
+  'Role': '角色',
+  'Start timing': '入职时间',
+  'Rationale': '理由',
+  'Experiment roadmap': '实验路线图',
+  'Horizon': '阶段',
+  'Experiment': '实验',
+  'Hypothesis': '假设',
+  'Owner': '负责人',
+  'Risk assessment': '风险评估',
+  'Risk': '风险',
+  'Likelihood': '可能性',
+  'Impact': '影响',
+  'Title': '标题',
+  'Profile': '画像',
+  'Trigger': '触发点',
+  'Buyer': '买方',
+  'Initial contract': '初始合同',
+  'What must be true': '必须成立的条件',
+  'Open diligence questions': '待尽调问题',
+  'Investor verdict': '投资人判断',
+  'Call': '结论',
+  'Conviction': '信心',
+  'Why believe': '相信的理由',
+  'Why doubt': '怀疑的理由',
+  'Next diligence': '下一步尽调',
+  '3-year totals': '三年合计',
+  'Year 1 revenue': '第 1 年收入',
+  'Year 2 revenue': '第 2 年收入',
+  'Year 3 revenue': '第 3 年收入',
+  'Unit economics': '单位经济',
+  'ARPU (annual)': '年 ARPU',
+  'Gross margin': '毛利率',
+  'Payback': '回本期',
+  'LTV': '生命周期价值',
+  'Funding ask': '融资需求',
+  'Round': '轮次',
+  'Runway': '跑道',
+  'Milestone': '里程碑',
+  'Model sanity': '模型合理性',
+  'Scenarios': '情景',
+  'Scenario': '情景',
+  'Y3 revenue': '第 3 年收入',
+  'Y3 EBITDA': '第 3 年 EBITDA',
+  'Cash low point': '现金低点',
+  'Description': '说明',
+  'Key changes': '关键变化',
+  'Sensitivity': '敏感性',
+  'Variable': '变量',
+  'Downside': '下行情景',
+  'Base': '基准情景',
+  'Upside': '上行情景',
+  'Key assumptions': '关键假设',
+  'ID': 'ID',
+  'Name': '名称',
+  'Value': '数值',
+  'Unit': '单位',
+  'Source': '来源',
+  'Flags': '警示项',
+  'Business plan risks': '商业计划风险',
+  'mapped': '已映射',
+};
+const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : label;
 ---
 <BaseLayout
   title={`${(idea?.pitch ?? entry.data.pitch)} — Bizidea`}
@@ -142,19 +272,19 @@ const tocItems = [
       <FactRow
         caption={t('label.startupThesis', lang)}
         rows={[
-          { label: 'Beachhead', value: idea?.startupThesis?.beachhead ?? null },
-          { label: 'Wedge', value: idea?.startupThesis?.wedge ?? null },
-          { label: 'Non-obvious insight', value: idea?.startupThesis?.nonObviousInsight ?? null },
-          { label: 'Venture-scale path', value: idea?.startupThesis?.ventureScalePath ?? null },
+          { label: ui('Beachhead'), value: idea?.startupThesis?.beachhead ?? null },
+          { label: ui('Wedge'), value: idea?.startupThesis?.wedge ?? null },
+          { label: ui('Non-obvious insight'), value: idea?.startupThesis?.nonObviousInsight ?? null },
+          { label: ui('Venture-scale path'), value: idea?.startupThesis?.ventureScalePath ?? null },
         ]}
       />
       {idea?.targetUser && (
         <FactRow
           caption={t('label.targetUser', lang)}
           rows={[
-            { label: 'Primary user', value: idea.targetUser.primary ?? null },
-            { label: 'Secondary user', value: idea.targetUser.secondary ?? null },
-            { label: 'Economic buyer', value: idea.targetUser.buyer ?? null },
+            { label: ui('Primary user'), value: idea.targetUser.primary ?? null },
+            { label: ui('Secondary user'), value: idea.targetUser.secondary ?? null },
+            { label: ui('Economic buyer'), value: idea.targetUser.buyer ?? null },
           ]}
         />
       )}
@@ -162,23 +292,23 @@ const tocItems = [
         <FactRow
           caption={t('label.gtmSeed', lang)}
           rows={[
-            { label: 'First customer', value: idea.goToMarketSeed.firstCustomer ?? null },
-            { label: 'Buying trigger', value: idea.goToMarketSeed.buyingTrigger ?? null },
-            { label: 'Current alternative', value: idea.goToMarketSeed.currentAlternative ?? null },
-            { label: 'Switching reason', value: idea.goToMarketSeed.switchingReason ?? null },
-            { label: 'Pricing hypothesis', value: idea.goToMarketSeed.pricingHypothesis ?? null },
+            { label: ui('First customer'), value: idea.goToMarketSeed.firstCustomer ?? null },
+            { label: ui('Buying trigger'), value: idea.goToMarketSeed.buyingTrigger ?? null },
+            { label: ui('Current alternative'), value: idea.goToMarketSeed.currentAlternative ?? null },
+            { label: ui('Switching reason'), value: idea.goToMarketSeed.switchingReason ?? null },
+            { label: ui('Pricing hypothesis'), value: idea.goToMarketSeed.pricingHypothesis ?? null },
           ]}
         />
       )}
       {Array.isArray(idea?.jobsToBeDone) && idea.jobsToBeDone.length > 0 && (
         <>
-          <h3 class="bz-section__head">Jobs to be done</h3>
+          <h3 class="bz-section__head">{ui('Jobs to be done')}</h3>
           <table class="bz-comp">
             <thead>
               <tr>
-                <th class="bz-mono">Job</th>
-                <th class="bz-mono">Current alternative</th>
-                <th class="bz-mono">Success metric</th>
+                <th class="bz-mono">{ui('Job')}</th>
+                <th class="bz-mono">{ui('Current alternative')}</th>
+                <th class="bz-mono">{ui('Success metric')}</th>
               </tr>
             </thead>
             <tbody>
@@ -197,10 +327,10 @@ const tocItems = [
         <Mermaid title={idea.conceptDiagram.title} code={idea.conceptDiagram.mermaid} />
       )}
       {idea?.ideaScorecard && (
-        <IdeaScorecard scorecard={idea.ideaScorecard} />
+        <IdeaScorecard scorecard={idea.ideaScorecard} lang={lang} />
       )}
       {idea?.businessModelCanvas && (
-        <BusinessModelCanvas canvas={idea.businessModelCanvas} />
+        <BusinessModelCanvas canvas={idea.businessModelCanvas} lang={lang} />
       )}
     </div>
 
@@ -211,6 +341,7 @@ const tocItems = [
           tam={research?.market?.tam?.value ?? null}
           sam={research?.market?.sam?.value ?? null}
           som={research?.market?.som?.value ?? null}
+          lang={lang}
         />
         <FactRow
           caption={t('label.marketSizing', lang)}
@@ -223,7 +354,7 @@ const tocItems = [
       </div>
       {research?.reportMemo?.executiveTakeaways && (
         <>
-          <h3 class="bz-section__head">Executive takeaways</h3>
+          <h3 class="bz-section__head">{ui('Executive takeaways')}</h3>
           <ul class="bz-list">
             {research.reportMemo.executiveTakeaways.map((t: string) => <li><CitedText text={t} /></li>)}
           </ul>
@@ -231,19 +362,19 @@ const tocItems = [
       )}
       {research?.reportMemo?.marketDefinition && (
         <>
-          <h3 class="bz-section__head">Market definition</h3>
+          <h3 class="bz-section__head">{ui('Market definition')}</h3>
           <p class="bz-story__lead"><CitedText text={research.reportMemo.marketDefinition} /></p>
         </>
       )}
       {research?.reportMemo?.customerAndBuyer && (
         <>
-          <h3 class="bz-section__head">Customer and buyer</h3>
+          <h3 class="bz-section__head">{ui('Customer and buyer')}</h3>
           <p class="bz-story__lead"><CitedText text={research.reportMemo.customerAndBuyer} /></p>
         </>
       )}
       {Array.isArray(research?.reportMemo?.buyingTriggers) && research.reportMemo.buyingTriggers.length > 0 && (
         <>
-          <h3 class="bz-section__head">Buying triggers</h3>
+          <h3 class="bz-section__head">{ui('Buying triggers')}</h3>
           <ul class="bz-list">
             {research.reportMemo.buyingTriggers.map((t: any) => (
               <li>
@@ -260,7 +391,7 @@ const tocItems = [
       )}
       {research?.reportMemo?.willingnessToPay?.summary && (
         <>
-          <h3 class="bz-section__head">Willingness to pay</h3>
+          <h3 class="bz-section__head">{ui('Willingness to pay')}</h3>
           <p class="bz-story__lead">
             <CitedText text={research.reportMemo.willingnessToPay.summary} />
             {Array.isArray(research.reportMemo.willingnessToPay.sourceRefs) && research.reportMemo.willingnessToPay.sourceRefs.length > 0 && (
@@ -273,14 +404,14 @@ const tocItems = [
       )}
       {research?.categoryDynamics && (research.categoryDynamics.tailwinds || research.categoryDynamics.headwinds) && (
         <>
-          <h3 class="bz-section__head">Category dynamics</h3>
+          <h3 class="bz-section__head">{ui('Category dynamics')}</h3>
           {research.categoryDynamics.growthRate && (
-            <p class="bz-mini-meta"><span class="bz-mono">Growth signal</span> {research.categoryDynamics.growthRate}</p>
+            <p class="bz-mini-meta"><span class="bz-mono">{ui('Growth signal')}</span> {research.categoryDynamics.growthRate}</p>
           )}
           <div class="bz-twocol">
             {Array.isArray(research.categoryDynamics.tailwinds) && (
               <section>
-                <h4 class="bz-mini-head bz-mini-head--up">Tailwinds</h4>
+                <h4 class="bz-mini-head bz-mini-head--up">{ui('Tailwinds')}</h4>
                 <ul class="bz-list">
                   {research.categoryDynamics.tailwinds.map((t: any) => (
                     <li><CitedText text={t.point} /></li>
@@ -290,7 +421,7 @@ const tocItems = [
             )}
             {Array.isArray(research.categoryDynamics.headwinds) && (
               <section>
-                <h4 class="bz-mini-head bz-mini-head--down">Headwinds</h4>
+                <h4 class="bz-mini-head bz-mini-head--down">{ui('Headwinds')}</h4>
                 <ul class="bz-list">
                   {research.categoryDynamics.headwinds.map((t: any) => (
                     <li><CitedText text={t.point} /></li>
@@ -303,7 +434,7 @@ const tocItems = [
       )}
       {Array.isArray(research?.validationSignals) && research.validationSignals.length > 0 && (
         <>
-          <h3 class="bz-section__head">Validation signals</h3>
+          <h3 class="bz-section__head">{ui('Validation signals')}</h3>
           <ul class="bz-list">
             {research.validationSignals.map((s: any) => (
               <li><CitedText text={s.point} /></li>
@@ -313,7 +444,7 @@ const tocItems = [
       )}
       {Array.isArray(research?.regulatoryTechnicalConstraints) && research.regulatoryTechnicalConstraints.length > 0 && (
         <>
-          <h3 class="bz-section__head">Regulatory & technical constraints</h3>
+          <h3 class="bz-section__head">{ui('Regulatory & technical constraints')}</h3>
           <ul class="bz-list">
             {research.regulatoryTechnicalConstraints.map((c: any) => (
               <li><CitedText text={c.point} /></li>
@@ -323,14 +454,14 @@ const tocItems = [
       )}
       {Array.isArray(research?.adoptionFrictionMatrix) && research.adoptionFrictionMatrix.length > 0 && (
         <>
-          <h3 class="bz-section__head">Adoption friction</h3>
+          <h3 class="bz-section__head">{ui('Adoption friction')}</h3>
           <table class="bz-comp">
             <thead>
               <tr>
-                <th class="bz-mono">Friction</th>
-                <th class="bz-mono">Severity</th>
-                <th class="bz-mono">Affected buyer</th>
-                <th class="bz-mono">Mitigation</th>
+                <th class="bz-mono">{ui('Friction')}</th>
+                <th class="bz-mono">{ui('Severity')}</th>
+                <th class="bz-mono">{ui('Affected buyer')}</th>
+                <th class="bz-mono">{ui('Mitigation')}</th>
               </tr>
             </thead>
             <tbody>
@@ -363,6 +494,7 @@ const tocItems = [
         <MarketMap
           title={research.analysisModels.marketMapDiagram.title}
           mermaid={research.analysisModels.marketMapDiagram.mermaid}
+          lang={lang}
         />
       )}
     </div>
