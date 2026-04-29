@@ -32,12 +32,12 @@ and update `SITE_URL` in the workflow.
 
 ## Fonts
 
-Loaded from Google Fonts in [`src/layouts/BaseLayout.astro`](src/layouts/BaseLayout.astro):
-Source Serif 4 (display) and Inter (UI). Body text falls through to Georgia,
-which is FT's own production fallback for Financier Text and is universally
-installed. Token stacks live in [`src/styles/tokens.css`](src/styles/tokens.css)
-and can be swapped to licensed faces by dropping `@font-face` declarations into
-the layout.
+Typography follows the GenisisIQ stack:
+
+- `Mona Sans` from `@font-face` in [`src/styles/tokens.css`](src/styles/tokens.css)
+- `Noto Sans SC` and `JetBrains Mono` from Google Fonts in [`src/layouts/BaseLayout.astro`](src/layouts/BaseLayout.astro)
+
+Token stacks live in [`src/styles/tokens.css`](src/styles/tokens.css).
 
 ## Architecture
 
