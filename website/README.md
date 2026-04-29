@@ -13,7 +13,12 @@ npm run build    # outputs to dist/
 ```
 
 `npm run build` first runs `scripts/check-ideas.mjs`, which fails fast if any
-`ideas/<run>/` folder is missing one of the five required YAML files.
+`ideas/<run>/` folder is missing one of the five required YAML files, contains
+unexpected YAML artifacts, or includes YAML that cannot be parsed.
+
+YAML repair helpers are available via `npm run repair:yaml`, but they are not
+part of the website build. They should run during report generation before
+artifacts are committed.
 
 ## Deploy
 

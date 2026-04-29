@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-// Fail fast if any ideas/<run>/ folder is missing one of the six required YAML files.
-import { readdirSync, statSync, existsSync } from 'node:fs';
+// Fail fast if any ideas/<run>/ folder is missing required YAML files,
+// contains unexpected YAML artifacts, or has YAML that cannot be parsed.
+import { readdirSync, statSync, existsSync, readFileSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import yaml from 'js-yaml';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const IDEAS_DIR = resolve(__dirname, '../../ideas');
@@ -13,6 +15,14 @@ const REQUIRED = [
   'financial-model.yaml',
   'index.yaml',
 ];
+const OPTIONAL_LOCALIZED = [
+  'idea.zh.yaml',
+  'research.zh.yaml',
+  'business-plan.zh.yaml',
+  'financial-model.zh.yaml',
+  'index.zh.yaml',
+];
+const ALLOWED_YAML = new Set([...REQUIRED, ...OPTIONAL_LOCALIZED]);
 
 try {
   if (!existsSync(IDEAS_DIR)) {
@@ -37,18 +47,83 @@ try {
   }
 
   const failures = [];
+  const unexpected = [];
+  const parseFailures = [];
+  const consistencyFailures = [];
   for (const run of runs) {
+    const dir = join(IDEAS_DIR, run);
+    const parsed = new Map();
+    const files = readdirSync(dir).filter((file) => {
+      try {
+        return statSync(join(dir, file)).isFile();
+      } catch (e) {
+        console.warn(`[check:ideas] skipped ${run}/${file}: ${e.message}`);
+        return false;
+      }
+    });
+
     for (const file of REQUIRED) {
       const p = join(IDEAS_DIR, run, file);
       if (!existsSync(p)) {
         failures.push(`${run}/${file}`);
       }
     }
+
+    for (const file of files) {
+      if (!file.endsWith('.yaml')) continue;
+      if (!ALLOWED_YAML.has(file)) {
+        unexpected.push(`${run}/${file}`);
+      }
+      try {
+        parsed.set(file, yaml.load(readFileSync(join(dir, file), 'utf8')));
+      } catch (e) {
+        parseFailures.push(`${run}/${file}: ${e.message.split('\n')[0]}`);
+      }
+    }
+
+    const index = parsed.get('index.yaml');
+    const idea = parsed.get('idea.yaml');
+    if (index && typeof index === 'object' && idea && typeof idea === 'object') {
+      const indexSlug = String(index.slug || '');
+      const ideaSlug = String(idea.slug || '');
+      if (indexSlug && ideaSlug && indexSlug !== ideaSlug) {
+        consistencyFailures.push(`${run}: index.yaml slug (${indexSlug}) does not match idea.yaml slug (${ideaSlug})`);
+      }
+    }
+
+    if (index && typeof index === 'object' && index.files && typeof index.files === 'object') {
+      const expectedFiles = {
+        idea: 'idea.yaml',
+        research: 'research.yaml',
+        businessPlan: 'business-plan.yaml',
+        financialModel: 'financial-model.yaml',
+      };
+      for (const [key, defaultFile] of Object.entries(expectedFiles)) {
+        const referenced = String(index.files[key] || defaultFile);
+        if (!files.includes(referenced)) {
+          consistencyFailures.push(`${run}: index.yaml files.${key} references missing ${referenced}`);
+        }
+      }
+    }
   }
 
-  if (failures.length) {
-    console.error('[check:ideas] missing required artifact files:');
-    for (const f of failures) console.error(`  - ideas/${f}`);
+  if (failures.length || unexpected.length || parseFailures.length || consistencyFailures.length) {
+    if (failures.length) {
+      console.error('[check:ideas] missing required artifact files:');
+      for (const f of failures) console.error(`  - ideas/${f}`);
+    }
+    if (unexpected.length) {
+      console.error('[check:ideas] unexpected YAML artifact files:');
+      for (const f of unexpected) console.error(`  - ideas/${f}`);
+    }
+    if (parseFailures.length) {
+      console.error('[check:ideas] YAML parse failures:');
+      for (const f of parseFailures) console.error(`  - ideas/${f}`);
+    }
+    if (consistencyFailures.length) {
+      console.error('[check:ideas] artifact consistency failures:');
+      for (const f of consistencyFailures) console.error(`  - ${f}`);
+    }
     process.exit(1);
   }
 

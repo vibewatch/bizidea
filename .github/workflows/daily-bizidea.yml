@@ -79,12 +79,15 @@ jobs:
           set -euo pipefail
           copilot --yolo --no-ask-user --agent "Bizidea" -p "Run the full Bizidea pipeline for ${{ steps.inputs.outputs.window }}. topic: startup news. cap: ${{ steps.inputs.outputs.cap }}. Orchestrate all stages yourself: News Triage once, generate and dedupe ideas from selected clusters, then run each surviving idea through research -> business plan -> financial model -> reporter. Do not invoke Bizidea recursively. Delete duplicate or failed partial report folders before final validation. Do not run git add or git commit."
 
+      - name: Normalize generated YAML
+        working-directory: website
+        run: npm run repair:yaml
+
       - name: Rebuild ideas/_index.yaml
-        run: node scripts/build-ideas-index.mjs
+        run: node scripts/build-ideas-index.mjs --strict
 
       - name: Validate generated ideas
-        working-directory: website
-        run: npm run check:ideas
+        run: npm run validate
 
       - name: Commit and push new reports
         run: |
@@ -93,7 +96,7 @@ jobs:
           git config user.email "bizidea-bot@users.noreply.github.com"
           git fetch origin "${{ github.ref_name }}"
           git rebase --autostash "origin/${{ github.ref_name }}"
-          node scripts/build-ideas-index.mjs
+          node scripts/build-ideas-index.mjs --strict
           git add ideas/
           if git diff --cached --quiet; then
             echo "No new reports today."

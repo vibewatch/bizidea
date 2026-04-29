@@ -5,13 +5,15 @@
 import { existsSync, readFileSync, rmSync, appendFileSync } from 'node:fs';
 import { resolve, join, basename } from 'node:path';
 import yaml from 'js-yaml';
+import { tokens, intersectionSize, jaccard } from './text-utils.mjs';
 
-const STOPWORDS = new Set([
-  'the','a','an','of','for','to','in','on','and','or','with','by','from','as',
-  'is','are','be','that','this','it','at','into','vs','via','using','use','new',
-  'first','second','third','startup','startups','company','companies','platform',
-  'product','tool','tools','solution','service','services',
-]);
+// Dedupe heuristics are intentionally conservative:
+// - exact slug catches deterministic reruns of the same concept.
+// - same sector + 6+ beachhead tokens catches near-identical ICP/wedge theses.
+// - 0.55 pitch Jaccard catches strongly overlapping elevator pitches while
+//   avoiding broad sector-level false positives.
+const BEACHHEAD_OVERLAP_THRESHOLD = 6;
+const PITCH_JACCARD_THRESHOLD = 0.55;
 
 function usage() {
   console.error('Usage: node scripts/check-idea-dedup.mjs <reportFolder> <ideas/_index.yaml> [--delete-on-duplicate] [--github-output <path>]');
@@ -21,26 +23,6 @@ function usage() {
 function loadYaml(path) {
   if (!existsSync(path)) return null;
   return yaml.load(readFileSync(path, 'utf8'));
-}
-
-function tokens(text) {
-  return new Set(String(text || '')
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s-]/gu, ' ')
-    .split(/\s+/)
-    .filter((token) => token.length >= 4 && !STOPWORDS.has(token)));
-}
-
-function intersectionSize(a, b) {
-  let count = 0;
-  for (const item of a) if (b.has(item)) count += 1;
-  return count;
-}
-
-function jaccard(a, b) {
-  if (!a.size && !b.size) return 0;
-  const intersection = intersectionSize(a, b);
-  return intersection / (a.size + b.size - intersection);
 }
 
 function writeOutput(path, key, value) {
@@ -86,13 +68,13 @@ for (const entry of entries) {
   }
   if (ideaSector && ideaSector === String(entry.sector || '')) {
     const overlap = intersectionSize(ideaBeachheadTokens, tokens(entry.beachhead));
-    if (overlap >= 6) {
+    if (overlap >= BEACHHEAD_OVERLAP_THRESHOLD) {
       match = { runFolder, reason: `sector-beachhead-overlap-${overlap}` };
       break;
     }
   }
   const similarity = jaccard(ideaPitchTokens, tokens(entry.pitch));
-  if (similarity >= 0.55) {
+  if (similarity >= PITCH_JACCARD_THRESHOLD) {
     match = { runFolder, reason: `pitch-jaccard-${similarity.toFixed(2)}` };
     break;
   }
