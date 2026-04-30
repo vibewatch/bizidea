@@ -34,6 +34,63 @@ const series: Pt[] = [...monthly, ...quarterly];
 const fmtK = (k: number) =>
   Math.abs(k) >= 1000 ? `$${(k / 1000).toFixed(2)}M` : `$${k.toFixed(0)}K`;
 const fmtSigned = (k: number) => (k >= 0 ? fmtK(k) : `-${fmtK(-k)}`);
+const scenarioLabel = (key: string) => {
+  const normalized = key.trim().toLowerCase();
+  if (lang !== 'zh') return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  return normalized === 'downside'
+    ? '下行'
+    : normalized === 'base'
+      ? '基准'
+      : normalized === 'upside'
+        ? '上行'
+        : key;
+};
+const localizeFinancialVariable = (value: unknown) => {
+  const raw = String(value ?? '');
+  if (lang !== 'zh') return raw;
+  return {
+    ARPU: 'ARPU',
+    CAC: 'CAC',
+    churn: '流失率',
+    'sales cycle': '销售周期',
+    'gross margin': '毛利率',
+    'hiring pace': '招聘节奏',
+  }[raw] ?? raw;
+};
+const localizeFinancialText = (value: unknown) => {
+  const raw = String(value ?? '');
+  if (lang !== 'zh') return raw;
+  return raw
+    .replace(/annual plus volume pricing/g, '年度订阅加用量定价')
+    .replace(/annual plus usage/g, '年度订阅加用量')
+    .replace(/USD per logo-month/g, '美元/客户-月')
+    .replace(/USD per production logo/g, '美元/正式生产客户')
+    .replace(/USD per pilot/g, '美元/试点')
+    .replace(/USD per FTE-year/g, '美元/FTE-年')
+    .replace(/USD per year/g, '美元/年')
+    .replace(/USD per month/g, '美元/月')
+    .replace(/USD per logo/g, '美元/客户')
+    .replace(/\bUSD\b/g, '美元')
+    .replace(/annual logo ARPU/g, '年化单客户 ARPU')
+    .replace(/per production logo/g, '每个正式生产客户')
+    .replace(/per logo-month/g, '每客户-月')
+    .replace(/per pilot/g, '每个试点')
+    .replace(/per logo/g, '每个客户')
+    .replace(/per month ramp/g, '每月爬坡')
+    .replace(/monthly logo churn/g, '月度客户流失率')
+    .replace(/gross margin/g, '毛利率')
+    .replace(/sales cycle/g, '销售周期')
+    .replace(/annualized/g, '年化')
+    .replace(/\bannual\b/g, '每年')
+    .replace(/per month/g, '每月')
+    .replace(/on exit FTE/g, '退出时每 FTE')
+    .replace(/percent/g, '百分比')
+    .replace(/hire plan/g, '招聘计划')
+    .replace(/logos/g, '客户数')
+    .replace(/\/mo/g, '/月')
+    .replace(/months/g, '个月')
+    .replace(/\bmonth\b/g, '月');
+};
 
 // FT palette — mirrors src/styles/tokens.css. Inline so the static SVG attributes resolve at build time.
 const C = {
@@ -140,11 +197,11 @@ const hcMaxTotal = hcQuartersWithData.reduce((m, q) => Math.max(m, q.total), 0) 
 const sens: { variable: string; cashImpactK: number; revImpactK: number; downside: string; upside: string }[] = Array.isArray(fm?.sensitivity)
   ? fm.sensitivity
       .map((s: any) => ({
-        variable: String(s.variable),
+        variable: localizeFinancialVariable(s.variable),
         cashImpactK: Number(s.cashImpactK ?? 0),
         revImpactK: Number(s.y3RevenueImpactK ?? 0),
-        downside: String(s.downsideCase ?? ''),
-        upside: String(s.upsideCase ?? ''),
+        downside: localizeFinancialText(s.downsideCase),
+        upside: localizeFinancialText(s.upsideCase),
       }))
       .sort((a: any, b: any) => Math.abs(b.cashImpactK) - Math.abs(a.cashImpactK))
   : [];
@@ -156,7 +213,7 @@ const scenarios = scs.map((k) => {
   const s = fm?.scenarios?.[k] ?? {};
   return {
     key: k,
-    label: k.charAt(0).toUpperCase() + k.slice(1),
+    label: scenarioLabel(k),
     desc: String(s.description ?? ''),
     revK: Number(s.y3RevenueK ?? 0),
     ebitdaK: Number(s.y3EbitdaK ?? 0),
@@ -170,7 +227,9 @@ const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)),
 {n > 0 && (
   <figure class="bz-chart" data-bz-chart>
     <figcaption class="bz-chart__caption bz-mono">
-      {t('chart.revCashEbitda', lang)} — {monthly.length}-month Y1 + {quarterly.length}-quarter Y2/Y3
+      {t('chart.revCashEbitda', lang)} — {lang === 'zh'
+        ? `${monthly.length} 个月的 Y1 + ${quarterly.length} 个季度的 Y2/Y3`
+        : `${monthly.length}-month Y1 + ${quarterly.length}-quarter Y2/Y3`}
     </figcaption>
     <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Financial trajectory" preserveAspectRatio="xMidYMid meet">
       {/* y grid + labels (line panel) */}
@@ -216,7 +275,9 @@ const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)),
             width={Math.max(16, innerW / n)}
             height={lineH}
             fill="transparent"
-            data-bz-tip={`${p.label} · Revenue ${fmtK(p.revenueK)} · Cash EOP ${fmtK(p.cashEopK)} · EBITDA ${fmtSigned(p.ebitdaK)}`}
+            data-bz-tip={lang === 'zh'
+              ? `${p.label} · 营收 ${fmtK(p.revenueK)} · 期末现金 ${fmtK(p.cashEopK)} · EBITDA ${fmtSigned(p.ebitdaK)}`
+              : `${p.label} · Revenue ${fmtK(p.revenueK)} · Cash EOP ${fmtK(p.cashEopK)} · EBITDA ${fmtSigned(p.ebitdaK)}`}
           />
         </g>
       ))}
@@ -281,7 +342,7 @@ const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)),
 {headcountRoles.length > 0 && (
   <figure class="bz-chart" data-bz-chart>
     <figcaption class="bz-chart__caption bz-mono">
-      {t('chart.headcount', lang)} — peak {hcMaxTotal} FTE
+      {t('chart.headcount', lang)} — {lang === 'zh' ? '峰值' : 'peak'} {hcMaxTotal} FTE
     </figcaption>
     <svg viewBox="0 0 720 220" role="img" aria-label="Headcount build">
       {(() => {
@@ -350,15 +411,15 @@ const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)),
         {scenarios.map((s) => (
           <tr>
             <td class="bz-mono bz-chart__row-label">{s.label}</td>
-            <td class="bz-chart__bar-cell" data-bz-tip={`${s.label} · Y3 revenue ${fmtK(s.revK)}`}>
+            <td class="bz-chart__bar-cell" data-bz-tip={`${s.label} · ${t('table.y3Revenue', lang)} ${fmtK(s.revK)}`}>
               <span class="bz-chart__bar" style={`width:${(s.revK / scMaxRev) * 100}%;`}></span>
               <span class="bz-chart__bar-num">{fmtK(s.revK)}</span>
             </td>
-            <td class="bz-chart__bar-cell bz-chart__bar-cell--signed" data-bz-tip={`${s.label} · Y3 EBITDA ${fmtSigned(s.ebitdaK)}`}>
+            <td class="bz-chart__bar-cell bz-chart__bar-cell--signed" data-bz-tip={`${s.label} · ${t('table.y3Ebitda', lang)} ${fmtSigned(s.ebitdaK)}`}>
               <span class={`bz-chart__bar ${s.ebitdaK >= 0 ? '' : 'bz-chart__bar--neg'}`} style={`width:${(Math.abs(s.ebitdaK) / scAbsEbitda) * 100}%;`}></span>
               <span class="bz-chart__bar-num">{fmtSigned(s.ebitdaK)}</span>
             </td>
-            <td class="bz-chart__bar-cell bz-chart__bar-cell--signed" data-bz-tip={`${s.label} · Cash low ${fmtSigned(s.cashLowK)}`}>
+            <td class="bz-chart__bar-cell bz-chart__bar-cell--signed" data-bz-tip={`${s.label} · ${t('table.cashLowPoint', lang)} ${fmtSigned(s.cashLowK)}`}>
               <span class={`bz-chart__bar ${s.cashLowK >= 0 ? '' : 'bz-chart__bar--neg'}`} style={`width:${(Math.abs(s.cashLowK) / scAbsCash) * 100}%;`}></span>
               <span class="bz-chart__bar-num">{fmtSigned(s.cashLowK)}</span>
             </td>
@@ -391,11 +452,11 @@ const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)),
             <td class="bz-mono bz-chart__row-label">{s.variable}</td>
             <td class="bz-chart__cell-tight">{s.downside}</td>
             <td class="bz-chart__cell-tight">{s.upside}</td>
-            <td class="bz-chart__bar-cell bz-chart__bar-cell--signed" data-bz-tip={`${s.variable} · cash impact ${fmtSigned(s.cashImpactK)}`}>
+            <td class="bz-chart__bar-cell bz-chart__bar-cell--signed" data-bz-tip={`${s.variable} · ${t('table.cashImpact', lang)} ${fmtSigned(s.cashImpactK)}`}>
               <span class={`bz-chart__bar ${s.cashImpactK >= 0 ? '' : 'bz-chart__bar--neg'}`} style={`width:${(Math.abs(s.cashImpactK) / sensMax) * 100}%;`}></span>
               <span class="bz-chart__bar-num">{fmtSigned(s.cashImpactK)}</span>
             </td>
-            <td class="bz-chart__bar-cell bz-chart__bar-cell--signed" data-bz-tip={`${s.variable} · revenue impact ${fmtSigned(s.revImpactK)}`}>
+            <td class="bz-chart__bar-cell bz-chart__bar-cell--signed" data-bz-tip={`${s.variable} · ${t('table.revenueImpact', lang)} ${fmtSigned(s.revImpactK)}`}>
               <span class={`bz-chart__bar ${s.revImpactK >= 0 ? '' : 'bz-chart__bar--neg'}`} style={`width:${(Math.abs(s.revImpactK) / sensMax) * 100}%;`}></span>
               <span class="bz-chart__bar-num">{fmtSigned(s.revImpactK)}</span>
             </td>

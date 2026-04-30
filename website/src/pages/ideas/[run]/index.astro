@@ -43,6 +43,65 @@ const fmtK = (k: number) =>
   (k >= 1000 || k <= -1000)
     ? `$${(k / 1000).toFixed(2)}M`
     : `$${k.toFixed(0)}K`;
+const cashEopLabel = lang === 'zh' ? '期末现金' : 'Cash EOP';
+const monthsLabel = lang === 'zh' ? '个月' : 'months';
+const scenarioLabel = (key: string) => {
+  const normalized = key.trim().toLowerCase();
+  if (lang !== 'zh') return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  return normalized === 'downside'
+    ? '下行'
+    : normalized === 'base'
+      ? '基准'
+      : normalized === 'upside'
+        ? '上行'
+        : key;
+};
+const localizeFinancialVariable = (value: unknown) => {
+  const raw = String(value ?? '');
+  if (lang !== 'zh') return raw;
+  return {
+    ARPU: 'ARPU',
+    CAC: 'CAC',
+    churn: '流失率',
+    'sales cycle': '销售周期',
+    'gross margin': '毛利率',
+    'hiring pace': '招聘节奏',
+  }[raw] ?? raw;
+};
+const localizeFinancialText = (value: unknown) => {
+  const raw = String(value ?? '');
+  if (lang !== 'zh') return raw;
+  return raw
+    .replace(/annual plus volume pricing/g, '年度订阅加用量定价')
+    .replace(/annual plus usage/g, '年度订阅加用量')
+    .replace(/USD per logo-month/g, '美元/客户-月')
+    .replace(/USD per production logo/g, '美元/正式生产客户')
+    .replace(/USD per pilot/g, '美元/试点')
+    .replace(/USD per FTE-year/g, '美元/FTE-年')
+    .replace(/USD per year/g, '美元/年')
+    .replace(/USD per month/g, '美元/月')
+    .replace(/USD per logo/g, '美元/客户')
+    .replace(/\bUSD\b/g, '美元')
+    .replace(/annual logo ARPU/g, '年化单客户 ARPU')
+    .replace(/per production logo/g, '每个正式生产客户')
+    .replace(/per logo-month/g, '每客户-月')
+    .replace(/per pilot/g, '每个试点')
+    .replace(/per logo/g, '每个客户')
+    .replace(/per month ramp/g, '每月爬坡')
+    .replace(/monthly logo churn/g, '月度客户流失率')
+    .replace(/gross margin/g, '毛利率')
+    .replace(/sales cycle/g, '销售周期')
+    .replace(/annualized/g, '年化')
+    .replace(/\bannual\b/g, '每年')
+    .replace(/per month/g, '每月')
+    .replace(/on exit FTE/g, '退出时每 FTE')
+    .replace(/percent/g, '百分比')
+    .replace(/hire plan/g, '招聘计划')
+    .replace(/logos/g, '客户数')
+    .replace(/\/mo/g, '/月')
+    .replace(/months/g, '个月')
+    .replace(/\bmonth\b/g, '月');
+};
 
 const tocItems = [
   { id: 'why-now', label: t('section.whyNow', lang) },
@@ -791,9 +850,9 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
       <FactRow
         caption={ui('3-year totals')}
         rows={[
-          { label: ui('Year 1 revenue'), value: fmtK(fm?.totals?.y1?.revenueK ?? 0), sub: `EBITDA ${fmtK(fm?.totals?.y1?.ebitdaK ?? 0)} · Cash EOP ${fmtK(fm?.totals?.y1?.cashEopK ?? 0)}` },
-          { label: ui('Year 2 revenue'), value: fmtK(fm?.totals?.y2?.revenueK ?? 0), sub: `EBITDA ${fmtK(fm?.totals?.y2?.ebitdaK ?? 0)} · Cash EOP ${fmtK(fm?.totals?.y2?.cashEopK ?? 0)}` },
-          { label: ui('Year 3 revenue'), value: fmtK(fm?.totals?.y3?.revenueK ?? 0), sub: `EBITDA ${fmtK(fm?.totals?.y3?.ebitdaK ?? 0)} · Cash EOP ${fmtK(fm?.totals?.y3?.cashEopK ?? 0)}` },
+          { label: ui('Year 1 revenue'), value: fmtK(fm?.totals?.y1?.revenueK ?? 0), sub: `EBITDA ${fmtK(fm?.totals?.y1?.ebitdaK ?? 0)} · ${cashEopLabel} ${fmtK(fm?.totals?.y1?.cashEopK ?? 0)}` },
+          { label: ui('Year 2 revenue'), value: fmtK(fm?.totals?.y2?.revenueK ?? 0), sub: `EBITDA ${fmtK(fm?.totals?.y2?.ebitdaK ?? 0)} · ${cashEopLabel} ${fmtK(fm?.totals?.y2?.cashEopK ?? 0)}` },
+          { label: ui('Year 3 revenue'), value: fmtK(fm?.totals?.y3?.revenueK ?? 0), sub: `EBITDA ${fmtK(fm?.totals?.y3?.ebitdaK ?? 0)} · ${cashEopLabel} ${fmtK(fm?.totals?.y3?.cashEopK ?? 0)}` },
         ]}
       />
       {fm?.unitEconomics && (
@@ -802,7 +861,7 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
           rows={[
             { label: ui('ARPU (annual)'), value: fmtK(fm.unitEconomics.arpuAnnualK ?? 0) },
             { label: ui('Gross margin'), value: `${(fm.unitEconomics.grossMarginPct ?? 0).toFixed(0)}%` },
-            { label: 'CAC', value: fmtK(fm.unitEconomics.cacK ?? 0), sub: `${ui('Payback')} ${(fm.unitEconomics.cacPaybackMonths ?? 0).toFixed(1)} months` },
+            { label: 'CAC', value: fmtK(fm.unitEconomics.cacK ?? 0), sub: `${ui('Payback')} ${(fm.unitEconomics.cacPaybackMonths ?? 0).toFixed(1)} ${monthsLabel}` },
             { label: 'LTV / CAC', value: `${(fm.unitEconomics.ltvCacRatio ?? 0).toFixed(1)}x`, sub: `${ui('LTV')} ${fmtK(fm.unitEconomics.ltvK ?? 0)}` },
           ]}
         />
@@ -812,7 +871,7 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
           caption={ui('Funding ask')}
           rows={[
             { label: ui('Round'), value: `${fm.fundingAsk.round} · $${fm.fundingAsk.amountM.toFixed(1)}M` },
-            { label: ui('Runway'), value: `${fm.fundingAsk.runwayMonths} months` },
+            { label: ui('Runway'), value: `${fm.fundingAsk.runwayMonths} ${monthsLabel}` },
             { label: ui('Milestone'), value: fm.fundingAsk.milestone ?? null },
           ]}
         />
@@ -847,7 +906,7 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
                 const s = fm.scenarios[k];
                 return (
                   <tr>
-                    <td><span class={`bz-pill bz-pill--scn-${k}`}>{k}</span></td>
+                    <td><span class={`bz-pill bz-pill--scn-${k}`}>{scenarioLabel(k)}</span></td>
                     <td class="bz-mono">{fmtK(s.y3RevenueK ?? 0)}</td>
                     <td class="bz-mono">{fmtK(s.y3EbitdaK ?? 0)}</td>
                     <td class="bz-mono">{fmtK(s.cashLowPointK ?? 0)}</td>
@@ -881,10 +940,10 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
             <tbody>
               {fm.sensitivity.map((s: any) => (
                 <tr>
-                  <td>{s.variable}</td>
-                  <td>{s.downsideCase}</td>
-                  <td>{s.baseCase}</td>
-                  <td>{s.upsideCase}</td>
+                  <td>{localizeFinancialVariable(s.variable)}</td>
+                  <td>{localizeFinancialText(s.downsideCase)}</td>
+                  <td>{localizeFinancialText(s.baseCase)}</td>
+                  <td>{localizeFinancialText(s.upsideCase)}</td>
                 </tr>
               ))}
             </tbody>
@@ -909,9 +968,9 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
                 <tr>
                   <td class="bz-mono">{a.id}</td>
                   <td>{a.name}</td>
-                  <td>{a.value}</td>
-                  <td>{a.unit}</td>
-                  <td>{a.source}</td>
+                  <td>{localizeFinancialText(a.value)}</td>
+                  <td>{localizeFinancialText(a.unit)}</td>
+                  <td>{localizeFinancialText(a.source)}</td>
                 </tr>
               ))}
             </tbody>
