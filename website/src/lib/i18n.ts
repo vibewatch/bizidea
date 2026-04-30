@@ -2,13 +2,13 @@ export type Lang = 'en' | 'zh';
 
 const translations: Record<Lang, Record<string, string>> = {
   en: {
-    'header.tag': 'Startup Dossiers',
     'header.home': 'Home',
     'lang.switch': '中文',
     'footer.tag': 'AI-generated venture research',
     'footer.sections': 'Sections',
     'footer.latest': 'Latest',
     'footer.all': 'All dossiers',
+    'footer.rss': 'RSS feed',
     'footer.about': 'About',
     'footer.about.line1': 'Triage → idea → research → plan → model',
     'footer.about.line2': 'Generated end-to-end by specialist agents',
@@ -19,7 +19,7 @@ const translations: Record<Lang, Record<string, string>> = {
     'nav.inPage': 'In-page navigation',
     'citation.aria': 'Citation',
 
-    'home.title': 'Bizidea — Startup Dossiers',
+    'home.title': 'Bizidea',
     'home.description': 'AI-generated startup research dossiers — triage, idea, market, plan, financial model.',
     'home.headline.line1': 'Startup news,',
     'home.headline.line2': 'read like a venture memo.',
@@ -137,13 +137,13 @@ const translations: Record<Lang, Record<string, string>> = {
     '404.back': '← Back to the newsstand',
   },
   zh: {
-    'header.tag': '创业报告',
     'header.home': '首页',
     'lang.switch': '英文',
     'footer.tag': 'AI 生成的创投研究',
     'footer.sections': '分栏',
     'footer.latest': '最新',
     'footer.all': '全部报告',
+    'footer.rss': 'RSS 订阅',
     'footer.about': '关于',
     'footer.about.line1': '筛选 → 创意 → 研究 → 计划 → 模型',
     'footer.about.line2': '由专业智能体端到端生成',
@@ -154,7 +154,7 @@ const translations: Record<Lang, Record<string, string>> = {
     'nav.inPage': '页内导航',
     'citation.aria': '引用',
 
-    'home.title': 'Bizidea — 创业报告',
+    'home.title': 'Bizidea',
     'home.description': 'AI 生成的创业研究报告：筛选、创意、市场、计划、财务模型。',
     'home.headline.line1': '创业新闻，',
     'home.headline.line2': '像风投备忘录一样阅读。',
