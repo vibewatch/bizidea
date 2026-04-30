@@ -1,0 +1,128 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Ribbon from '../../../components/Ribbon.astro';
+import Rule from '../../../components/Rule.astro';
+import { hasZhTranslation } from '../../../content/ideas-loader';
+import { t, type Lang } from '../../../lib/i18n';
+import { formatMonthLabel, groupIdeasBySector, monthSlugForTimestamp, summarizeReportEntries } from '../../../lib/reports';
+
+const lang: Lang = 'zh';
+const all = (await getCollection('ideas')).filter((entry) => hasZhTranslation(entry.id));
+const sectorGroups = groupIdeasBySector(all, lang);
+const base = import.meta.env.BASE_URL;
+---
+<BaseLayout
+  title={t('sectors.title', lang)}
+  description={t('sectors.description', lang)}
+  lang={lang}
+  langSwitchHref={`${base}sectors/`}
+>
+  <section class="bz-sector-masthead">
+    <div class="bz-container">
+      <p class="bz-sector-masthead__eyebrow bz-mono">
+        {sectorGroups.length} {t('sectors.ribbon', lang)}
+      </p>
+      <h1 class="bz-sector-masthead__title">{t('sectors.heading', lang)}</h1>
+      <p class="bz-sector-masthead__deck">{t('sectors.deck', lang)}</p>
+    </div>
+  </section>
+
+  <Rule weight="thin" />
+  <Ribbon label={t('sectors.ribbon', lang)} id="sector-index" />
+
+  <div class="bz-container">
+    <div class="bz-sector-grid">
+      {sectorGroups.map((group) => {
+        const summary = summarizeReportEntries(group.entries, lang);
+        const recentMonth = formatMonthLabel(monthSlugForTimestamp(group.entries[0]?.data.runTimestamp ?? ''), lang);
+        return (
+          <a class="bz-sector-card" href={`${base}zh/sectors/${group.slug}/`}>
+            <span class="bz-sector-card__label">{group.label}</span>
+            <span class="bz-sector-card__count bz-mono">
+              {group.entries.length} {group.entries.length === 1 ? t('home.dossierCount.one', lang) : t('home.dossierCount.other', lang)}
+            </span>
+            <span class="bz-sector-card__meta bz-mono">
+              {t('archive.summary.avgRating', lang)} {summary.averageRating?.toFixed(1) ?? '—'} · {t('sectors.months', lang)} {recentMonth}
+            </span>
+            <span class="bz-sector-card__cta bz-mono">{t('sectors.open', lang)}</span>
+          </a>
+        );
+      })}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .bz-sector-masthead { padding-block: var(--space-5) var(--space-3); }
+  .bz-sector-masthead__eyebrow { color: var(--caption-gray); margin: 0 0 var(--space-2); }
+  .bz-sector-masthead__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-xl);
+    line-height: 1.16;
+    letter-spacing: var(--tracking-display-snug);
+    font-weight: 700;
+    color: var(--ink-page);
+    margin: var(--space-2) 0;
+    max-width: 34ch;
+  }
+  .bz-sector-masthead__deck {
+    font-family: var(--font-sans);
+    font-size: var(--fs-md);
+    line-height: 1.55;
+    max-width: 60ch;
+    color: var(--ink-page);
+    margin-bottom: 0;
+  }
+  .bz-sector-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4) var(--space-6);
+  }
+  .bz-sector-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 166px;
+    gap: var(--space-2);
+    background:
+      linear-gradient(135deg, rgba(13, 118, 128, 0.08), transparent 46%),
+      rgba(242, 223, 206, 0.55);
+    border-top: 3px solid var(--claret);
+    border-left: 3px solid transparent;
+    color: var(--ink-page);
+    text-decoration: none;
+    padding: var(--space-4);
+    transition: background 120ms ease, border-left-color 120ms ease, transform 120ms ease;
+  }
+  .bz-sector-card:hover {
+    background:
+      linear-gradient(135deg, rgba(13, 118, 128, 0.12), transparent 48%),
+      var(--paper-wheat);
+    border-left-color: var(--claret);
+    transform: translateY(-2px);
+  }
+  .bz-sector-card__label {
+    font-family: var(--font-display);
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: var(--tracking-display-snug);
+  }
+  .bz-sector-card__count {
+    color: var(--caption-gray);
+    border-top: var(--rule-hairline);
+    margin-top: var(--space-2);
+    padding-top: var(--space-3);
+  }
+  .bz-sector-card__meta { color: var(--caption-gray); font-size: var(--fs-xs); }
+  .bz-sector-card__cta {
+    align-self: flex-start;
+    color: var(--claret);
+    margin-top: auto;
+    border-bottom: 2px solid currentColor;
+    padding-bottom: var(--space-1);
+  }
+  .bz-sector-card:hover .bz-sector-card__cta { color: var(--ink-page); }
+  @media (max-width: 1023px) { .bz-sector-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 599px) { .bz-sector-grid { grid-template-columns: 1fr; } }
+</style>

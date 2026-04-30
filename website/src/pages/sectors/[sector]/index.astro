@@ -1,0 +1,106 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Ribbon from '../../../components/Ribbon.astro';
+import Rule from '../../../components/Rule.astro';
+import StoryTile from '../../../components/StoryTile.astro';
+import { hasZhTranslation, loadLocalizedIndex } from '../../../content/ideas-loader';
+import { t, type Lang } from '../../../lib/i18n';
+import { groupIdeasBySector, summarizeReportEntries } from '../../../lib/reports';
+
+const lang: Lang = 'en';
+
+export async function getStaticPaths() {
+  const all = await getCollection('ideas');
+  const zhSectorSlugs = new Set(groupIdeasBySector(all.filter((entry) => hasZhTranslation(entry.id)), 'zh').map((group) => group.slug));
+  return groupIdeasBySector(all, 'en').map((group) => ({
+    params: { sector: group.slug },
+    props: { entries: group.entries, sectorSlug: group.slug, sectorLabel: group.label, hasZhSector: zhSectorSlugs.has(group.slug) },
+  }));
+}
+
+const { entries, sectorSlug, sectorLabel, hasZhSector } = Astro.props;
+const summary = summarizeReportEntries(entries, lang);
+const base = import.meta.env.BASE_URL;
+const hrefFor = (entry: any) => `${base}${entry.data.folderSlug}/`;
+
+function fmtRunDate(ts: string): string {
+  if (!/^\d{14}$/.test(ts)) return ts;
+  return `${ts.slice(0, 4)}-${ts.slice(4, 6)}-${ts.slice(6, 8)} ${ts.slice(8, 10)}:${ts.slice(10, 12)}`;
+}
+
+const localized = new Map<string, Record<string, unknown> | null>();
+for (const entry of entries) {
+  localized.set(entry.id, loadLocalizedIndex(entry.id, lang));
+}
+
+const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
+  const idx = localized.get(entry.id);
+  const val = idx?.[field];
+  return typeof val === 'string' && val.length > 0 ? val : entry.data[field];
+};
+---
+<BaseLayout
+  title={`${sectorLabel} ${t('sectors.titleSuffix', lang)}`}
+  description={t('sectors.description', lang)}
+  lang={lang}
+  langSwitchHref={hasZhSector ? `${base}zh/sectors/${sectorSlug}/` : `${base}zh/sectors/`}
+>
+  <section class="bz-sector-masthead">
+    <div class="bz-container">
+      <p class="bz-sector-masthead__eyebrow bz-mono"><a href={`${base}sectors/`}>{t('sectors.back', lang)}</a></p>
+      <h1 class="bz-sector-masthead__title">{sectorLabel}</h1>
+      <p class="bz-sector-masthead__deck">
+        {entries.length} {entries.length === 1 ? t('home.dossierCount.one', lang) : t('home.dossierCount.other', lang)} · {t('archive.summary.avgRating', lang)} {summary.averageRating?.toFixed(1) ?? '—'}
+      </p>
+    </div>
+  </section>
+
+  <Rule weight="thin" />
+  <Ribbon label={t('sectors.ribbon', lang)} id="sector-dossiers" />
+
+  <div class="bz-container">
+    <div class="bz-grid">
+      {entries.map((entry) => (
+        <StoryTile
+          href={hrefFor(entry)}
+          kicker={`${localText(entry, 'kicker')} · ${sectorLabel}`}
+          headline={localText(entry, 'pitch')}
+          deck={localText(entry, 'topic')}
+          meta={fmtRunDate(entry.data.runTimestamp)}
+          rating={entry.data.rating}
+          lang={lang}
+        />
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .bz-sector-masthead { padding-block: var(--space-5) var(--space-3); }
+  .bz-sector-masthead__eyebrow { margin: 0 0 var(--space-2); }
+  .bz-sector-masthead__eyebrow a { color: var(--claret); text-decoration: none; }
+  .bz-sector-masthead__eyebrow a:hover { color: var(--ink-page); }
+  .bz-sector-masthead__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-xl);
+    line-height: 1.16;
+    letter-spacing: var(--tracking-display-snug);
+    font-weight: 700;
+    color: var(--ink-page);
+    margin: var(--space-2) 0;
+    max-width: 34ch;
+  }
+  .bz-sector-masthead__deck {
+    font-family: var(--font-sans);
+    font-size: var(--fs-md);
+    line-height: 1.55;
+    max-width: 60ch;
+    color: var(--ink-page);
+    margin-bottom: 0;
+  }
+  .bz-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 var(--space-6); }
+  .bz-grid > :global(*) { border-top: var(--rule-thin); padding-top: var(--space-4); }
+  @media (max-width: 1023px) { .bz-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 599px) { .bz-grid { grid-template-columns: 1fr; } }
+</style>

@@ -18,9 +18,11 @@ import BusinessModelCanvas from '../../../components/BusinessModelCanvas.astro';
 import CitedText from '../../../components/CitedText.astro';
 import RatingSparkline from '../../../components/RatingSparkline.astro';
 import DossierToc from '../../../components/DossierToc.astro';
-import { loadLocalizedIndex, loadStageFiles } from '../../../content/ideas-loader';
+import StoryTile from '../../../components/StoryTile.astro';
+import { hasZhTranslation, loadLocalizedIndex, loadStageFiles } from '../../../content/ideas-loader';
 import { linkifyCitations } from '../../../lib/citations';
 import { citationAriaLabel, localizeFundingRound, localizeSector, t, type Lang } from '../../../lib/i18n';
+import { findRelatedDossiers, RELATED_DOSSIER_LIMIT } from '../../../lib/reports';
 
 export async function getStaticPaths() {
   return [];
@@ -33,6 +35,9 @@ const localizedIndex = loadLocalizedIndex(rawEntry.id, lang);
 const entry = { ...rawEntry, data: { ...rawEntry.data, ...(localizedIndex ?? {}) } };
 const base = import.meta.env.BASE_URL;
 const prefixFor = (l: Lang) => (l === 'zh' ? `${base}zh/` : base);
+const langSwitchHref = lang === 'en' && !hasZhTranslation(rawEntry.id)
+  ? `${base}zh/`
+  : `${prefixFor(otherLang)}${entry.data.folderSlug}/`;
 const stages = loadStageFiles(entry.id, lang);
 const idea = stages.idea as any;
 const research = stages.research as any;
@@ -43,6 +48,19 @@ const topFundingRoundLabel = localizeFundingRound(String(entry.data.financials?.
 const fundingRoundLabel = localizeFundingRound(String(fm?.fundingAsk?.round ?? ''), lang);
 const atGlanceLabel = t('common.atGlance', lang);
 const citationLabel = (id: number | string) => citationAriaLabel(id, lang);
+const relatedPool = (await getCollection('ideas')).filter((candidate) => lang === 'en' || hasZhTranslation(candidate.id));
+const relatedEntries = findRelatedDossiers(rawEntry, relatedPool, RELATED_DOSSIER_LIMIT);
+const relatedLocalized = new Map<string, Record<string, unknown> | null>();
+for (const relatedEntry of relatedEntries) {
+  relatedLocalized.set(relatedEntry.id, loadLocalizedIndex(relatedEntry.id, lang));
+}
+const relatedHrefFor = (relatedEntry: any) => `${prefixFor(lang)}${relatedEntry.data.folderSlug}/`;
+const relatedText = (relatedEntry: any, field: 'kicker' | 'pitch' | 'topic') => {
+  const idx = relatedLocalized.get(relatedEntry.id);
+  const val = idx?.[field];
+  return typeof val === 'string' && val.length > 0 ? val : relatedEntry.data[field];
+};
+const relatedSectorFor = (relatedEntry: any) => localizeSector(String(relatedEntry.data.sector ?? ''), lang);
 
 const fmtK = (k: number) =>
   (k >= 1000 || k <= -1000)
@@ -260,7 +278,7 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
   title={`${(idea?.pitch ?? entry.data.pitch)} — Bizidea`}
   description={idea?.pitch ?? entry.data.pitch}
   lang={lang}
-  langSwitchHref={`${prefixFor(otherLang)}${entry.data.folderSlug}/`}
+  langSwitchHref={langSwitchHref}
 >
   <article class="bz-story">
     <header class="bz-story__head bz-container">
@@ -1038,6 +1056,27 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
       </div>
     </div>
   </article>
+  {relatedEntries.length > 0 && (
+    <section class="bz-related" aria-labelledby="related-dossiers">
+      <Ribbon label={t('related.ribbon', lang)} id="related-dossiers" />
+      <div class="bz-container">
+        <p class="bz-related__deck">{t('related.deck', lang)}</p>
+        <div class="bz-related__grid">
+          {relatedEntries.map((relatedEntry) => (
+            <StoryTile
+              href={relatedHrefFor(relatedEntry)}
+              kicker={`${relatedText(relatedEntry, 'kicker')} · ${relatedSectorFor(relatedEntry)}`}
+              headline={relatedText(relatedEntry, 'pitch')}
+              deck={relatedText(relatedEntry, 'topic')}
+              meta={`${t('dossier.overallRating', lang)} ${relatedEntry.data.rating.overall.toFixed(1)}`}
+              rating={relatedEntry.data.rating}
+              lang={lang}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
   <script is:inline>
     document.querySelector('[data-print-dossier]')?.addEventListener('click', () => window.print());
   </script>
@@ -1515,6 +1554,29 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
     margin-left: var(--space-2);
   }
   .bz-assumptions[open] > summary::after { content: "  ▴"; }
+
+  .bz-related {
+    margin-top: var(--space-8);
+  }
+  .bz-related__deck {
+    font-family: var(--font-sans);
+    font-size: var(--fs-md);
+    line-height: 1.55;
+    color: var(--ink-page);
+    max-width: 62ch;
+    margin: 0 0 var(--space-4);
+  }
+  .bz-related__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0 var(--space-6);
+  }
+  .bz-related__grid > :global(*) {
+    border-top: var(--rule-thin);
+    padding-top: var(--space-4);
+  }
+  @media (max-width: 1023px) { .bz-related__grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 599px) { .bz-related__grid { grid-template-columns: 1fr; } }
 
   @page { margin: 14mm 12mm; }
   @media print {
