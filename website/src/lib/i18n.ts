@@ -34,6 +34,14 @@ const translations: Record<Lang, Record<string, string>> = {
     'home.empty': 'No additional dossiers yet — generate one with the Bizidea agent.',
     'home.dossierCount.one': 'dossier',
     'home.dossierCount.other': 'dossiers',
+    'home.hiddenSuffix': 'in the archive',
+    'home.viewAll': 'View all dossiers →',
+
+    'archive.title': 'All dossiers — Bizidea',
+    'archive.description': 'Complete archive of AI-generated startup research dossiers.',
+    'archive.heading': 'All dossiers.',
+    'archive.deck': 'Browse every generated Bizidea report in newest-first order, from fresh signals to earlier startup theses.',
+    'archive.ribbon': 'Archive',
 
     'dossier.byline': 'By Bizidea Research',
     'dossier.export': 'Export PDF',
@@ -169,6 +177,14 @@ const translations: Record<Lang, Record<string, string>> = {
     'home.empty': '暂无更多报告——可使用 Bizidea 智能体生成。',
     'home.dossierCount.one': '份报告',
     'home.dossierCount.other': '份报告',
+    'home.hiddenSuffix': '已收入归档',
+    'home.viewAll': '查看全部报告 →',
+
+    'archive.title': '全部报告 — Bizidea',
+    'archive.description': 'AI 生成创业研究报告的完整归档。',
+    'archive.heading': '全部报告。',
+    'archive.deck': '按时间倒序浏览所有已生成的 Bizidea 报告，从最新信号到早期创业论点。',
+    'archive.ribbon': '归档',
 
     'dossier.byline': 'Bizidea 研究',
     'dossier.export': '导出 PDF',

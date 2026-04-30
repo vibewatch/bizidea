@@ -9,11 +9,14 @@ import StoryTile from '../components/StoryTile.astro';
 import RatingSparkline from '../components/RatingSparkline.astro';
 import { loadLocalizedIndex } from '../content/ideas-loader';
 import { localizeFundingRound, t, type Lang } from '../lib/i18n';
+import { HOMEPAGE_REPORT_LIMIT, sortIdeasNewestFirst } from '../lib/reports';
 
 const lang: Lang = 'en';
 const all = await getCollection('ideas');
-const sorted = all.sort((a, b) => b.data.runTimestamp.localeCompare(a.data.runTimestamp));
-const [hero, ...rest] = sorted;
+const sorted = sortIdeasNewestFirst(all);
+const [hero, ...allRest] = sorted;
+const rest = allRest.slice(0, Math.max(HOMEPAGE_REPORT_LIMIT - 1, 0));
+const hiddenCount = Math.max(sorted.length - HOMEPAGE_REPORT_LIMIT, 0);
 
 const base = import.meta.env.BASE_URL;
 const hrefFor = (entry: any) => `${base}${entry.data.folderSlug}/`;
@@ -59,7 +62,7 @@ const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
       <div class="bz-container bz-hero__layout">
         <div class="bz-hero__copy">
           <Kicker bold>{localText(hero, 'kicker')} · {hero.data.sector}</Kicker>
-          <Headline as="h2" size="hero" href={hrefFor(hero)}>
+          <Headline as="h2" size="block" class="bz-hero__headline" href={hrefFor(hero)}>
             {localText(hero, 'pitch')}
           </Headline>
           <p class="bz-hero__deck">{localText(hero, 'topic')}</p>
@@ -70,7 +73,7 @@ const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
             <RatingSparkline
               dimensions={hero.data.rating.dimensions}
               overall={hero.data.rating.overall}
-              size="md"
+              size="sm"
               lang={lang}
             />
             <span class="bz-hero__panel-legend bz-mono">{t('home.rating.legend', lang)}</span>
@@ -107,21 +110,31 @@ const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
           />
         ))}
       </div>
+      {hiddenCount > 0 && (
+        <div class="bz-home-archive-cta">
+          <a href={`${base}archive/`} class="bz-home-archive-button bz-mono">
+            {t('home.viewAll', lang)}
+          </a>
+          <span class="bz-home-archive-cta__meta bz-mono">
+            {hiddenCount} {hiddenCount === 1 ? t('home.dossierCount.one', lang) : t('home.dossierCount.other', lang)} {t('home.hiddenSuffix', lang)}
+          </span>
+        </div>
+      )}
     </div>
   )}
 </BaseLayout>
 
 <style>
-  .bz-masthead { padding-block: var(--space-8) var(--space-5); }
+  .bz-masthead { padding-block: var(--space-5) var(--space-3); }
   .bz-masthead__title {
     font-family: var(--font-display);
-    font-size: var(--fs-3xl);
-    line-height: var(--lh-display-hero);
-    letter-spacing: var(--tracking-display-tight);
-    font-weight: 600;
+    font-size: var(--fs-xl);
+    line-height: 1.16;
+    letter-spacing: var(--tracking-display-snug);
+    font-weight: 700;
     color: var(--ink-page);
-    margin: var(--space-3) 0;
-    max-width: 22ch;
+    margin: var(--space-2) 0;
+    max-width: 34ch;
   }
   .bz-masthead__title span { display: block; }
   .bz-masthead__deck {
@@ -143,6 +156,12 @@ const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
     .bz-hero__layout { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: var(--space-7); }
   }
   .bz-hero__copy { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+  .bz-hero__headline {
+    font-size: var(--fs-lg);
+    line-height: 1.16;
+    letter-spacing: var(--tracking-display-snug);
+    max-width: 34ch;
+  }
   .bz-hero__deck {
     font-family: var(--font-sans);
     font-size: var(--fs-md);
@@ -154,10 +173,10 @@ const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
   .bz-hero__panel {
     background: var(--paper-wheat);
     border-top: 3px solid var(--claret);
-    padding: var(--space-4) var(--space-4) var(--space-3);
+    padding: var(--space-3) var(--space-4);
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    gap: var(--space-3);
   }
   .bz-hero__panel-head {
     display: flex;
@@ -169,9 +188,9 @@ const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
   .bz-hero__facts {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--space-3);
+    gap: var(--space-2);
     margin: 0;
-    padding: var(--space-3) 0 0;
+    padding: var(--space-2) 0 0;
     border-top: var(--rule-hairline);
   }
   .bz-hero__facts > div {
@@ -184,8 +203,8 @@ const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
   .bz-hero__facts dd {
     margin: 0;
     font-family: var(--font-display);
-    font-size: var(--fs-lg);
-    line-height: 1.15;
+    font-size: var(--fs-base);
+    line-height: 1.2;
     color: var(--ink-page);
     font-feature-settings: 'tnum';
     text-align: right;
@@ -193,7 +212,7 @@ const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
   .bz-hero__facts-sub {
     font-family: var(--font-sans);
     font-weight: 500;
-    font-size: var(--fs-xs);
+    font-size: var(--fs-2xs);
     color: var(--caption-gray);
     text-transform: lowercase;
   }
@@ -202,7 +221,7 @@ const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
     color: var(--claret);
     text-decoration: none;
     border-top: var(--rule-hairline);
-    padding-top: var(--space-3);
+    padding-top: var(--space-2);
   }
   .bz-hero__panel-cta:hover { color: var(--ink-page); }
 
@@ -226,5 +245,36 @@ const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
     color: var(--caption-gray);
     padding-block: var(--space-7);
     text-align: center;
+  }
+
+  .bz-home-archive-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--claret);
+    color: var(--paper);
+    padding: var(--space-3) var(--space-4);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .bz-home-archive-button:hover {
+    background: var(--ink-page);
+    color: var(--paper);
+  }
+
+  .bz-home-archive-cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    background: var(--paper-wheat);
+    border-top: 3px solid var(--claret);
+    margin-top: var(--space-7);
+    padding: var(--space-4);
+  }
+  .bz-home-archive-cta__meta {
+    color: var(--ink-page);
+    font-size: var(--fs-sm);
   }
 </style>

@@ -1,0 +1,122 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Ribbon from '../../../components/Ribbon.astro';
+import Rule from '../../../components/Rule.astro';
+import StoryTile from '../../../components/StoryTile.astro';
+import { loadLocalizedIndex } from '../../../content/ideas-loader';
+import { localizeSector, t, type Lang } from '../../../lib/i18n';
+import { sortIdeasNewestFirst } from '../../../lib/reports';
+
+const lang: Lang = 'zh';
+const all = await getCollection('ideas');
+const sorted = sortIdeasNewestFirst(all);
+
+const base = import.meta.env.BASE_URL;
+const hrefFor = (entry: any) => `${base}${lang}/${entry.data.folderSlug}/`;
+
+function fmtRunDate(ts: string): string {
+  if (!/^\d{14}$/.test(ts)) return ts;
+  return `${ts.slice(0, 4)}-${ts.slice(4, 6)}-${ts.slice(6, 8)} ${ts.slice(8, 10)}:${ts.slice(10, 12)}`;
+}
+
+const localized = new Map<string, Record<string, unknown> | null>();
+for (const entry of sorted) {
+  localized.set(entry.id, loadLocalizedIndex(entry.id, lang));
+}
+
+const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
+  const idx = localized.get(entry.id);
+  const val = idx?.[field];
+  return typeof val === 'string' && val.length > 0 ? val : entry.data[field];
+};
+const sectorFor = (entry: any) => localizeSector(String(entry.data.sector ?? ''), lang);
+---
+<BaseLayout
+  title={t('archive.title', lang)}
+  description={t('archive.description', lang)}
+  lang={lang}
+  langSwitchHref={`${base}archive/`}
+>
+  <section class="bz-archive-masthead">
+    <div class="bz-container">
+      <p class="bz-archive-masthead__eyebrow bz-mono">
+        {sorted.length} {sorted.length === 1 ? t('home.dossierCount.one', lang) : t('home.dossierCount.other', lang)}
+      </p>
+      <h1 class="bz-archive-masthead__title">{t('archive.heading', lang)}</h1>
+      <p class="bz-archive-masthead__deck">{t('archive.deck', lang)}</p>
+    </div>
+  </section>
+
+  <Rule weight="thin" />
+  <Ribbon label={t('archive.ribbon', lang)} id="all-dossiers" />
+
+  {sorted.length === 0 ? (
+    <div class="bz-container">
+      <p class="bz-empty bz-mono">{t('home.empty', lang)}</p>
+    </div>
+  ) : (
+    <div class="bz-container">
+      <div class="bz-grid">
+        {sorted.map((entry) => (
+          <StoryTile
+            href={hrefFor(entry)}
+            kicker={`${localText(entry, 'kicker')} · ${sectorFor(entry)}`}
+            headline={localText(entry, 'pitch')}
+            deck={localText(entry, 'topic')}
+            meta={fmtRunDate(entry.data.runTimestamp)}
+            rating={entry.data.rating}
+            lang={lang}
+          />
+        ))}
+      </div>
+    </div>
+  )}
+</BaseLayout>
+
+<style>
+  .bz-archive-masthead { padding-block: var(--space-8) var(--space-5); }
+  .bz-archive-masthead__eyebrow {
+    color: var(--caption-gray);
+    margin: 0 0 var(--space-2);
+  }
+  .bz-archive-masthead__title {
+    font-family: var(--font-display);
+    font-size: var(--fs-xl);
+    line-height: 1.16;
+    letter-spacing: var(--tracking-display-snug);
+    font-weight: 700;
+    color: var(--ink-page);
+    margin: var(--space-3) 0;
+    max-width: 34ch;
+  }
+  .bz-archive-masthead__deck {
+    font-family: var(--font-sans);
+    font-size: var(--fs-md);
+    line-height: 1.55;
+    max-width: 60ch;
+    color: var(--ink-page);
+  }
+
+  .bz-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0 var(--space-6);
+  }
+  .bz-grid > :global(*) {
+    border-top: var(--rule-thin);
+    padding-top: var(--space-4);
+  }
+  @media (max-width: 1023px) {
+    .bz-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 599px) {
+    .bz-grid { grid-template-columns: 1fr; }
+  }
+
+  .bz-empty {
+    color: var(--caption-gray);
+    padding-block: var(--space-7);
+    text-align: center;
+  }
+</style>
