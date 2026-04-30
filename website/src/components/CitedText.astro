@@ -2,13 +2,16 @@
 // Linkifies `[N]` and `[N][M][...]` citation tokens into anchors that point at
 // the matching `<li id="cite-N">` in the cited-sources bibliography.
 
+import { citationAriaLabel, type Lang } from '../lib/i18n';
+
 interface Props {
   text?: string | null;
   /** Optional element wrapper, defaults to span. */
   as?: keyof HTMLElementTagNameMap;
   class?: string;
+  lang?: Lang;
 }
-const { text, as: Tag = 'span', class: cls = '' } = Astro.props as Props;
+const { text, as: Tag = 'span', class: cls = '', lang = 'en' } = Astro.props as Props;
 
 const parts: Array<string | { id: string }> = [];
 if (typeof text === 'string' && text.length > 0) {
@@ -27,7 +30,7 @@ if (typeof text === 'string' && text.length > 0) {
   {parts.map((p) =>
     typeof p === 'string'
       ? p
-      : <a class="bz-cite" href={`#cite-${p.id}`} aria-label={`Citation ${p.id}`}>[{p.id}]</a>
+      : <a class="bz-cite" href={`#cite-${p.id}`} aria-label={citationAriaLabel(p.id, lang)}>[{p.id}]</a>
   )}
 </Tag>
 <style is:global>

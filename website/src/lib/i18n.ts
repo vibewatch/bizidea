@@ -14,6 +14,10 @@ const translations: Record<Lang, Record<string, string>> = {
     'footer.about.line2': 'Generated end-to-end by specialist agents',
     'footer.build': 'Build',
     'footer.copyright': 'Copyright © 2026 Yingting Huang',
+    'common.atGlance': 'At a glance',
+    'brand.home': 'BizIdea home',
+    'nav.inPage': 'In-page navigation',
+    'citation.aria': 'Citation',
 
     'home.title': 'Bizidea — Startup Dossiers',
     'home.description': 'AI-generated startup research dossiers — triage, idea, market, plan, financial model.',
@@ -107,8 +111,11 @@ const translations: Record<Lang, Record<string, string>> = {
     'heatmap.unscored': '(unscored)',
 
     'chart.revCashEbitda': 'Revenue, cash, and EBITDA',
+    'chart.trajectory.aria': 'Financial trajectory',
     'chart.useOfFunds': 'Use of funds',
+    'chart.useOfFunds.aria': 'Use of funds',
     'chart.headcount': 'Headcount build by role',
+    'chart.headcount.aria': 'Headcount build',
     'chart.scenarios': 'Year-3 scenarios — base / downside / upside',
     'chart.sensitivity': 'Sensitivity — Y3 cash and revenue impact, sorted by magnitude',
     'chart.revenue': 'Revenue (line, area)',
@@ -132,7 +139,7 @@ const translations: Record<Lang, Record<string, string>> = {
   zh: {
     'header.tag': '创业报告',
     'header.home': '首页',
-    'lang.switch': 'English',
+    'lang.switch': '英文',
     'footer.tag': 'AI 生成的创投研究',
     'footer.sections': '分栏',
     'footer.latest': '最新',
@@ -142,6 +149,10 @@ const translations: Record<Lang, Record<string, string>> = {
     'footer.about.line2': '由专业智能体端到端生成',
     'footer.build': '构建',
     'footer.copyright': '版权所有 © 2026 Yingting Huang',
+    'common.atGlance': '概览',
+    'brand.home': 'BizIdea 首页',
+    'nav.inPage': '页内导航',
+    'citation.aria': '引用',
 
     'home.title': 'Bizidea — 创业报告',
     'home.description': 'AI 生成的创业研究报告：筛选、创意、市场、计划、财务模型。',
@@ -159,7 +170,7 @@ const translations: Record<Lang, Record<string, string>> = {
     'home.dossierCount.one': '份报告',
     'home.dossierCount.other': '份报告',
 
-    'dossier.byline': 'Bizidea Research',
+    'dossier.byline': 'Bizidea 研究',
     'dossier.export': '导出 PDF',
     'dossier.rating': '评分',
     'dossier.rating.legend': '市场 · 差异 · 执行 · 时机',
@@ -235,8 +246,11 @@ const translations: Record<Lang, Record<string, string>> = {
     'heatmap.unscored': '（未评分）',
 
     'chart.revCashEbitda': '营收、现金与 EBITDA',
+    'chart.trajectory.aria': '财务走势',
     'chart.useOfFunds': '资金用途',
+    'chart.useOfFunds.aria': '资金用途',
     'chart.headcount': '按角色的人力增长',
+    'chart.headcount.aria': '人员配置',
     'chart.scenarios': '第3年情景：基准 / 下行 / 上行',
     'chart.sensitivity': '敏感性——第3年现金与营收影响（按幅度排序）',
     'chart.revenue': '营收（线/面积）',
@@ -261,4 +275,51 @@ const translations: Record<Lang, Record<string, string>> = {
 
 export function t(key: string, lang: Lang = 'en'): string {
   return translations[lang]?.[key] ?? translations.en[key] ?? key;
+}
+
+export function localizeSector(value: string | null | undefined, lang: Lang = 'en'): string {
+  const raw = String(value ?? '').trim();
+  if (!raw || lang !== 'zh') return raw;
+  return {
+    consumer: '消费',
+    enterprise: '企业',
+    fintech: '金融科技',
+    health: '医疗健康',
+    healthcare: '医疗健康',
+    climate: '气候',
+    energy: '能源',
+    biotech: '生物科技',
+    media: '媒体',
+    security: '安全',
+    mobility: '出行',
+    commerce: '商业',
+    education: '教育',
+    devtools: '开发工具',
+    'developer tools': '开发工具',
+  }[raw.toLowerCase()] ?? raw;
+}
+
+export function localizeFundingRound(value: string | null | undefined, lang: Lang = 'en'): string {
+  const raw = String(value ?? '').trim();
+  if (!raw || lang !== 'zh') return raw;
+  return {
+    'pre-seed': '种子前轮',
+    preseed: '种子前轮',
+    seed: '种子轮',
+    'series a': 'A 轮',
+    'series b': 'B 轮',
+    'series c': 'C 轮',
+    growth: '成长期融资',
+    ipo: 'IPO',
+  }[raw.toLowerCase()] ?? raw;
+}
+
+export function citationAriaLabel(id: string | number, lang: Lang = 'en'): string {
+  return `${t('citation.aria', lang)} ${id}`;
+}
+
+export function ratingAriaLabel(overall: number | null | undefined, lang: Lang = 'en'): string {
+  const value = typeof overall === 'number' ? overall.toFixed(1) : '';
+  if (lang === 'zh') return value ? `评分 ${value} / 5` : '评分';
+  return value ? `Rating ${value} of 5` : 'Rating';
 }

@@ -20,7 +20,7 @@ import RatingSparkline from '../../../components/RatingSparkline.astro';
 import DossierToc from '../../../components/DossierToc.astro';
 import { loadLocalizedIndex, loadStageFiles } from '../../../content/ideas-loader';
 import { linkifyCitations } from '../../../lib/citations';
-import { t, type Lang } from '../../../lib/i18n';
+import { citationAriaLabel, localizeFundingRound, localizeSector, t, type Lang } from '../../../lib/i18n';
 
 export async function getStaticPaths() {
   return [];
@@ -38,6 +38,11 @@ const idea = stages.idea as any;
 const research = stages.research as any;
 const bp = stages.businessPlan as any;
 const fm = stages.financialModel as any;
+const sectorLabel = localizeSector(String(entry.data.sector ?? ''), lang);
+const topFundingRoundLabel = localizeFundingRound(String(entry.data.financials?.fundingAsk?.round ?? ''), lang);
+const fundingRoundLabel = localizeFundingRound(String(fm?.fundingAsk?.round ?? ''), lang);
+const atGlanceLabel = t('common.atGlance', lang);
+const citationLabel = (id: number | string) => citationAriaLabel(id, lang);
 
 const fmtK = (k: number) =>
   (k >= 1000 || k <= -1000)
@@ -141,6 +146,7 @@ const zhUiLabels: Record<string, string> = {
   'Headwinds': '逆风因素',
   'Validation signals': '验证信号',
   'Regulatory & technical constraints': '监管与技术约束',
+  'PESTLE': 'PESTLE',
   'Adoption friction': '采用阻力',
   'Friction': '阻力',
   'Severity': '严重度',
@@ -152,6 +158,12 @@ const zhUiLabels: Record<string, string> = {
   'Strength': '优势',
   'Weakness vs. us': '相对劣势',
   'Why incumbents do not win by default': '为什么现有厂商不会默认胜出',
+  "Porter's five forces": '波特五力',
+  'Supplier power': '供应商议价能力',
+  'Buyer power': '买方议价能力',
+  'Threat of entrants': '新进入者威胁',
+  'Threat of substitutes': '替代品威胁',
+  'Competitive rivalry': '竞争强度',
   'Problem': '问题',
   'Solution': '解决方案',
   'Why we win': '为什么我们会赢',
@@ -256,7 +268,7 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
         <p class="bz-story__strap bz-mono">
           <span class="bz-story__strap-section">{entry.data.kicker}</span>
           <span class="bz-story__strap-sep" aria-hidden="true">·</span>
-          <span>{entry.data.sector}</span>
+          <span>{sectorLabel}</span>
           <span class="bz-story__strap-sep" aria-hidden="true">·</span>
           <span>{ui('Scan')} {entry.data.scan.timeWindow}</span>
           <span class="bz-story__strap-sep" aria-hidden="true">·</span>
@@ -276,13 +288,14 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
             <time datetime={entry.data.date}>{entry.data.date}</time>
           </p>
         </div>
-        <aside class="bz-story__kpis" aria-label="At a glance">
+        <aside class="bz-story__kpis" aria-label={atGlanceLabel}>
           <div class="bz-story__kpi bz-story__kpi--rating">
             <span class="bz-mono">{t('dossier.rating', lang)}</span>
             <RatingSparkline
               dimensions={entry.data.rating.dimensions}
               overall={entry.data.rating.overall}
               size="md"
+              lang={lang}
             />
             <span class="bz-story__kpi-legend bz-mono">{t('dossier.rating.legend', lang)}</span>
           </div>
@@ -293,7 +306,7 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
           <div class="bz-story__kpi">
             <span class="bz-mono">{t('dossier.funding', lang)}</span>
             <span class="bz-story__kpi-num">${entry.data.financials?.fundingAsk?.amountM?.toFixed(1) ?? '—'}M</span>
-            <span class="bz-story__kpi-sub">{entry.data.financials?.fundingAsk?.round}</span>
+            <span class="bz-story__kpi-sub">{topFundingRoundLabel}</span>
           </div>
           <div class="bz-story__kpi">
             <span class="bz-mono">{t('dossier.y3Revenue', lang)}</span>
@@ -317,11 +330,11 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
       {Array.isArray(idea?.whyNow) && (
         <ol class="bz-list">
           {idea.whyNow.map((w: any) => (
-            <li><CitedText text={w.point} /></li>
+            <li><CitedText text={w.point} lang={lang} /></li>
           ))}
         </ol>
       )}
-      <p class="bz-story__lead"><strong>{t('label.catalyst', lang)}</strong> <CitedText text={idea?.startupThesis?.whyNowCatalyst} /></p>
+      <p class="bz-story__lead"><strong>{t('label.catalyst', lang)}</strong> <CitedText text={idea?.startupThesis?.whyNowCatalyst} lang={lang} /></p>
     </div>
 
     <Ribbon label={t('section.idea', lang)} id="idea" />
@@ -407,9 +420,9 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
         <FactRow
           caption={t('label.marketSizing', lang)}
           rows={[
-            { label: 'TAM', value: research?.market?.tam?.value ?? null, subHtml: linkifyCitations(research?.market?.tam?.rationale) },
-            { label: 'SAM', value: research?.market?.sam?.value ?? null, subHtml: linkifyCitations(research?.market?.sam?.rationale) },
-            { label: 'SOM', value: research?.market?.som?.value ?? null, subHtml: linkifyCitations(research?.market?.som?.rationale) },
+            { label: 'TAM', value: research?.market?.tam?.value ?? null, subHtml: linkifyCitations(research?.market?.tam?.rationale, lang) },
+            { label: 'SAM', value: research?.market?.sam?.value ?? null, subHtml: linkifyCitations(research?.market?.sam?.rationale, lang) },
+            { label: 'SOM', value: research?.market?.som?.value ?? null, subHtml: linkifyCitations(research?.market?.som?.rationale, lang) },
           ]}
         />
       </div>
@@ -417,20 +430,20 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
         <>
           <h3 class="bz-section__head">{ui('Executive takeaways')}</h3>
           <ul class="bz-list">
-            {research.reportMemo.executiveTakeaways.map((t: string) => <li><CitedText text={t} /></li>)}
+            {research.reportMemo.executiveTakeaways.map((t: string) => <li><CitedText text={t} lang={lang} /></li>)}
           </ul>
         </>
       )}
       {research?.reportMemo?.marketDefinition && (
         <>
           <h3 class="bz-section__head">{ui('Market definition')}</h3>
-          <p class="bz-story__lead"><CitedText text={research.reportMemo.marketDefinition} /></p>
+          <p class="bz-story__lead"><CitedText text={research.reportMemo.marketDefinition} lang={lang} /></p>
         </>
       )}
       {research?.reportMemo?.customerAndBuyer && (
         <>
           <h3 class="bz-section__head">{ui('Customer and buyer')}</h3>
-          <p class="bz-story__lead"><CitedText text={research.reportMemo.customerAndBuyer} /></p>
+          <p class="bz-story__lead"><CitedText text={research.reportMemo.customerAndBuyer} lang={lang} /></p>
         </>
       )}
       {Array.isArray(research?.reportMemo?.buyingTriggers) && research.reportMemo.buyingTriggers.length > 0 && (
@@ -439,10 +452,10 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
           <ul class="bz-list">
             {research.reportMemo.buyingTriggers.map((t: any) => (
               <li>
-                <CitedText text={t.point} />
+                <CitedText text={t.point} lang={lang} />
                 {Array.isArray(t.sourceRefs) && t.sourceRefs.length > 0 && (
                   <span class="bz-cite-trail"> {t.sourceRefs.map((id: number) => (
-                    <a class="bz-cite" href={`#cite-${id}`} aria-label={`Citation ${id}`}>[{id}]</a>
+                    <a class="bz-cite" href={`#cite-${id}`} aria-label={citationLabel(id)}>[{id}]</a>
                   ))}</span>
                 )}
               </li>
@@ -454,10 +467,10 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
         <>
           <h3 class="bz-section__head">{ui('Willingness to pay')}</h3>
           <p class="bz-story__lead">
-            <CitedText text={research.reportMemo.willingnessToPay.summary} />
+            <CitedText text={research.reportMemo.willingnessToPay.summary} lang={lang} />
             {Array.isArray(research.reportMemo.willingnessToPay.sourceRefs) && research.reportMemo.willingnessToPay.sourceRefs.length > 0 && (
               <span class="bz-cite-trail"> {research.reportMemo.willingnessToPay.sourceRefs.map((id: number) => (
-                <a class="bz-cite" href={`#cite-${id}`} aria-label={`Citation ${id}`}>[{id}]</a>
+                <a class="bz-cite" href={`#cite-${id}`} aria-label={citationLabel(id)}>[{id}]</a>
               ))}</span>
             )}
           </p>
@@ -475,7 +488,7 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
                 <h4 class="bz-mini-head bz-mini-head--up">{ui('Tailwinds')}</h4>
                 <ul class="bz-list">
                   {research.categoryDynamics.tailwinds.map((t: any) => (
-                    <li><CitedText text={t.point} /></li>
+                    <li><CitedText text={t.point} lang={lang} /></li>
                   ))}
                 </ul>
               </section>
@@ -485,7 +498,7 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
                 <h4 class="bz-mini-head bz-mini-head--down">{ui('Headwinds')}</h4>
                 <ul class="bz-list">
                   {research.categoryDynamics.headwinds.map((t: any) => (
-                    <li><CitedText text={t.point} /></li>
+                    <li><CitedText text={t.point} lang={lang} /></li>
                   ))}
                 </ul>
               </section>
@@ -498,7 +511,7 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
           <h3 class="bz-section__head">{ui('Validation signals')}</h3>
           <ul class="bz-list">
             {research.validationSignals.map((s: any) => (
-              <li><CitedText text={s.point} /></li>
+              <li><CitedText text={s.point} lang={lang} /></li>
             ))}
           </ul>
         </>
@@ -508,7 +521,7 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
           <h3 class="bz-section__head">{ui('Regulatory & technical constraints')}</h3>
           <ul class="bz-list">
             {research.regulatoryTechnicalConstraints.map((c: any) => (
-              <li><CitedText text={c.point} /></li>
+              <li><CitedText text={c.point} lang={lang} /></li>
             ))}
           </ul>
         </>
@@ -540,12 +553,12 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
       )}
       {Array.isArray(research?.pestle) && research.pestle.length > 0 && (
         <>
-          <h3 class="bz-section__head">PESTLE</h3>
+          <h3 class="bz-section__head">{ui('PESTLE')}</h3>
           <ul class="bz-pestle">
             {research.pestle.map((p: any) => (
               <li class={`bz-pestle__item bz-pestle__item--${(p.impact ?? 'neutral').toLowerCase()}`}>
                 <span class="bz-pestle__factor bz-mono">{p.factor}</span>
-                <span class="bz-pestle__point"><CitedText text={p.point} /></span>
+                <span class="bz-pestle__point"><CitedText text={p.point} lang={lang} /></span>
               </li>
             ))}
           </ul>
@@ -563,7 +576,7 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
     <Ribbon label={t('section.competition', lang)} id="competition" />
     <div class="bz-container bz-section">
       {research?.reportMemo?.competitiveLandscape && (
-        <p class="bz-story__lead"><CitedText text={research.reportMemo.competitiveLandscape} /></p>
+        <p class="bz-story__lead"><CitedText text={research.reportMemo.competitiveLandscape} lang={lang} /></p>
       )}
       {Array.isArray(research?.competitors) && (
         <table class="bz-comp">
@@ -596,14 +609,14 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
           <h3 class="bz-section__head">{ui('Why incumbents do not win by default')}</h3>
           <ul class="bz-list">
             {research.reportMemo.incumbentThesis.map((i: any) => (
-              <li><strong>{i.incumbentClass}.</strong> <CitedText text={i.point} /></li>
+              <li><strong>{i.incumbentClass}.</strong> <CitedText text={i.point} lang={lang} /></li>
             ))}
           </ul>
         </>
       )}
       {research?.fiveForces && (
         <>
-          <h3 class="bz-section__head">Porter's five forces</h3>
+          <h3 class="bz-section__head">{ui("Porter's five forces")}</h3>
           <ul class="bz-forces">
             {[
               { key: 'supplierPower', label: 'Supplier power' },
@@ -616,10 +629,10 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
               const pct = Math.max(0, Math.min(100, ((f.score ?? 0) / 5) * 100));
               return (
                 <li class="bz-force">
-                  <span class="bz-force__label bz-mono">{label}</span>
+                  <span class="bz-force__label bz-mono">{ui(label)}</span>
                   <span class="bz-force__bar"><span class="bz-force__bar-fill" style={`width:${pct}%`}></span></span>
                   <span class="bz-force__score">{f.score ?? '—'} / 5</span>
-                  <span class="bz-force__note"><CitedText text={f.rationale} /></span>
+                  <span class="bz-force__note"><CitedText text={f.rationale} lang={lang} /></span>
                 </li>
               );
             })}
@@ -870,7 +883,7 @@ const ui = (label: string) => lang === 'zh' ? (zhUiLabels[label] ?? label) : lab
         <FactRow
           caption={ui('Funding ask')}
           rows={[
-            { label: ui('Round'), value: `${fm.fundingAsk.round} · $${fm.fundingAsk.amountM.toFixed(1)}M` },
+            { label: ui('Round'), value: `${fundingRoundLabel} · $${fm.fundingAsk.amountM.toFixed(1)}M` },
             { label: ui('Runway'), value: `${fm.fundingAsk.runwayMonths} ${monthsLabel}` },
             { label: ui('Milestone'), value: fm.fundingAsk.milestone ?? null },
           ]}

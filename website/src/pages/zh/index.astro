@@ -8,7 +8,7 @@ import Rule from '../../components/Rule.astro';
 import StoryTile from '../../components/StoryTile.astro';
 import RatingSparkline from '../../components/RatingSparkline.astro';
 import { loadLocalizedIndex } from '../../content/ideas-loader';
-import { t, type Lang } from '../../lib/i18n';
+import { localizeFundingRound, localizeSector, t, type Lang } from '../../lib/i18n';
 
 const lang: Lang = 'zh';
 const otherLang: Lang = 'en';
@@ -40,6 +40,8 @@ const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
   const val = idx?.[field];
   return typeof val === 'string' && val.length > 0 ? val : entry.data[field];
 };
+const sectorFor = (entry: any) => localizeSector(String(entry.data.sector ?? ''), lang);
+const roundFor = (entry: any) => localizeFundingRound(String(entry.data.financials?.fundingAsk?.round ?? ''), lang);
 ---
 <BaseLayout
   title={t('home.title', lang)}
@@ -69,25 +71,26 @@ const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
     <section class="bz-hero">
       <div class="bz-container bz-hero__layout">
         <div class="bz-hero__copy">
-          <Kicker bold>{localText(hero, 'kicker')} · {hero.data.sector}</Kicker>
+          <Kicker bold>{localText(hero, 'kicker')} · {sectorFor(hero)}</Kicker>
           <Headline as="h2" size="hero" href={hrefFor(hero)}>
             {localText(hero, 'pitch')}
           </Headline>
           <p class="bz-hero__deck">{localText(hero, 'topic')}</p>
         </div>
-        <aside class="bz-hero__panel" aria-label="At a glance">
+        <aside class="bz-hero__panel" aria-label={t('common.atGlance', lang)}>
           <div class="bz-hero__panel-head">
             <span class="bz-mono">{t('home.rating', lang)}</span>
             <RatingSparkline
               dimensions={hero.data.rating.dimensions}
               overall={hero.data.rating.overall}
               size="md"
+              lang={lang}
             />
             <span class="bz-hero__panel-legend bz-mono">{t('home.rating.legend', lang)}</span>
           </div>
           <dl class="bz-hero__facts">
             <div><dt class="bz-mono">{t('home.som', lang)}</dt><dd>{hero.data.market.som ?? '—'}</dd></div>
-            <div><dt class="bz-mono">{t('home.funding', lang)}</dt><dd>${hero.data.financials.fundingAsk.amountM.toFixed(1)}M <span class="bz-hero__facts-sub">{hero.data.financials.fundingAsk.round}</span></dd></div>
+            <div><dt class="bz-mono">{t('home.funding', lang)}</dt><dd>${hero.data.financials.fundingAsk.amountM.toFixed(1)}M <span class="bz-hero__facts-sub">{roundFor(hero)}</span></dd></div>
             <div><dt class="bz-mono">{t('home.scan', lang)}</dt><dd>{hero.data.scan.timeWindow}</dd></div>
           </dl>
           <a href={hrefFor(hero)} class="bz-hero__panel-cta bz-mono">{t('home.read', lang)}</a>
@@ -108,11 +111,12 @@ const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
         {rest.map((entry) => (
           <StoryTile
             href={hrefFor(entry)}
-            kicker={`${localText(entry, 'kicker')} · ${entry.data.sector}`}
+            kicker={`${localText(entry, 'kicker')} · ${sectorFor(entry)}`}
             headline={localText(entry, 'pitch')}
             deck={localText(entry, 'topic')}
             meta={fmtRunDate(entry.data.runTimestamp)}
             rating={entry.data.rating}
+            lang={lang}
           />
         ))}
       </div>
