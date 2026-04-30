@@ -7,6 +7,7 @@ const BASE = process.env.BASE_PATH ?? '/';
 export default defineConfig({
   site: SITE,
   base: BASE,
+  integrations: [],
   trailingSlash: 'always',
   output: 'static',
   build: {
