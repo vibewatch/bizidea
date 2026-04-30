@@ -4,14 +4,14 @@ import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import Ribbon from '../../../../components/Ribbon.astro';
 import Rule from '../../../../components/Rule.astro';
 import StoryTile from '../../../../components/StoryTile.astro';
-import { loadLocalizedIndex } from '../../../../content/ideas-loader';
+import { hasZhTranslation, loadLocalizedIndex } from '../../../../content/ideas-loader';
 import { localizeSector, t, type Lang } from '../../../../lib/i18n';
 import { groupIdeasByMonth } from '../../../../lib/reports';
 
 const lang: Lang = 'zh';
 
 export async function getStaticPaths() {
-  const all = await getCollection('ideas');
+  const all = (await getCollection('ideas')).filter((entry) => hasZhTranslation(entry.id));
   return groupIdeasByMonth(all, 'zh').map((month) => ({
     params: { month: month.slug },
     props: { entries: month.entries, monthSlug: month.slug, monthLabel: month.label },
