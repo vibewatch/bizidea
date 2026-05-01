@@ -8,21 +8,22 @@ import yaml from 'js-yaml';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const IDEAS_DIR = resolve(__dirname, '../../ideas');
-const REQUIRED = [
+const REQUIRED_ENGLISH = [
   'idea.yaml',
   'research.yaml',
   'business-plan.yaml',
   'financial-model.yaml',
   'index.yaml',
 ];
-const OPTIONAL_LOCALIZED = [
+const REQUIRED_LOCALIZED = [
   'idea.zh.yaml',
   'research.zh.yaml',
   'business-plan.zh.yaml',
   'financial-model.zh.yaml',
   'index.zh.yaml',
 ];
-const ALLOWED_YAML = new Set([...REQUIRED, ...OPTIONAL_LOCALIZED]);
+const REQUIRED = [...REQUIRED_ENGLISH, ...REQUIRED_LOCALIZED];
+const ALLOWED_YAML = new Set(REQUIRED);
 
 try {
   if (!existsSync(IDEAS_DIR)) {

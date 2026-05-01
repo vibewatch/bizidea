@@ -36,6 +36,7 @@ This agent may invoke only the agents listed in frontmatter. Invoke each special
      ```
 
 4. **Finalize**
+   - Confirm every generated report folder has completed `ZH Translator` handoff output before rebuilding the aggregate index.
    - Rebuild `ideas/_index.yaml` with `node scripts/build-ideas-index.mjs`.
    - Validate completed folders with `website/scripts/check-ideas.mjs` when the website folder is available.
    - Summarize generated, deduped, and failed topics.
@@ -48,6 +49,7 @@ This agent may invoke only the agents listed in frontmatter. Invoke each special
 - Do not write or expect a per-report news artifact. Per-report source context belongs in `idea.yaml.sourceContext`.
 - Do not start research until all selected ideas have been generated and deduped.
 - Do not proceed to a downstream stage until the previous stage's file exists, is non-empty, parses as YAML, and has the minimum fields below.
+- Do not mark a report generated or enter finalization until `ZH Translator` has written and verified all five localized YAML files for that folder.
 - If a per-idea pipeline fails after one corrective retry, mark only that idea as failed, remove its partial report folder from `ideas/`, and continue with other ideas.
 - Triage failure, missing repository paths, or final index rebuild failure stops the whole run.
 
@@ -85,6 +87,7 @@ Time-window defaults:
 | `business-plan.yaml` | `slug`, `date`, `executiveSummary`, `strategicChoices`, `market`, `product`, `gtm`, `milestones`, `fundingAsk`, `investorMemo`, `operatingAssumptions` |
 | `financial-model.yaml` | `slug`, `date`, `totals`, `unitEconomics`, `fundingAsk`, `modelSanity` |
 | `index.yaml` | `slug`, `date`, `pitch`, `rating`, `files`, `financials` |
+| `*.zh.yaml` | all five files exist: `idea.zh.yaml`, `research.zh.yaml`, `business-plan.zh.yaml`, `financial-model.zh.yaml`, `index.zh.yaml`; each is non-empty, parses as YAML, and preserves the English source schema shape |
 
 When a gate fails, retry the same specialist once with the validation error and same folder path. If it still fails, record the topic as failed and do not run later stages for that topic.
 
