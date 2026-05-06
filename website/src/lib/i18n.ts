@@ -380,23 +380,35 @@ export function t(key: string, lang: Lang = 'en'): string {
 export function localizeSector(value: string | null | undefined, lang: Lang = 'en'): string {
   const raw = String(value ?? '').trim();
   if (!raw || lang !== 'zh') return raw;
+  const key = raw.toLowerCase().replace(/[_\s]+/g, '-');
   return {
+    'ai-infra': 'AI 基础设施',
+    'ai-infrastructure': 'AI 基础设施',
+    bio: '生物科技',
+    defense: '国防科技',
+    'climate-tech': '气候科技',
     consumer: '消费',
+    'consumer-tech': '消费科技',
+    'dev-tools': '开发工具',
+    devtools: '开发工具',
+    'developer-tools': '开发工具',
     enterprise: '企业',
+    'enterprise-ai': '企业 AI',
     fintech: '金融科技',
     health: '医疗健康',
+    'health-tech': '医疗科技',
     healthcare: '医疗健康',
     climate: '气候',
     energy: '能源',
     biotech: '生物科技',
     media: '媒体',
     security: '安全',
+    industrial: '工业科技',
     mobility: '出行',
     commerce: '商业',
     education: '教育',
-    devtools: '开发工具',
-    'developer tools': '开发工具',
-  }[raw.toLowerCase()] ?? raw;
+    other: '其他',
+  }[key] ?? raw;
 }
 
 export function localizeFundingRound(value: string | null | undefined, lang: Lang = 'en'): string {
