@@ -19,10 +19,18 @@ on:
     inputs:
       cap:
         description: "Max reports per run (1-5)"
+        type: choice
+        options:
+          - "1"
+          - "2"
+          - "3"
+          - "4"
+          - "5"
         required: false
         default: "5"
       timeWindow:
         description: "Time window phrase (e.g. 'yesterday', 'last 7 days')"
+        type: string
         required: false
         default: "yesterday"
 
@@ -37,7 +45,27 @@ jobs:
   run:
     runs-on: ubuntu-latest
     timeout-minutes: 360
+    defaults:
+      run:
+        shell: bash
     steps:
+      - name: Check required secrets
+        env:
+          BIZIDEA_PAT: ${{ secrets.BIZIDEA_PAT }}
+          COPILOT_PAT: ${{ secrets.COPILOT_PAT }}
+        run: |
+          set -euo pipefail
+          missing=0
+          if [ -z "${BIZIDEA_PAT:-}" ]; then
+            echo "Missing required secret: BIZIDEA_PAT" >&2
+            missing=1
+          fi
+          if [ -z "${COPILOT_PAT:-}" ]; then
+            echo "Missing required secret: COPILOT_PAT" >&2
+            missing=1
+          fi
+          exit "$missing"
+
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
@@ -52,23 +80,34 @@ jobs:
             website/package-lock.json
 
       - name: Install root deps
-        run: npm ci || npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Install website deps
         working-directory: website
-        run: npm ci || npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Install GitHub Copilot CLI
-        run: npm install -g @github/copilot
+        run: npm install -g @github/copilot --no-audit --no-fund
 
       - name: Resolve run inputs
         id: inputs
+        env:
+          RAW_CAP: ${{ github.event.inputs.cap }}
+          RAW_WINDOW: ${{ github.event.inputs.timeWindow }}
         run: |
           set -euo pipefail
-          CAP="${{ github.event.inputs.cap }}"
-          WINDOW="${{ github.event.inputs.timeWindow }}"
+          CAP="${RAW_CAP:-}"
+          WINDOW="${RAW_WINDOW:-}"
           if [ -z "$CAP" ]; then CAP="5"; fi
           if [ -z "$WINDOW" ]; then WINDOW="yesterday"; fi
+          if ! [[ "$CAP" =~ ^[1-5]$ ]]; then
+            echo "Invalid cap '$CAP'; expected an integer from 1 to 5." >&2
+            exit 2
+          fi
+          if [ "${#WINDOW}" -gt 80 ] || ! [[ "$WINDOW" =~ ^[A-Za-z0-9][A-Za-z0-9\ .,/_:+-]*$ ]]; then
+            echo "Invalid timeWindow '$WINDOW'; use a short plain-text phrase like 'yesterday' or 'last 7 days'." >&2
+            exit 2
+          fi
           echo "cap=$CAP" >> "$GITHUB_OUTPUT"
           echo "window=$WINDOW" >> "$GITHUB_OUTPUT"
 

@@ -12,7 +12,7 @@ A Bizidea run is one orchestrator (`Bizidea`) delegating to seven specialist age
 
 ```mermaid
 flowchart TD
-    cron([cron / manual dispatch]) --> wf[".github/workflows/daily-bizidea.yml"]
+  cron([cron / manual dispatch]) --> wf[".github/workflows/daily.yml"]
     wf -->|"copilot --agent Bizidea"| orch{{"Bizidea<br/>orchestrator"}}
 
     orch -->|"once per run"| triage["News Triage<br/>web fetch · cluster · score · dedupe"]
@@ -38,7 +38,7 @@ flowchart TD
     finalize -->|"node scripts/build-ideas-index.mjs"| indexFile[("ideas/_index.yaml<br/>aggregated history")]
     finalize -->|"website/scripts/check-ideas.mjs"| validate["validate completed folders"]
     indexFile --> push["git commit &amp; push"]
-    push --> deploy[".github/workflows/deploy-website.yml<br/>Astro build &rarr; GitHub Pages"]
+    push --> deploy[".github/workflows/deploy.yml<br/>Astro build &rarr; GitHub Pages"]
 ```
 
 ### Agent responsibilities
@@ -87,7 +87,7 @@ The orchestrator validates each handoff against the minimum-field schema below b
 | `ideas/` | Generated report artifacts. Each dated folder is one startup package containing five English YAMLs and their `*.zh.yaml` Simplified Chinese counterparts. `_index.yaml` is the aggregated history (rebuilt by [scripts/build-ideas-index.mjs](scripts/build-ideas-index.mjs)). `_triage/<runTimestamp>/triage.yaml` records each daily triage. Underscore-prefixed paths are ignored by the Astro content collection. |
 | `website/` | [Astro 5](https://astro.build) site that renders reports as editorial pages. |
 | `.github/agents/` | Custom Copilot agent definitions: `Bizidea` (the orchestrator) plus `News Triage`, `Idea Generator`, `Market Researcher`, `Business Plan Writer`, `Financial Modeler`, `Reporter`, `ZH Translator`, and the `yaml-syntax` reference. |
-| `.github/workflows/` | `daily-bizidea.yml` (scheduled multi-report run) and `deploy-website.yml` (publishes the site on `main` pushes touching `website/**` or `ideas/**`). |
+| `.github/workflows/` | `daily.yml` (scheduled multi-report run) and `deploy.yml` (publishes the site on `main` pushes touching `website/**` or `ideas/**`). |
 | `scripts/` | Repo-level deterministic helpers: `build-ideas-index.mjs`, `check-idea-dedup.mjs`, `prepare-report-folder.mjs`, and the shared `text-utils.mjs` tokenizer. |
 | [AGENTS.md](AGENTS.md) | Unified coding-agent instructions (working approach, repo map, YAML conventions). |
 
@@ -157,14 +157,14 @@ The important sequencing rule is: `News Triage` runs once, `Idea Generator` crea
 
 ## Deployment
 
-`deploy-website.yml` builds the Astro site and publishes to GitHub Pages whenever `main` receives a push touching `website/**`, `ideas/**`, or the workflow itself. The custom domain `bizidea.genisisiq.com` is set via [website/public/CNAME](website/public/CNAME).
+`deploy.yml` builds the Astro site and publishes to GitHub Pages whenever `main` receives a push touching `website/**`, `ideas/**`, or the workflow itself. The custom domain `bizidea.genisisiq.com` is set via [website/public/CNAME](website/public/CNAME).
 
 ## Required secrets
 
 | Secret | Used by | Purpose |
 |---|---|---|
-| `COPILOT_PAT` | `daily-bizidea.yml` | PAT for a Copilot-licensed account; passed as `COPILOT_GITHUB_TOKEN` to the Copilot CLI. |
-| `BIZIDEA_PAT` | `daily-bizidea.yml` | PAT with repo write access for checkout/push so the resulting commit can trigger downstream deploy workflows. |
+| `COPILOT_PAT` | `daily.yml` | PAT for a Copilot-licensed account; passed as `COPILOT_GITHUB_TOKEN` to the Copilot CLI. |
+| `BIZIDEA_PAT` | `daily.yml` | PAT with repo write access for checkout/push so the resulting commit can trigger downstream deploy workflows. |
 
 The workflow uses `contents: write`, but `BIZIDEA_PAT` is used for checkout and pushing the daily commit so downstream workflows such as Pages deploy can be triggered reliably.
 

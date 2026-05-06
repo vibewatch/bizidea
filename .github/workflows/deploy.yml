@@ -6,7 +6,7 @@ on:
     paths:
       - 'website/**'
       - 'ideas/**'
-      - '.github/workflows/deploy-website.yml'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 permissions:
@@ -21,22 +21,28 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: website
+    env:
+      BASE_PATH: /
+      SITE_URL: https://bizidea.genisisiq.com
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: website/package-lock.json
-      - run: npm ci
-      - name: Configure base path for custom domain
-        run: echo "BASE_PATH=/" >> $GITHUB_ENV
-      - name: Configure site URL
-        run: echo "SITE_URL=https://bizidea.genisisiq.com" >> $GITHUB_ENV
-      - run: npm run build
+          cache-dependency-path: |
+            package-lock.json
+            website/package-lock.json
+      - name: Install root deps
+        run: npm ci --no-audit --no-fund
+      - name: Install website deps
+        working-directory: website
+        run: npm ci --no-audit --no-fund
+      - name: Validate ideas index
+        run: npm run check:ideas-index
+      - name: Build website
+        working-directory: website
+        run: npm run build
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

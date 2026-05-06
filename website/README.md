@@ -22,7 +22,7 @@ artifacts are committed.
 
 ## Deploy
 
-Pushed to GitHub Pages by [`.github/workflows/deploy-website.yml`](../.github/workflows/deploy-website.yml)
+Pushed to GitHub Pages by [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml)
 on every push to `main` that touches `website/**` or `ideas/**`. Repo settings
 must have **Pages → Source: GitHub Actions** enabled.
 
