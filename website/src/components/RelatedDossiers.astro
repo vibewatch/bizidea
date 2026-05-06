@@ -1,0 +1,62 @@
+---
+import StoryTile from './StoryTile.astro';
+import Ribbon from './Ribbon.astro';
+import { t, type Lang } from '../lib/i18n';
+import { dossierHref, localizedSector, localizedText, type IdeaEntry, type LocalizedIndexMap, type LocalizedTextField } from '../lib/page-helpers';
+
+interface Props {
+  base: string;
+  entries: IdeaEntry[];
+  lang: Lang;
+  localized: LocalizedIndexMap;
+}
+
+const { base, entries, lang, localized } = Astro.props;
+const hrefFor = (entry: IdeaEntry) => dossierHref(entry, lang, base);
+const textFor = (entry: IdeaEntry, field: LocalizedTextField) => localizedText(entry, localized, field);
+const sectorFor = (entry: IdeaEntry) => localizedSector(entry, lang);
+---
+{entries.length > 0 && (
+  <section class="bz-related" aria-labelledby="related-dossiers">
+    <Ribbon label={t('related.ribbon', lang)} id="related-dossiers" />
+    <div class="bz-container">
+      <p class="bz-related__deck">{t('related.deck', lang)}</p>
+      <div class="bz-related__grid">
+        {entries.map((entry) => (
+          <StoryTile
+            href={hrefFor(entry)}
+            kicker={`${textFor(entry, 'kicker')} · ${sectorFor(entry)}`}
+            headline={textFor(entry, 'pitch')}
+            deck={textFor(entry, 'topic')}
+            meta={`${t('dossier.overallRating', lang)} ${entry.data.rating.overall.toFixed(1)}`}
+            rating={entry.data.rating}
+            lang={lang}
+          />
+        ))}
+      </div>
+    </div>
+  </section>
+)}
+
+<style>
+  .bz-related { margin-top: var(--space-8); }
+  .bz-related__deck {
+    font-family: var(--font-sans);
+    font-size: var(--fs-md);
+    line-height: 1.55;
+    color: var(--ink-page);
+    max-width: 62ch;
+    margin: 0 0 var(--space-4);
+  }
+  .bz-related__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0 var(--space-6);
+  }
+  .bz-related__grid > :global(*) {
+    border-top: var(--rule-thin);
+    padding-top: var(--space-4);
+  }
+  @media (max-width: 1023px) { .bz-related__grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 599px) { .bz-related__grid { grid-template-columns: 1fr; } }
+</style>

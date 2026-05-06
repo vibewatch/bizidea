@@ -7,8 +7,9 @@ import Ribbon from '../../components/Ribbon.astro';
 import Rule from '../../components/Rule.astro';
 import StoryTile from '../../components/StoryTile.astro';
 import RatingSparkline from '../../components/RatingSparkline.astro';
-import { hasZhTranslation, loadLocalizedIndex } from '../../content/ideas-loader';
-import { localizeFundingRound, localizeSector, t, type Lang } from '../../lib/i18n';
+import { hasZhTranslation } from '../../content/ideas-loader';
+import { localizeFundingRound, t, type Lang } from '../../lib/i18n';
+import { buildLocalizedIndexMap, dossierHref, formatRunTimestamp, languagePrefix, localizedSector, localizedText, type IdeaEntry, type LocalizedTextField } from '../../lib/page-helpers';
 import { HOMEPAGE_REPORT_LIMIT, sortIdeasNewestFirst } from '../../lib/reports';
 
 const lang: Lang = 'zh';
@@ -21,26 +22,12 @@ const rest = allRest.slice(0, Math.max(HOMEPAGE_REPORT_LIMIT - 1, 0));
 const hiddenCount = Math.max(sorted.length - HOMEPAGE_REPORT_LIMIT, 0);
 
 const base = import.meta.env.BASE_URL;
-const prefixFor = (l: Lang) => (l === 'zh' ? `${base}zh/` : base);
-const hrefFor = (entry: any) => `${base}${lang}/${entry.data.folderSlug}/`;
-
-function fmtRunDate(ts: string): string {
-  if (!/^\d{14}$/.test(ts)) return ts;
-  return `${ts.slice(0, 4)}-${ts.slice(4, 6)}-${ts.slice(6, 8)} ${ts.slice(8, 10)}:${ts.slice(10, 12)}`;
-}
-
-const localized = new Map<string, Record<string, unknown> | null>();
-for (const entry of sorted) {
-  localized.set(entry.id, loadLocalizedIndex(entry.id, lang));
-}
-
-const localText = (entry: any, field: 'kicker' | 'pitch' | 'topic') => {
-  const idx = localized.get(entry.id);
-  const val = idx?.[field];
-  return typeof val === 'string' && val.length > 0 ? val : entry.data[field];
-};
-const sectorFor = (entry: any) => localizeSector(String(entry.data.sector ?? ''), lang);
-const roundFor = (entry: any) => localizeFundingRound(String(entry.data.financials?.fundingAsk?.round ?? ''), lang);
+const prefixFor = (l: Lang) => languagePrefix(base, l);
+const hrefFor = (entry: IdeaEntry) => dossierHref(entry, lang, base);
+const localized = buildLocalizedIndexMap(sorted, lang);
+const localText = (entry: IdeaEntry, field: LocalizedTextField) => localizedText(entry, localized, field);
+const sectorFor = (entry: IdeaEntry) => localizedSector(entry, lang);
+const roundFor = (entry: IdeaEntry) => localizeFundingRound(String(entry.data.financials?.fundingAsk?.round ?? ''), lang);
 ---
 <BaseLayout
   title={t('home.title', lang)}
@@ -109,7 +96,7 @@ const roundFor = (entry: any) => localizeFundingRound(String(entry.data.financia
             kicker={`${localText(entry, 'kicker')} · ${sectorFor(entry)}`}
             headline={localText(entry, 'pitch')}
             deck={localText(entry, 'topic')}
-            meta={fmtRunDate(entry.data.runTimestamp)}
+            meta={formatRunTimestamp(entry.data.runTimestamp)}
             rating={entry.data.rating}
             lang={lang}
           />

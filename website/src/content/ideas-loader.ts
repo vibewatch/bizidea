@@ -8,6 +8,27 @@ import type { Lang } from '../lib/i18n';
 // Resolve relative to the Astro project (website/) which is process.cwd() during build.
 const IDEAS_DIR = resolve(process.cwd(), '..', 'ideas');
 
+export type LocalizedIndexData = Record<string, unknown>;
+
+export interface StageFiles {
+  idea: unknown;
+  research: unknown;
+  businessPlan: unknown;
+  financialModel: unknown;
+}
+
+const parsedYamlCache = new Map<string, unknown>();
+const localizedIndexCache = new Map<string, LocalizedIndexData | null>();
+const stageFilesCache = new Map<string, StageFiles>();
+const zhTranslationCache = new Map<string, boolean>();
+
+function clearIdeaCaches(): void {
+  parsedYamlCache.clear();
+  localizedIndexCache.clear();
+  stageFilesCache.clear();
+  zhTranslationCache.clear();
+}
+
 /**
  * List all valid idea run folders.
  * Filters out hidden/system folders (., _) and non-directories.
@@ -70,6 +91,16 @@ function fixColonPaste(value: unknown): unknown {
   return value;
 }
 
+function readYamlCached(path: string): unknown {
+  if (parsedYamlCache.has(path)) return parsedYamlCache.get(path);
+
+  const raw = readFileSync(path, 'utf8');
+  const parsed = yaml.load(raw);
+  const repaired = fixColonPaste(parsed);
+  parsedYamlCache.set(path, repaired);
+  return repaired;
+}
+
 /**
  * Parse run folder name to extract timestamp and generate slug.
  * Handles both new format (14-digit-timestamp-slug) and legacy (YYYY-MM-DD-slug).
@@ -96,6 +127,7 @@ export function ideasLoader(): Loader {
     name: 'bizidea-ideas-loader',
     load: async ({ store, parseData, logger }) => {
       store.clear();
+      clearIdeaCaches();
       const runs = listRuns();
 
       if (runs.length === 0) {
@@ -118,18 +150,17 @@ export function ideasLoader(): Loader {
         }
 
         try {
-          const raw = readFileSync(indexPath, 'utf8');
           let parsed: unknown;
 
           try {
-            parsed = yaml.load(raw);
+            parsed = readYamlCached(indexPath);
           } catch (yamlErr) {
             logger.error(`[ideas-loader] ${runId}: YAML parsing failed — ${yamlErr instanceof Error ? yamlErr.message : String(yamlErr)}`);
             skipped++;
             continue;
           }
 
-          const repaired = fixColonPaste(parsed) as Record<string, unknown>;
+          const repaired = parsed as Record<string, unknown>;
           const { runTimestamp, folderSlug } = parseRunId(runId);
 
           try {
@@ -154,13 +185,6 @@ export function ideasLoader(): Loader {
   };
 }
 
-interface StageFiles {
-  idea: unknown;
-  research: unknown;
-  businessPlan: unknown;
-  financialModel: unknown;
-}
-
 /**
  * Read a YAML file with language fallback.
  * Tries localized version (e.g., idea.zh.yaml) first, then falls back to English (idea.yaml).
@@ -176,18 +200,14 @@ function readLocalizedYaml(folder: string, basename: string, lang: Lang): unknow
 
   if (lang === 'zh' && existsSync(localized)) {
     try {
-      const raw = readFileSync(localized, 'utf8');
-      const parsed = yaml.load(raw);
-      return fixColonPaste(parsed);
+      return readYamlCached(localized);
     } catch (err) {
       throw new Error(`Failed to load ${localized}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
   try {
-    const raw = readFileSync(fallback, 'utf8');
-    const parsed = yaml.load(raw);
-    return fixColonPaste(parsed);
+    return readYamlCached(fallback);
   } catch (err) {
     throw new Error(`Failed to load ${fallback}: ${err instanceof Error ? err.message : String(err)}`);
   }
@@ -201,8 +221,12 @@ function readLocalizedYaml(folder: string, basename: string, lang: Lang): unknow
  * @returns - true if zh translation exists, false otherwise
  */
 export function hasZhTranslation(runId: string): boolean {
+  if (zhTranslationCache.has(runId)) return zhTranslationCache.get(runId)!;
+
   const folder = join(IDEAS_DIR, runId);
-  return existsSync(join(folder, 'idea.zh.yaml'));
+  const exists = existsSync(join(folder, 'idea.zh.yaml'));
+  zhTranslationCache.set(runId, exists);
+  return exists;
 }
 
 /**
@@ -213,30 +237,38 @@ export function hasZhTranslation(runId: string): boolean {
  * @param lang - Language code ('en' or 'zh'), defaults to 'en'
  * @returns - Parsed index object, or null if no file found
  */
-export function loadLocalizedIndex(runId: string, lang: Lang = 'en'): Record<string, unknown> | null {
+export function loadLocalizedIndex(runId: string, lang: Lang = 'en'): LocalizedIndexData | null {
+  const cacheKey = `${runId}:${lang}`;
+  if (localizedIndexCache.has(cacheKey)) return localizedIndexCache.get(cacheKey)!;
+
   const folder = join(IDEAS_DIR, runId);
   const localized = join(folder, `index.${lang}.yaml`);
   const fallback = join(folder, 'index.yaml');
 
   if (lang === 'zh' && existsSync(localized)) {
     try {
-      const raw = readFileSync(localized, 'utf8');
-      const parsed = yaml.load(raw);
-      return fixColonPaste(parsed) as Record<string, unknown>;
+      const data = readYamlCached(localized) as LocalizedIndexData;
+      localizedIndexCache.set(cacheKey, data);
+      return data;
     } catch (err) {
       console.error(`[loadLocalizedIndex] ${runId}: failed to load zh — ${err instanceof Error ? err.message : String(err)}`);
+      localizedIndexCache.set(cacheKey, null);
       return null;
     }
   }
 
-  if (!existsSync(fallback)) return null;
+  if (!existsSync(fallback)) {
+    localizedIndexCache.set(cacheKey, null);
+    return null;
+  }
 
   try {
-    const raw = readFileSync(fallback, 'utf8');
-    const parsed = yaml.load(raw);
-    return fixColonPaste(parsed) as Record<string, unknown>;
+    const data = readYamlCached(fallback) as LocalizedIndexData;
+    localizedIndexCache.set(cacheKey, data);
+    return data;
   } catch (err) {
     console.error(`[loadLocalizedIndex] ${runId}: failed to load en — ${err instanceof Error ? err.message : String(err)}`);
+    localizedIndexCache.set(cacheKey, null);
     return null;
   }
 }
@@ -252,11 +284,17 @@ export function loadLocalizedIndex(runId: string, lang: Lang = 'en'): Record<str
  * @throws - On file read or YAML parse errors
  */
 export function loadStageFiles(runId: string, lang: Lang = 'en'): StageFiles {
+  const cacheKey = `${runId}:${lang}`;
+  const cached = stageFilesCache.get(cacheKey);
+  if (cached) return cached;
+
   const folder = join(IDEAS_DIR, runId);
-  return {
+  const stages = {
     idea: readLocalizedYaml(folder, 'idea', lang),
     research: readLocalizedYaml(folder, 'research', lang),
     businessPlan: readLocalizedYaml(folder, 'business-plan', lang),
     financialModel: readLocalizedYaml(folder, 'financial-model', lang),
   };
+  stageFilesCache.set(cacheKey, stages);
+  return stages;
 }

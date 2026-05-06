@@ -25,6 +25,86 @@ const REQUIRED_LOCALIZED = [
 const REQUIRED = [...REQUIRED_ENGLISH, ...REQUIRED_LOCALIZED];
 const ALLOWED_YAML = new Set(REQUIRED);
 
+function isPlainObject(value) {
+  return value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date);
+}
+
+function fixColonPaste(value) {
+  if (Array.isArray(value)) return value.map(fixColonPaste);
+  if (isPlainObject(value)) {
+    const keys = Object.keys(value);
+    if (keys.length === 1 && /\s/.test(keys[0])) {
+      const key = keys[0];
+      const nested = value[key];
+      if (typeof nested === 'string') return `${key}: ${nested}`;
+      if (nested == null) return key;
+    }
+
+    const out = {};
+    for (const key of keys) out[key] = fixColonPaste(value[key]);
+    return out;
+  }
+  return value;
+}
+
+function compareSchemaShape(source, localized, label, failures, path = '$') {
+  if (failures.length > 1000) return;
+
+  if (isPlainObject(source)) {
+    if (!isPlainObject(localized)) {
+      failures.push(`${label} ${path}: expected object shape`);
+      return;
+    }
+
+    const sourceKeys = Object.keys(source);
+    const localizedKeys = Object.keys(localized);
+    const localizedKeySet = new Set(localizedKeys);
+    for (const key of sourceKeys) {
+      if (!localizedKeySet.has(key)) {
+        failures.push(`${label} ${path}: missing key ${key}`);
+        continue;
+      }
+      compareSchemaShape(source[key], localized[key], label, failures, `${path}.${key}`);
+    }
+    for (const key of localizedKeys) {
+      if (!Object.prototype.hasOwnProperty.call(source, key)) {
+        failures.push(`${label} ${path}: unexpected key ${key}`);
+      }
+    }
+    return;
+  }
+
+  if (Array.isArray(source)) {
+    if (!Array.isArray(localized)) {
+      failures.push(`${label} ${path}: expected array shape`);
+      return;
+    }
+
+    const sourceObject = source.find(isPlainObject);
+    const localizedObject = localized.find(isPlainObject);
+    if (sourceObject && !localizedObject) {
+      failures.push(`${label} ${path}: expected array item object shape`);
+      return;
+    }
+    if (sourceObject && localizedObject) {
+      compareSchemaShape(sourceObject, localizedObject, label, failures, `${path}[]`);
+    }
+    return;
+  }
+
+  if (isPlainObject(localized) || Array.isArray(localized)) {
+    failures.push(`${label} ${path}: expected scalar shape`);
+  }
+}
+
+function assertNonEmptyString(parsed, fileLabel, field, failures) {
+  const value = parsed?.[field];
+  if (value instanceof Date) return;
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    failures.push(`${fileLabel}: ${field} must be a non-empty string`);
+  }
+}
+
 try {
   if (!existsSync(IDEAS_DIR)) {
     console.warn(`[check:ideas] ${IDEAS_DIR} not found; nothing to check.`);
@@ -51,6 +131,7 @@ try {
   const unexpected = [];
   const parseFailures = [];
   const consistencyFailures = [];
+  const schemaShapeFailures = [];
   for (const run of runs) {
     const dir = join(IDEAS_DIR, run);
     const parsed = new Map();
@@ -76,7 +157,7 @@ try {
         unexpected.push(`${run}/${file}`);
       }
       try {
-        parsed.set(file, yaml.load(readFileSync(join(dir, file), 'utf8')));
+        parsed.set(file, fixColonPaste(yaml.load(readFileSync(join(dir, file), 'utf8'))));
       } catch (e) {
         parseFailures.push(`${run}/${file}: ${e.message.split('\n')[0]}`);
       }
@@ -106,9 +187,25 @@ try {
         }
       }
     }
+
+    for (const englishFile of REQUIRED_ENGLISH) {
+      const localizedFile = englishFile.replace(/\.yaml$/, '.zh.yaml');
+      const english = parsed.get(englishFile);
+      const localized = parsed.get(localizedFile);
+      if (english && localized) {
+        compareSchemaShape(english, localized, `${run}/${localizedFile}`, schemaShapeFailures);
+      }
+    }
+
+    const localizedIndex = parsed.get('index.zh.yaml');
+    if (localizedIndex && typeof localizedIndex === 'object') {
+      for (const field of ['slug', 'date', 'topic', 'pitch', 'kicker']) {
+        assertNonEmptyString(localizedIndex, `${run}/index.zh.yaml`, field, schemaShapeFailures);
+      }
+    }
   }
 
-  if (failures.length || unexpected.length || parseFailures.length || consistencyFailures.length) {
+  if (failures.length || unexpected.length || parseFailures.length || consistencyFailures.length || schemaShapeFailures.length) {
     if (failures.length) {
       console.error('[check:ideas] missing required artifact files:');
       for (const f of failures) console.error(`  - ideas/${f}`);
@@ -124,6 +221,11 @@ try {
     if (consistencyFailures.length) {
       console.error('[check:ideas] artifact consistency failures:');
       for (const f of consistencyFailures) console.error(`  - ${f}`);
+    }
+    if (schemaShapeFailures.length) {
+      console.error('[check:ideas] localized schema shape failures:');
+      for (const f of schemaShapeFailures.slice(0, 200)) console.error(`  - ${f}`);
+      if (schemaShapeFailures.length > 200) console.error(`  - ...and ${schemaShapeFailures.length - 200} more`);
     }
     process.exit(1);
   }
