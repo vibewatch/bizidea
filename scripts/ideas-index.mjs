@@ -10,7 +10,7 @@ import { readdirSync, statSync, readFileSync, writeFileSync, existsSync } from '
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
-import { STOPWORDS } from './text-utils.mjs';
+import { STOPWORDS } from './text.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(HERE, '..');
@@ -187,20 +187,20 @@ function build() {
   }
 
   if (errors.length) {
-    for (const err of errors) console.warn(`[build-ideas-index] ${err}`);
+    for (const err of errors) console.warn(`[ideas-index] ${err}`);
     if (STRICT) {
-      console.error(`[build-ideas-index] strict mode failed with ${errors.length} issue(s)`);
+      console.error(`[ideas-index] strict mode failed with ${errors.length} issue(s)`);
       process.exit(1);
     }
   }
 
   if (CHECK_ONLY) {
-    console.log(`[build-ideas-index] ✓ validated ${entries.length}/${runs.length} entries; no files written`);
+    console.log(`[ideas-index] ✓ validated ${entries.length}/${runs.length} entries; no files written`);
     return;
   }
 
   writeFileSync(OUT_PATH, dumped, 'utf8');
-  console.log(`[build-ideas-index] wrote ${OUT_PATH} with ${entries.length} entries`);
+  console.log(`[ideas-index] wrote ${OUT_PATH} with ${entries.length} entries`);
 }
 
 build();

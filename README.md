@@ -21,7 +21,7 @@ flowchart TD
     triageFile --> fanout{{"for each selected cluster"}}
     fanout --> idea["Idea Generator<br/>one cluster &rarr; one idea"]
     idea -->|"writes"| ideaFile[("idea.yaml<br/>+ embedded sourceContext")]
-    ideaFile --> dedup{{"scripts/check-idea-dedup.mjs<br/>vs ideas/_index.yaml"}}
+    ideaFile --> dedup{{"scripts/dedupe-idea.mjs<br/>vs ideas/_index.yaml"}}
     dedup -->|"duplicate"| drop["delete partial folder"]
     dedup -->|"new"| pipeline
 
@@ -35,7 +35,7 @@ flowchart TD
     end
 
     zhFiles --> finalize{{"Bizidea finalize"}}
-    finalize -->|"node scripts/build-ideas-index.mjs"| indexFile[("ideas/_index.yaml<br/>aggregated history")]
+    finalize -->|"node scripts/ideas-index.mjs"| indexFile[("ideas/_index.yaml<br/>aggregated history")]
     finalize -->|"website/scripts/check-ideas.mjs"| validate["validate completed folders"]
     indexFile --> push["git commit &amp; push"]
     push --> deploy[".github/workflows/deploy.yml<br/>Astro build &rarr; GitHub Pages"]
@@ -48,13 +48,13 @@ flowchart TD
 | 0 | **Bizidea** | user prompt, repo state | nothing directly | Resolve `topic` / `cap` / `timeWindow` / `runTimestamp`; sequence specialists; enforce gates; never invokes itself; never writes stage YAML. |
 | 1 | **News Triage** | web (broad fetch), `ideas/_index.yaml` | `ideas/_triage/<ts>/triage.yaml` | One scan per run. Fetches ~120 candidate URLs, keeps ~80 verified items, groups them into opportunity clusters, scores 4 sub-scores, dedupes against history (`eventKeys`, `slugs`, canonical URLs, keyword overlap), and marks the top `cap` `new` clusters as `selected`. |
 | 2 | **Idea Generator** | `triage.yaml` (one cluster), `_index.yaml` | `<folder>/idea.yaml` | One cluster &rarr; one venture-scale idea with sharp wedge, beachhead customer, GTM seed, and source-grounded "why now". Embeds `sourceContext`; never searches the web. |
-| 2.5 | _gate_ | `idea.yaml`, `_index.yaml` | (deletes folder on duplicate) | `scripts/check-idea-dedup.mjs` runs after every `idea.yaml`. Duplicates are removed before any research starts. |
+| 2.5 | _gate_ | `idea.yaml`, `_index.yaml` | (deletes folder on duplicate) | `scripts/dedupe-idea.mjs` runs after every `idea.yaml`. Duplicates are removed before any research starts. |
 | 3 | **Market Researcher** | `idea.yaml`, web | `<folder>/research.yaml` | Builds an auditable evidence corpus (target 100+ deduped fetched sources), bottom-up TAM/SAM/SOM, ≤5 competitors with wedge analysis, regulation, customer signals, and `openQuestions` for honest gaps. |
 | 4 | **Business Plan Writer** | `idea.yaml`, `research.yaml` | `<folder>/business-plan.yaml` | Investor-ready plan: ICP, product sequencing, GTM system, milestones, hiring plan, risks, funding ask, investor memo. No web access; gaps surfaced as `null`. |
 | 5 | **Financial Modeler** | `business-plan.yaml`, `research.yaml` | `<folder>/financial-model.yaml` | 3-year model: monthly Y1 + quarterly Y2/Y3 P&L, headcount plan, unit economics (CAC/LTV/payback), runway-based funding ask, `sanityChecks.flags`, and an investor-facing `modelSanity` summary. Every number traces to an `assumptions[]` entry. |
 | 6 | **Reporter** | all four stage YAMLs | `<folder>/index.yaml` | Extracts and rates (does not reinterpret) the stage artifacts into the compact website sidecar. Preserves units (`K`, `M`); missing values become `null`. |
 | 7 | **ZH Translator** | five English YAMLs in folder | `<folder>/*.zh.yaml` (×5) | Two-pass EN&rarr;zh-CN translation (draft + reflection/revision) producing schema-preserving Chinese siblings. Never modifies English sources. |
-| ∞ | **Bizidea** (finalize) | completed folders | `ideas/_index.yaml` | After every report has all five `*.zh.yaml` files, rebuilds the history index via `scripts/build-ideas-index.mjs`, runs `website/scripts/check-ideas.mjs`, and emits the run summary. |
+| ∞ | **Bizidea** (finalize) | completed folders | `ideas/_index.yaml` | After every report has all five `*.zh.yaml` files, rebuilds the history index via `scripts/ideas-index.mjs`, runs `website/scripts/check-ideas.mjs`, and emits the run summary. |
 
 ### Orchestration rules
 
@@ -62,7 +62,7 @@ flowchart TD
 - **Generate-then-research barrier.** All selected ideas are generated and deduped *before* any `Market Researcher` invocation. This keeps the dedupe gate authoritative across the whole batch.
 - **Parallel across ideas, sequential within.** Per-idea pipelines (`research → business-plan → financial-model → report → zh`) may run concurrently, but each stage inside a pipeline waits for the previous file to exist, parse as YAML, and pass a minimum-fields gate.
 - **Gate-and-retry.** A failed gate triggers exactly one retry of the same specialist with the validation error and the same folder path. A second failure marks only that idea as failed; its partial folder is deleted so the website's content-collection check does not see incomplete reports.
-- **Stable folder names.** [scripts/prepare-report-folder.mjs](scripts/prepare-report-folder.mjs) creates `ideas/<runTimestamp>-<slug>/` once; the folder name never changes if the idea slug evolves later.
+- **Stable folder names.** [scripts/report-dir.mjs](scripts/report-dir.mjs) creates `ideas/<runTimestamp>-<slug>/` once; the folder name never changes if the idea slug evolves later.
 - **Hard stops.** Triage failure, missing repository paths, or final index-rebuild failure aborts the entire run. Per-idea failures only abort that idea.
 - **Localization is part of "done".** A report is not considered generated until its five `*.zh.yaml` files exist and parse — only then does finalization rebuild `_index.yaml`.
 
@@ -84,11 +84,11 @@ The orchestrator validates each handoff against the minimum-field schema below b
 
 | Path | Purpose |
 |---|---|
-| `ideas/` | Generated report artifacts. Each dated folder is one startup package containing five English YAMLs and their `*.zh.yaml` Simplified Chinese counterparts. `_index.yaml` is the aggregated history (rebuilt by [scripts/build-ideas-index.mjs](scripts/build-ideas-index.mjs)). `_triage/<runTimestamp>/triage.yaml` records each daily triage. Underscore-prefixed paths are ignored by the Astro content collection. |
+| `ideas/` | Generated report artifacts. Each dated folder is one startup package containing five English YAMLs and their `*.zh.yaml` Simplified Chinese counterparts. `_index.yaml` is the aggregated history (rebuilt by [scripts/ideas-index.mjs](scripts/ideas-index.mjs)). `_triage/<runTimestamp>/triage.yaml` records each daily triage. Underscore-prefixed paths are ignored by the Astro content collection. |
 | `website/` | [Astro 5](https://astro.build) site that renders reports as editorial pages. |
 | `.github/agents/` | Custom Copilot agent definitions: `Bizidea` (the orchestrator) plus `News Triage`, `Idea Generator`, `Market Researcher`, `Business Plan Writer`, `Financial Modeler`, `Reporter`, `ZH Translator`, and the `yaml-syntax` reference. |
 | `.github/workflows/` | `daily.yml` (scheduled multi-report run) and `deploy.yml` (publishes the site on `main` pushes touching `website/**` or `ideas/**`). |
-| `scripts/` | Repo-level deterministic helpers: `build-ideas-index.mjs`, `check-idea-dedup.mjs`, `prepare-report-folder.mjs`, and the shared `text-utils.mjs` tokenizer. |
+| `scripts/` | Repo-level deterministic helpers: `ideas-index.mjs`, `dedupe-idea.mjs`, `report-dir.mjs`, and the shared `text.mjs` tokenizer. |
 | [AGENTS.md](AGENTS.md) | Unified coding-agent instructions (working approach, repo map, YAML conventions). |
 
 ## YAML schema conventions
@@ -136,10 +136,10 @@ The `Bizidea` agent owns orchestration, but uses small deterministic scripts for
 
 | Script | Purpose |
 |---|---|
-| `scripts/build-ideas-index.mjs` | Rebuilds `ideas/_index.yaml` from completed report folders. |
-| `scripts/check-idea-dedup.mjs` | Compares a newly generated `idea.yaml` against `_index.yaml` and can delete duplicate partial folders. |
-| `scripts/prepare-report-folder.mjs` | Creates a stable `ideas/<runTimestamp>-<slug>/` folder for one selected idea. |
-| `scripts/text-utils.mjs` | Shared tokenizer/stopword helpers used by the dedupe and index scripts. |
+| `scripts/ideas-index.mjs` | Rebuilds `ideas/_index.yaml` from completed report folders. |
+| `scripts/dedupe-idea.mjs` | Compares a newly generated `idea.yaml` against `_index.yaml` and can delete duplicate partial folders. |
+| `scripts/report-dir.mjs` | Creates a stable `ideas/<runTimestamp>-<slug>/` folder for one selected idea. |
+| `scripts/text.mjs` | Shared tokenizer/stopword helpers used by the dedupe and index scripts. |
 
 ## Running the pipeline
 

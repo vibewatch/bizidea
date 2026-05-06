@@ -5,7 +5,7 @@
 import { existsSync, readFileSync, rmSync, appendFileSync } from 'node:fs';
 import { resolve, join, basename } from 'node:path';
 import yaml from 'js-yaml';
-import { tokens, intersectionSize, jaccard } from './text-utils.mjs';
+import { tokens, intersectionSize, jaccard } from './text.mjs';
 
 // Dedupe heuristics are intentionally conservative:
 // - exact slug catches deterministic reruns of the same concept.
@@ -16,7 +16,7 @@ const BEACHHEAD_OVERLAP_THRESHOLD = 6;
 const PITCH_JACCARD_THRESHOLD = 0.55;
 
 function usage() {
-  console.error('Usage: node scripts/check-idea-dedup.mjs <reportFolder> <ideas/_index.yaml> [--delete-on-duplicate] [--github-output <path>]');
+  console.error('Usage: node scripts/dedupe-idea.mjs <reportFolder> <ideas/_index.yaml> [--delete-on-duplicate] [--github-output <path>]');
   process.exit(2);
 }
 
@@ -40,7 +40,7 @@ if (!reportFolder || !indexPath) usage();
 
 const ideaPath = join(reportFolder, 'idea.yaml');
 if (!existsSync(ideaPath)) {
-  console.error(`[check-idea-dedup] missing ${ideaPath}`);
+  console.error(`[dedupe-idea] missing ${ideaPath}`);
   process.exit(1);
 }
 
@@ -48,7 +48,7 @@ let idea;
 try {
   idea = loadYaml(ideaPath);
 } catch (err) {
-  console.error(`[check-idea-dedup] failed to parse idea.yaml: ${err.message}`);
+  console.error(`[dedupe-idea] failed to parse idea.yaml: ${err.message}`);
   process.exit(1);
 }
 
@@ -85,11 +85,11 @@ if (match) {
   writeOutput(githubOutput, 'duplicate', 'true');
   writeOutput(githubOutput, 'matchedRunFolder', match.runFolder);
   writeOutput(githubOutput, 'dedupeReason', match.reason);
-  console.log(`[check-idea-dedup] duplicate ${basename(reportFolder)} -> ${match.runFolder} (${match.reason})`);
+  console.log(`[dedupe-idea] duplicate ${basename(reportFolder)} -> ${match.runFolder} (${match.reason})`);
   process.exit(0);
 }
 
 writeOutput(githubOutput, 'duplicate', 'false');
 writeOutput(githubOutput, 'matchedRunFolder', '');
 writeOutput(githubOutput, 'dedupeReason', 'new');
-console.log(`[check-idea-dedup] new idea: ${basename(reportFolder)}`);
+console.log(`[dedupe-idea] new idea: ${basename(reportFolder)}`);

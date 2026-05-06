@@ -22,7 +22,7 @@ This agent may invoke only the agents listed in frontmatter. Invoke each special
 
 2. **Generate and dedupe ideas**
    - For each selected triage cluster, invoke `Idea Generator` to write `<reportFolder>/idea.yaml`.
-   - Run `scripts/check-idea-dedup.mjs` against `ideas/_index.yaml` after each idea is written.
+   - Run `scripts/dedupe-idea.mjs` against `ideas/_index.yaml` after each idea is written.
    - If the deterministic dedupe gate marks an idea duplicate, delete that partial folder and do not run research for it.
 
 3. **Parallel report processing**
@@ -37,7 +37,7 @@ This agent may invoke only the agents listed in frontmatter. Invoke each special
 
 4. **Finalize**
    - Confirm every generated report folder has completed `ZH Translator` handoff output before rebuilding the aggregate index.
-   - Rebuild `ideas/_index.yaml` with `node scripts/build-ideas-index.mjs`.
+   - Rebuild `ideas/_index.yaml` with `node scripts/ideas-index.mjs`.
    - Validate completed folders with `website/scripts/check-ideas.mjs` when the website folder is available.
    - Summarize generated, deduped, and failed topics.
 
@@ -93,7 +93,7 @@ When a gate fails, retry the same specialist once with the validation error and 
 
 ## Report folder rules
 
-- Create one folder per selected idea with `scripts/prepare-report-folder.mjs <runTimestamp> <proposedSlug>` when available.
+- Create one folder per selected idea with `scripts/report-dir.mjs <runTimestamp> <proposedSlug>` when available.
 - The folder name is stable after creation; never rename it to match a later idea slug.
 - Partial folders must not remain directly under `ideas/` at finalization because website validation treats every non-underscore folder as a completed report. Delete duplicate and failed partial folders before rebuilding `_index.yaml`.
 
