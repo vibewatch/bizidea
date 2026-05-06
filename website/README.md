@@ -1,8 +1,8 @@
 # Bizidea website
 
 Static site (Astro) that renders the YAML dossiers under `../ideas/<run>/` using
-an FT.com-inspired editorial design system (salmon paper, claret accent, Source
-Serif 4 / Inter type stack) defined in [`src/styles/tokens.css`](src/styles/tokens.css).
+an FT.com-inspired editorial design system (salmon paper, claret accent, Mona
+Sans / Noto Sans SC type stack) defined in [`src/styles/tokens.css`](src/styles/tokens.css).
 
 ## Local
 
@@ -35,7 +35,7 @@ and update `SITE_URL` in the workflow.
 Typography follows the GenisisIQ stack:
 
 - `Mona Sans` from `@font-face` in [`src/styles/tokens.css`](src/styles/tokens.css)
-- `Noto Sans SC` and `JetBrains Mono` from Google Fonts in [`src/layouts/BaseLayout.astro`](src/layouts/BaseLayout.astro)
+- `Noto Sans SC` from Google Fonts in [`src/layouts/BaseLayout.astro`](src/layouts/BaseLayout.astro)
 
 Token stacks live in [`src/styles/tokens.css`](src/styles/tokens.css).
 
