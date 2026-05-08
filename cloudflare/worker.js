@@ -13,7 +13,7 @@
  *   GITHUB_REF = "main"
  *   BIZIDEA_CAP = "5"
  *   BIZIDEA_TIME_WINDOW = "yesterday"
- *   BIZIDEA_MODEL = "gpt-5.4"  (allowed: gpt-5.4, claude-opus-4.6, claude-sonnet-4.6)
+ *   BIZIDEA_MODEL = "gpt-5.4"  (allowed: gpt-5.4, gpt-5.5, claude-opus-4.6, claude-sonnet-4.6)
  */
 
 const WORKFLOW = "bizidea.yml";
@@ -24,6 +24,7 @@ const DEFAULT_MODEL = "gpt-5.4";
 
 const MODEL_EFFECTS = {
   "gpt-5.4": "xhigh",
+  "gpt-5.5": "xhigh",
   "claude-opus-4.6": "high",
   "claude-sonnet-4.6": "high",
 };

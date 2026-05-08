@@ -108,7 +108,7 @@ Common checks from the repo root:
 
 In CI, the Cloudflare scheduler dispatches the workflow daily. Manual triggers:
 
-- **GitHub UI**: Actions → *Bizidea — triage, generate, and publish reports* → *Run workflow*. Inputs: `cap` (1–5), `timeWindow` (e.g. `yesterday`, `last 7 days`), `model` (default `gpt-5.4` → effect `xhigh`; `claude-opus-4.6` and `claude-sonnet-4.6` → effect `high`).
+- **GitHub UI**: Actions → *Bizidea — triage, generate, and publish reports* → *Run workflow*. Inputs: `cap` (1–5), `timeWindow` (e.g. `yesterday`, `last 7 days`), `model` (default `gpt-5.4` → effect `xhigh`; `gpt-5.5` → effect `xhigh`; `claude-opus-4.6` and `claude-sonnet-4.6` → effect `high`).
 - **Local Copilot CLI** (requires a Copilot license):
 
   ```bash
@@ -133,7 +133,7 @@ npx wrangler secret put GITHUB_REPO    # vibewatch/bizidea
 npx wrangler deploy
 ```
 
-Optional vars in [cloudflare/wrangler.toml](cloudflare/wrangler.toml) override dispatch defaults: `BIZIDEA_CAP` (1–5, default `5`), `BIZIDEA_TIME_WINDOW` (default `yesterday`), `BIZIDEA_MODEL` (default `gpt-5.4`; also `claude-opus-4.6` / `claude-sonnet-4.6` — effect derived automatically).
+Optional vars in [cloudflare/wrangler.toml](cloudflare/wrangler.toml) override dispatch defaults: `BIZIDEA_CAP` (1–5, default `5`), `BIZIDEA_TIME_WINDOW` (default `yesterday`), `BIZIDEA_MODEL` (default `gpt-5.4`; also `gpt-5.5` / `claude-opus-4.6` / `claude-sonnet-4.6` — effect derived automatically).
 
 ## Required secrets
 
