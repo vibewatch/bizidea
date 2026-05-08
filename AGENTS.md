@@ -9,8 +9,9 @@
 ## Repository map
 - `ideas/` contains generated Bizidea report artifacts. Each report lives in its own dated folder and includes both English (`*.yaml`) and Simplified Chinese (`*.zh.yaml`) versions of the five stage artifacts. Top-level `_index.yaml` is the aggregated history catalog (rebuilt by [scripts/ideas-index.mjs](scripts/ideas-index.mjs)) used by `News Triage` to dedupe across runs. `_triage/<runTimestamp>/triage.yaml` records each daily triage decision. Folders or files prefixed with `_` are ignored by the Astro content collection.
 - `website/` contains the Astro site that renders reports.
+- `cloudflare/` contains the Cloudflare Worker scheduler that dispatches the daily GitHub Actions workflow.
 - `.github/agents/` contains custom workflow agents, including the `Bizidea` orchestrator, the per-stage specialists (`News Triage`, `Idea Generator`, `Market Researcher`, `Business Plan Writer`, `Financial Modeler`, `Reporter`), the `ZH Translator` (writes `*.zh.yaml` siblings), and the `yaml-syntax` reference.
-- `.github/workflows/` includes `deploy.yml` (publishes the site on `main` pushes touching `website/**` or `ideas/**`) and `daily.yml` (scheduled multi-report run).
+- `.github/workflows/` includes `deploy.yml` (publishes the site on `main` pushes touching `website/**` or `ideas/**`) and `daily.yml` (Cloudflare-dispatched multi-report run).
 - `scripts/` holds repo-level Node helpers: [ideas-index.mjs](scripts/ideas-index.mjs), [dedupe-idea.mjs](scripts/dedupe-idea.mjs), [report-dir.mjs](scripts/report-dir.mjs), and the shared [text.mjs](scripts/text.mjs) tokenizer used for dedupe.
 
 ## Website workflow

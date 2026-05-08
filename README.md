@@ -1,6 +1,6 @@
 # Bizidea
 
-Bizidea is a daily, fully-automated startup-research factory. A scheduled GitHub Actions workflow invokes the **Bizidea** Copilot orchestrator, which runs one **News Triage** scan, generates and dedupes ideas from selected clusters, then starts report production for each surviving idea. Each successful topic becomes a self-contained folder of YAML artifacts spanning idea synthesis, embedded source context, market research, business plan, 3-year financial model, and a machine-readable index. The companion Astro site renders those YAMLs as an FT-style editorial reading experience and ships to GitHub Pages on every push.
+Bizidea is a daily, fully-automated startup-research factory. A Cloudflare Cron Worker dispatches a GitHub Actions workflow that invokes the **Bizidea** Copilot orchestrator, which runs one **News Triage** scan, generates and dedupes ideas from selected clusters, then starts report production for each surviving idea. Each successful topic becomes a self-contained folder of YAML artifacts spanning idea synthesis, embedded source context, market research, business plan, 3-year financial model, and a machine-readable index. The companion Astro site renders those YAMLs as an FT-style editorial reading experience and ships to GitHub Pages on every push.
 
 Live site: <https://bizidea.genisisiq.com>
 
@@ -12,7 +12,7 @@ A Bizidea run is one orchestrator (`Bizidea`) delegating to seven specialist age
 
 ```mermaid
 flowchart TD
-  cron([cron / manual dispatch]) --> wf[".github/workflows/daily.yml"]
+  cron([Cloudflare cron / manual dispatch]) --> wf[".github/workflows/daily.yml"]
     wf -->|"copilot --agent Bizidea"| orch{{"Bizidea<br/>orchestrator"}}
 
     orch -->|"once per run"| triage["News Triage<br/>web fetch · cluster · score · dedupe"]
@@ -86,8 +86,9 @@ The orchestrator validates each handoff against the minimum-field schema below b
 |---|---|
 | `ideas/` | Generated report artifacts. Each dated folder is one startup package containing five English YAMLs and their `*.zh.yaml` Simplified Chinese counterparts. `_index.yaml` is the aggregated history (rebuilt by [scripts/ideas-index.mjs](scripts/ideas-index.mjs)). `_triage/<runTimestamp>/triage.yaml` records each daily triage. Underscore-prefixed paths are ignored by the Astro content collection. |
 | `website/` | [Astro 5](https://astro.build) site that renders reports as editorial pages. |
+| `cloudflare/` | Cloudflare Worker scheduler that dispatches the daily GitHub Actions workflow. |
 | `.github/agents/` | Custom Copilot agent definitions: `Bizidea` (the orchestrator) plus `News Triage`, `Idea Generator`, `Market Researcher`, `Business Plan Writer`, `Financial Modeler`, `Reporter`, `ZH Translator`, and the `yaml-syntax` reference. |
-| `.github/workflows/` | `daily.yml` (scheduled multi-report run) and `deploy.yml` (publishes the site on `main` pushes touching `website/**` or `ideas/**`). |
+| `.github/workflows/` | `daily.yml` (Cloudflare-dispatched multi-report run) and `deploy.yml` (publishes the site on `main` pushes touching `website/**` or `ideas/**`). |
 | `scripts/` | Repo-level deterministic helpers: `ideas-index.mjs`, `dedupe-idea.mjs`, `report-dir.mjs`, and the shared `text.mjs` tokenizer. |
 | [AGENTS.md](AGENTS.md) | Unified coding-agent instructions (working approach, repo map, YAML conventions). |
 
@@ -143,7 +144,7 @@ The `Bizidea` agent owns orchestration, but uses small deterministic scripts for
 
 ## Running the pipeline
 
-The agent-orchestrated pipeline runs in CI on a daily schedule, but you can also trigger it manually:
+The agent-orchestrated pipeline runs in CI via the Cloudflare scheduler, but you can also trigger it manually:
 
 - **Manually via GitHub UI**: Actions → *Daily Bizidea run* → *Run workflow* (inputs: `cap`, `timeWindow`).
 - **Locally via Copilot CLI** (requires a Copilot license; the `Bizidea` agent orchestrates all stages):
@@ -158,6 +159,20 @@ The important sequencing rule is: `News Triage` runs once, `Idea Generator` crea
 ## Deployment
 
 `deploy.yml` builds the Astro site and publishes to GitHub Pages whenever `main` receives a push touching `website/**`, `ideas/**`, or the workflow itself. The custom domain `bizidea.genisisiq.com` is set via [website/public/CNAME](website/public/CNAME).
+
+### Cloudflare scheduler
+
+[cloudflare/worker.js](cloudflare/worker.js) dispatches [.github/workflows/daily.yml](.github/workflows/daily.yml) once per day at `07:00 UTC`, using the workflow's `workflow_dispatch` endpoint. The native GitHub Actions cron is commented out to prevent duplicate runs.
+
+Deploy it from [cloudflare/](cloudflare/):
+
+```bash
+npx wrangler secret put GITHUB_TOKEN
+npx wrangler secret put GITHUB_REPO
+npx wrangler deploy
+```
+
+Use `vibewatch/bizidea` for `GITHUB_REPO`. `GITHUB_TOKEN` should be a fine-grained PAT with `Actions: Read and write` access on this repository.
 
 ## Required secrets
 
