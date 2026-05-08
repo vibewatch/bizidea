@@ -1,0 +1,514 @@
+slug: brownfield-robot-rollout-os
+date: '2026-05-08'
+currency: USD
+modelStartMonth: '2026-05'
+assumptions:
+  - id: A1
+    name: Model start month
+    value: '2026-05'
+    unit: month
+    source: "[BP date 2026-05-08; model starts in the same month as the pre-seed close.]"
+  - id: A2
+    name: Opening cash after pre-seed close
+    value: '2000'
+    unit: USDK
+    source: "[BP fundingAsk.targetFundingRangeUsd $2-3M; base case uses the low end $2.0M to stay inside plan guidance.]"
+  - id: A3
+    name: Billable unit in the model
+    value: 1 live production site = 1 customer
+    unit: policy
+    source: "[BP businessModel.unitOfValue live brownfield site; Research market.som uses 45 live sites as the Y3 reachable base.]"
+  - id: A4
+    name: Pricing architecture
+    value: One-time site and connector setup plus annual per-live-site software
+    unit: pricing model
+    source: "[BP gtm.pricing; BP businessModel.revenueStreams.]"
+  - id: A5
+    name: Blended annual ARPU per live site
+    value: '30'
+    unit: USDK
+    source: "[Research bottomUpSizingDrivers $20K annual software spend per live site; BP pricing also includes setup and connector fees, so the base case uses a conservative blended first-year site revenue of $30K.]"
+  - id: A6
+    name: Revenue recognition cadence
+    value: Active live sites contribute a full monthly ratable amount in the month shown
+    unit: policy
+    source: "[Startup-finance heuristic: simple pre-seed SaaS recognition using monthly ratable revenue once a site is live.]"
+  - id: A7
+    name: Target gross margin
+    value: '70'
+    unit: percent
+    source: "[BP businessModel.targetGrossMarginPct.]"
+  - id: A8
+    name: Year 1 ending live sites
+    value: '10'
+    unit: sites
+    source: "[BP product.twelveMonth 8-12 live production sites; base case uses 10.]"
+  - id: A9
+    name: Year 2 ending live sites
+    value: '28'
+    unit: sites
+    source: "[BP milestones 12-24 months target roughly 45 live sites; Research adoptionFrictionMatrix flags services-heavy onboarding and budget fragmentation, so the base case discounts that milestone to 28 by Q4Y2.]"
+  - id: A10
+    name: Year 3 ending live sites
+    value: '45'
+    unit: sites
+    source: "[BP market.som and milestones both anchor the reachable Y3 base case at roughly 45 live sites.]"
+  - id: A11
+    name: Steady-state monthly site churn for unit economics
+    value: '1.5'
+    unit: percent per month
+    source: "[Startup-finance heuristic for sticky operations software with annual budgets but still-early product maturity.]"
+  - id: A12
+    name: Explicit forecast churn policy
+    value: No modeled site churn before Y4
+    unit: forecast policy
+    source: "[Startup-finance heuristic: the first three years are reference-sensitive expansion deployments inside a small number of anchor accounts, so the operating forecast assumes no site loss even though unit economics uses a steady-state churn rate.]"
+  - id: A13
+    name: Blended CAC per new live site
+    value: '14'
+    unit: USDK
+    source: "[Model-derived heuristic anchored to BP GTM channels and founder-led enterprise selling with partner referrals.]"
+  - id: A14
+    name: Average sales cycle
+    value: '4'
+    unit: months
+    source: "[BP gtm.funnelTargets and Research buyingTriggers both imply a multi-stakeholder expansion sale with one-quarter-plus cycles.]"
+  - id: A15
+    name: Hiring cadence
+    value: Founder and founding engineer at start; deployment engineer in M2; product/integration lead in M6; CS benchmarking lead in M9; first sales/partnerships hire in M12; then lean expansion hires through Y3
+    unit: hiring plan
+    source: "[BP team startTiming; later hires are a startup-finance extension sized to the Y2-Y3 site ramp.]"
+  - id: A16
+    name: Fully loaded annual cash compensation
+    value: Founder 72; engineering or product 55; deployment or CS 42; sales or partnerships 48
+    unit: USDK per FTE
+    source: "[Startup-finance heuristic: India enterprise-software startup salary bands with cash comp and benefits.]"
+  - id: A17
+    name: Non-payroll operating spend ramp
+    value: About 15K per month in early Y1 rising to about 42K per month by Q4Y3
+    unit: USDK per month
+    source: "[Startup-finance heuristic anchored to cloud tooling, travel for brownfield launches, partner development, and legal/admin overhead.]"
+  - id: A18
+    name: Cash conversion assumption
+    value: EBITDA approximates operating cash movement
+    unit: cash policy
+    source: "[Startup-finance heuristic: no debt, capex, taxes, or material working-capital swings are modeled at pre-seed stage.]"
+  - id: A19
+    name: Fundraise objective
+    value: Reach roughly 45 live sites, 6 anchor operator networks, repeatable partner-sourced pipeline, and preserve 6 months of buffer before a seed round
+    unit: milestone
+    source: "[BP fundingAsk.useOfFundsSummary; BP milestones; Financial-model requirement to include a 6-month buffer.]"
+headcount:
+  - role: Founder/Exec
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q1y2: 1
+    q2y2: 1
+    q3y2: 1
+    q4y2: 1
+    q1y3: 1
+    q2y3: 1
+    q3y3: 1
+    q4y3: 1
+  - role: Engineering/Product
+    q1y1: 1
+    q2y1: 2
+    q3y1: 2
+    q4y1: 2
+    q1y2: 3
+    q2y2: 3
+    q3y2: 4
+    q4y2: 4
+    q1y3: 5
+    q2y3: 5
+    q3y3: 6
+    q4y3: 6
+  - role: Deployment/CS
+    q1y1: 1
+    q2y1: 1
+    q3y1: 2
+    q4y1: 2
+    q1y2: 2
+    q2y2: 2
+    q3y2: 3
+    q4y2: 3
+    q1y3: 3
+    q2y3: 4
+    q3y3: 4
+    q4y3: 5
+  - role: Sales/Partnerships
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q1y2: 1
+    q2y2: 2
+    q3y2: 2
+    q4y2: 2
+    q1y3: 3
+    q2y3: 3
+    q3y3: 3
+    q4y3: 3
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 5
+  q4y1: 6
+  q1y2: 7
+  q2y2: 8
+  q3y2: 10
+  q4y2: 10
+  q1y3: 12
+  q2y3: 13
+  q3y3: 14
+  q4y3: 15
+headcountAnnualizedPayrollK:
+  q1y1: 169.0
+  q2y1: 224.0
+  q3y1: 266.0
+  q4y1: 314.0
+  q1y2: 369.0
+  q2y2: 417.0
+  q3y2: 514.0
+  q4y2: 514.0
+  q1y3: 617.0
+  q2y3: 697.0
+  q3y3: 752.0
+  q4y3: 794.0
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 3.0
+    researchDevelopmentK: 9.58
+    generalAdministrativeK: 13.0
+    opexK: 25.58
+    ebitdaK: -25.58
+    cashEopK: 1974.42
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 6.5
+    researchDevelopmentK: 9.58
+    generalAdministrativeK: 13.0
+    opexK: 29.08
+    ebitdaK: -29.08
+    cashEopK: 1945.34
+  - month: M3
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 2.5
+    cogsK: 0.75
+    grossProfitK: 1.75
+    salesMarketingK: 6.5
+    researchDevelopmentK: 9.58
+    generalAdministrativeK: 13.0
+    opexK: 29.08
+    ebitdaK: -27.33
+    cashEopK: 1918.01
+  - month: M4
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 2.5
+    cogsK: 0.75
+    grossProfitK: 1.75
+    salesMarketingK: 6.5
+    researchDevelopmentK: 9.58
+    generalAdministrativeK: 13.0
+    opexK: 29.08
+    ebitdaK: -27.33
+    cashEopK: 1890.68
+  - month: M5
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 5.0
+    cogsK: 1.5
+    grossProfitK: 3.5
+    salesMarketingK: 6.5
+    researchDevelopmentK: 9.58
+    generalAdministrativeK: 13.0
+    opexK: 29.08
+    ebitdaK: -25.58
+    cashEopK: 1865.1
+  - month: M6
+    customersEop: 3
+    newCustomers: 1
+    revenueK: 7.5
+    cogsK: 2.25
+    grossProfitK: 5.25
+    salesMarketingK: 7.5
+    researchDevelopmentK: 15.17
+    generalAdministrativeK: 14.0
+    opexK: 36.67
+    ebitdaK: -31.42
+    cashEopK: 1833.68
+  - month: M7
+    customersEop: 4
+    newCustomers: 1
+    revenueK: 10.0
+    cogsK: 3.0
+    grossProfitK: 7.0
+    salesMarketingK: 7.5
+    researchDevelopmentK: 15.17
+    generalAdministrativeK: 14.0
+    opexK: 36.67
+    ebitdaK: -29.67
+    cashEopK: 1804.01
+  - month: M8
+    customersEop: 5
+    newCustomers: 1
+    revenueK: 12.5
+    cogsK: 3.75
+    grossProfitK: 8.75
+    salesMarketingK: 7.5
+    researchDevelopmentK: 15.17
+    generalAdministrativeK: 14.0
+    opexK: 36.67
+    ebitdaK: -27.92
+    cashEopK: 1776.09
+  - month: M9
+    customersEop: 6
+    newCustomers: 1
+    revenueK: 15.0
+    cogsK: 4.5
+    grossProfitK: 10.5
+    salesMarketingK: 12.0
+    researchDevelopmentK: 16.17
+    generalAdministrativeK: 15.0
+    opexK: 43.17
+    ebitdaK: -32.67
+    cashEopK: 1743.42
+  - month: M10
+    customersEop: 7
+    newCustomers: 1
+    revenueK: 17.5
+    cogsK: 5.25
+    grossProfitK: 12.25
+    salesMarketingK: 12.0
+    researchDevelopmentK: 16.17
+    generalAdministrativeK: 15.0
+    opexK: 43.17
+    ebitdaK: -30.92
+    cashEopK: 1712.5
+  - month: M11
+    customersEop: 8
+    newCustomers: 1
+    revenueK: 20.0
+    cogsK: 6.0
+    grossProfitK: 14.0
+    salesMarketingK: 12.0
+    researchDevelopmentK: 16.17
+    generalAdministrativeK: 15.0
+    opexK: 43.17
+    ebitdaK: -29.17
+    cashEopK: 1683.33
+  - month: M12
+    customersEop: 10
+    newCustomers: 2
+    revenueK: 25.0
+    cogsK: 7.5
+    grossProfitK: 17.5
+    salesMarketingK: 17.0
+    researchDevelopmentK: 16.17
+    generalAdministrativeK: 15.0
+    opexK: 48.17
+    ebitdaK: -30.67
+    cashEopK: 1652.66
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 13
+    revenueK: 86.25
+    grossProfitK: 60.37
+    opexK: 151.38
+    ebitdaK: -91.01
+    cashEopK: 1561.65
+  - quarter: Q2Y2
+    customersEop: 17
+    revenueK: 112.5
+    grossProfitK: 78.75
+    opexK: 173.25
+    ebitdaK: -94.5
+    cashEopK: 1467.15
+  - quarter: Q3Y2
+    customersEop: 22
+    revenueK: 146.25
+    grossProfitK: 102.38
+    opexK: 200.38
+    ebitdaK: -98.0
+    cashEopK: 1369.15
+  - quarter: Q4Y2
+    customersEop: 28
+    revenueK: 187.5
+    grossProfitK: 131.25
+    opexK: 218.5
+    ebitdaK: -87.25
+    cashEopK: 1281.9
+  - quarter: Q1Y3
+    customersEop: 32
+    revenueK: 225.0
+    grossProfitK: 157.5
+    opexK: 240.38
+    ebitdaK: -82.88
+    cashEopK: 1199.02
+  - quarter: Q2Y3
+    customersEop: 36
+    revenueK: 255.0
+    grossProfitK: 178.5
+    opexK: 272.25
+    ebitdaK: -93.75
+    cashEopK: 1105.27
+  - quarter: Q3Y3
+    customersEop: 40
+    revenueK: 285.0
+    grossProfitK: 199.5
+    opexK: 298.12
+    ebitdaK: -98.62
+    cashEopK: 1006.65
+  - quarter: Q4Y3
+    customersEop: 45
+    revenueK: 318.75
+    grossProfitK: 223.12
+    opexK: 319.25
+    ebitdaK: -96.13
+    cashEopK: 910.52
+totals:
+  y1:
+    revenueK: 117.5
+    ebitdaK: -347.34
+    cashEopK: 1652.66
+  y2:
+    revenueK: 532.5
+    ebitdaK: -370.76
+    cashEopK: 1281.9
+  y3:
+    revenueK: 1083.75
+    ebitdaK: -371.38
+    cashEopK: 910.52
+unitEconomics:
+  arpuAnnualK: 30.0
+  grossMarginPct: 70.0
+  cacK: 14.0
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 66.7
+  ltvK: 116.7
+  ltvCacRatio: 8.3
+  cacPaybackMonths: 8.0
+fundingAsk:
+  round: pre-seed
+  amountM: 2.0
+  runwayMonths: 24
+  milestone: Reach 6 anchor operator networks, roughly 45 live sites, partner-sourced pipeline above 40%, and keep 6 months of buffer before a seed raise.
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 820000
+      percentage: 41
+    - bucket: GTM
+      amountUsd: 500000
+      percentage: 25
+    - bucket: G&A
+      amountUsd: 280000
+      percentage: 14
+    - bucket: Buffer (6 mo)
+      amountUsd: 400000
+      percentage: 20
+scenarios:
+  downside:
+    description: Budget stays partly OEM-bundled, so site ramp slips and the business remains more implementation-heavy.
+    y3RevenueK: 780.0
+    y3EbitdaK: -520.0
+    cashLowPointK: 520.0
+    keyAssumptionChanges:
+      - Blended annual ARPU falls to $26K per live site.
+      - Q4Y3 live sites reach 34 instead of 45.
+      - Gross margin tops out at 65% because connector reuse lags.
+      - Blended CAC rises to $18K as partner-sourced pipeline underperforms.
+  base:
+    description: Warehouse expansion demand converts steadily into 45 live sites by Q4Y3 while gross margin reaches the 70% plan target.
+    y3RevenueK: 1083.75
+    y3EbitdaK: -371.38
+    cashLowPointK: 910.52
+    keyAssumptionChanges:
+      - Blended annual ARPU stays at $30K per live site.
+      - Live sites grow from 10 at Y1 end to 28 at Y2 end and 45 at Y3 end.
+      - Gross margin improves to the 70% target as deployment templates get reused.
+  upside:
+    description: Partner referrals pull forward more networks and raise module attach, producing faster site growth with less delivery drag.
+    y3RevenueK: 1350.0
+    y3EbitdaK: -170.0
+    cashLowPointK: 1060.0
+    keyAssumptionChanges:
+      - Blended annual ARPU rises to $34K per live site on stronger benchmark and connector attach.
+      - Q4Y3 live sites reach 55 through faster expansion inside anchor accounts.
+      - Gross margin reaches 72% as reusable connectors cover most launches.
+sensitivity:
+  - variable: ARPU
+    downsideCase: $26K annual blended site ARPU
+    baseCase: $30K annual blended site ARPU
+    upsideCase: $34K annual blended site ARPU
+    y3RevenueImpactK: -144.5
+    cashImpactK: -101.2
+  - variable: CAC
+    downsideCase: $18K blended CAC per live site landed
+    baseCase: $14K blended CAC per live site landed
+    upsideCase: $11K blended CAC per live site landed
+    y3RevenueImpactK: 0.0
+    cashImpactK: -180.0
+  - variable: churn
+    downsideCase: 2.5% monthly site churn after reference period
+    baseCase: 1.5% monthly site churn after reference period
+    upsideCase: 1.0% monthly site churn after reference period
+    y3RevenueImpactK: -92.0
+    cashImpactK: -64.0
+  - variable: sales cycle
+    downsideCase: First 10 live sites land by M15 instead of M12
+    baseCase: First 10 live sites land by M12
+    upsideCase: First 10 live sites land by M10
+    y3RevenueImpactK: -150.0
+    cashImpactK: -110.0
+  - variable: gross margin
+    downsideCase: 65% gross margin
+    baseCase: 70% gross margin
+    upsideCase: 72% gross margin
+    y3RevenueImpactK: 0.0
+    cashImpactK: -75.0
+  - variable: hiring pace
+    downsideCase: Keep the full hiring plan even if site ramp slips
+    baseCase: Hire against the current milestone plan
+    upsideCase: Delay one sales and one deployment hire by two quarters
+    y3RevenueImpactK: 0.0
+    cashImpactK: -120.0
+modelDiagram:
+  title: unit economics flow
+  mermaid: |
+    flowchart LR
+      Leads[Partner referrals + direct outreach] --> Assessments[Qualified rollout assessments]
+      Assessments --> LiveSites[Live production sites]
+      LiveSites --> Revenue[Blended site revenue]
+      Revenue --> GrossProfit[70% gross profit]
+      GrossProfit --> Cash[Cash runway]
+modelSanity:
+  - checkName: Revenue engine
+    finding: Base-case revenue is driven by expanding from 10 to 45 live sites and holding blended annual site revenue at $30K through software plus modest setup and connector fees.
+  - checkName: Must go right
+    finding: Connector reuse and partner referrals must improve fast enough to support the 28-site Y2 exit without letting deployment labor crush the 70% gross-margin target.
+  - checkName: Model breaks if
+    finding: If rollout budgets stay trapped inside OEM contracts and the company exits Y3 below roughly 34 live sites, the downside case leaves too little cash for a clean seed process.
+  - checkName: Next-round proof
+    finding: The seed story works once the company can show 6 anchor networks, about 45 live sites, partner-sourced pipeline above 40%, and benchmark data proving repeatable launch economics.
+sanityChecks:
+  ruleOf40: Y3 growth 104% + EBITDA margin -34% = 70%
+  burnMultiple: Y2 burn multiple 0.9x and Y3 burn multiple 0.7x, improving as revenue growth outruns burn.
+  revenuePerFte: $72K Y3 using Q4Y3 15 FTE, well below pure-play SaaS benchmarks and acceptable only if deployment work keeps getting productized.
+  flags:
+    - The base case intentionally pushes the BP 45-live-site target from 24 months to 36 months because research points to services-heavy onboarding and fragmented budget ownership.
+    - Revenue per FTE remains low for software, so the business still looks part-software and part-deployment-services unless connector reuse improves materially.
+    - The model assumes buyers will pay for a neutral rollout layer alongside OEM relationships; if they will only buy bundled vendor software, CAC and growth both worsen quickly.
+    - Blended site ARPU includes modest setup and connector revenue, so realized recurring-only ARR will look lower than the headline blended revenue figure.
