@@ -144,6 +144,14 @@ function dateString(v) {
   return v == null ? null : String(v);
 }
 
+function comparableIndex(index) {
+  return {
+    schemaVersion: index?.schemaVersion ?? null,
+    entryCount: index?.entryCount ?? null,
+    entries: Array.isArray(index?.entries) ? index.entries : [],
+  };
+}
+
 function build() {
   const runs = listRuns();
   const entries = [];
@@ -195,7 +203,19 @@ function build() {
   }
 
   if (CHECK_ONLY) {
-    console.log(`[ideas-index] ✓ validated ${entries.length}/${runs.length} entries; no files written`);
+    const currentErrors = [];
+    const current = safeLoad(OUT_PATH, currentErrors);
+    if (currentErrors.length) {
+      for (const err of currentErrors) console.error(`[ideas-index] ${err}`);
+      process.exit(1);
+    }
+
+    if (JSON.stringify(comparableIndex(current)) !== JSON.stringify(comparableIndex(out))) {
+      console.error(`[ideas-index] check failed: ${OUT_PATH} is stale; run npm run build:ideas-index`);
+      process.exit(1);
+    }
+
+    console.log(`[ideas-index] ✓ validated ${entries.length}/${runs.length} entries; checked ${OUT_PATH}; no files written`);
     return;
   }
 
