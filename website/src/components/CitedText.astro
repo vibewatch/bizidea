@@ -1,8 +1,9 @@
 ---
-// Linkifies `[N]` and `[N][M][...]` citation tokens into anchors that point at
+// Linkifies `[N]`, `[N,N,...]`, and `[N][M][...]` citation tokens into anchors that point at
 // the matching `<li id="cite-N">` in the cited-sources bibliography.
 
 import { citationAriaLabel, type Lang } from '../lib/i18n';
+import { splitCitationText } from '../lib/citations';
 
 interface Props {
   text?: string | null;
@@ -13,18 +14,7 @@ interface Props {
 }
 const { text, as: Tag = 'span', class: cls = '', lang = 'en' } = Astro.props as Props;
 
-const parts: Array<string | { id: string }> = [];
-if (typeof text === 'string' && text.length > 0) {
-  const re = /\[(\d+)\]/g;
-  let last = 0;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text))) {
-    if (m.index > last) parts.push(text.slice(last, m.index));
-    parts.push({ id: m[1]! });
-    last = m.index + m[0].length;
-  }
-  if (last < text.length) parts.push(text.slice(last));
-}
+const parts = splitCitationText(text);
 ---
 <Tag class:list={[cls]}>
   {parts.map((p) =>
