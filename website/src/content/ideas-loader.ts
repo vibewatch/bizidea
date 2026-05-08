@@ -7,6 +7,13 @@ import type { Lang } from '../lib/i18n';
 
 // Resolve relative to the Astro project (website/) which is process.cwd() during build.
 const IDEAS_DIR = resolve(process.cwd(), '..', 'ideas');
+const REQUIRED_LOCALIZED_FILES = [
+  'idea.zh.yaml',
+  'research.zh.yaml',
+  'business-plan.zh.yaml',
+  'financial-model.zh.yaml',
+  'index.zh.yaml',
+];
 
 export type LocalizedIndexData = Record<string, unknown>;
 
@@ -215,7 +222,7 @@ function readLocalizedYaml(folder: string, basename: string, lang: Lang): unknow
 
 /**
  * Check if a run has Chinese translation files.
- * Returns true only if idea.zh.yaml exists.
+ * Returns true only if all localized report artifacts exist.
  *
  * @param runId - The run folder name
  * @returns - true if zh translation exists, false otherwise
@@ -224,7 +231,7 @@ export function hasZhTranslation(runId: string): boolean {
   if (zhTranslationCache.has(runId)) return zhTranslationCache.get(runId)!;
 
   const folder = join(IDEAS_DIR, runId);
-  const exists = existsSync(join(folder, 'idea.zh.yaml'));
+  const exists = REQUIRED_LOCALIZED_FILES.every((file) => existsSync(join(folder, file)));
   zhTranslationCache.set(runId, exists);
   return exists;
 }
