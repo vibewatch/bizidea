@@ -10,7 +10,7 @@
 # - COPILOT_PAT — PAT for a Copilot-licensed account; passed to the Copilot CLI.
 # - BIZIDEA_PAT — PAT with repo write access for checkout/push and downstream deploy triggers.
 
-name: Daily Bizidea run
+name: Bizidea — triage, generate, and publish reports
 
 on:
   # schedule: # Disabled; Cloudflare Worker handles scheduling.
@@ -33,6 +33,15 @@ on:
         type: string
         required: false
         default: "yesterday"
+      model:
+        description: "Copilot model to use (effect is derived automatically)"
+        type: choice
+        options:
+          - "gpt-5.4"
+          - "claude-opus-4.6"
+          - "claude-sonnet-4.6"
+        required: false
+        default: "gpt-5.4"
 
 permissions:
   contents: write
@@ -42,14 +51,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  run:
+  generate-and-publish:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     defaults:
       run:
         shell: bash
     steps:
-      - name: Check required secrets
+      - name: Verify required secrets are present
         env:
           BIZIDEA_PAT: ${{ secrets.BIZIDEA_PAT }}
           COPILOT_PAT: ${{ secrets.COPILOT_PAT }}
@@ -66,12 +75,14 @@ jobs:
           fi
           exit "$missing"
 
-      - uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ secrets.BIZIDEA_PAT }}
 
-      - uses: actions/setup-node@v6
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v6
         with:
           node-version: "22"
           cache: "npm"
@@ -79,27 +90,30 @@ jobs:
             package-lock.json
             website/package-lock.json
 
-      - name: Install root deps
+      - name: Install root dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Install website deps
+      - name: Install website dependencies
         working-directory: website
         run: npm ci --no-audit --no-fund
 
       - name: Install GitHub Copilot CLI
         run: npm install -g @github/copilot --no-audit --no-fund
 
-      - name: Resolve run inputs
+      - name: Validate and resolve run inputs (cap, time window, model)
         id: inputs
         env:
           RAW_CAP: ${{ github.event.inputs.cap }}
           RAW_WINDOW: ${{ github.event.inputs.timeWindow }}
+          RAW_MODEL: ${{ github.event.inputs.model }}
         run: |
           set -euo pipefail
           CAP="${RAW_CAP:-}"
           WINDOW="${RAW_WINDOW:-}"
+          MODEL="${RAW_MODEL:-}"
           if [ -z "$CAP" ]; then CAP="5"; fi
           if [ -z "$WINDOW" ]; then WINDOW="yesterday"; fi
+          if [ -z "$MODEL" ]; then MODEL="gpt-5.4"; fi
           if ! [[ "$CAP" =~ ^[1-5]$ ]]; then
             echo "Invalid cap '$CAP'; expected an integer from 1 to 5." >&2
             exit 2
@@ -108,27 +122,38 @@ jobs:
             echo "Invalid timeWindow '$WINDOW'; use a short plain-text phrase like 'yesterday' or 'last 7 days'." >&2
             exit 2
           fi
+          case "$MODEL" in
+            gpt-5.4)          EFFECT="xhigh" ;;
+            claude-opus-4.6)  EFFECT="high" ;;
+            claude-sonnet-4.6) EFFECT="high" ;;
+            *)
+              echo "Invalid model '$MODEL'; allowed: gpt-5.4, claude-opus-4.6, claude-sonnet-4.6." >&2
+              exit 2
+              ;;
+          esac
           echo "cap=$CAP" >> "$GITHUB_OUTPUT"
           echo "window=$WINDOW" >> "$GITHUB_OUTPUT"
+          echo "model=$MODEL" >> "$GITHUB_OUTPUT"
+          echo "effect=$EFFECT" >> "$GITHUB_OUTPUT"
 
-      - name: Run Bizidea orchestrator
+      - name: Run Bizidea agent — triage → ideas → research → plan → model → report
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
         run: |
           set -euo pipefail
-          copilot --yolo --no-ask-user --agent "Bizidea" -p "Run the full Bizidea pipeline for ${{ steps.inputs.outputs.window }}. topic: startup news. cap: ${{ steps.inputs.outputs.cap }}. Orchestrate all stages yourself: News Triage once, generate and dedupe ideas from selected clusters, then run each surviving idea through research -> business plan -> financial model -> reporter. Do not invoke Bizidea recursively. Delete duplicate or failed partial report folders before final validation. Do not run git add or git commit."
+          copilot --yolo --no-ask-user --model "${{ steps.inputs.outputs.model }}" --effect "${{ steps.inputs.outputs.effect }}" --agent "Bizidea" -p "Run the full Bizidea pipeline for ${{ steps.inputs.outputs.window }}. topic: startup news. cap: ${{ steps.inputs.outputs.cap }}. Orchestrate all stages yourself: News Triage once, generate and dedupe ideas from selected clusters, then run each surviving idea through research -> business plan -> financial model -> reporter. Do not invoke Bizidea recursively. Delete duplicate or failed partial report folders before final validation. Do not run git add or git commit."
 
-      - name: Normalize generated YAML
+      - name: Normalize generated YAML (repair flow style and bare colons)
         working-directory: website
         run: npm run repair:yaml
 
-      - name: Rebuild ideas/_index.yaml
+      - name: Rebuild aggregate history index (ideas/_index.yaml)
         run: node scripts/ideas-index.mjs --strict
 
-      - name: Validate generated ideas
+      - name: Validate all generated report folders
         run: npm run validate:all
 
-      - name: Commit and push new reports
+      - name: Commit and push completed reports to main
         run: |
           set -euo pipefail
           git config user.name "bizidea-bot"

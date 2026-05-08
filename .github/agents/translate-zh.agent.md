@@ -3,7 +3,7 @@ description: "Use when: generating Simplified Chinese *.zh.yaml files for comple
 name: "ZH Translator"
 model: "GPT-5.4 (copilot)"
 tools: [read, edit, execute]
-user-invocable: true
+user-invocable: false
 ---
 
 Read completed English YAML artifacts and write Simplified Chinese counterparts with the same schema.

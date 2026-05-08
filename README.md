@@ -1,18 +1,18 @@
 # Bizidea
 
-Bizidea is a daily, fully-automated startup-research factory. A Cloudflare Cron Worker dispatches a GitHub Actions workflow that invokes the **Bizidea** Copilot orchestrator, which runs one **News Triage** scan, generates and dedupes ideas from selected clusters, then starts report production for each surviving idea. Each successful topic becomes a self-contained folder of YAML artifacts spanning idea synthesis, embedded source context, market research, business plan, 3-year financial model, and a machine-readable index. The companion Astro site renders those YAMLs as an FT-style editorial reading experience and ships to GitHub Pages on every push.
+Bizidea is a daily, fully-automated startup-research factory. A Cloudflare Cron Worker dispatches a GitHub Actions workflow that invokes the **Bizidea** Copilot orchestrator: one **News Triage** scan, idea generation + dedupe, then per-idea report production. Each surviving topic becomes a folder of YAML artifacts (idea, market research, business plan, 3-year financial model, machine-readable index) plus Simplified Chinese siblings. The companion Astro site renders those YAMLs as an FT-style editorial reading experience and ships to GitHub Pages on every push.
 
 Live site: <https://bizidea.genisisiq.com>
 
 ## How it works
 
-A Bizidea run is one orchestrator (`Bizidea`) delegating to seven specialist agents. Each specialist owns exactly one artifact, validates it against a minimum-fields gate, and only then hands off to the next stage. The orchestrator never writes stage YAML itself.
+A run is one orchestrator (`Bizidea`) delegating to seven specialists. Each specialist owns exactly one artifact, validates it against a minimum-fields gate, then hands off. The orchestrator never writes stage YAML itself.
 
 ### End-to-end flow
 
 ```mermaid
 flowchart TD
-  cron([Cloudflare cron / manual dispatch]) --> wf[".github/workflows/daily.yml"]
+  cron([Cloudflare cron / manual dispatch]) --> wf[".github/workflows/bizidea.yml"]
     wf -->|"copilot --agent Bizidea"| orch{{"Bizidea<br/>orchestrator"}}
 
     orch -->|"once per run"| triage["News Triage<br/>web fetch · cluster · score · dedupe"]
@@ -41,34 +41,31 @@ flowchart TD
     push --> deploy[".github/workflows/deploy.yml<br/>Astro build &rarr; GitHub Pages"]
 ```
 
-### Agent responsibilities
+### Agents
 
-| Stage | Agent | Reads | Writes | Key job |
-|---|---|---|---|---|
-| 0 | **Bizidea** | user prompt, repo state | nothing directly | Resolve `topic` / `cap` / `timeWindow` / `runTimestamp`; sequence specialists; enforce gates; never invokes itself; never writes stage YAML. |
-| 1 | **News Triage** | web (broad fetch), `ideas/_index.yaml` | `ideas/_triage/<ts>/triage.yaml` | One scan per run. Fetches ~120 candidate URLs, keeps ~80 verified items, groups them into opportunity clusters, scores 4 sub-scores, dedupes against history (`eventKeys`, `slugs`, canonical URLs, keyword overlap), and marks the top `cap` `new` clusters as `selected`. |
-| 2 | **Idea Generator** | `triage.yaml` (one cluster), `_index.yaml` | `<folder>/idea.yaml` | One cluster &rarr; one venture-scale idea with sharp wedge, beachhead customer, GTM seed, and source-grounded "why now". Embeds `sourceContext`; never searches the web. |
-| 2.5 | _gate_ | `idea.yaml`, `_index.yaml` | (deletes folder on duplicate) | `scripts/dedupe-idea.mjs` runs after every `idea.yaml`. Duplicates are removed before any research starts. |
-| 3 | **Market Researcher** | `idea.yaml`, web | `<folder>/research.yaml` | Builds an auditable evidence corpus (target 100+ deduped fetched sources), bottom-up TAM/SAM/SOM, ≤5 competitors with wedge analysis, regulation, customer signals, and `openQuestions` for honest gaps. |
-| 4 | **Business Plan Writer** | `idea.yaml`, `research.yaml` | `<folder>/business-plan.yaml` | Investor-ready plan: ICP, product sequencing, GTM system, milestones, hiring plan, risks, funding ask, investor memo. No web access; gaps surfaced as `null`. |
-| 5 | **Financial Modeler** | `business-plan.yaml`, `research.yaml` | `<folder>/financial-model.yaml` | 3-year model: monthly Y1 + quarterly Y2/Y3 P&L, headcount plan, unit economics (CAC/LTV/payback), runway-based funding ask, `sanityChecks.flags`, and an investor-facing `modelSanity` summary. Every number traces to an `assumptions[]` entry. |
-| 6 | **Reporter** | all four stage YAMLs | `<folder>/index.yaml` | Extracts and rates (does not reinterpret) the stage artifacts into the compact website sidecar. Preserves units (`K`, `M`); missing values become `null`. |
-| 7 | **ZH Translator** | five English YAMLs in folder | `<folder>/*.zh.yaml` (×5) | Two-pass EN&rarr;zh-CN translation (draft + reflection/revision) producing schema-preserving Chinese siblings. Never modifies English sources. |
-| ∞ | **Bizidea** (finalize) | completed folders | `ideas/_index.yaml` | After every report has all five `*.zh.yaml` files, rebuilds the history index via `scripts/ideas-index.mjs`, runs `website/scripts/check-ideas.mjs`, and emits the run summary. |
+| # | Agent | Writes | Job |
+|---|---|---|---|
+| 1 | **News Triage** | `_triage/<ts>/triage.yaml` | One scan per run. Fetches ~120 URLs, keeps ~80, clusters them, scores 4 sub-axes, dedupes against `_index.yaml`, marks top `cap` `new` clusters as `selected`. |
+| 2 | **Idea Generator** | `<folder>/idea.yaml` | One cluster → one venture-scale idea: wedge, beachhead, GTM seed, source-grounded "why now". Embeds `sourceContext`; no web access. |
+| 2.5 | _gate_ | (deletes folder on dup) | `scripts/dedupe-idea.mjs` runs after every `idea.yaml`. Duplicates removed before any research starts. |
+| 3 | **Market Researcher** | `<folder>/research.yaml` | Auditable evidence corpus (100+ deduped fetched sources), bottom-up TAM/SAM/SOM, ≤5 competitors, regulation, customer signals, `openQuestions`. |
+| 4 | **Business Plan Writer** | `<folder>/business-plan.yaml` | Investor-ready plan: ICP, product sequencing, GTM, milestones, hiring, risks, funding ask, investor memo. No web; gaps surfaced as `null`. |
+| 5 | **Financial Modeler** | `<folder>/financial-model.yaml` | 3-year model: monthly Y1 + quarterly Y2/Y3 P&L, headcount, CAC/LTV/payback, runway-based funding ask, `sanityChecks.flags`, `modelSanity` summary. Every number ties to `assumptions[]`. |
+| 6 | **Reporter** | `<folder>/index.yaml` | Extracts and rates (does not reinterpret) into the compact website sidecar. Preserves units (`K`, `M`); missing values → `null`. |
+| 7 | **ZH Translator** | `<folder>/*.zh.yaml` (×5) | Two-pass EN→zh-CN (draft + reflection/revision). Schema-preserving; never modifies English sources. |
+| ∞ | **Bizidea** finalize | `ideas/_index.yaml` | After all five `*.zh.yaml` exist, rebuilds history index and runs `website/scripts/check-ideas.mjs`. |
 
 ### Orchestration rules
 
-- **One triage per run.** `News Triage` is invoked exactly once; the orchestrator never spins up a second scout/news agent.
-- **Generate-then-research barrier.** All selected ideas are generated and deduped *before* any `Market Researcher` invocation. This keeps the dedupe gate authoritative across the whole batch.
-- **Parallel across ideas, sequential within.** Per-idea pipelines (`research → business-plan → financial-model → report → zh`) may run concurrently, but each stage inside a pipeline waits for the previous file to exist, parse as YAML, and pass a minimum-fields gate.
-- **Gate-and-retry.** A failed gate triggers exactly one retry of the same specialist with the validation error and the same folder path. A second failure marks only that idea as failed; its partial folder is deleted so the website's content-collection check does not see incomplete reports.
-- **Stable folder names.** [scripts/report-dir.mjs](scripts/report-dir.mjs) creates `ideas/<runTimestamp>-<slug>/` once; the folder name never changes if the idea slug evolves later.
-- **Hard stops.** Triage failure, missing repository paths, or final index-rebuild failure aborts the entire run. Per-idea failures only abort that idea.
-- **Localization is part of "done".** A report is not considered generated until its five `*.zh.yaml` files exist and parse — only then does finalization rebuild `_index.yaml`.
+- **One triage per run.** No second scout/news agent.
+- **Generate-then-research barrier.** All selected ideas are generated and deduped *before* any `Market Researcher` invocation, so the dedupe gate is authoritative across the batch.
+- **Parallel across ideas, sequential within.** Stages inside a pipeline wait for the previous file to exist, parse, and pass the minimum-fields gate.
+- **Gate-and-retry.** A failed gate triggers exactly one retry of the same specialist. A second failure marks only that idea as failed and deletes its partial folder.
+- **Stable folder names.** [scripts/report-dir.mjs](scripts/report-dir.mjs) creates `ideas/<runTimestamp>-<slug>/` once; the name never changes if the slug evolves.
+- **Hard stops.** Triage failure or final index-rebuild failure aborts the whole run; per-idea failures only abort that idea.
+- **Localization is part of "done".** A report is not generated until its five `*.zh.yaml` files exist and parse.
 
 ### Artifact gates
-
-The orchestrator validates each handoff against the minimum-field schema below before advancing:
 
 | File | Minimum fields |
 |---|---|
@@ -84,111 +81,74 @@ The orchestrator validates each handoff against the minimum-field schema below b
 
 | Path | Purpose |
 |---|---|
-| `ideas/` | Generated report artifacts. Each dated folder is one startup package containing five English YAMLs and their `*.zh.yaml` Simplified Chinese counterparts. `_index.yaml` is the aggregated history (rebuilt by [scripts/ideas-index.mjs](scripts/ideas-index.mjs)). `_triage/<runTimestamp>/triage.yaml` records each daily triage. Underscore-prefixed paths are ignored by the Astro content collection. |
-| `website/` | [Astro 5](https://astro.build) site that renders reports as editorial pages. |
-| `cloudflare/` | Cloudflare Worker scheduler that dispatches the daily GitHub Actions workflow. |
-| `.github/agents/` | Custom Copilot agent definitions: `Bizidea` (the orchestrator) plus `News Triage`, `Idea Generator`, `Market Researcher`, `Business Plan Writer`, `Financial Modeler`, `Reporter`, `ZH Translator`, and the `yaml-syntax` reference. |
-| `.github/workflows/` | `daily.yml` (Cloudflare-dispatched multi-report run) and `deploy.yml` (publishes the site on `main` pushes touching `website/**` or `ideas/**`). |
-| `scripts/` | Repo-level deterministic helpers: `ideas-index.mjs`, `dedupe-idea.mjs`, `report-dir.mjs`, and the shared `text.mjs` tokenizer. |
-| [AGENTS.md](AGENTS.md) | Unified coding-agent instructions (working approach, repo map, YAML conventions). |
+| `ideas/` | Report folders (English + `*.zh.yaml`). `_index.yaml` = aggregated history. `_triage/<ts>/` = daily triage. `_`-prefixed paths ignored by Astro. |
+| `website/` | [Astro 5](https://astro.build) site that renders reports. |
+| `cloudflare/` | Cloudflare Worker scheduler. |
+| `.github/agents/` | Copilot agents: `Bizidea` orchestrator, the seven specialists above, and the `yaml-syntax` reference. |
+| `.github/workflows/` | `bizidea.yml` (Cloudflare-dispatched run) and `deploy.yml` (publishes the site on `main` pushes touching `website/**` or `ideas/**`). |
+| `scripts/` | Deterministic Node helpers: `ideas-index.mjs`, `dedupe-idea.mjs`, `report-dir.mjs`, `check-near-duplicates.mjs`, shared `text.mjs`. |
+| [AGENTS.md](AGENTS.md) | Coding-agent quick reference (commands, layout, YAML conventions). |
 
-## YAML schema conventions
-
-All pipeline artifacts are YAML files (`idea.yaml`, `research.yaml`, `business-plan.yaml`, `financial-model.yaml`, `index.yaml`, their `*.zh.yaml` Simplified Chinese counterparts, plus per-run `_triage/<ts>/triage.yaml` and the aggregated `_index.yaml`).
-
-- Prefer descriptive **camelCase** field names.
-- Include units in numeric field names where helpful: `fundingRangeUsd`, `revenueK`, `marginPct`, `headcountEop`.
-- Follow [.github/agents/yaml-syntax.md](.github/agents/yaml-syntax.md) for indentation, quoting, block-vs-flow style, and multi-line strings.
+YAML conventions (camelCase field names, units in numeric names like `revenueK`/`marginPct`, indentation/quoting/multi-line rules) live in [.github/agents/yaml-syntax.md](.github/agents/yaml-syntax.md).
 
 ## Local development
-
-### Website
 
 ```bash
 cd website
 npm ci
-npm run dev      # http://localhost:4321/
-npm run build    # static output → website/dist/
+npm run dev          # http://localhost:4321/
+npm run build        # static output → website/dist/ (runs check-ideas first)
 ```
 
-The website build is intentionally read-only with respect to `ideas/`: it runs `check-ideas` before `astro build`. YAML repair scripts are available through `npm --prefix website run repair:yaml`, but the daily generation workflow runs them before committing artifacts rather than during website rendering.
+The website build is read-only with respect to `ideas/`. YAML repair (`npm --prefix website run repair:yaml`) runs in the daily workflow before commits, not during rendering.
 
-### Rebuild the dedupe index
+Common checks from the repo root:
 
-```bash
-npm run build:ideas-index
-```
-
-To validate without rewriting `ideas/_index.yaml`:
-
-```bash
-npm run check:ideas-index
-```
-
-To run the full local validation gate:
-
-```bash
-npm run validate:all
-```
-
-To review likely near-duplicate report pairs without failing the run:
-
-```bash
-npm run check:duplicates
-```
-
-### Helper scripts
-
-The `Bizidea` agent owns orchestration, but uses small deterministic scripts for repeatable file-system work:
-
-| Script | Purpose |
+| Command | Purpose |
 |---|---|
-| `scripts/ideas-index.mjs` | Rebuilds `ideas/_index.yaml` from completed report folders. |
-| `scripts/dedupe-idea.mjs` | Compares a newly generated `idea.yaml` against `_index.yaml` and can delete duplicate partial folders. |
-| `scripts/check-near-duplicates.mjs` | Reviews historical `_index.yaml` entries for likely duplicate report topics. |
-| `scripts/report-dir.mjs` | Creates a stable `ideas/<runTimestamp>-<slug>/` folder for one selected idea. |
-| `scripts/text.mjs` | Shared tokenizer/stopword helpers used by the dedupe and index scripts. |
+| `npm run build:ideas-index` | Rebuild `ideas/_index.yaml` from completed folders. |
+| `npm run check:ideas-index` | Validate `_index.yaml` without rewriting. |
+| `npm run validate:all` | Full local validation gate. |
+| `npm run check:duplicates` | Flag likely near-duplicate report pairs (non-blocking). |
+| `npm run check:test` | Vitest. |
 
 ## Running the pipeline
 
-The agent-orchestrated pipeline runs in CI via the Cloudflare scheduler, but you can also trigger it manually:
+In CI, the Cloudflare scheduler dispatches the workflow daily. Manual triggers:
 
-- **Manually via GitHub UI**: Actions → *Daily Bizidea run* → *Run workflow* (inputs: `cap`, `timeWindow`).
-- **Locally via Copilot CLI** (requires a Copilot license; the `Bizidea` agent orchestrates all stages):
+- **GitHub UI**: Actions → *Bizidea — triage, generate, and publish reports* → *Run workflow*. Inputs: `cap` (1–5), `timeWindow` (e.g. `yesterday`, `last 7 days`), `model` (default `gpt-5.4` → effect `xhigh`; `claude-opus-4.6` and `claude-sonnet-4.6` → effect `high`).
+- **Local Copilot CLI** (requires a Copilot license):
 
   ```bash
   npm install -g @github/copilot
-  copilot --yolo --agent Bizidea -p "Scan yesterday's startup news and generate up to 5 non-duplicate startup reports."
+  copilot --yolo --model gpt-5.4 --effect xhigh --agent Bizidea \
+    -p "Scan yesterday's startup news and generate up to 5 non-duplicate startup reports."
   ```
-
-The important sequencing rule is: `News Triage` runs once, `Idea Generator` creates and dedupes ideas from that triage output, and only then does `Bizidea` start parallel per-idea report pipelines (`research → business plan → financial model → report → zh translation`).
 
 ## Deployment
 
-`deploy.yml` builds the Astro site and publishes to GitHub Pages whenever `main` receives a push touching `website/**`, `ideas/**`, or the workflow itself. The custom domain `bizidea.genisisiq.com` is set via [website/public/CNAME](website/public/CNAME).
+[`deploy.yml`](.github/workflows/deploy.yml) builds the Astro site and publishes to GitHub Pages on `main` pushes touching `website/**`, `ideas/**`, or the workflow itself. The custom domain `bizidea.genisisiq.com` is set via [website/public/CNAME](website/public/CNAME).
 
 ### Cloudflare scheduler
 
-[cloudflare/worker.js](cloudflare/worker.js) dispatches [.github/workflows/daily.yml](.github/workflows/daily.yml) once per day at `07:00 UTC`, using the workflow's `workflow_dispatch` endpoint. The native GitHub Actions cron is commented out to prevent duplicate runs.
+[cloudflare/worker.js](cloudflare/worker.js) dispatches [.github/workflows/bizidea.yml](.github/workflows/bizidea.yml) once per day at `07:00 UTC` via `workflow_dispatch`. The native GitHub Actions cron is commented out to prevent duplicate runs.
 
-Deploy it from [cloudflare/](cloudflare/):
+Deploy from [cloudflare/](cloudflare/):
 
 ```bash
-npx wrangler secret put GITHUB_TOKEN
-npx wrangler secret put GITHUB_REPO
+npx wrangler secret put GITHUB_TOKEN   # fine-grained PAT, Actions: Read & write
+npx wrangler secret put GITHUB_REPO    # vibewatch/bizidea
 npx wrangler deploy
 ```
 
-Use `vibewatch/bizidea` for `GITHUB_REPO`. `GITHUB_TOKEN` should be a fine-grained PAT with `Actions: Read and write` access on this repository.
+Optional vars in [cloudflare/wrangler.toml](cloudflare/wrangler.toml) override dispatch defaults: `BIZIDEA_CAP` (1–5, default `5`), `BIZIDEA_TIME_WINDOW` (default `yesterday`), `BIZIDEA_MODEL` (default `gpt-5.4`; also `claude-opus-4.6` / `claude-sonnet-4.6` — effect derived automatically).
 
 ## Required secrets
 
 | Secret | Used by | Purpose |
 |---|---|---|
-| `COPILOT_PAT` | `daily.yml` | PAT for a Copilot-licensed account; passed as `COPILOT_GITHUB_TOKEN` to the Copilot CLI. |
-| `BIZIDEA_PAT` | `daily.yml` | PAT with repo write access for checkout/push so the resulting commit can trigger downstream deploy workflows. |
-
-The workflow uses `contents: write`, but `BIZIDEA_PAT` is used for checkout and pushing the daily commit so downstream workflows such as Pages deploy can be triggered reliably.
+| `COPILOT_PAT` | `bizidea.yml` | Copilot-licensed PAT, passed as `COPILOT_GITHUB_TOKEN` to the Copilot CLI. |
+| `BIZIDEA_PAT` | `bizidea.yml` | Repo-write PAT used for checkout and the daily commit, so downstream deploy workflows trigger reliably. |
 
 ## License
 

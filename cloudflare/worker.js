@@ -13,12 +13,20 @@
  *   GITHUB_REF = "main"
  *   BIZIDEA_CAP = "5"
  *   BIZIDEA_TIME_WINDOW = "yesterday"
+ *   BIZIDEA_MODEL = "gpt-5.4"  (allowed: gpt-5.4, claude-opus-4.6, claude-sonnet-4.6)
  */
 
-const WORKFLOW = "daily.yml";
+const WORKFLOW = "bizidea.yml";
 const DEFAULT_REF = "main";
 const DEFAULT_CAP = "5";
 const DEFAULT_TIME_WINDOW = "yesterday";
+const DEFAULT_MODEL = "gpt-5.4";
+
+const MODEL_EFFECTS = {
+  "gpt-5.4": "xhigh",
+  "claude-opus-4.6": "high",
+  "claude-sonnet-4.6": "high",
+};
 
 export default {
   async scheduled(event, env, _ctx) {
@@ -30,7 +38,7 @@ export default {
     assertRequired(env.GITHUB_REPO, "GITHUB_REPO");
 
     console.log(
-      `[${now.toISOString()}] Dispatching ${WORKFLOW} on ${ref}: cap=${inputs.cap}, timeWindow=${JSON.stringify(inputs.timeWindow)}`,
+      `[${now.toISOString()}] Dispatching ${WORKFLOW} on ${ref}: cap=${inputs.cap}, timeWindow=${JSON.stringify(inputs.timeWindow)}, model=${inputs.model}, effect=${inputs.effect}`,
     );
 
     await dispatchWorkflow(env.GITHUB_TOKEN, env.GITHUB_REPO, WORKFLOW, ref, inputs);
@@ -41,6 +49,7 @@ export default {
 function resolveInputs(env) {
   const cap = String(env.BIZIDEA_CAP || DEFAULT_CAP);
   const timeWindow = String(env.BIZIDEA_TIME_WINDOW || DEFAULT_TIME_WINDOW);
+  const model = String(env.BIZIDEA_MODEL || DEFAULT_MODEL);
 
   if (!/^[1-5]$/.test(cap)) {
     throw new Error(`Invalid BIZIDEA_CAP ${JSON.stringify(cap)}; expected 1-5`);
@@ -52,7 +61,14 @@ function resolveInputs(env) {
     );
   }
 
-  return { cap, timeWindow };
+  const effect = MODEL_EFFECTS[model];
+  if (!effect) {
+    throw new Error(
+      `Invalid BIZIDEA_MODEL ${JSON.stringify(model)}; allowed: ${Object.keys(MODEL_EFFECTS).join(", ")}`,
+    );
+  }
+
+  return { cap, timeWindow, model, effect };
 }
 
 function assertRequired(value, name) {
