@@ -105,6 +105,191 @@ function assertNonEmptyString(parsed, fileLabel, field, failures) {
   }
 }
 
+function collectSourceRefs(node, path, refs, failures, label) {
+  if (Array.isArray(node)) {
+    node.forEach((child, i) => collectSourceRefs(child, `${path}[${i}]`, refs, failures, label));
+    return;
+  }
+  if (!isPlainObject(node)) return;
+
+  for (const [key, value] of Object.entries(node)) {
+    const childPath = `${path}.${key}`;
+    if (key === 'sourceRefs') {
+      if (!Array.isArray(value)) {
+        failures.push(`${label} ${childPath}: sourceRefs must be an array`);
+        continue;
+      }
+      value.forEach((ref, i) => refs.push({ ref, path: `${childPath}[${i}]` }));
+      continue;
+    }
+    collectSourceRefs(value, childPath, refs, failures, label);
+  }
+}
+
+function collectInlineCitationRefs(node, path, refs) {
+  if (typeof node === 'string') {
+    for (const match of node.matchAll(/\[(\d+)\]/g)) {
+      refs.push({ ref: match[1], path });
+    }
+    return;
+  }
+  if (Array.isArray(node)) {
+    node.forEach((child, i) => collectInlineCitationRefs(child, `${path}[${i}]`, refs));
+    return;
+  }
+  if (!isPlainObject(node)) return;
+
+  for (const [key, value] of Object.entries(node)) {
+    if (path === '$' && (key === 'sources' || key === 'evidenceCorpus')) continue;
+    collectInlineCitationRefs(value, `${path}.${key}`, refs);
+  }
+}
+
+function validateResearchSourceRefs(run, fileName, parsed, failures) {
+  if (!isPlainObject(parsed)) return;
+  if (!Array.isArray(parsed.sources)) return;
+
+  const label = `${run}/${fileName}`;
+  const sourceIds = new Set();
+  const evidenceIds = new Set();
+  for (const [i, source] of parsed.sources.entries()) {
+    if (!isPlainObject(source) || source.id == null) {
+      failures.push(`${label} $.sources[${i}]: source must have an id`);
+      continue;
+    }
+    const id = String(source.id);
+    if (sourceIds.has(id)) failures.push(`${label} $.sources[${i}]: duplicate source id ${id}`);
+    sourceIds.add(id);
+  }
+
+  if (Array.isArray(parsed.evidenceCorpus)) {
+    for (const [i, evidence] of parsed.evidenceCorpus.entries()) {
+      if (!isPlainObject(evidence) || evidence.id == null) {
+        failures.push(`${label} $.evidenceCorpus[${i}]: evidence item must have an id`);
+        continue;
+      }
+      const id = String(evidence.id);
+      if (evidenceIds.has(id)) failures.push(`${label} $.evidenceCorpus[${i}]: duplicate evidence id ${id}`);
+      evidenceIds.add(id);
+    }
+  }
+
+  const refs = [];
+  collectSourceRefs(parsed, '$', refs, failures, label);
+  for (const { ref, path } of refs) {
+    if (!sourceIds.has(String(ref)) && !evidenceIds.has(String(ref))) {
+      failures.push(`${label} ${path}: sourceRef ${ref} does not match any sources[].id or evidenceCorpus[].id`);
+    }
+  }
+
+  const inlineRefs = [];
+  collectInlineCitationRefs(parsed, '$', inlineRefs);
+  for (const { ref, path } of inlineRefs) {
+    if (!sourceIds.has(String(ref))) {
+      failures.push(`${label} ${path}: inline citation [${ref}] does not match any sources[].id`);
+    }
+  }
+}
+
+function numeric(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function closeEnough(a, b, tolerance = 0.2) {
+  const left = numeric(a);
+  const right = numeric(b);
+  return left != null && right != null && Math.abs(left - right) <= tolerance;
+}
+
+function sumBy(rows, key) {
+  return rows.reduce((sum, row) => sum + (numeric(row?.[key]) ?? 0), 0);
+}
+
+function validateRating(run, fileName, parsed, failures) {
+  if (!isPlainObject(parsed)) return;
+  const label = `${run}/${fileName}`;
+  const dimensions = parsed.rating?.dimensions;
+  if (!isPlainObject(dimensions)) return;
+
+  const market = numeric(dimensions.market?.score);
+  const differentiation = numeric(dimensions.differentiation?.score);
+  const execution = numeric(dimensions.execution?.score);
+  const timeliness = numeric(dimensions.timeliness?.score);
+  const overall = numeric(parsed.rating?.overall);
+  if ([market, differentiation, execution, timeliness, overall].some((v) => v == null)) {
+    failures.push(`${label}: rating scores must be numeric`);
+    return;
+  }
+
+  const expected = Math.round((0.30 * market + 0.30 * differentiation + 0.25 * execution + 0.15 * timeliness) * 10) / 10;
+  if (!closeEnough(overall, expected, 0.05)) {
+    failures.push(`${label}: rating.overall ${overall} must equal weighted score ${expected}`);
+  }
+}
+
+function validateRiskCount(run, fileName, parsed, field, failures) {
+  if (!isPlainObject(parsed)) return;
+  const value = parsed[field];
+  if (!Array.isArray(value) || value.length !== 3) {
+    failures.push(`${run}/${fileName}: ${field} must contain exactly 3 items`);
+  }
+}
+
+function validateFinancialModel(run, parsed, failures) {
+  if (!isPlainObject(parsed)) return;
+  const label = `${run}/financial-model.yaml`;
+  const monthly = Array.isArray(parsed.y1Monthly) ? parsed.y1Monthly : [];
+  const quarterly = Array.isArray(parsed.y2y3Quarterly) ? parsed.y2y3Quarterly : [];
+
+  if (monthly.length !== 12) failures.push(`${label}: y1Monthly must contain 12 rows; got ${monthly.length}`);
+  if (quarterly.length !== 8) failures.push(`${label}: y2y3Quarterly must contain 8 rows; got ${quarterly.length}`);
+
+  const yearRows = {
+    y1: monthly,
+    y2: quarterly.filter((row) => String(row?.quarter ?? '').toUpperCase().includes('Y2')),
+    y3: quarterly.filter((row) => String(row?.quarter ?? '').toUpperCase().includes('Y3')),
+  };
+
+  for (const [year, rows] of Object.entries(yearRows)) {
+    const totals = parsed.totals?.[year];
+    if (!isPlainObject(totals)) {
+      failures.push(`${label}: totals.${year} must be present`);
+      continue;
+    }
+    for (const key of ['revenueK', 'ebitdaK']) {
+      const actual = sumBy(rows, key);
+      if (!closeEnough(actual, totals[key])) {
+        failures.push(`${label}: totals.${year}.${key} ${totals[key]} must equal row sum ${actual.toFixed(1)}`);
+      }
+    }
+    const lastCash = rows.length > 0 ? rows[rows.length - 1]?.cashEopK : null;
+    if (lastCash != null && !closeEnough(lastCash, totals.cashEopK)) {
+      failures.push(`${label}: totals.${year}.cashEopK ${totals.cashEopK} must equal final period cash ${lastCash}`);
+    }
+  }
+
+  const useOfFunds = Array.isArray(parsed.fundingAsk?.useOfFunds) ? parsed.fundingAsk.useOfFunds : [];
+  if (useOfFunds.length > 0) {
+    const percentageTotal = sumBy(useOfFunds, 'percentage');
+    if (Math.abs(percentageTotal - 100) > 2) {
+      failures.push(`${label}: fundingAsk.useOfFunds percentages must sum to ~100; got ${percentageTotal}`);
+    }
+    const amountTotal = sumBy(useOfFunds, 'amountUsd');
+    const askUsd = (numeric(parsed.fundingAsk?.amountM) ?? 0) * 1_000_000;
+    if (askUsd > 0 && Math.abs(amountTotal - askUsd) / askUsd > 0.05) {
+      failures.push(`${label}: fundingAsk.useOfFunds amount $${amountTotal} must reconcile to ask $${askUsd}`);
+    }
+  }
+
+  const modelSanity = Array.isArray(parsed.modelSanity) ? parsed.modelSanity : [];
+  const expectedChecks = ['Revenue engine', 'Must go right', 'Model breaks if', 'Next-round proof'];
+  const actualChecks = modelSanity.map((row) => String(row?.checkName ?? ''));
+  if (modelSanity.length !== 4 || !expectedChecks.every((check) => actualChecks.includes(check))) {
+    failures.push(`${label}: modelSanity must contain ${expectedChecks.join(', ')}`);
+  }
+}
+
 try {
   if (!existsSync(IDEAS_DIR)) {
     console.warn(`[check:ideas] ${IDEAS_DIR} not found; nothing to check.`);
@@ -132,6 +317,8 @@ try {
   const parseFailures = [];
   const consistencyFailures = [];
   const schemaShapeFailures = [];
+  const referenceFailures = [];
+  const modelFailures = [];
   for (const run of runs) {
     const dir = join(IDEAS_DIR, run);
     const parsed = new Map();
@@ -188,6 +375,16 @@ try {
       }
     }
 
+    validateResearchSourceRefs(run, 'research.yaml', parsed.get('research.yaml'), referenceFailures);
+    validateResearchSourceRefs(run, 'research.zh.yaml', parsed.get('research.zh.yaml'), referenceFailures);
+    validateRating(run, 'index.yaml', parsed.get('index.yaml'), modelFailures);
+    validateRating(run, 'index.zh.yaml', parsed.get('index.zh.yaml'), modelFailures);
+    validateRiskCount(run, 'idea.yaml', parsed.get('idea.yaml'), 'topRisks', modelFailures);
+    validateRiskCount(run, 'idea.zh.yaml', parsed.get('idea.zh.yaml'), 'topRisks', modelFailures);
+    validateRiskCount(run, 'index.yaml', parsed.get('index.yaml'), 'topRisks', modelFailures);
+    validateRiskCount(run, 'index.zh.yaml', parsed.get('index.zh.yaml'), 'topRisks', modelFailures);
+    validateFinancialModel(run, parsed.get('financial-model.yaml'), modelFailures);
+
     for (const englishFile of REQUIRED_ENGLISH) {
       const localizedFile = englishFile.replace(/\.yaml$/, '.zh.yaml');
       const english = parsed.get(englishFile);
@@ -205,7 +402,7 @@ try {
     }
   }
 
-  if (failures.length || unexpected.length || parseFailures.length || consistencyFailures.length || schemaShapeFailures.length) {
+  if (failures.length || unexpected.length || parseFailures.length || consistencyFailures.length || referenceFailures.length || modelFailures.length || schemaShapeFailures.length) {
     if (failures.length) {
       console.error('[check:ideas] missing required artifact files:');
       for (const f of failures) console.error(`  - ideas/${f}`);
@@ -221,6 +418,16 @@ try {
     if (consistencyFailures.length) {
       console.error('[check:ideas] artifact consistency failures:');
       for (const f of consistencyFailures) console.error(`  - ${f}`);
+    }
+    if (referenceFailures.length) {
+      console.error('[check:ideas] citation reference failures:');
+      for (const f of referenceFailures.slice(0, 200)) console.error(`  - ${f}`);
+      if (referenceFailures.length > 200) console.error(`  - ...and ${referenceFailures.length - 200} more`);
+    }
+    if (modelFailures.length) {
+      console.error('[check:ideas] model consistency failures:');
+      for (const f of modelFailures.slice(0, 200)) console.error(`  - ${f}`);
+      if (modelFailures.length > 200) console.error(`  - ...and ${modelFailures.length - 200} more`);
     }
     if (schemaShapeFailures.length) {
       console.error('[check:ideas] localized schema shape failures:');

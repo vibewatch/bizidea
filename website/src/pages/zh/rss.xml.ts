@@ -5,7 +5,8 @@ import { ideaFeedItems } from '../../lib/rss';
 
 export async function GET(context: APIContext) {
   const ideas = await getCollection('ideas');
-  const site = new URL(`${import.meta.env.BASE_URL}zh/`, context.site);
+  const siteRoot = context.site ?? new URL('https://bizidea.genisisiq.com');
+  const site = new URL(`${import.meta.env.BASE_URL}zh/`, siteRoot);
 
   return rss({
     title: 'BizIdea',

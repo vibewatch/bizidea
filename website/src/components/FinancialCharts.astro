@@ -4,6 +4,7 @@
 // bottom of the component.
 import { t, type Lang } from '../lib/i18n';
 import { localizeFundingRound } from '../lib/i18n';
+import { formatMoneyK as fmtK, formatSignedMoneyK as fmtSigned, localizeFinancialText as formatFinancialText, localizeFinancialVariable as formatFinancialVariable, scenarioLabel as formatScenarioLabel } from '../lib/dossier-format';
 
 interface Props {
   fm: any;
@@ -33,66 +34,9 @@ const quarterly: Pt[] = Array.isArray(fm?.y2y3Quarterly)
 // Stitch into a single 20-point trajectory.
 const series: Pt[] = [...monthly, ...quarterly];
 
-const fmtK = (k: number) =>
-  Math.abs(k) >= 1000 ? `$${(k / 1000).toFixed(2)}M` : `$${k.toFixed(0)}K`;
-const fmtSigned = (k: number) => (k >= 0 ? fmtK(k) : `-${fmtK(-k)}`);
-const scenarioLabel = (key: string) => {
-  const normalized = key.trim().toLowerCase();
-  if (lang !== 'zh') return normalized.charAt(0).toUpperCase() + normalized.slice(1);
-  return normalized === 'downside'
-    ? '下行'
-    : normalized === 'base'
-      ? '基准'
-      : normalized === 'upside'
-        ? '上行'
-        : key;
-};
-const localizeFinancialVariable = (value: unknown) => {
-  const raw = String(value ?? '');
-  if (lang !== 'zh') return raw;
-  return {
-    ARPU: 'ARPU',
-    CAC: 'CAC',
-    churn: '流失率',
-    'sales cycle': '销售周期',
-    'gross margin': '毛利率',
-    'hiring pace': '招聘节奏',
-  }[raw] ?? raw;
-};
-const localizeFinancialText = (value: unknown) => {
-  const raw = String(value ?? '');
-  if (lang !== 'zh') return raw;
-  return raw
-    .replace(/annual plus volume pricing/g, '年度订阅加用量定价')
-    .replace(/annual plus usage/g, '年度订阅加用量')
-    .replace(/USD per logo-month/g, '美元/客户-月')
-    .replace(/USD per production logo/g, '美元/正式生产客户')
-    .replace(/USD per pilot/g, '美元/试点')
-    .replace(/USD per FTE-year/g, '美元/FTE-年')
-    .replace(/USD per year/g, '美元/年')
-    .replace(/USD per month/g, '美元/月')
-    .replace(/USD per logo/g, '美元/客户')
-    .replace(/\bUSD\b/g, '美元')
-    .replace(/annual logo ARPU/g, '年化单客户 ARPU')
-    .replace(/per production logo/g, '每个正式生产客户')
-    .replace(/per logo-month/g, '每客户-月')
-    .replace(/per pilot/g, '每个试点')
-    .replace(/per logo/g, '每个客户')
-    .replace(/per month ramp/g, '每月爬坡')
-    .replace(/monthly logo churn/g, '月度客户流失率')
-    .replace(/gross margin/g, '毛利率')
-    .replace(/sales cycle/g, '销售周期')
-    .replace(/annualized/g, '年化')
-    .replace(/\bannual\b/g, '每年')
-    .replace(/per month/g, '每月')
-    .replace(/on exit FTE/g, '退出时每 FTE')
-    .replace(/percent/g, '百分比')
-    .replace(/hire plan/g, '招聘计划')
-    .replace(/logos/g, '客户数')
-    .replace(/\/mo/g, '/月')
-    .replace(/months/g, '个月')
-    .replace(/\bmonth\b/g, '月');
-};
+const scenarioLabel = (key: string) => formatScenarioLabel(key, lang);
+const localizeFinancialVariable = (value: unknown) => formatFinancialVariable(value, lang);
+const localizeFinancialText = (value: unknown) => formatFinancialText(value, lang);
 
 // FT palette — mirrors src/styles/tokens.css. Inline so the static SVG attributes resolve at build time.
 const C = {

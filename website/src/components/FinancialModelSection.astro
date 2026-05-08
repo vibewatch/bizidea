@@ -1,0 +1,170 @@
+---
+import FactRow from './FactRow.astro';
+import FinancialCharts from './FinancialCharts.astro';
+import Mermaid from './Mermaid.astro';
+import Ribbon from './Ribbon.astro';
+import {
+  formatMoneyK as fmtK,
+  localizeFinancialText as formatFinancialText,
+  localizeFinancialVariable as formatFinancialVariable,
+  scenarioLabel as formatScenarioLabel,
+  uiLabel,
+} from '../lib/dossier-format';
+import { localizeFundingRound, t, type Lang } from '../lib/i18n';
+
+interface Props {
+  fm: any;
+  lang?: Lang;
+}
+
+const { fm, lang = 'en' } = Astro.props as Props;
+const ui = (label: string) => uiLabel(label, lang);
+const cashEopLabel = lang === 'zh' ? '期末现金' : 'Cash EOP';
+const monthsLabel = lang === 'zh' ? '个月' : 'months';
+const fundingRoundLabel = localizeFundingRound(String(fm?.fundingAsk?.round ?? ''), lang);
+const scenarioLabel = (key: string) => formatScenarioLabel(key, lang);
+const localizeFinancialVariable = (value: unknown) => formatFinancialVariable(value, lang);
+const localizeFinancialText = (value: unknown) => formatFinancialText(value, lang);
+---
+
+<Ribbon label={t('section.financialModel', lang)} id="financial-model" />
+<div class="bz-container bz-section">
+  <FactRow
+    caption={ui('3-year totals')}
+    rows={[
+      { label: ui('Year 1 revenue'), value: fmtK(fm?.totals?.y1?.revenueK ?? 0), sub: `EBITDA ${fmtK(fm?.totals?.y1?.ebitdaK ?? 0)} · ${cashEopLabel} ${fmtK(fm?.totals?.y1?.cashEopK ?? 0)}` },
+      { label: ui('Year 2 revenue'), value: fmtK(fm?.totals?.y2?.revenueK ?? 0), sub: `EBITDA ${fmtK(fm?.totals?.y2?.ebitdaK ?? 0)} · ${cashEopLabel} ${fmtK(fm?.totals?.y2?.cashEopK ?? 0)}` },
+      { label: ui('Year 3 revenue'), value: fmtK(fm?.totals?.y3?.revenueK ?? 0), sub: `EBITDA ${fmtK(fm?.totals?.y3?.ebitdaK ?? 0)} · ${cashEopLabel} ${fmtK(fm?.totals?.y3?.cashEopK ?? 0)}` },
+    ]}
+  />
+  {fm?.unitEconomics && (
+    <FactRow
+      caption={ui('Unit economics')}
+      rows={[
+        { label: ui('ARPU (annual)'), value: fmtK(fm.unitEconomics.arpuAnnualK ?? 0) },
+        { label: ui('Gross margin'), value: `${(fm.unitEconomics.grossMarginPct ?? 0).toFixed(0)}%` },
+        { label: 'CAC', value: fmtK(fm.unitEconomics.cacK ?? 0), sub: `${ui('Payback')} ${(fm.unitEconomics.cacPaybackMonths ?? 0).toFixed(1)} ${monthsLabel}` },
+        { label: 'LTV / CAC', value: `${(fm.unitEconomics.ltvCacRatio ?? 0).toFixed(1)}x`, sub: `${ui('LTV')} ${fmtK(fm.unitEconomics.ltvK ?? 0)}` },
+      ]}
+    />
+  )}
+  {fm?.fundingAsk && (
+    <FactRow
+      caption={ui('Funding ask')}
+      rows={[
+        { label: ui('Round'), value: `${fundingRoundLabel} · $${fm.fundingAsk.amountM.toFixed(1)}M` },
+        { label: ui('Runway'), value: `${fm.fundingAsk.runwayMonths} ${monthsLabel}` },
+        { label: ui('Milestone'), value: fm.fundingAsk.milestone ?? null },
+      ]}
+    />
+  )}
+  {Array.isArray(fm?.modelSanity) && (
+    <>
+      <h3 class="bz-section__head">{ui('Model sanity')}</h3>
+      <ul class="bz-list">
+        {fm.modelSanity.map((s: any) => (
+          <li><strong>{s.checkName}.</strong> {s.finding}</li>
+        ))}
+      </ul>
+    </>
+  )}
+  <FinancialCharts fm={fm} lang={lang} />
+  {fm?.scenarios && (
+    <>
+      <h3 class="bz-section__head">{ui('Scenarios')}</h3>
+      <table class="bz-comp">
+        <thead>
+          <tr>
+            <th class="bz-label">{ui('Scenario')}</th>
+            <th class="bz-label">{ui('Y3 revenue')}</th>
+            <th class="bz-label">{ui('Y3 EBITDA')}</th>
+            <th class="bz-label">{ui('Cash low point')}</th>
+            <th class="bz-label">{ui('Description')}</th>
+            <th class="bz-label">{ui('Key changes')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {(['downside','base','upside'] as const).filter((k) => fm.scenarios[k]).map((k) => {
+            const s = fm.scenarios[k];
+            return (
+              <tr>
+                <td><span class={`bz-pill bz-pill--scn-${k}`}>{scenarioLabel(k)}</span></td>
+                <td class="bz-label">{fmtK(s.y3RevenueK ?? 0)}</td>
+                <td class="bz-label">{fmtK(s.y3EbitdaK ?? 0)}</td>
+                <td class="bz-label">{fmtK(s.cashLowPointK ?? 0)}</td>
+                <td>{s.description}</td>
+                <td>
+                  {Array.isArray(s.keyAssumptionChanges) && (
+                    <ul class="bz-list bz-list--tight">
+                      {s.keyAssumptionChanges.map((c: string) => <li>{c}</li>)}
+                    </ul>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </>
+  )}
+  {Array.isArray(fm?.sensitivity) && fm.sensitivity.length > 0 && (
+    <>
+      <h3 class="bz-section__head">{ui('Sensitivity')}</h3>
+      <table class="bz-comp">
+        <thead>
+          <tr>
+            <th class="bz-label">{ui('Variable')}</th>
+            <th class="bz-label">{ui('Downside')}</th>
+            <th class="bz-label">{ui('Base')}</th>
+            <th class="bz-label">{ui('Upside')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {fm.sensitivity.map((s: any) => (
+            <tr>
+              <td>{localizeFinancialVariable(s.variable)}</td>
+              <td>{localizeFinancialText(s.downsideCase)}</td>
+              <td>{localizeFinancialText(s.baseCase)}</td>
+              <td>{localizeFinancialText(s.upsideCase)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  )}
+  {Array.isArray(fm?.assumptions) && fm.assumptions.length > 0 && (
+    <details class="bz-assumptions">
+      <summary class="bz-section__head">{ui('Key assumptions')} ({fm.assumptions.length})</summary>
+      <table class="bz-comp">
+        <thead>
+          <tr>
+            <th class="bz-label">{ui('ID')}</th>
+            <th class="bz-label">{ui('Name')}</th>
+            <th class="bz-label">{ui('Value')}</th>
+            <th class="bz-label">{ui('Unit')}</th>
+            <th class="bz-label">{ui('Source')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {fm.assumptions.map((a: any) => (
+            <tr>
+              <td class="bz-label">{a.id}</td>
+              <td>{a.name}</td>
+              <td>{localizeFinancialText(a.value)}</td>
+              <td>{localizeFinancialText(a.unit)}</td>
+              <td>{localizeFinancialText(a.source)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </details>
+  )}
+  {fm?.modelDiagram?.mermaid && (
+    <Mermaid title={fm.modelDiagram.title ?? ui('Model sanity')} code={fm.modelDiagram.mermaid} />
+  )}
+  {Array.isArray(fm?.sanityChecks?.flags) && fm.sanityChecks.flags.length > 0 && (
+    <p class="bz-flags bz-label">
+      {ui('Flags')}: {fm.sanityChecks.flags.join(' · ')}
+    </p>
+  )}
+</div>

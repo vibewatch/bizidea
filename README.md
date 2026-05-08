@@ -131,6 +131,12 @@ To run the full local validation gate:
 npm run validate
 ```
 
+To review likely near-duplicate report pairs without failing the run:
+
+```bash
+npm run check:duplicates
+```
+
 ### Helper scripts
 
 The `Bizidea` agent owns orchestration, but uses small deterministic scripts for repeatable file-system work:
@@ -139,6 +145,7 @@ The `Bizidea` agent owns orchestration, but uses small deterministic scripts for
 |---|---|
 | `scripts/ideas-index.mjs` | Rebuilds `ideas/_index.yaml` from completed report folders. |
 | `scripts/dedupe-idea.mjs` | Compares a newly generated `idea.yaml` against `_index.yaml` and can delete duplicate partial folders. |
+| `scripts/check-near-duplicates.mjs` | Reviews historical `_index.yaml` entries for likely duplicate report topics. |
 | `scripts/report-dir.mjs` | Creates a stable `ideas/<runTimestamp>-<slug>/` folder for one selected idea. |
 | `scripts/text.mjs` | Shared tokenizer/stopword helpers used by the dedupe and index scripts. |
 
