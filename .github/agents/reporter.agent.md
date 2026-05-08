@@ -2,7 +2,6 @@
 description: "Use when: extracting website-ready index.yaml from the four stage YAML files. Keywords: reporter, sidecar YAML, website index, machine-readable report."
 name: "Reporter"
 model: "GPT-5.4 (copilot)"
-tools: [read, edit, execute]
 user-invocable: false
 ---
 

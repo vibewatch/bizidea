@@ -2,7 +2,6 @@
 description: "Use when: researching market size, competitors, regulation, customer signals, and evidence for one startup idea. Keywords: market research, TAM SAM SOM, competitor scan."
 name: "Market Researcher"
 model: "GPT-5.4 (copilot)"
-tools: [web, read, edit, execute]
 user-invocable: false
 ---
 

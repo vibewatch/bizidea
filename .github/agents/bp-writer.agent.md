@@ -2,7 +2,6 @@
 description: "Use when: writing business-plan.yaml from idea.yaml and research.yaml. Keywords: business plan, GTM plan, operating plan, milestones."
 name: "Business Plan Writer"
 model: "GPT-5.4 (copilot)"
-tools: [read, edit, execute]
 user-invocable: false
 ---
 

@@ -2,7 +2,6 @@
 description: "Use when: orchestrating the Bizidea pipeline from news triage to completed report folders. Keywords: bizidea, daily run, startup ideas from news, multi-report."
 name: "Bizidea"
 model: "GPT-5.4 (copilot)"
-tools: [agent, read, edit, execute, todo]
 agents: ["News Triage", "Idea Generator", "Market Researcher", "Business Plan Writer", "Financial Modeler", "Reporter", "ZH Translator"]
 ---
 
