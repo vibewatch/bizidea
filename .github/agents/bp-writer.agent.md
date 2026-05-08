@@ -169,7 +169,7 @@ Rules:
 
 ## Handoff
 
-Follow [handoff-protocol.md](./handoff-protocol.md). Return ONLY this success block to the orchestrator (no extra prose), and only after `business-plan.yaml` has been written and read back successfully:
+Follow [handoff-protocol.md](./handoff-protocol.md). Return ONLY this success block to the orchestrator (no extra prose), and only after `business-plan.yaml` has been written and `validate-stage.mjs` exited zero:
 
 ```
 HANDOFF

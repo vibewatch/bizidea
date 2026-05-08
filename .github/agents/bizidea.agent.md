@@ -45,8 +45,8 @@ Every specialist follows [handoff-protocol.md](./handoff-protocol.md). Treat any
    - Inside each report folder, stages are strictly sequential:
 
      ```text
-   Market Researcher → Business Plan Writer → Financial Modeler → Reporter → ZH Translator
-   research.yaml → business-plan.yaml → financial-model.yaml → index.yaml → *.zh.yaml
+     Market Researcher → Business Plan Writer → Financial Modeler → Reporter → ZH Translator
+     research.yaml → business-plan.yaml → financial-model.yaml → index.yaml → *.zh.yaml
      ```
 
 4. **Finalize**
