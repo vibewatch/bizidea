@@ -129,7 +129,9 @@ If the linter exits non-zero:
 
 ## Handoff
 
-Follow [handoff-protocol.md](./handoff-protocol.md). Return ONLY this success block to the orchestrator after the linter exits 0:
+Follow [handoff-protocol.md](./handoff-protocol.md). Emit the HANDOFF block **exactly once**, as the final thing in your turn, and stop immediately after the closing fence. Do not re-emit it after the draft pass, the reflection pass, each linter run, or any retry — the draft → reflect → write → lint → fix → re-lint loop is internal and must produce a single block at the end. Do not wrap it in a `text` code block or change its fence style between attempts.
+
+Return ONLY this success block to the orchestrator after the linter exits 0:
 
 ```
 HANDOFF

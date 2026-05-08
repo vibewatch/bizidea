@@ -5,6 +5,22 @@ Every Bizidea specialist agent must end its turn with **exactly one** fenced
 block to decide whether to advance, retry, or skip. Inconsistent shapes break
 the dispatcher.
 
+## Emit once, then stop
+
+The HANDOFF block must appear **once per turn**, as the final thing you
+write, and your turn ends immediately after the closing fence. Do not:
+
+- repeat the block after each internal checkpoint, draft, reflection,
+  revision, retry, or linter pass;
+- re-emit the block in a different style (fenced vs. bare, with or without a
+  language tag) to "try again";
+- print any prose, status update, or summary after the closing fence.
+
+If you have already emitted the block, you are done — do not write anything
+else, even if a later self-check makes you want to repeat or reformat it.
+Duplicate blocks are logged verbatim by the dispatcher and pollute CI output;
+they do not trigger a second run.
+
 ## Success block
 
 ```
