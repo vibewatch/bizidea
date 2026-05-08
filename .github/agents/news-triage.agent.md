@@ -1,7 +1,7 @@
 ---
 description: "Use when: scanning startup news, clustering opportunities, scoring, and deduping before idea generation. Keywords: news triage, daily scan, candidate clusters, opportunity shortlist."
 name: "News Triage"
-model: "GPT-5.4 mini (copilot)"
+model: "GPT-5.4 (copilot)"
 tools: [web, read, edit, execute]
 user-invocable: false
 ---
@@ -10,7 +10,7 @@ Scan startup news once per Bizidea run. Write a ranked, deduplicated shortlist o
 
 ## Invocation contract
 
-The orchestrator must provide all inputs listed below in one prompt. If an input is missing or contradictory, return the failure handoff shape in the Handoff section and do not write partial output. Otherwise, create exactly one file: `<triageFolder>/triage.yaml`.
+The orchestrator must provide all inputs listed below in one prompt. If an input is missing or contradictory, return the failure handoff shape from [handoff-protocol.md](./handoff-protocol.md) and do not write partial output. Otherwise, create exactly one file: `<triageFolder>/triage.yaml`.
 
 ## Inputs
 
@@ -48,10 +48,10 @@ A "cluster" is the unit a downstream Bizidea pipeline run will work on. Two stor
 2. Load the history index from `historyIndexPath` if it exists. Build in-memory sets of:
    - `historicalEventKeys` — every `eventKeys` entry across all `entries`.
    - `historicalUrls` — every `topSourceUrls` entry across all `entries`.
-   - `historicalKeywords` — every `keywords` entry; track which `runFolder` each came from.
    - `historicalSlugs` — every `slug`.
-3. Search the web broadly for startup-signal news inside `timeWindow`. Target **120+ candidate URLs** across the sectors below (broad scope) or around `topic` (narrow scope). Use queries like `funding`, `seed`, `Series A`, `raises`, `launches`, `announces`, `partnership`, `acquires`, `spinout`, `pilot`, `regulation`, `outage`, `bottleneck`, `workflow`. Sectors to cover in broad scope: AI/ML; climate/energy/grid; health/eldercare/longevity; education/workforce; enterprise SaaS/dev tools; fintech/consumer/marketplaces; industrial/robotics/defense/bio.
-4. **Quick-fetch** each candidate URL — read enough of the page to extract: title, publisher, published date, primary company, one-sentence event summary, event type, and 1–3 key points. **Stop at ~80 verified items**; you do not need the full corpus the Market Researcher will build later.
+   Keep the per-entry `entries[].keywords` arrays accessible (do not flatten them — step 8's overlap check is per-entry).
+3. Search the web broadly for startup-signal news inside `timeWindow`. Target **~120 candidate URLs** across the sectors below (broad scope) or around `topic` (narrow scope). The 120/80 numbers below are calibrated for the default `gpt-5.4` / `xhigh` profile in `bizidea.yml`; smaller models or shorter time windows may legitimately produce fewer. Use queries like `funding`, `seed`, `Series A`, `raises`, `launches`, `announces`, `partnership`, `acquires`, `spinout`, `pilot`, `regulation`, `outage`, `bottleneck`, `workflow`. Sectors to cover in broad scope: AI/ML; climate/energy/grid; health/eldercare/longevity; education/workforce; enterprise SaaS/dev tools; fintech/consumer/marketplaces; industrial/robotics/defense/bio.
+4. **Quick-fetch** each candidate URL — read enough of the page to extract: title, publisher, published date, primary company, one-sentence event summary, event type, and 1–3 key points. Aim for **~80 verified items** before clustering; do not pad with low-quality fetches to hit the number.
 5. Drop:
    - Sources outside `timeWindow`.
    - Search engine result pages, aggregator-only pages, dead pages.
@@ -75,15 +75,15 @@ A "cluster" is the unit a downstream Bizidea pipeline run will work on. Two stor
 9. Sort clusters by `signalStrength` descending, then `opportunityClarity` descending, then `itemCount` descending. Mark the top `cap` clusters with `dedupeStatus: new` as `selected: true`. All others `selected: false`.
 10. For every selected cluster, include `sourceBriefs` with the best 3–8 fetched sources from that cluster. These briefs must be good enough for `Idea Generator` to embed in `idea.yaml.sourceContext`.
 11. Write `<triageFolder>/triage.yaml`.
-12. Read the file back and confirm it is non-empty valid YAML before returning the handoff.
+12. Run `node scripts/validate-stage.mjs <triageFolder> triage` from the repo root and confirm it exits zero (this loads the file, parses it, and verifies required fields). If it fails, fix the missing field and re-run before returning the handoff.
 
 ## Cluster slug rule
 
 `proposedSlug` must be lowercase kebab-case, alphanumerics + hyphens only, 3–5 words, derived from the headline + primary company. Examples: `vercel-ai-toolchain-breach`, `fervo-geothermal-ipo`, `cohere-aleph-alpha-merger`. Do not reuse a slug already in `historicalSlugs`.
 
-## Sector vocabulary (closed — pick one per cluster)
+## Sector vocabulary
 
-`climate-tech` · `ai-infra` · `fintech` · `health-tech` · `dev-tools` · `consumer` · `industrial` · `defense` · `bio` · `crypto` · `edu` · `other`
+Use the closed list and rules in [sector-vocabulary.md](./sector-vocabulary.md). Pick exactly one `sectorHint` per cluster. Do not invent new sectors.
 
 ## Scoring rubric
 
@@ -176,10 +176,11 @@ Rules:
 
 ## Handoff
 
-Return ONLY this block to the orchestrator (no extra prose):
+Follow [handoff-protocol.md](./handoff-protocol.md). Return ONLY this success block to the orchestrator (no extra prose):
 
 ```
 HANDOFF
+status: ok
 path: <absolute path to triage.yaml>
 selectedCount: <integer>
 selected:

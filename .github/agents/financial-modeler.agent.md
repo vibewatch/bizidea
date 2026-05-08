@@ -34,7 +34,7 @@ The orchestrator must invoke you with one absolute report folder path containing
 5. Compute unit economics: CAC, LTV, payback months, gross margin.
 6. Compute the funding ask: cash needed to reach the next milestone with 6 months of buffer; show use of funds.
 7. Sanity check: rule-of-40 directionally, burn multiple, headcount-to-revenue ratio. Flag any red flags in `sanityChecks.flags`.
-8. Read `<folder>/financial-model.yaml` back from disk and confirm it is non-empty valid YAML with the required top-level fields before returning `HANDOFF`.
+8. Run `node scripts/validate-stage.mjs <folder> financial-model` from the repo root and confirm it exits zero (this loads the file, parses it, and verifies required fields). If it fails, fix the missing field and re-run before returning `HANDOFF`.
 
 ## YAML syntax rules
 
@@ -208,13 +208,22 @@ Rules:
 
 ## Handoff
 
-Return ONLY this block to the orchestrator (no extra prose):
+Follow [handoff-protocol.md](./handoff-protocol.md). Return ONLY this success block to the orchestrator (no extra prose):
 
 ```
 HANDOFF
+status: ok
 path: <absolute path to financial-model.yaml>
 y3_revenue: $<value>
 y3_ebitda: $<value>
 y3_cash_eop: $<value>
 funding_ask: $<value>
+```
+
+If required inputs are missing or `financial-model.yaml` cannot be written, return ONLY this failure block and write no files:
+
+```
+HANDOFF
+status: failed
+reason: <one sentence explaining why financial-model.yaml was not written>
 ```

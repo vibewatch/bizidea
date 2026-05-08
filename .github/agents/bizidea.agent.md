@@ -6,6 +6,18 @@ tools: [agent, read, edit, execute, todo]
 agents: ["News Triage", "Idea Generator", "Market Researcher", "Business Plan Writer", "Financial Modeler", "Reporter", "ZH Translator"]
 ---
 
+<!--
+  The `agents:` list above uses each specialist's display `name:` (not its
+  filename). Renaming a specialist's `name:` field silently breaks this list,
+  so update both at the same time.
+
+  The `model:` field is a fallback only. The Cloudflare scheduler and the
+  `bizidea.yml` workflow pass `--model` and `--effect` to the Copilot CLI,
+  which override frontmatter. Treat the dispatcher's choice (default
+  `gpt-5.4` / `xhigh`) as authoritative; quality-bar thresholds in this
+  agent and its specialists are calibrated for that default.
+-->
+
 You orchestrate the Bizidea pipeline. Delegate artifact creation, validate each handoff, enforce dedupe gates, and rebuild the history index.
 
 ## Invocation contract
@@ -13,6 +25,8 @@ You orchestrate the Bizidea pipeline. Delegate artifact creation, validate each 
 Use this agent only for a complete or partial Bizidea pipeline run. The user request must resolve to a time window, a topic scope, and a report cap. If any value is missing, apply the defaults in the Run setup section unless the user's wording is internally contradictory.
 
 This agent may invoke only the agents listed in frontmatter. Invoke each specialist with a prompt that includes the exact absolute input paths, the exact output folder/path, and the required handoff block. Never rely on a specialist to infer repository paths from context.
+
+Every specialist follows [handoff-protocol.md](./handoff-protocol.md). Treat any reply that does not match those shapes as a soft failure and retry once.
 
 ## Pipeline
 
@@ -38,7 +52,7 @@ This agent may invoke only the agents listed in frontmatter. Invoke each special
 4. **Finalize**
    - Confirm every generated report folder has completed `ZH Translator` handoff output before rebuilding the aggregate index.
    - Rebuild `ideas/_index.yaml` with `node scripts/ideas-index.mjs`.
-   - Validate completed folders with `website/scripts/check-ideas.mjs` when the website folder is available.
+   - Validate completed folders with `npm --prefix website run check:ideas` when the website folder is available. If it fails, identify the offending folder(s) from its output, delete only those folders (they were marked failed earlier in the run or are partial), and re-run the validator. Repeat once. If the validator still fails, abort the run with the validator output included in the final summary; do not push.
    - Summarize generated, deduped, and failed topics.
 
 ## Non-negotiable rules
@@ -58,7 +72,7 @@ This agent may invoke only the agents listed in frontmatter. Invoke each special
 Resolve these values before invoking any subagent:
 
 - `topic`: user-provided topic, or `startup news` if unspecified.
-- `topicScope`: `narrow` when the user gives a specific topic; otherwise `broad`.
+- `topicScope`: `narrow` when the user gives a specific topic; otherwise `broad`. **Note**: the scheduled CI path in [`.github/workflows/bizidea.yml`](../workflows/bizidea.yml) hard-codes `topic: startup news`, so `topicScope: narrow` is reachable only via the local Copilot CLI or a manual workflow dispatch that adds a topic input. Do not assume narrow scope in the daily run.
 - `cap`: user-provided cap, default `5`, hard maximum `5`.
 - `timeWindow`: concrete inclusive `YYYY-MM-DD to YYYY-MM-DD` range.
 - `timeWindowLabel`: user's phrase such as `today`, `yesterday`, `last 7 days`, or `null`.
@@ -79,15 +93,21 @@ Time-window defaults:
 
 ## Artifact gates
 
-| File | Minimum fields |
-|---|---|
-| `triage.yaml` | `runDate`, `timeWindow`, `clustersFound`, `selectedCount`, `clusters` |
-| `idea.yaml` | `slug`, `date`, `pitch`, `sourceContext`, `startupThesis`, `goToMarketSeed`, `solution` |
-| `research.yaml` | `slug`, `date`, `market`, `competitors`, `researchCoverage`, `deduplication`, `evidenceCorpus`, `sources`, `reportMemo.incumbentThesis` |
-| `business-plan.yaml` | `slug`, `date`, `executiveSummary`, `strategicChoices`, `market`, `product`, `gtm`, `milestones`, `fundingAsk`, `investorMemo`, `operatingAssumptions` |
-| `financial-model.yaml` | `slug`, `date`, `totals`, `unitEconomics`, `fundingAsk`, `modelSanity` |
-| `index.yaml` | `slug`, `date`, `pitch`, `rating`, `files`, `financials` |
-| `*.zh.yaml` | all five files exist: `idea.zh.yaml`, `research.zh.yaml`, `business-plan.zh.yaml`, `financial-model.zh.yaml`, `index.zh.yaml`; each is non-empty, parses as YAML, and preserves the English source schema shape |
+This table is the canonical minimum-fields contract. README and AGENTS.md
+link here. Each gate is also enforced deterministically by
+[`scripts/validate-stage.mjs`](../../scripts/validate-stage.mjs); specialists
+are instructed to run it after writing, and the orchestrator may re-run it
+before advancing to the next stage.
+
+| File | Stage key for `validate-stage.mjs` | Minimum fields |
+|---|---|---|
+| `triage.yaml` | `triage` | `runDate`, `timeWindow`, `clustersFound`, `selectedCount`, `clusters` |
+| `idea.yaml` | `idea` | `slug`, `date`, `pitch`, `sourceContext`, `startupThesis`, `goToMarketSeed`, `solution` |
+| `research.yaml` | `research` | `slug`, `date`, `market`, `competitors`, `researchCoverage`, `deduplication`, `evidenceCorpus`, `sources`, `reportMemo.incumbentThesis` |
+| `business-plan.yaml` | `business-plan` | `slug`, `date`, `executiveSummary`, `strategicChoices`, `market`, `product`, `gtm`, `milestones`, `fundingAsk`, `investorMemo`, `operatingAssumptions` |
+| `financial-model.yaml` | `financial-model` | `slug`, `date`, `totals`, `unitEconomics`, `fundingAsk`, `modelSanity` |
+| `index.yaml` | `index` | `slug`, `date`, `pitch`, `rating`, `files`, `financials` |
+| `*.zh.yaml` | (covered by `node scripts/check-zh-translation.mjs`) | all five files exist: `idea.zh.yaml`, `research.zh.yaml`, `business-plan.zh.yaml`, `financial-model.zh.yaml`, `index.zh.yaml`; each is non-empty, parses as YAML, and preserves the English source schema shape |
 
 When a gate fails, retry the same specialist once with the validation error and same folder path. If it still fails, record the topic as failed and do not run later stages for that topic.
 

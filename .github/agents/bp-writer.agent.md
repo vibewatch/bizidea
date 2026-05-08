@@ -28,7 +28,7 @@ The orchestrator must invoke you with one absolute report folder path containing
 - DO NOT pad. Each field must say something specific and falsifiable.
 - ONLY write `business-plan.yaml` in the folder you were given.
 - You are not done after reading inputs. You must create or overwrite `<folder>/business-plan.yaml` with valid YAML before returning a handoff.
-- After writing, read `<folder>/business-plan.yaml` back from disk and confirm it is non-empty valid YAML with the required top-level fields before returning `HANDOFF`.
+- After writing, run `node scripts/validate-stage.mjs <folder> business-plan` from the repo root and confirm it exits zero (this loads the file, parses it, and verifies required fields). If it fails, fix the missing field and re-run before returning `HANDOFF`.
 
 ## Approach
 1. Read both inputs in full.
@@ -148,7 +148,7 @@ risks:
     impact: Low|Medium|High
     mitigation: string
 fundingAsk:
-  stage: pre-seed|seed
+  round: pre-seed|seed
   targetFundingRangeUsd: "e.g. $2–4M"
   runwayMonths: 18
   useOfFundsSummary: "string — what 18 months of runway buys"
@@ -157,6 +157,7 @@ fundingAsk:
 Rules:
 - Use `null` (not empty string) when a value is genuinely missing.
 - Specific dollar amounts will be set by the financial model; here `fundingAsk.targetFundingRangeUsd` is the target band.
+- `fundingAsk.round` MUST match the value Financial Modeler will write to `financial-model.yaml.fundingAsk.round` (`pre-seed` | `seed` | `series-a` | etc.) so downstream agents can cross-reference one field name.
 - `strategicChoices` should explain the hard choices behind the plan, especially what is intentionally deferred.
 - `operatingAssumptions` should contain 3–6 assumptions that materially affect GTM, product scope, hiring, pricing, or funding; every entry must include a concrete validation test and decision impact.
 - `strategyMap.mermaid` must be valid Mermaid `flowchart` syntax (use a YAML literal block scalar `|` to preserve newlines); do not wrap it in Markdown fences.
@@ -168,10 +169,19 @@ Rules:
 
 ## Handoff
 
-Return ONLY this block to the orchestrator (no extra prose), and only after `business-plan.yaml` has been written and read back successfully:
+Follow [handoff-protocol.md](./handoff-protocol.md). Return ONLY this success block to the orchestrator (no extra prose), and only after `business-plan.yaml` has been written and read back successfully:
 
 ```
 HANDOFF
+status: ok
 path: <absolute path to business-plan.yaml>
 exec_summary_excerpt: <2 sentences>
+```
+
+If required inputs are missing or `business-plan.yaml` cannot be written, return ONLY this failure block and write no files:
+
+```
+HANDOFF
+status: failed
+reason: <one sentence explaining why business-plan.yaml was not written>
 ```

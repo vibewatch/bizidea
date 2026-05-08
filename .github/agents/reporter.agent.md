@@ -33,10 +33,14 @@ The orchestrator must invoke you with one absolute report folder path containing
 3. From `idea.yaml.sourceContext`: the `topic` prompt (verbatim), `timeWindow`, `timeWindowLabel`, and source-backed signal count.
 4. From `research.yaml`: `market.tam.value`, `market.sam.value`, `market.som.value` (preserve units like `$0.37B–$0.66B`, `$10M`).
 5. From `financial-model.yaml`: `totals.y1`/`y2`/`y3` for revenue, EBITDA, ending cash; `fundingAsk.amountM`, `fundingAsk.round`, `fundingAsk.runwayMonths`.
-6. Derive `kicker` from the topic: ALL CAPS, hyphens preserved (e.g. `climate-tech news` → `CLIMATE-TECH`).
+6. Derive `kicker` from the topic. The website renders it as a short strap label (e.g. on cards joined to the sector with `·`), so keep it tight:
+   - Drop trailing event-type or category nouns: `news`, `launch`, `launches`, `funding`, `round`, `raise`, `acquisition`, `merger`, `deal`, `announcement`, `pilot`, `ipo`, `report`, `update`.
+   - Take the remaining 1–3 words — prefer the company or product name; fall back to the most distinctive topic noun.
+   - Uppercase the result; preserve internal hyphens; ASCII only; aim for ≤ 24 characters.
+   - Examples: `Collate AI analytics launch` → `COLLATE`; `JuliaHub industrial digital twins` → `JULIAHUB`; `non-dilutive DTC health capital` → `NON-DILUTIVE`; `clinical trial recruiting AI` → `CLINICAL TRIAL`; `climate-tech news` → `CLIMATE-TECH`.
 7. **Apply the rating rubric** (next section) using the four stage YAML files you just read.
 8. Write `index.yaml` matching the schema exactly. Use YAML with 2-space indent. If newer upstream fields such as `topicScope`, diagrams, canvases, analysis models, scenarios, or sensitivity tables are present but not in this schema, ignore them; they remain available in the stage YAML files.
-9. Read `<folder>/index.yaml` back from disk and confirm it is non-empty valid YAML with the required top-level fields before returning `HANDOFF`.
+9. Run `node scripts/validate-stage.mjs <folder> index` from the repo root and confirm it exits zero (this loads the file, parses it, and verifies required fields). If it fails, fix the missing field and re-run before returning `HANDOFF`.
 
 ## Rating rubric (apply during step 7)
 
@@ -129,13 +133,22 @@ topRisks: [string, string, string]
 
 ## Handoff
 
-Return ONLY this block to the orchestrator (no extra prose):
+Follow [handoff-protocol.md](./handoff-protocol.md). Return ONLY this success block to the orchestrator (no extra prose):
 
 ```
 HANDOFF
+status: ok
 path: <absolute path to index.yaml>
 slug: <slug>
 sector: <sector>
 rating: <overall e.g. 3.7>
 null_fields: <comma-separated list of any null fields, or "none">
+```
+
+If required inputs are missing or `index.yaml` cannot be written, return ONLY this failure block and write no files:
+
+```
+HANDOFF
+status: failed
+reason: <one sentence explaining why index.yaml was not written>
 ```

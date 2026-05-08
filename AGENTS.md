@@ -7,6 +7,8 @@
 | Run tests | `npm run check:test` |
 | Build website | `npm --prefix website run build` |
 | Type-check website | `npm --prefix website run typecheck` |
+| Validate one stage YAML | `node scripts/validate-stage.mjs <folder> <stage>` |
+| Check agent frontmatter | `node scripts/check-agent-frontmatter.mjs` |
 | Validate all ideas | `npm run validate:all` |
 | Rebuild history index | `node scripts/ideas-index.mjs --strict` |
 | Repair generated YAML | `npm --prefix website run repair:yaml` |
@@ -18,9 +20,9 @@
 | `ideas/` | Report artifacts — one dated folder per run; `_index.yaml` = aggregated catalog; `_triage/<ts>/` = triage decisions; `_`-prefixed paths ignored by Astro |
 | `website/` | Astro site that renders reports |
 | `cloudflare/` | Cloudflare Worker scheduler (dispatches `bizidea.yml` daily) |
-| `.github/agents/` | Agent definitions: `Bizidea` orchestrator, stage specialists, `ZH Translator`, `yaml-syntax` reference |
+| `.github/agents/` | Agent definitions: `Bizidea` orchestrator, stage specialists, `ZH Translator`, plus shared references (`handoff-protocol.md`, `sector-vocabulary.md`, `zh-translation-style.md`, `yaml-syntax.md`) |
 | `.github/workflows/` | `bizidea.yml` (main pipeline run), `deploy.yml` (site publish on push) |
-| `scripts/` | Node helpers: `ideas-index.mjs`, `dedupe-idea.mjs`, `report-dir.mjs`, `text.mjs` |
+| `scripts/` | Node helpers: `ideas-index.mjs`, `dedupe-idea.mjs`, `report-dir.mjs`, `validate-stage.mjs`, `check-agent-frontmatter.mjs`, `text.mjs` |
 
 ## YAML conventions
 

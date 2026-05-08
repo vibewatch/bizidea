@@ -72,6 +72,10 @@ conceptDiagram:
 
 ## Self-check before handoff
 
-After writing the file, read it back and confirm it parses as valid YAML
-with all required top-level fields. If a value contains `: ` or a leading
-indicator and is not quoted, fix it before returning.
+Deterministic YAML and minimum-fields validation is the job of
+[`scripts/validate-stage.mjs`](../../scripts/validate-stage.mjs); each
+specialist runs it before returning `HANDOFF`. Beyond that, when you draft a
+value containing `: ` or a leading indicator (`-`, `?`, `:`, `>`, `|`,
+`*`, `&`, `!`, `%`, `#`, `@`, `` ` ``), quote it before you write the file—
+the validator will reject the result if `js-yaml` cannot parse it, but a
+clean draft costs less than a retry.

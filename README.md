@@ -36,7 +36,7 @@ flowchart TD
 
     zhFiles --> finalize{{"Bizidea finalize"}}
     finalize -->|"node scripts/ideas-index.mjs"| indexFile[("ideas/_index.yaml<br/>aggregated history")]
-    finalize -->|"website/scripts/check-ideas.mjs"| validate["validate completed folders"]
+    finalize -->|"npm --prefix website run check:ideas"| validate["validate completed folders"]
     indexFile --> push["git commit &amp; push"]
     push --> deploy[".github/workflows/deploy.yml<br/>Astro build &rarr; GitHub Pages"]
 ```
@@ -53,7 +53,7 @@ flowchart TD
 | 5 | **Financial Modeler** | `<folder>/financial-model.yaml` | 3-year model: monthly Y1 + quarterly Y2/Y3 P&L, headcount, CAC/LTV/payback, runway-based funding ask, `sanityChecks.flags`, `modelSanity` summary. Every number ties to `assumptions[]`. |
 | 6 | **Reporter** | `<folder>/index.yaml` | Extracts and rates (does not reinterpret) into the compact website sidecar. Preserves units (`K`, `M`); missing values → `null`. |
 | 7 | **ZH Translator** | `<folder>/*.zh.yaml` (×5) | Two-pass EN→zh-CN (draft + reflection/revision). Schema-preserving; never modifies English sources. |
-| ∞ | **Bizidea** finalize | `ideas/_index.yaml` | After all five `*.zh.yaml` exist, rebuilds history index and runs `website/scripts/check-ideas.mjs`. |
+| ∞ | **Bizidea** finalize | `ideas/_index.yaml` | After all five `*.zh.yaml` exist, rebuilds history index and runs `npm --prefix website run check:ideas`. |
 
 ### Orchestration rules
 
@@ -67,15 +67,7 @@ flowchart TD
 
 ### Artifact gates
 
-| File | Minimum fields |
-|---|---|
-| `triage.yaml` | `runDate`, `timeWindow`, `clustersFound`, `selectedCount`, `clusters` |
-| `idea.yaml` | `slug`, `date`, `pitch`, `sourceContext`, `startupThesis`, `goToMarketSeed`, `solution` |
-| `research.yaml` | `slug`, `date`, `market`, `competitors`, `researchCoverage`, `deduplication`, `evidenceCorpus`, `sources`, `reportMemo.incumbentThesis` |
-| `business-plan.yaml` | `slug`, `date`, `executiveSummary`, `strategicChoices`, `market`, `product`, `gtm`, `milestones`, `fundingAsk`, `investorMemo`, `operatingAssumptions` |
-| `financial-model.yaml` | `slug`, `date`, `totals`, `unitEconomics`, `fundingAsk`, `modelSanity` |
-| `index.yaml` | `slug`, `date`, `pitch`, `rating`, `files`, `financials` |
-| `*.zh.yaml` | All five Chinese siblings exist, are non-empty, parse as YAML, and preserve the English schema shape |
+The minimum-fields contract for each stage YAML lives in [.github/agents/bizidea.agent.md](.github/agents/bizidea.agent.md#artifact-gates) and is enforced deterministically by [scripts/validate-stage.mjs](scripts/validate-stage.mjs). Each specialist runs the validator before handoff; the orchestrator may re-run it during gate-and-retry.
 
 ## Repository layout
 
@@ -84,9 +76,9 @@ flowchart TD
 | `ideas/` | Report folders (English + `*.zh.yaml`). `_index.yaml` = aggregated history. `_triage/<ts>/` = daily triage. `_`-prefixed paths ignored by Astro. |
 | `website/` | [Astro 5](https://astro.build) site that renders reports. |
 | `cloudflare/` | Cloudflare Worker scheduler. |
-| `.github/agents/` | Copilot agents: `Bizidea` orchestrator, the seven specialists above, and the `yaml-syntax` reference. |
+| `.github/agents/` | Copilot agents: `Bizidea` orchestrator, the seven specialists above, and shared references (`handoff-protocol.md`, `sector-vocabulary.md`, `zh-translation-style.md`, `yaml-syntax.md`). |
 | `.github/workflows/` | `bizidea.yml` (Cloudflare-dispatched run) and `deploy.yml` (publishes the site on `main` pushes touching `website/**` or `ideas/**`). |
-| `scripts/` | Deterministic Node helpers: `ideas-index.mjs`, `dedupe-idea.mjs`, `report-dir.mjs`, `check-near-duplicates.mjs`, shared `text.mjs`. |
+| `scripts/` | Deterministic Node helpers: `ideas-index.mjs`, `dedupe-idea.mjs`, `report-dir.mjs`, `validate-stage.mjs`, `check-agent-frontmatter.mjs`, `check-zh-translation.mjs`, `check-near-duplicates.mjs`, `validate-all.mjs`, shared `text.mjs`. |
 | [AGENTS.md](AGENTS.md) | Coding-agent quick reference (commands, layout, YAML conventions). |
 
 YAML conventions (camelCase field names, units in numeric names like `revenueK`/`marginPct`, indentation/quoting/multi-line rules) live in [.github/agents/yaml-syntax.md](.github/agents/yaml-syntax.md).

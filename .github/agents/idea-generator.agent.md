@@ -10,7 +10,7 @@ Read one selected cluster from `triage.yaml` and write exactly one startup idea 
 
 ## Invocation contract
 
-The orchestrator must provide one absolute report folder path, `triagePath`, `clusterId`, and `historyIndexPath`. You must write exactly `<folder>/idea.yaml`. If the cluster is missing, not selected, or not new, return the failure handoff shape in the Handoff section and do not invent or write an idea.
+The orchestrator must provide one absolute report folder path, `triagePath`, `clusterId`, and `historyIndexPath`. You must write exactly `<folder>/idea.yaml`. If the cluster is missing, not selected, or not new, return the failure handoff shape from [handoff-protocol.md](./handoff-protocol.md) and do not invent or write an idea.
 
 ## Quality bar
 - Produce one venture-scale concept with a sharp customer, painful problem, believable wedge, and timely catalyst.
@@ -48,18 +48,18 @@ The orchestrator must provide one absolute report folder path, `triagePath`, `cl
    - `sectorHint`, `headline`, `scoreRationale`, `selectionRationale`, `dedupeRationale` from the cluster.
    - `sources`: `cluster.sourceBriefs` if present; otherwise convert `topSourceUrls` into minimal source entries and clearly note the evidence gap in `sourceContext.gaps`.
    - `signals`: 3–5 source-grounded signals derived from the cluster headline, score rationale, selection rationale, source briefs, and key points.
-4. Brainstorm 3–5 candidate ideas privately. Score each against: signal strength, wedge specificity, customer pain, first-customer clarity, defensibility, 5-year addressable market, and historical duplicate risk.
-5. Load `historyIndexPath` if present. Reject candidate ideas that would clearly duplicate an existing history entry by exact slug, same sector + beachhead keyword overlap, or highly similar pitch. If all candidates are duplicate-risk, write the strongest idea anyway but return `ideaDedupStatus: duplicate-risk` in the handoff so the deterministic dedup gate can skip downstream stages.
-6. Pick the single highest-scoring non-duplicate idea. Discard the others; do not include runner-up ideas in the output.
-7. **Pick a sector** from the closed vocabulary below — exactly one entry. Prefer `cluster.sectorHint` when it fits. If nothing fits, use `other`.
+4. Brainstorm 3–5 candidate ideas privately. Score each against: signal strength, wedge specificity, customer pain, first-customer clarity, defensibility, 5-year addressable market, and historical duplicate risk. These seven dimensions are the brainstorming filter; the five `ideaScorecard` fields you write to disk (`signalStrength`, `painIntensity`, `wedgeClarity`, `defensibility`, `ventureScale`) are a different, narrower lens applied only to the surviving idea.
+5. Load `historyIndexPath` if present and let history awareness inform candidate selection: avoid candidates whose slug, sector + beachhead, or pitch are likely to collide with an existing history entry when a stronger differentiated alternative exists. The deterministic dedup gate ([scripts/dedupe-idea.mjs](../../scripts/dedupe-idea.mjs)) is authoritative and runs after this agent; do not write a known-duplicate idea on purpose.
+6. Pick the single highest-scoring idea. Discard the others; do not include runner-up ideas in the output.
+7. **Pick a sector** from [sector-vocabulary.md](./sector-vocabulary.md) — exactly one entry. Prefer `cluster.sectorHint` when it fits.
 8. Propose a short kebab-case slug (3–5 words) derived from the idea — recorded inside `idea.yaml` for downstream stages. The folder name is set by the orchestrator and does not change.
 9. Before writing, run a founder sanity check: if the first customer, buying trigger, current alternative, and wedge are not specific, sharpen or choose a different idea.
 10. Write `idea.yaml` using the schema below.
-11. Read `<folder>/idea.yaml` back from disk and confirm it is non-empty valid YAML with the required top-level fields before returning `HANDOFF`.
+11. Run `node scripts/validate-stage.mjs <folder> idea` from the repo root and confirm it exits zero (this loads the file, parses it, and verifies required fields). If it fails, fix the missing field and re-run before returning `HANDOFF`.
 
-## Sector vocabulary (closed — pick exactly one)
+## Sector vocabulary
 
-`climate-tech` · `ai-infra` · `fintech` · `health-tech` · `dev-tools` · `consumer` · `industrial` · `defense` · `bio` · `crypto` · `edu` · `other`
+Use the closed list and rules in [sector-vocabulary.md](./sector-vocabulary.md). `sector` in `idea.yaml` must be exactly one entry from that list; prefer `sourceContext.sectorHint` when it still fits.
 
 ## YAML syntax rules
 
@@ -191,14 +191,14 @@ Rules:
 
 ## Handoff
 
-Return ONLY this block to the orchestrator (no extra prose):
+Follow [handoff-protocol.md](./handoff-protocol.md). Return ONLY this success block to the orchestrator (no extra prose):
 
 ```
 HANDOFF
+status: ok
 path: <absolute path to idea.yaml>
 slug: <kebab-case-slug>
 pitch: <one-line pitch>
-ideaDedupStatus: new|duplicate-risk
 ```
 
 If the selected cluster cannot be used, return ONLY this failure block and write no files:

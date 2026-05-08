@@ -17,7 +17,7 @@ The orchestrator must invoke you with one absolute report folder path containing
 - Treat competitor analysis as strategic mapping, not a directory listing: explain each player’s wedge, strength, and gap versus the proposed startup.
 - Prefer recent, primary, or authoritative sources; every external claim should be traceable to fetched evidence.
 - Be candid about uncertainty through `openQuestions` instead of inventing precision.
-- Build a broad evidence corpus before writing conclusions: target **100+ reputable fetched sources/pages** across news, market reports, company pages, regulatory sources, analyst commentary, pricing pages, customer forums/reviews, and technical docs when the topic and time window support it.
+- Build a broad evidence corpus before writing conclusions: aim for **~100 reputable fetched sources/pages** across news, market reports, company pages, regulatory sources, analyst commentary, pricing pages, customer forums/reviews, and technical docs when the topic and time window support it. The 100-source target is calibrated for the default `gpt-5.4` / `xhigh` profile in `bizidea.yml`; smaller models or thinner topics may legitimately produce fewer—record the shortfall in `researchCoverage.coverageGap` rather than padding with low-value fetches.
 - Separate **evidence collection** from **report synthesis**: the report should be concise and analytical, while `evidenceCorpus` preserves the broader audit trail.
 - Remove duplicate evidence before synthesis so corpus counts represent distinct useful sources, not repeated syndications, mirrors, tracking-URL variants, or near-identical vendor pages.
 
@@ -53,24 +53,6 @@ Keep the best representative source using this priority:
 
 Different outlets covering the same event are not automatically duplicates if they add materially distinct facts. In that case, keep at most the primary source plus the strongest independent analysis, and record the removed items in `deduplication.duplicateClusters`.
 
-## Key information the report must cover
-
-Think like a diligence lead deciding whether this startup deserves a partner meeting. Include the following where evidence exists:
-
-1. **Executive research takeaways** — 5–7 concise bullets that say what the evidence means, not just what sources said.
-2. **Market definition** — category boundaries, buyer type, geography, adjacent markets, and what is intentionally excluded.
-3. **TAM / SAM / SOM** — bottom-up sizing first, top-down cross-check second, assumptions, sensitivity cases, and source-backed constraints.
-4. **Customer and buyer** — ICP, economic buyer, user, urgent jobs-to-be-done, buying trigger, budget source, procurement friction, and willingness-to-pay evidence.
-5. **Competitive landscape** — 3–5 priority competitors plus substitutes, incumbents, open-source / in-house alternatives, pricing, wedge, distribution, and weakness versus the proposed startup.
-  - Also write `reportMemo.incumbentThesis`: 3–5 concise investor-facing bullets that answer why incumbents or substitutes do **not** win by default. Each bullet should name a competitor class (e.g. cloud platforms, vertical incumbents, workflow tools, open source, in-house) and explain the startup's conditional wedge.
-6. **Category dynamics** — growth rates, technology shifts, regulation, capital flows, adoption signals, platform changes, and headwinds.
-7. **Validation signals** — funding, hiring, product launches, customer announcements, search/community pain, regulatory deadlines, RFPs, integrations, usage metrics, or public case studies.
-8. **Regulatory / technical / data constraints** — compliance, privacy, data access, model risk, security, infrastructure dependencies, reliability, and integration barriers.
-9. **Business-model implications** — likely pricing basis, sales motion, gross-margin pressure, channel partners, procurement timeline, and expansion path; do not write the full business plan.
-10. **Risks and disconfirming evidence** — credible reasons this might fail, weak evidence, crowded segments, low willingness to pay, or timing mismatch.
-11. **Open questions and validation plan** — what must be customer-tested next, with priority and suggested evidence to gather.
-12. **Evidence coverage** — how many sources/pages were found, fetched, retained, used in the memo, rejected, and what source classes were represented.
-
 ## Approach
 1. Read `idea.yaml`. Extract the target user, `startupThesis.beachhead`, `startupThesis.wedge`, `goToMarketSeed.firstCustomer`, `goToMarketSeed.currentAlternative`, and core hypothesis.
   - Use web search to discover candidate pages and web fetch/opening to verify each retained URL. Do not report missing web capability unless a concrete web action is unavailable or fails in the run.
@@ -82,16 +64,16 @@ Think like a diligence lead deciding whether this startup deserves a partner mee
   - funding/deal/news articles;
   - technical docs, benchmarks, open-source repos, or cloud/platform docs;
   - reviews/forums/RFPs/job posts when they reveal demand.
-3. Target **at least 100 reputable fetched, de-duplicated sources/pages** for `evidenceCorpus`.
+3. Target **at least ~100 reputable fetched, de-duplicated sources/pages** for `evidenceCorpus` when the topic and time window support it.
   - Prioritize source reputation and relevance over raw volume.
   - Use reputable publishers and primary sources first: Reuters, FT, Bloomberg, The Information, TechCrunch, Crunchbase News, PitchBook/CB Insights/Dealroom blogs, analyst firms, government/regulatory sites, standards bodies, company documentation, pricing pages, engineering blogs, public filings, respected sector publications, and credible trade press.
   - Avoid duplicate syndicated articles. If multiple sources repeat the same announcement, keep the primary release plus the best independent analysis.
-  - If the topic/time window genuinely cannot support 100 credible fetchable sources, collect the maximum credible set and explain the shortfall in `researchCoverage.coverageGap`.
+  - If the topic/time window genuinely cannot support 100 credible fetchable sources, collect the maximum credible set and explain the shortfall in `researchCoverage.coverageGap` rather than padding with weak fetches.
 4. Select the 20–40 most decision-useful fetched sources into `sources`; these are the compact citation set used by `sourceRefs` in the report body. Keep the broader 100+ audit trail in `evidenceCorpus`.
 5. For TAM/SAM/SOM, use the bottom-up method where possible (units × ARPU), then add top-down cross-checks and sensitivity cases. State every assumption.
 6. Build a competitor list of 3–5 entries, each grounded in fetched sources, plus note substitutes/in-house alternatives in `reportMemo.competitiveLandscape`.
 7. Write the file using the schema below. Every numeric claim or external fact in the synthesized report must reference a `sources[].id`.
-8. Read `<folder>/research.yaml` back from disk and confirm it is non-empty valid YAML with the required top-level fields before returning `HANDOFF`.
+8. Run `node scripts/validate-stage.mjs <folder> research` from the repo root and confirm it exits zero (this loads the file, parses it, and verifies required fields). If it fails, fix the missing field and re-run before returning `HANDOFF`.
 
 ## YAML syntax rules
 
@@ -285,7 +267,8 @@ Rules:
 - `researchCoverage.sourcesRetained` MUST equal `evidenceCorpus.length` after duplicate removal.
 - `researchCoverage.duplicatesRemoved` MUST equal `deduplication.duplicatesRemoved`.
 - `evidenceCorpus` SHOULD contain at least 100 entries. Every entry must have `fetchVerified: true`; otherwise drop it.
-- `sources` should contain the 20–40 strongest cited sources from `evidenceCorpus`, unless the evidence base is smaller.
+- `sources` is the strict subset of `evidenceCorpus` entries with `usedInMemo: true`. Each `sources[].id` MUST equal the `id` of the same entry in `evidenceCorpus` — do not renumber. This keeps `sourceRefs` unambiguous when a reader cross-references the audit corpus.
+- `sources` should contain the 20–40 strongest cited entries from `evidenceCorpus`, unless the evidence base is smaller.
 - `deduplication.uniqueCorpusItems` MUST equal `evidenceCorpus.length`; `deduplication.uniqueMemoSources` MUST equal `sources.length`.
 - `deduplication.duplicateClusters[].keptEvidenceId`, when present, MUST reference an existing `evidenceCorpus[].id`; `keptSourceId`, when present, MUST reference an existing `sources[].id`.
 - Every `sourceRefs` element MUST match an existing `sources[].id`.
@@ -298,11 +281,20 @@ Rules:
 
 ## Handoff
 
-Return ONLY this block to the orchestrator (no extra prose):
+Follow [handoff-protocol.md](./handoff-protocol.md). Return ONLY this success block to the orchestrator (no extra prose):
 
 ```
 HANDOFF
+status: ok
 path: <absolute path to research.yaml>
 som_y3: $<value>
 competitive_intensity: <one sentence>
+```
+
+If required inputs are missing or `research.yaml` cannot be written, return ONLY this failure block and write no files:
+
+```
+HANDOFF
+status: failed
+reason: <one sentence explaining why research.yaml was not written>
 ```
