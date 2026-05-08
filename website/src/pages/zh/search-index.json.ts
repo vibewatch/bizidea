@@ -2,9 +2,10 @@ import { getCollection } from 'astro:content';
 import { hasZhTranslation } from '../../content/ideas-loader';
 import { buildSearchDocuments } from '../../lib/search';
 import { sortIdeasNewestFirst } from '../../lib/reports';
+import type { IdeaEntry } from '../../lib/page-helpers';
 
 export async function GET() {
-  const entries = sortIdeasNewestFirst((await getCollection('ideas')).filter((entry) => hasZhTranslation(entry.id)));
+  const entries = sortIdeasNewestFirst((await getCollection('ideas')).filter((entry: IdeaEntry) => hasZhTranslation(entry.id)));
   const body = JSON.stringify(buildSearchDocuments(entries, 'zh', import.meta.env.BASE_URL));
   return new Response(body, {
     headers: {
