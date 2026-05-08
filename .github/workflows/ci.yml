@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - 'cloudflare/README.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            website/package-lock.json
+      - name: Install root deps
+        run: npm ci --no-audit --no-fund
+      - name: Install website deps
+        working-directory: website
+        run: npm ci --no-audit --no-fund
+      - name: Validate project
+        run: npm run validate:all
+      - name: Audit production deps
+        if: ${{ always() }}
+        run: |
+          npm audit --omit=dev
+          npm --prefix website audit --omit=dev

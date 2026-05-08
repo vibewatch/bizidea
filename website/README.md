@@ -41,12 +41,12 @@ Token stacks live in [`src/styles/tokens.css`](src/styles/tokens.css).
 
 ## Architecture
 
-- Astro 5 static output, zero client JS except the lazy Mermaid loader on
+- Astro 6 static output, zero client JS except the lazy Mermaid loader on
   pages that contain diagrams.
-- `src/content/config.ts` defines the `ideas` content collection. The custom
+- `src/content.config.ts` defines the `ideas` content collection. The custom
   loader in `src/content/ideas-loader.ts` walks `../ideas/*/index.yaml`,
-  parses each with `js-yaml`, and validates against the Zod schema mirroring
-  the `Reporter` agent's output.
+  parses each with `js-yaml`, and validates against the Astro content schema
+  mirroring the `Reporter` agent's output.
 - Stage YAMLs (`idea`, `research`, `business-plan`, `financial-model`)
   are loaded lazily inside the detail page via `loadStageFiles(runId)`.
 - Visual primitives live in `src/components/` (Kicker, Headline, Ribbon, Rule,

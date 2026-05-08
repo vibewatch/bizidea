@@ -1,5 +1,5 @@
 import { defineCollection, z } from 'astro:content';
-import { ideasLoader } from './ideas-loader';
+import { ideasLoader } from './content/ideas-loader';
 
 const numberSeries = z.object({
   revenueK: z.number(),

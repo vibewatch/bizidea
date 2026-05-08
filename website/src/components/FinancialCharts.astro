@@ -4,39 +4,26 @@
 // bottom of the component.
 import { t, type Lang } from '../lib/i18n';
 import { localizeFundingRound } from '../lib/i18n';
-import { formatMoneyK as fmtK, formatSignedMoneyK as fmtSigned, localizeFinancialText as formatFinancialText, localizeFinancialVariable as formatFinancialVariable, scenarioLabel as formatScenarioLabel } from '../lib/dossier-format';
+import { formatMoneyK as fmtK, formatSignedMoneyK as fmtSigned } from '../lib/dossier-format';
+import {
+  normalizeFinancialSeries,
+  normalizeHeadcount,
+  normalizeScenarios,
+  normalizeSensitivity,
+  normalizeUseOfFunds,
+  niceTicks,
+  QUARTER_LABELS,
+} from '../lib/financial-chart-data';
+import type { FinancialModelStage } from '../lib/stage-schemas';
 
 interface Props {
-  fm: any;
+  fm: FinancialModelStage;
   lang?: Lang;
 }
 const { fm, lang = 'en' } = Astro.props as Props;
 const fundingRoundLabel = localizeFundingRound(String(fm?.fundingAsk?.round ?? ''), lang);
 
-type Pt = { label: string; revenueK: number; ebitdaK: number; cashEopK: number };
-
-const monthly: Pt[] = Array.isArray(fm?.y1Monthly)
-  ? fm.y1Monthly.map((m: any) => ({
-      label: m.month,
-      revenueK: Number(m.revenueK ?? 0),
-      ebitdaK: Number(m.ebitdaK ?? 0),
-      cashEopK: Number(m.cashEopK ?? 0),
-    }))
-  : [];
-const quarterly: Pt[] = Array.isArray(fm?.y2y3Quarterly)
-  ? fm.y2y3Quarterly.map((q: any) => ({
-      label: q.quarter,
-      revenueK: Number(q.revenueK ?? 0),
-      ebitdaK: Number(q.ebitdaK ?? 0),
-      cashEopK: Number(q.cashEopK ?? 0),
-    }))
-  : [];
-// Stitch into a single 20-point trajectory.
-const series: Pt[] = [...monthly, ...quarterly];
-
-const scenarioLabel = (key: string) => formatScenarioLabel(key, lang);
-const localizeFinancialVariable = (value: unknown) => formatFinancialVariable(value, lang);
-const localizeFinancialText = (value: unknown) => formatFinancialText(value, lang);
+const { monthly, quarterly, series } = normalizeFinancialSeries(fm);
 
 // FT palette — mirrors src/styles/tokens.css. Inline so the static SVG attributes resolve at build time.
 const C = {
@@ -79,19 +66,6 @@ const yBarBase = PAD.t + lineH + 8;
 const eRange = eMax - eMin || 1;
 const yBar = (v: number) => yBarBase + (1 - (v - eMin) / eRange) * barH;
 
-// Y-axis ticks for the line panel — symmetric around zero when domain crosses it.
-function niceTicks(min: number, max: number, count = 4): number[] {
-  if (max <= min) return [0];
-  const raw = (max - min) / count;
-  const pow = Math.pow(10, Math.floor(Math.log10(raw)));
-  const norm = raw / pow;
-  const step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * pow;
-  const start = Math.floor(min / step) * step;
-  const end = Math.ceil(max / step) * step;
-  const ticks: number[] = [];
-  for (let v = start; v <= end + step / 2; v += step) ticks.push(v);
-  return ticks;
-}
 const yTicks = niceTicks(yMin, yMax);
 
 // Line paths
@@ -103,72 +77,16 @@ const cashPath = series
   .join(' ');
 
 // --- Use of funds horizontal bar ---
-const uof: { bucket: string; pct: number; usd: number }[] = Array.isArray(fm?.fundingAsk?.useOfFunds)
-  ? fm.fundingAsk.useOfFunds.map((b: any) => ({
-      bucket: String(b.bucket),
-      pct: Number(b.percentage ?? 0),
-      usd: Number(b.amountUsd ?? 0),
-    }))
-  : [];
-const uofTotal = uof.reduce((s, b) => s + b.pct, 0) || 100;
+const { buckets: uof, totalPct: uofTotal } = normalizeUseOfFunds(fm);
 
 // --- Headcount stacked bars ---
-const quarters = ['q1y1', 'q2y1', 'q3y1', 'q4y1', 'q1y2', 'q2y2', 'q3y2', 'q4y2', 'q1y3', 'q2y3', 'q3y3', 'q4y3'] as const;
-const qLabels = ['Q1Y1', 'Q2Y1', 'Q3Y1', 'Q4Y1', 'Q1Y2', 'Q2Y2', 'Q3Y2', 'Q4Y2', 'Q1Y3', 'Q2Y3', 'Q3Y3', 'Q4Y3'];
-// Forward-fill missing quarter values so milestone-only headcount data
-// (e.g. q1y1, q4y1, q4y2, q4y3) doesn't render as zero between snapshots.
-function fillForward(row: any): number[] {
-  const out: number[] = [];
-  let last = 0;
-  for (const k of quarters) {
-    if (row[k] !== undefined && row[k] !== null && row[k] !== '') {
-      last = Number(row[k]) || 0;
-    }
-    out.push(last);
-  }
-  return out;
-}
-const headcountRoles: { role: string; values: number[] }[] = Array.isArray(fm?.headcount)
-  ? fm.headcount.map((row: any) => ({
-      role: String(row.role),
-      values: fillForward(row),
-    }))
-  : [];
-const hcQuartersWithData = quarters
-  .map((q, i) => ({ i, q, total: headcountRoles.reduce((s, r) => s + (r.values[i] ?? 0), 0) }))
-  .filter((q) => q.total > 0 || headcountRoles.some((r) => r.values[q.i] !== undefined));
-const hcMaxTotal = hcQuartersWithData.reduce((m, q) => Math.max(m, q.total), 0) || 1;
+const { roles: headcountRoles, quartersWithData: hcQuartersWithData, maxTotal: hcMaxTotal } = normalizeHeadcount(fm);
 
 // --- Sensitivity tornado ---
-const sens: { variable: string; cashImpactK: number; revImpactK: number; downside: string; upside: string }[] = Array.isArray(fm?.sensitivity)
-  ? fm.sensitivity
-      .map((s: any) => ({
-        variable: localizeFinancialVariable(s.variable),
-        cashImpactK: Number(s.cashImpactK ?? 0),
-        revImpactK: Number(s.y3RevenueImpactK ?? 0),
-        downside: localizeFinancialText(s.downsideCase),
-        upside: localizeFinancialText(s.upsideCase),
-      }))
-      .sort((a: any, b: any) => Math.abs(b.cashImpactK) - Math.abs(a.cashImpactK))
-  : [];
-const sensMax = sens.reduce((m, s) => Math.max(m, Math.abs(s.cashImpactK), Math.abs(s.revImpactK)), 0) || 1;
+const { rows: sens, maxAbs: sensMax } = normalizeSensitivity(fm, lang);
 
 // --- Scenarios (downside / base / upside) ---
-const scs = ['downside', 'base', 'upside'] as const;
-const scenarios = scs.map((k) => {
-  const s = fm?.scenarios?.[k] ?? {};
-  return {
-    key: k,
-    label: scenarioLabel(k),
-    desc: String(s.description ?? ''),
-    revK: Number(s.y3RevenueK ?? 0),
-    ebitdaK: Number(s.y3EbitdaK ?? 0),
-    cashLowK: Number(s.cashLowPointK ?? 0),
-  };
-});
-const scMaxRev = scenarios.reduce((m, s) => Math.max(m, s.revK), 0) || 1;
-const scAbsCash = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.cashLowK)), 0) || 1;
-const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)), 0) || 1;
+const { rows: scenarios, maxRev: scMaxRev, maxAbsCash: scAbsCash, maxAbsEbitda: scAbsEbitda } = normalizeScenarios(fm, lang);
 ---
 {n > 0 && (
   <figure class="bz-chart" data-bz-chart>
@@ -310,14 +228,14 @@ const scAbsEbitda = scenarios.reduce((m, s) => Math.max(m, Math.abs(s.ebitdaK)),
                 width={bw}
                 height={segH}
                 fill={tones[ri % tones.length]}
-                data-bz-tip={`${qLabels[q.i]} · ${r.role} ${v} FTE`}
+                data-bz-tip={`${QUARTER_LABELS[q.i]} · ${r.role} ${v} FTE`}
               />
             );
           });
           return (
             <g>
               {segs}
-              <text x={xBar + bw / 2} y={220 - 10} text-anchor="middle" class="bz-chart__tick">{qLabels[q.i]}</text>
+              <text x={xBar + bw / 2} y={220 - 10} text-anchor="middle" class="bz-chart__tick">{QUARTER_LABELS[q.i]}</text>
               <text x={xBar + bw / 2} y={24 + h - (q.total / hcMaxTotal) * h - 6} text-anchor="middle" class="bz-chart__tick bz-chart__tick--bold">{q.total}</text>
             </g>
           );

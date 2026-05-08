@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import yaml from 'js-yaml';
 import type { Loader } from 'astro/loaders';
 import type { Lang } from '../lib/i18n';
+import { stageFileSchemas, type StageFiles } from '../lib/stage-schemas';
 
 // Resolve relative to the Astro project (website/) which is process.cwd() during build.
 const IDEAS_DIR = resolve(process.cwd(), '..', 'ideas');
@@ -16,13 +17,6 @@ const REQUIRED_LOCALIZED_FILES = [
 ];
 
 export type LocalizedIndexData = Record<string, unknown>;
-
-export interface StageFiles {
-  idea: unknown;
-  research: unknown;
-  businessPlan: unknown;
-  financialModel: unknown;
-}
 
 const parsedYamlCache = new Map<string, unknown>();
 const localizedIndexCache = new Map<string, LocalizedIndexData | null>();
@@ -296,11 +290,11 @@ export function loadStageFiles(runId: string, lang: Lang = 'en'): StageFiles {
   if (cached) return cached;
 
   const folder = join(IDEAS_DIR, runId);
-  const stages = {
-    idea: readLocalizedYaml(folder, 'idea', lang),
-    research: readLocalizedYaml(folder, 'research', lang),
-    businessPlan: readLocalizedYaml(folder, 'business-plan', lang),
-    financialModel: readLocalizedYaml(folder, 'financial-model', lang),
+  const stages: StageFiles = {
+    idea: stageFileSchemas.idea.parse(readLocalizedYaml(folder, 'idea', lang)),
+    research: stageFileSchemas.research.parse(readLocalizedYaml(folder, 'research', lang)),
+    businessPlan: stageFileSchemas.businessPlan.parse(readLocalizedYaml(folder, 'business-plan', lang)),
+    financialModel: stageFileSchemas.financialModel.parse(readLocalizedYaml(folder, 'financial-model', lang)),
   };
   stageFilesCache.set(cacheKey, stages);
   return stages;

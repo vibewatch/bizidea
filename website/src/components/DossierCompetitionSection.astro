@@ -1,0 +1,83 @@
+---
+import CitedText from './CitedText.astro';
+import Ribbon from './Ribbon.astro';
+import { uiLabel } from '../lib/dossier-format';
+import { t, type Lang } from '../lib/i18n';
+import type { ResearchStage } from '../lib/stage-schemas';
+
+interface Props {
+  research: ResearchStage;
+  lang?: Lang;
+}
+
+const { research, lang = 'en' } = Astro.props as Props;
+const ui = (label: string) => uiLabel(label, lang);
+---
+
+<Ribbon label={t('section.competition', lang)} id="competition" />
+<div class="bz-container bz-section">
+  {research?.reportMemo?.competitiveLandscape && (
+    <p class="bz-story__lead"><CitedText text={research.reportMemo.competitiveLandscape} lang={lang} /></p>
+  )}
+  {Array.isArray(research?.competitors) && (
+    <table class="bz-comp">
+      <thead>
+        <tr>
+          <th class="bz-label">{ui('Competitor')}</th>
+          <th class="bz-label">{ui('Stage')}</th>
+          <th class="bz-label">{ui('Wedge')}</th>
+          <th class="bz-label">{ui('Pricing')}</th>
+          <th class="bz-label">{ui('Strength')}</th>
+          <th class="bz-label">{ui('Weakness vs. us')}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {research.competitors.map((competitor: any) => (
+          <tr>
+            <td>{competitor.name}</td>
+            <td>{competitor.stage}</td>
+            <td>{competitor.wedge}</td>
+            <td>{competitor.pricing ?? '—'}</td>
+            <td>{competitor.strength ?? '—'}</td>
+            <td>{competitor.weaknessVsUs}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )}
+  {Array.isArray(research?.reportMemo?.incumbentThesis) && (
+    <>
+      <h3 class="bz-section__head">{ui('Why incumbents do not win by default')}</h3>
+      <ul class="bz-list">
+        {research.reportMemo.incumbentThesis.map((item: any) => (
+          <li><strong>{item.incumbentClass}.</strong> <CitedText text={item.point} lang={lang} /></li>
+        ))}
+      </ul>
+    </>
+  )}
+  {research?.fiveForces && (
+    <>
+      <h3 class="bz-section__head">{ui("Porter's five forces")}</h3>
+      <ul class="bz-forces">
+        {[
+          { key: 'supplierPower', label: 'Supplier power' },
+          { key: 'buyerPower', label: 'Buyer power' },
+          { key: 'threatOfEntrants', label: 'Threat of entrants' },
+          { key: 'threatOfSubstitutes', label: 'Threat of substitutes' },
+          { key: 'competitiveRivalry', label: 'Competitive rivalry' },
+        ].filter(({ key }) => research.fiveForces[key]).map(({ key, label }) => {
+          const force = research.fiveForces[key];
+          const pct = Math.max(0, Math.min(100, ((force.score ?? 0) / 5) * 100));
+          return (
+            <li class="bz-force">
+              <span class="bz-force__label bz-label">{ui(label)}</span>
+              <span class="bz-force__bar"><span class="bz-force__bar-fill" style={`width:${pct}%`}></span></span>
+              <span class="bz-force__score">{force.score ?? '—'} / 5</span>
+              <span class="bz-force__note"><CitedText text={force.rationale} lang={lang} /></span>
+            </li>
+          );
+        })}
+      </ul>
+    </>
+  )}
+</div>

@@ -128,7 +128,7 @@ npm run check:ideas-index
 To run the full local validation gate:
 
 ```bash
-npm run validate
+npm run validate:all
 ```
 
 To review likely near-duplicate report pairs without failing the run:

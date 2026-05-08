@@ -1,0 +1,234 @@
+---
+import FactRow from './FactRow.astro';
+import Mermaid from './Mermaid.astro';
+import Ribbon from './Ribbon.astro';
+import RiskHeatmap from './RiskHeatmap.astro';
+import { uiLabel } from '../lib/dossier-format';
+import { t, type Lang } from '../lib/i18n';
+import type { BusinessPlanStage } from '../lib/stage-schemas';
+
+interface Props {
+  bp: BusinessPlanStage;
+  lang?: Lang;
+}
+
+const { bp, lang = 'en' } = Astro.props as Props;
+const ui = (label: string) => uiLabel(label, lang);
+---
+
+<Ribbon label={t('section.businessPlan', lang)} id="business-plan" />
+<div class="bz-container bz-section">
+  <p class="bz-story__lead">{bp?.executiveSummary}</p>
+  {Array.isArray(bp?.problem) && bp.problem.length > 0 && (
+    <>
+      <h3 class="bz-section__head">{ui('Problem')}</h3>
+      <ul class="bz-list">
+        {bp.problem.map((problem: string) => <li>{problem}</li>)}
+      </ul>
+    </>
+  )}
+  {Array.isArray(bp?.solution) && bp.solution.length > 0 && (
+    <>
+      <h3 class="bz-section__head">{ui('Solution')}</h3>
+      <ul class="bz-list">
+        {bp.solution.map((solution: string) => <li>{solution}</li>)}
+      </ul>
+    </>
+  )}
+  {Array.isArray(bp?.whyWeWin) && bp.whyWeWin.length > 0 && (
+    <>
+      <h3 class="bz-section__head">{ui('Why we win')}</h3>
+      <ul class="bz-list">
+        {bp.whyWeWin.map((reason: string) => <li>{reason}</li>)}
+      </ul>
+    </>
+  )}
+  {Array.isArray(bp?.strategicChoices?.notYet) && (
+    <FactRow
+      caption={ui('Strategic choices')}
+      rows={[
+        { label: ui('Beachhead'), value: bp?.strategicChoices?.beachhead ?? null },
+        { label: ui('Wedge rationale'), value: bp?.strategicChoices?.wedgeRationale ?? null },
+        { label: ui('Sequencing'), value: bp?.strategicChoices?.sequencingRationale ?? null },
+        { label: ui('Not yet'), value: bp.strategicChoices.notYet.join(' · ') },
+      ]}
+    />
+  )}
+  {bp?.gtm && (
+    <FactRow
+      caption={ui('Go-to-market')}
+      rows={[
+        { label: ui('Wedge'), value: bp.gtm.wedge ?? null },
+        { label: ui('Channels'), value: Array.isArray(bp.gtm.channels) ? bp.gtm.channels.join(' · ') : (bp.gtm.channels ?? null) },
+        { label: ui('Funnel targets'), value: bp.gtm.funnelTargets ?? null },
+        { label: ui('Pricing'), value: bp.gtm.pricing ?? null },
+      ]}
+    />
+  )}
+  {bp?.product && (bp.product.mvp || bp.product.sixMonth || bp.product.twelveMonth || bp.product.twentyFourMonth) && (
+    <FactRow
+      caption={ui('Product roadmap')}
+      rows={[
+        { label: 'MVP', value: bp.product.mvp ?? null },
+        { label: ui('6 months'), value: bp.product.sixMonth ?? null },
+        { label: ui('12 months'), value: bp.product.twelveMonth ?? null },
+        { label: ui('24 months'), value: bp.product.twentyFourMonth ?? null },
+        ...(Array.isArray(bp.product.keyBets) ? [{ label: ui('Key bets'), value: bp.product.keyBets.join(' · ') }] : []),
+      ]}
+    />
+  )}
+  {bp?.businessModel && (
+    <FactRow
+      caption={ui('Business model')}
+      rows={[
+        { label: ui('Revenue streams'), value: Array.isArray(bp.businessModel.revenueStreams) ? bp.businessModel.revenueStreams.join(' · ') : null },
+        { label: ui('Unit of value'), value: bp.businessModel.unitOfValue ?? null },
+        { label: ui('Target gross margin'), value: bp.businessModel.targetGrossMarginPct != null ? `${bp.businessModel.targetGrossMarginPct}%` : null },
+        { label: ui('Expansion levers'), value: Array.isArray(bp.businessModel.expansionLevers) ? bp.businessModel.expansionLevers.join(' · ') : null },
+      ]}
+    />
+  )}
+  {bp?.strategyMap && (bp.strategyMap.northStarMetric || bp.strategyMap.inputMetrics || bp.strategyMap.moatsToBuild || bp.strategyMap.killCriteria) && (
+    <FactRow
+      caption={ui('Strategy map')}
+      rows={[
+        { label: ui('North-star metric'), value: bp.strategyMap.northStarMetric ?? null },
+        { label: ui('Input metrics'), value: Array.isArray(bp.strategyMap.inputMetrics) ? bp.strategyMap.inputMetrics.join(' · ') : null },
+        { label: ui('Moats to build'), value: Array.isArray(bp.strategyMap.moatsToBuild) ? bp.strategyMap.moatsToBuild.join(' · ') : null },
+        { label: ui('Kill criteria'), value: Array.isArray(bp.strategyMap.killCriteria) ? bp.strategyMap.killCriteria.join(' · ') : null },
+      ]}
+    />
+  )}
+  {Array.isArray(bp?.milestones) && (
+    <>
+      <h3 class="bz-section__head">{ui('Milestones')}</h3>
+      {bp.milestones.map((milestone: any) => (
+        <section class="bz-milestone">
+          <span class="bz-label bz-milestone__horizon">{milestone.horizon}</span>
+          <ul class="bz-list">
+            {(milestone.items ?? []).map((item: string) => <li>{item}</li>)}
+          </ul>
+        </section>
+      ))}
+    </>
+  )}
+  {bp?.strategyMap?.mermaid && (
+    <Mermaid title={ui('Strategy map')} code={bp.strategyMap.mermaid} />
+  )}
+  {Array.isArray(bp?.team) && bp.team.length > 0 && (
+    <>
+      <h3 class="bz-section__head">{ui('Founding team')}</h3>
+      <table class="bz-comp">
+        <thead>
+          <tr>
+            <th class="bz-label">{ui('Role')}</th>
+            <th class="bz-label">{ui('Start timing')}</th>
+            <th class="bz-label">{ui('Rationale')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {bp.team.map((member: any) => (
+            <tr>
+              <td>{member.role}</td>
+              <td>{member.startTiming}</td>
+              <td>{member.rationale}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  )}
+  {Array.isArray(bp?.experimentRoadmap) && bp.experimentRoadmap.length > 0 && (
+    <>
+      <h3 class="bz-section__head">{ui('Experiment roadmap')}</h3>
+      <table class="bz-comp">
+        <thead>
+          <tr>
+            <th class="bz-label">{ui('Horizon')}</th>
+            <th class="bz-label">{ui('Experiment')}</th>
+            <th class="bz-label">{ui('Hypothesis')}</th>
+            <th class="bz-label">{ui('Success metric')}</th>
+            <th class="bz-label">{ui('Owner')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {bp.experimentRoadmap.map((experiment: any) => (
+            <tr>
+              <td class="bz-label">{experiment.horizon}</td>
+              <td>{experiment.experiment}</td>
+              <td>{experiment.hypothesis}</td>
+              <td>{experiment.successMetric}</td>
+              <td>{experiment.owner}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  )}
+  {Array.isArray(bp?.risks) && bp.risks.length > 0 && (
+    <>
+      <h3 class="bz-section__head">{ui('Risk assessment')}</h3>
+      <RiskHeatmap risks={bp.risks} caption={`${ui('Business plan risks')} — ${bp.risks.length} ${ui('mapped')}`} lang={lang} />
+      <table class="bz-comp">
+        <thead>
+          <tr>
+            <th class="bz-label">{ui('Risk')}</th>
+            <th class="bz-label">{ui('Likelihood')}</th>
+            <th class="bz-label">{ui('Impact')}</th>
+            <th class="bz-label">{ui('Mitigation')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {bp.risks.map((risk: any) => (
+            <tr>
+              <td>{risk.risk}</td>
+              <td><span class={`bz-pill bz-pill--${(risk.likelihood ?? 'medium').toLowerCase()}`}>{risk.likelihood}</span></td>
+              <td><span class={`bz-pill bz-pill--${(risk.impact ?? 'medium').toLowerCase()}`}>{risk.impact}</span></td>
+              <td>{risk.mitigation}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  )}
+  {bp?.investorMemo?.firstCustomer && (
+    <FactRow
+      caption={ui('First customer')}
+      rows={[
+        { label: ui('Title'), value: bp.investorMemo.firstCustomer.title ?? null },
+        { label: ui('Profile'), value: bp.investorMemo.firstCustomer.profile ?? null },
+        { label: ui('Trigger'), value: bp.investorMemo.firstCustomer.trigger ?? null },
+        { label: ui('Buyer'), value: bp.investorMemo.firstCustomer.buyer ?? null },
+        { label: ui('Initial contract'), value: bp.investorMemo.firstCustomer.initialContract ?? null },
+      ]}
+    />
+  )}
+  {Array.isArray(bp?.investorMemo?.mustBeTrue) && bp.investorMemo.mustBeTrue.length > 0 && (
+    <>
+      <h3 class="bz-section__head">{ui('What must be true')}</h3>
+      <ul class="bz-list">
+        {bp.investorMemo.mustBeTrue.map((item: string) => <li>{item}</li>)}
+      </ul>
+    </>
+  )}
+  {Array.isArray(bp?.investorMemo?.diligenceQuestions) && bp.investorMemo.diligenceQuestions.length > 0 && (
+    <>
+      <h3 class="bz-section__head">{ui('Open diligence questions')}</h3>
+      <ul class="bz-list">
+        {bp.investorMemo.diligenceQuestions.map((question: string) => <li>{question}</li>)}
+      </ul>
+    </>
+  )}
+  {bp?.investorMemo?.verdict && (
+    <FactRow
+      caption={ui('Investor verdict')}
+      rows={[
+        { label: ui('Call'), value: bp.investorMemo.verdict.call ?? null },
+        { label: ui('Conviction'), value: bp.investorMemo.verdict.conviction ?? null },
+        { label: ui('Why believe'), value: bp.investorMemo.verdict.whyBelieve ?? null },
+        { label: ui('Why doubt'), value: bp.investorMemo.verdict.whyDoubt ?? null },
+        { label: ui('Next diligence'), value: bp.investorMemo.verdict.nextDiligence ?? null },
+      ]}
+    />
+  )}
+</div>

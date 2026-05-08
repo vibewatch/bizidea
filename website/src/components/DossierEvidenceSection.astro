@@ -1,0 +1,52 @@
+---
+import Ribbon from './Ribbon.astro';
+import { uiLabel } from '../lib/dossier-format';
+import { t, type Lang } from '../lib/i18n';
+import type { IdeaStage, ResearchStage } from '../lib/stage-schemas';
+
+interface Props {
+  idea: IdeaStage;
+  research: ResearchStage;
+  topRisks: string[];
+  lang?: Lang;
+}
+
+const { idea, research, topRisks, lang = 'en' } = Astro.props as Props;
+const ui = (label: string) => uiLabel(label, lang);
+---
+
+<Ribbon label={t('section.topRisks', lang)} id="risks" />
+<div class="bz-container bz-section">
+  {Array.isArray(idea?.topRisks) && idea.topRisks.length > 0 && typeof idea.topRisks[0] === 'object' ? (
+    <ul class="bz-list">
+      {idea.topRisks.map((risk: any) => (
+        <li>
+          <strong>{risk.name}.</strong> {risk.description} {risk.mitigation && (<><em class="bz-mute">{ui('Mitigation')}:</em> {risk.mitigation}</>)}
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <ul class="bz-list">
+      {topRisks.map((risk) => <li>{risk}</li>)}
+    </ul>
+  )}
+</div>
+
+<Ribbon label={t('section.evidence', lang)} id="evidence" />
+<div class="bz-container bz-section">
+  <div class="bz-evidence-grid">
+    {Array.isArray(research?.sources) && (
+      <section>
+        <h3 class="bz-section__head">{t('dossier.citedSources', lang)} ({research.sources.length})</h3>
+        <ol class="bz-bib">
+          {research.sources.map((source: any) => (
+            <li id={`cite-${source.id}`}>
+              <strong>{source.publisher}.</strong> {source.title}
+              {source.url && <span> · <a href={source.url} target="_blank" rel="noopener noreferrer">{source.url}</a></span>}
+            </li>
+          ))}
+        </ol>
+      </section>
+    )}
+  </div>
+</div>

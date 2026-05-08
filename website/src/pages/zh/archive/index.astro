@@ -1,118 +1,15 @@
 ---
 import { getCollection } from 'astro:content';
-import BaseLayout from '../../../layouts/BaseLayout.astro';
-import Ribbon from '../../../components/Ribbon.astro';
-import Rule from '../../../components/Rule.astro';
+import ArchiveIndexPage from '../../../components/ArchiveIndexPage.astro';
 import { hasZhTranslation } from '../../../content/ideas-loader';
-import { t, type Lang } from '../../../lib/i18n';
+import type { Lang } from '../../../lib/i18n';
 import { groupIdeasByMonth, sortIdeasNewestFirst } from '../../../lib/reports';
 
 const lang: Lang = 'zh';
 const all = (await getCollection('ideas')).filter((entry) => hasZhTranslation(entry.id));
 const sorted = sortIdeasNewestFirst(all);
 const monthGroups = groupIdeasByMonth(sorted, lang);
-
 const base = import.meta.env.BASE_URL;
 ---
-<BaseLayout
-  title={t('archive.title', lang)}
-  description={t('archive.description', lang)}
-  lang={lang}
-  langSwitchHref={`${base}archive/`}
->
-  <section class="bz-page-masthead">
-    <div class="bz-container">
-      <p class="bz-page-masthead__eyebrow bz-label">
-        {sorted.length} {sorted.length === 1 ? t('home.dossierCount.one', lang) : t('home.dossierCount.other', lang)}
-      </p>
-      <h1 class="bz-page-masthead__title">{t('archive.heading', lang)}</h1>
-      <p class="bz-page-masthead__deck">{t('archive.deck', lang)}</p>
-    </div>
-  </section>
 
-  <Rule weight="thin" />
-  <Ribbon label={t('archive.months.ribbon', lang)} id="archive-months" />
-
-  {monthGroups.length === 0 ? (
-    <div class="bz-container">
-      <p class="bz-empty bz-label">{t('home.empty', lang)}</p>
-    </div>
-  ) : (
-    <div class="bz-container">
-      <div class="bz-month-grid">
-        {monthGroups.map((month) => (
-          <a class="bz-month-card" href={`${base}${lang}/archive/${month.slug}/`}>
-            <span class="bz-month-card__label">{month.label}</span>
-            <span class="bz-month-card__count bz-label">
-              {month.entries.length} {month.entries.length === 1 ? t('home.dossierCount.one', lang) : t('home.dossierCount.other', lang)}
-            </span>
-            <span class="bz-month-card__cta bz-label">{t('archive.openMonth', lang)}</span>
-          </a>
-        ))}
-      </div>
-    </div>
-  )}
-</BaseLayout>
-
-<style>
-  .bz-month-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-4) var(--space-6);
-  }
-  .bz-month-card {
-    display: flex;
-    flex-direction: column;
-    min-height: 166px;
-    gap: var(--space-2);
-    background:
-      linear-gradient(135deg, rgba(153, 15, 61, 0.07), transparent 46%),
-      rgba(242, 223, 206, 0.55);
-    border-top: 3px solid var(--claret);
-    border-left: 3px solid transparent;
-    color: var(--ink-page);
-    text-decoration: none;
-    padding: var(--space-4);
-    transition: background 120ms ease, border-left-color 120ms ease, transform 120ms ease;
-  }
-  .bz-month-card:hover {
-    background:
-      linear-gradient(135deg, rgba(153, 15, 61, 0.11), transparent 48%),
-      var(--paper-wheat);
-    border-left-color: var(--claret);
-    transform: translateY(-2px);
-  }
-  .bz-month-card__label {
-    font-family: var(--font-display);
-    font-size: var(--fs-xl);
-    font-weight: 700;
-    line-height: 1.1;
-    letter-spacing: var(--tracking-display-snug);
-  }
-  .bz-month-card__count {
-    color: var(--caption-gray);
-    font-size: var(--fs-base);
-    border-top: var(--rule-hairline);
-    margin-top: var(--space-2);
-    padding-top: var(--space-3);
-  }
-  .bz-month-card__cta {
-    align-self: flex-start;
-    color: var(--claret);
-    margin-top: auto;
-    border-bottom: 2px solid currentColor;
-    padding-bottom: var(--space-1);
-    font-size: var(--fs-base);
-  }
-  .bz-month-card:hover .bz-month-card__cta { color: var(--ink-page); }
-  @media (max-width: 1023px) {
-    .bz-month-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (max-width: 599px) { .bz-month-grid { grid-template-columns: 1fr; } }
-
-  .bz-empty {
-    color: var(--caption-gray);
-    padding-block: var(--space-7);
-    text-align: center;
-  }
-</style>
+<ArchiveIndexPage totalCount={sorted.length} monthGroups={monthGroups} lang={lang} langSwitchHref={`${base}archive/`} />

@@ -1,0 +1,185 @@
+---
+import CitedText from './CitedText.astro';
+import FactRow from './FactRow.astro';
+import MarketMap from './MarketMap.astro';
+import MarketSizing from './MarketSizing.astro';
+import Ribbon from './Ribbon.astro';
+import { linkifyCitations } from '../lib/citations';
+import { uiLabel } from '../lib/dossier-format';
+import { citationAriaLabel, t, type Lang } from '../lib/i18n';
+import type { ResearchStage } from '../lib/stage-schemas';
+
+interface Props {
+  research: ResearchStage;
+  lang?: Lang;
+}
+
+const { research, lang = 'en' } = Astro.props as Props;
+const ui = (label: string) => uiLabel(label, lang);
+const citationLabel = (id: number | string) => citationAriaLabel(id, lang);
+---
+
+<Ribbon label={t('section.market', lang)} id="market" />
+<div class="bz-container bz-section">
+  <div class="bz-market-grid">
+    <MarketSizing
+      tam={research?.market?.tam?.value ?? null}
+      sam={research?.market?.sam?.value ?? null}
+      som={research?.market?.som?.value ?? null}
+      lang={lang}
+    />
+    <FactRow
+      caption={t('label.marketSizing', lang)}
+      rows={[
+        { label: 'TAM', value: research?.market?.tam?.value ?? null, subHtml: linkifyCitations(research?.market?.tam?.rationale, lang) },
+        { label: 'SAM', value: research?.market?.sam?.value ?? null, subHtml: linkifyCitations(research?.market?.sam?.rationale, lang) },
+        { label: 'SOM', value: research?.market?.som?.value ?? null, subHtml: linkifyCitations(research?.market?.som?.rationale, lang) },
+      ]}
+    />
+  </div>
+  {research?.reportMemo?.executiveTakeaways && (
+    <>
+      <h3 class="bz-section__head">{ui('Executive takeaways')}</h3>
+      <ul class="bz-list">
+        {research.reportMemo.executiveTakeaways.map((takeaway: string) => <li><CitedText text={takeaway} lang={lang} /></li>)}
+      </ul>
+    </>
+  )}
+  {research?.reportMemo?.marketDefinition && (
+    <>
+      <h3 class="bz-section__head">{ui('Market definition')}</h3>
+      <p class="bz-story__lead"><CitedText text={research.reportMemo.marketDefinition} lang={lang} /></p>
+    </>
+  )}
+  {research?.reportMemo?.customerAndBuyer && (
+    <>
+      <h3 class="bz-section__head">{ui('Customer and buyer')}</h3>
+      <p class="bz-story__lead"><CitedText text={research.reportMemo.customerAndBuyer} lang={lang} /></p>
+    </>
+  )}
+  {Array.isArray(research?.reportMemo?.buyingTriggers) && research.reportMemo.buyingTriggers.length > 0 && (
+    <>
+      <h3 class="bz-section__head">{ui('Buying triggers')}</h3>
+      <ul class="bz-list">
+        {research.reportMemo.buyingTriggers.map((trigger: any) => (
+          <li>
+            <CitedText text={trigger.point} lang={lang} />
+            {Array.isArray(trigger.sourceRefs) && trigger.sourceRefs.length > 0 && (
+              <span class="bz-cite-trail"> {trigger.sourceRefs.map((id: number) => (
+                <a class="bz-cite" href={`#cite-${id}`} aria-label={citationLabel(id)}>[{id}]</a>
+              ))}</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </>
+  )}
+  {research?.reportMemo?.willingnessToPay?.summary && (
+    <>
+      <h3 class="bz-section__head">{ui('Willingness to pay')}</h3>
+      <p class="bz-story__lead">
+        <CitedText text={research.reportMemo.willingnessToPay.summary} lang={lang} />
+        {Array.isArray(research.reportMemo.willingnessToPay.sourceRefs) && research.reportMemo.willingnessToPay.sourceRefs.length > 0 && (
+          <span class="bz-cite-trail"> {research.reportMemo.willingnessToPay.sourceRefs.map((id: number) => (
+            <a class="bz-cite" href={`#cite-${id}`} aria-label={citationLabel(id)}>[{id}]</a>
+          ))}</span>
+        )}
+      </p>
+    </>
+  )}
+  {research?.categoryDynamics && (research.categoryDynamics.tailwinds || research.categoryDynamics.headwinds) && (
+    <>
+      <h3 class="bz-section__head">{ui('Category dynamics')}</h3>
+      {research.categoryDynamics.growthRate && (
+        <p class="bz-mini-meta"><span class="bz-label">{ui('Growth signal')}</span> {research.categoryDynamics.growthRate}</p>
+      )}
+      <div class="bz-twocol">
+        {Array.isArray(research.categoryDynamics.tailwinds) && (
+          <section>
+            <h4 class="bz-mini-head bz-mini-head--up">{ui('Tailwinds')}</h4>
+            <ul class="bz-list">
+              {research.categoryDynamics.tailwinds.map((tailwind: any) => (
+                <li><CitedText text={tailwind.point} lang={lang} /></li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {Array.isArray(research.categoryDynamics.headwinds) && (
+          <section>
+            <h4 class="bz-mini-head bz-mini-head--down">{ui('Headwinds')}</h4>
+            <ul class="bz-list">
+              {research.categoryDynamics.headwinds.map((headwind: any) => (
+                <li><CitedText text={headwind.point} lang={lang} /></li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
+    </>
+  )}
+  {Array.isArray(research?.validationSignals) && research.validationSignals.length > 0 && (
+    <>
+      <h3 class="bz-section__head">{ui('Validation signals')}</h3>
+      <ul class="bz-list">
+        {research.validationSignals.map((signal: any) => (
+          <li><CitedText text={signal.point} lang={lang} /></li>
+        ))}
+      </ul>
+    </>
+  )}
+  {Array.isArray(research?.regulatoryTechnicalConstraints) && research.regulatoryTechnicalConstraints.length > 0 && (
+    <>
+      <h3 class="bz-section__head">{ui('Regulatory & technical constraints')}</h3>
+      <ul class="bz-list">
+        {research.regulatoryTechnicalConstraints.map((constraint: any) => (
+          <li><CitedText text={constraint.point} lang={lang} /></li>
+        ))}
+      </ul>
+    </>
+  )}
+  {Array.isArray(research?.adoptionFrictionMatrix) && research.adoptionFrictionMatrix.length > 0 && (
+    <>
+      <h3 class="bz-section__head">{ui('Adoption friction')}</h3>
+      <table class="bz-comp">
+        <thead>
+          <tr>
+            <th class="bz-label">{ui('Friction')}</th>
+            <th class="bz-label">{ui('Severity')}</th>
+            <th class="bz-label">{ui('Affected buyer')}</th>
+            <th class="bz-label">{ui('Mitigation')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {research.adoptionFrictionMatrix.map((friction: any) => (
+            <tr>
+              <td>{friction.friction}</td>
+              <td><span class={`bz-pill bz-pill--${(friction.severity ?? 'medium').toLowerCase()}`}>{friction.severity}</span></td>
+              <td>{friction.affectedBuyer}</td>
+              <td>{friction.mitigation}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  )}
+  {Array.isArray(research?.pestle) && research.pestle.length > 0 && (
+    <>
+      <h3 class="bz-section__head">{ui('PESTLE')}</h3>
+      <ul class="bz-pestle">
+        {research.pestle.map((item: any) => (
+          <li class={`bz-pestle__item bz-pestle__item--${(item.impact ?? 'neutral').toLowerCase()}`}>
+            <span class="bz-pestle__factor bz-label">{item.factor}</span>
+            <span class="bz-pestle__point"><CitedText text={item.point} lang={lang} /></span>
+          </li>
+        ))}
+      </ul>
+    </>
+  )}
+  {research?.analysisModels?.marketMapDiagram?.mermaid && (
+    <MarketMap
+      title={research.analysisModels.marketMapDiagram.title}
+      mermaid={research.analysisModels.marketMapDiagram.mermaid}
+      lang={lang}
+    />
+  )}
+</div>
