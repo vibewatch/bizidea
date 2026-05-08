@@ -12,7 +12,7 @@ agents: ["News Triage", "Idea Generator", "Market Researcher", "Business Plan Wr
   so update both at the same time.
 
   The `model:` field is a fallback only. The Cloudflare scheduler and the
-  `bizidea.yml` workflow pass `--model` and `--effect` to the Copilot CLI,
+  `bizidea.yml` workflow pass `--model` and `--effort` to the Copilot CLI,
   which override frontmatter. Treat the dispatcher's choice (default
   `gpt-5.4` / `xhigh`) as authoritative; quality-bar thresholds in this
   agent and its specialists are calibrated for that default.

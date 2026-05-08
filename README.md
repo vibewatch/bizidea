@@ -113,7 +113,7 @@ In CI, the Cloudflare scheduler dispatches the workflow daily. Manual triggers:
 
   ```bash
   npm install -g @github/copilot
-  copilot --yolo --model gpt-5.4 --effect xhigh --agent Bizidea \
+  copilot --yolo --model gpt-5.4 --effort xhigh --agent Bizidea \
     -p "Scan yesterday's startup news and generate up to 5 non-duplicate startup reports."
   ```
 
