@@ -76,7 +76,7 @@ The minimum-fields contract for each stage YAML lives in [.github/agents/bizidea
 | `ideas/` | Report folders (English + `*.zh.yaml`). `_index.yaml` = aggregated history. `_triage/<ts>/` = daily triage. `_`-prefixed paths ignored by Astro. |
 | `website/` | [Astro 5](https://astro.build) site that renders reports. |
 | `cloudflare/` | Cloudflare Worker scheduler. |
-| `.github/agents/` | Copilot agents: `Bizidea` orchestrator, the seven specialists above, and shared references (`handoff-protocol.md`, `sector-vocabulary.md`, `zh-translation-style.md`, `yaml-syntax.md`). |
+| `.github/agents/` | Copilot agents: `Bizidea` orchestrator, the seven specialists above, and shared references (`handoff-protocol.md`, `sector-vocabulary.md`, `yaml-syntax.md`). |
 | `.github/workflows/` | `bizidea.yml` (Cloudflare-dispatched run) and `deploy.yml` (publishes the site on `main` pushes touching `website/**` or `ideas/**`). |
 | `scripts/` | Deterministic Node helpers: `ideas-index.mjs`, `dedupe-idea.mjs`, `report-dir.mjs`, `validate-stage.mjs`, `check-agent-frontmatter.mjs`, `check-zh-translation.mjs`, `check-near-duplicates.mjs`, `validate-all.mjs`, shared `text.mjs`. |
 | [AGENTS.md](AGENTS.md) | Coding-agent quick reference (commands, layout, YAML conventions). |
