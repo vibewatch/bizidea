@@ -8,7 +8,14 @@ interface Props {
 const { size = 'block', as: Tag = 'h2', href, class: cls = '' } = Astro.props as Props;
 ---
 <Tag class:list={['bz-headline', `bz-headline--${size}`, cls]}>
-  {href ? <a href={href}><slot /></a> : <slot />}
+  {href ? (
+    <a href={href}>
+      <slot />
+      <svg class="bz-headline__arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+        <path d="M3 8h9M8.5 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  ) : <slot />}
 </Tag>
 <style>
   .bz-headline {
@@ -40,13 +47,28 @@ const { size = 'block', as: Tag = 'h2', href, class: cls = '' } = Astro.props as
   .bz-headline a {
     color: inherit;
     text-decoration: none;
+    transition: color 160ms ease;
   }
   .bz-headline a:hover,
   .bz-headline a:focus-visible {
     color: var(--claret);
-    text-decoration: underline;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 4px;
-    text-decoration-color: rgba(153, 15, 61, 0.5);
+  }
+  .bz-headline__arrow {
+    width: 0.7em;
+    height: 0.7em;
+    margin-left: 0.25em;
+    vertical-align: -0.05em;
+    opacity: 0;
+    transform: translateX(-0.25em);
+    transition: opacity 180ms ease, transform 220ms ease;
+  }
+  .bz-headline a:hover .bz-headline__arrow,
+  .bz-headline a:focus-visible .bz-headline__arrow {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bz-headline a,
+    .bz-headline__arrow { transition: none; }
   }
 </style>
