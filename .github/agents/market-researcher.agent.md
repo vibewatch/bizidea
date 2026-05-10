@@ -265,6 +265,7 @@ Rules:
 - `researchCoverage.sourcesFetched` SHOULD be at least `100`. If it is less than `100`, `researchCoverage.coverageGap` MUST explain why the topic/time window did not yield 100 credible fetchable sources.
 - `researchCoverage.sourcesRetained` MUST equal `evidenceCorpus.length` after duplicate removal.
 - `researchCoverage.duplicatesRemoved` MUST equal `deduplication.duplicatesRemoved`.
+- `researchCoverage.sourcesFound`/`sourcesFetched` count the agent's whole discovery and fetch effort across all search buckets; `deduplication.candidateUrlsFound`/`candidateUrlsFetched` count only the inputs to the dedup pass. They are usually equal but may differ when a bucket was discarded before dedup (e.g. all SERPs); record both honestly rather than copying one into the other.
 - `evidenceCorpus` SHOULD contain at least 100 entries. Every entry must have `fetchVerified: true`; otherwise drop it.
 - `sources` is the strict subset of `evidenceCorpus` entries with `usedInMemo: true`. Each `sources[].id` MUST equal the `id` of the same entry in `evidenceCorpus` — do not renumber. This keeps `sourceRefs` unambiguous when a reader cross-references the audit corpus.
 - `sources` should contain the 20–40 strongest cited entries from `evidenceCorpus`, unless the evidence base is smaller.

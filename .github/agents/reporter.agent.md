@@ -28,7 +28,7 @@ The orchestrator must invoke you with one absolute report folder path containing
 
 ## Approach
 1. Read in order: `idea.yaml`, `research.yaml`, `business-plan.yaml`, `financial-model.yaml`.
-2. From `idea.yaml`: `slug`, `pitch`, `date`, `sector`, `topRisks` (use the `name` field of each risk).
+2. From `idea.yaml`: `slug`, `pitch`, `date`, `sector`, `topRisks` (use the `name` field of each risk; if `idea.yaml.topRisks` has more than 3 entries, take the first 3 in source order so the website always renders exactly three risk pills).
 3. From `idea.yaml.sourceContext`: the `topic` prompt (verbatim), `timeWindow`, and `timeWindowLabel`.
 4. From `research.yaml`: `market.tam.value`, `market.sam.value`, `market.som.value` (preserve units like `$0.37B–$0.66B`, `$10M`).
 5. From `financial-model.yaml`: `totals.y1`/`y2`/`y3` for revenue, EBITDA, ending cash; `fundingAsk.amountM`, `fundingAsk.round`, `fundingAsk.runwayMonths`.
@@ -69,7 +69,7 @@ Rationale writing rules:
   Inputs: `idea.yaml.sourceContext.signals.length`, `idea.yaml.sourceContext.timeWindow`, `idea.yaml.whyNow`.
   Anchors: `1` = thin or stale signal; `3` = clear current trend with multiple sources; `5` = breakout moment with multiple converging recent signals.
 
-Compute `overall` = the weighted sum `0.30 * market + 0.30 * differentiation + 0.25 * execution + 0.15 * timeliness`, then round half-up to one decimal place (e.g. `3.55` → `3.6`, `3.54` → `3.5`). Always include all four dimensions even if you must default to `3` with rationale `"insufficient data"`.
+Compute `overall` = the weighted sum `0.30 * market + 0.30 * differentiation + 0.25 * execution + 0.15 * timeliness`, then round half-up to one decimal place (e.g. `3.55` → `3.6`, `3.54` → `3.5`). The same half-up convention is used by `News Triage.signalStrength`. Always include all four dimensions even if you must default to `3` with rationale `"insufficient data"`.
 
 ## YAML syntax rules
 

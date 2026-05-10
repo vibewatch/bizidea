@@ -45,9 +45,11 @@ const ZH_FILES = [
 // `sensitivityCases[].impact` which holds a free-form description) are not
 // flagged. `topRisks` is intentionally absent: in `idea.yaml` it is
 // `[ {name, description, mitigation} ]` (no enum) and in `index.yaml` it is
-// `[string]`.
+// `[string]`. `riskHeatmap` is also absent: the field was removed from the
+// business-plan schema, but old reports may still carry it; tolerate the
+// historical Chinese values rather than retroactively flagging them.
 const ENUM_PATH_PATTERNS = [
-  /(^|\.)(riskHeatmap|risks)\[\d+\]\.(likelihood|impact)$/,
+  /(^|\.)risks\[\d+\]\.(likelihood|impact)$/,
   /(^|\.)pestle\[\d+\]\.impact$/,
 ];
 

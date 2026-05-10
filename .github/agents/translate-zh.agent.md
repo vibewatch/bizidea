@@ -69,8 +69,6 @@ Never translate values at these paths; the website depends on the exact ASCII to
 
 | Path | Allowed values |
 |---|---|
-| `**.riskHeatmap[*].likelihood` | `Low`, `Medium`, `High` |
-| `**.riskHeatmap[*].impact` | `Low`, `Medium`, `High` |
 | `**.risks[*].likelihood` | `Low`, `Medium`, `High` |
 | `**.risks[*].impact` | `Low`, `Medium`, `High` |
 | `**.pestle[*].impact` | `positive`, `negative`, `neutral` |
@@ -78,17 +76,18 @@ Never translate values at these paths; the website depends on the exact ASCII to
 | `sector`, `kicker`, `slug`, `runId`, `folderSlug` | source value verbatim |
 | `eventType`, `topicScope`, `timeWindow`, `timeWindowLabel` | source value verbatim |
 
-These are bucket keys, not labels. Translating them silently breaks the heatmap and pill colors. Note: `topRisks` carries no `likelihood/impact` in any current artifact (it is `[ {name, description, mitigation} ]` in `idea.yaml` and `[string]` in `index.yaml`); only `risks[]` and `riskHeatmap[]` (in `business-plan.yaml`) have those enum fields.
+These are bucket keys, not labels. Translating them silently breaks the heatmap and pill colors. Note: `topRisks` carries no `likelihood/impact` in any current artifact (it is `[ {name, description, mitigation} ]` in `idea.yaml` and `[string]` in `index.yaml`); only `risks[]` (in `business-plan.yaml`) has those enum fields.
 
 ## Categorical labels to translate
 
-These fields look short and structural but are rendered as visible text. They must contain Chinese characters in `*.zh.yaml`:
+These fields look short and structural but are rendered as visible text. They must contain Chinese characters in `*.zh.yaml`. The deterministic linter ([scripts/check-zh-translation.mjs](../../scripts/check-zh-translation.mjs)) enforces every entry in this list (rule R4):
 
 - `**.incumbentThesis[*].incumbentClass` (e.g. `Workflow tools` → `工作流工具`)
 - `**.team[*].role` (e.g. `Founder CEO` → `创始人/CEO`)
 - `**.experimentRoadmap[*].horizon` and `**.milestones[*].horizon` (e.g. `0–90 days` → `0–90 天`, `12–24 months` → `12–24 个月`)
 - `topRisks[]` items in `index.zh.yaml`
-- Any `title`, `name`, or `factor` field used as a section heading or list label
+
+Other reader-facing labels (`title`, `name`, `factor`, etc.) should also be translated when they appear as headings or list labels in the source, but the linter does not enforce them path-by-path; the reflection-and-revision pass in [zh-translation-style.md](./zh-translation-style.md) is responsible for catching missed ones.
 
 ## Cross-reference mirroring
 

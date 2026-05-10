@@ -19,6 +19,12 @@ const STAGES = {
   idea: {
     file: 'idea.yaml',
     requiredKeys: ['slug', 'date', 'pitch', 'sourceContext', 'startupThesis', 'goToMarketSeed', 'solution'],
+    // `topRisks` must contain exactly 3 entries; the website's check-ideas.mjs
+    // also enforces this for idea.yaml/idea.zh.yaml/index.yaml/index.zh.yaml.
+    // Catching it here lets the writer agent self-correct before handoff.
+    requiredArrays: [
+      [['topRisks'], 3, 3],
+    ],
   },
   research: {
     file: 'research.yaml',
@@ -41,6 +47,9 @@ const STAGES = {
   index: {
     file: 'index.yaml',
     requiredKeys: ['slug', 'date', 'pitch', 'rating', 'files', 'financials'],
+    requiredArrays: [
+      [['topRisks'], 3, 3],
+    ],
   },
 };
 
@@ -113,18 +122,32 @@ for (const path of spec.requiredNested ?? []) {
   if (!ok || cursor == null) missing.push(path.join('.'));
 }
 
-for (const [path, minLength] of spec.requiredArrays ?? []) {
+for (const entry of spec.requiredArrays ?? []) {
+  // Tuple shape: [path, minLength, maxLength?]. Omitting maxLength means "any
+  // length ≥ minLength". Use minLength === maxLength for an exact-count check.
+  const [path, minLength, maxLength] = entry;
+  const pathLabel = path.join('.');
+  const reportedAsNested = (spec.requiredNested ?? []).some((p) => p.length === path.length && p.every((seg, i) => seg === path[i]));
   let cursor = parsed;
   let ok = true;
   for (const segment of path) {
     if (cursor == null || typeof cursor !== 'object' || !(segment in cursor)) { ok = false; break; }
     cursor = cursor[segment];
   }
-  if (!ok || cursor == null) continue; // already reported via requiredNested
+  if (!ok || cursor == null) {
+    if (!reportedAsNested) missing.push(pathLabel);
+    continue;
+  }
   if (!Array.isArray(cursor)) {
-    missing.push(`${path.join('.')} (must be a list)`);
-  } else if (cursor.length < minLength) {
-    missing.push(`${path.join('.')} (need at least ${minLength} entr${minLength === 1 ? 'y' : 'ies'})`);
+    missing.push(`${pathLabel} (must be a list)`);
+    continue;
+  }
+  if (cursor.length < minLength) {
+    missing.push(`${pathLabel} (need at least ${minLength} entr${minLength === 1 ? 'y' : 'ies'}, got ${cursor.length})`);
+    continue;
+  }
+  if (typeof maxLength === 'number' && cursor.length > maxLength) {
+    missing.push(`${pathLabel} (must contain at most ${maxLength} entr${maxLength === 1 ? 'y' : 'ies'}, got ${cursor.length})`);
   }
 }
 

@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 // Deterministic post-idea dedup gate. It compares a freshly generated
 // idea.yaml against ideas/_index.yaml and optionally removes partial folders.
+//
+// Sister script: `scripts/check-near-duplicates.mjs` is a post-hoc review of
+// the entire `_index.yaml` and uses different (broader) thresholds for
+// catching adjacent-but-legitimate stories. Tune the two scripts together if
+// you change either threshold set.
 
 import { existsSync, readFileSync, rmSync, appendFileSync } from 'node:fs';
 import { resolve, join, basename } from 'node:path';

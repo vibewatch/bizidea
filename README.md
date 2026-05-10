@@ -35,8 +35,8 @@ flowchart TD
     end
 
     zhFiles --> finalize{{"Bizidea finalize"}}
-    finalize -->|"node scripts/ideas-index.mjs"| indexFile[("ideas/_index.yaml<br/>aggregated history")]
-    finalize -->|"npm --prefix website run check:ideas"| validate["validate completed folders"]
+    finalize -->|"node scripts/ideas-index.mjs --strict"| indexFile[("ideas/_index.yaml<br/>aggregated history")]
+    finalize -->|"npm run validate:all"| validate["validate everything"]
     indexFile --> push["git commit &amp; push"]
     push --> deploy[".github/workflows/deploy.yml<br/>Astro build &rarr; GitHub Pages"]
 ```
@@ -53,7 +53,7 @@ flowchart TD
 | 5 | **Financial Modeler** | `<folder>/financial-model.yaml` | 3-year model: monthly Y1 + quarterly Y2/Y3 P&L, headcount, CAC/LTV/payback, runway-based funding ask, `sanityChecks.flags`, `modelSanity` summary. Every number ties to `assumptions[]`. |
 | 6 | **Reporter** | `<folder>/index.yaml` | Extracts and rates (does not reinterpret) into the compact website sidecar. Preserves units (`K`, `M`); missing values → `null`. |
 | 7 | **ZH Translator** | `<folder>/*.zh.yaml` (×5) | Two-pass EN→zh-CN (draft + reflection/revision). Schema-preserving; never modifies English sources. |
-| ∞ | **Bizidea** finalize | `ideas/_index.yaml` | After all five `*.zh.yaml` exist, rebuilds history index and runs `npm --prefix website run check:ideas`. |
+| ∞ | **Bizidea** finalize | `ideas/_index.yaml` | After all five `*.zh.yaml` exist, sweeps partial `<runTimestamp>-*` folders, rebuilds the history index with `--strict`, then runs `npm run validate:all` (the same superset CI uses). |
 
 ### Orchestration rules
 
@@ -113,7 +113,7 @@ In CI, the Cloudflare scheduler dispatches the workflow daily. Manual triggers:
 
   ```bash
   npm install -g @github/copilot
-  copilot --yolo --model gpt-5.4 --effort xhigh --agent Bizidea \
+  copilot --yolo --autopilot --model gpt-5.4 --effort xhigh --agent Bizidea \
     -p "Scan yesterday's startup news and generate up to 5 non-duplicate startup reports."
   ```
 

@@ -42,7 +42,7 @@ The orchestrator must provide one absolute report folder path, `triagePath`, `cl
 2. Confirm the cluster is `selected: true` and `dedupeStatus: new`. If not, stop and report failure.
 3. Build `sourceContext` directly from the cluster:
    - `topic`: `cluster.proposedTopic`.
-   - `topicScope`: `narrow`.
+   - `topicScope`: copy verbatim from the triage root (`broad` or `narrow`); do not assume a fixed value.
    - `timeWindow` and `timeWindowLabel` from the triage root.
    - `sectorHint`, `headline`, `scoreRationale`, `selectionRationale`, `dedupeRationale` from the cluster.
    - `sources`: `cluster.sourceBriefs` if present; otherwise convert `topSourceUrls` into minimal source entries and clearly note the evidence gap in `sourceContext.gaps`.
@@ -75,7 +75,7 @@ sector: one entry from the closed vocabulary
 pitch: ≤140-char elevator line
 sourceContext:
   topic: cluster proposedTopic
-  topicScope: narrow
+  topicScope: broad|narrow
   timeWindow: YYYY-MM-DD to YYYY-MM-DD
   timeWindowLabel: string|null
   sectorHint: one entry from the closed vocabulary

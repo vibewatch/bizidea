@@ -112,12 +112,6 @@ investorMemo:
     initialContract: credible pilot/ACV range and conversion path
   mustBeTrue: [5 concise falsifiable investment-test bullets]
   diligenceQuestions: [4–6 diligence questions an investor should ask next]
-  riskHeatmap:
-    - risk: string
-      likelihood: Low|Medium|High
-      impact: Low|Medium|High
-      leadingIndicator: observable disconfirming signal
-      mitigation: string
 operatingAssumptions:
   - assumption: string
     basis: idea.yaml|research.yaml|operator judgment
@@ -164,7 +158,6 @@ Rules:
 - `investorMemo.verdict.call` should be candid. Use `Meet / investigate further` only when the evidence supports a plausible partner meeting; use `Watch` or `Pass` when customer timing, differentiation, or market size is weak.
 - `investorMemo.mustBeTrue` should contain exactly 5 bullets, each falsifiable in customer or market diligence.
 - `investorMemo.diligenceQuestions` should contain 4–6 concise questions, not generic advice.
-- `investorMemo.riskHeatmap` should be derived from `risks`, but add a concrete `leadingIndicator` for each risk so the website can render an investor risk table.
 
 ## Handoff
 
