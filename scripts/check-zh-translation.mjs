@@ -43,19 +43,33 @@ const ZH_FILES = [
 // stay ASCII (Low/Medium/High, positive/negative/neutral) regardless of
 // language. We match by path so similarly-named narrative fields (e.g.
 // `sensitivityCases[].impact` which holds a free-form description) are not
-// flagged.
+// flagged. `topRisks` is intentionally absent: in `idea.yaml` it is
+// `[ {name, description, mitigation} ]` (no enum) and in `index.yaml` it is
+// `[string]`.
 const ENUM_PATH_PATTERNS = [
-  /(^|\.)(riskHeatmap|topRisks|risks|riskRegister)\[\d+\]\.(likelihood|impact)$/,
+  /(^|\.)(riskHeatmap|risks)\[\d+\]\.(likelihood|impact)$/,
   /(^|\.)pestle\[\d+\]\.impact$/,
 ];
 
-// Fields whose values are short categorical labels rendered verbatim. They
-// must contain at least one CJK character in *.zh.yaml.
-const LABEL_KEYS = new Set([
-  'incumbentClass',
-  'horizon',
-  'role',
-]);
+// Path patterns whose values are short categorical labels rendered verbatim.
+// They must contain at least one CJK character in *.zh.yaml. Matched by full
+// path so that similarly-named narrative fields (e.g. an arbitrary `role:`
+// enum) are not flagged.
+const LABEL_PATH_PATTERNS = [
+  /(^|\.)incumbentThesis\[\d+\]\.incumbentClass$/,
+  /(^|\.)team\[\d+\]\.role$/,
+  /(^|\.)experimentRoadmap\[\d+\]\.horizon$/,
+  /(^|\.)milestones\[\d+\]\.horizon$/,
+];
+
+// Top-level string-array paths whose items are reader-facing labels and must
+// be translated. In `index.zh.yaml`, `topRisks` is `[string]` and is rendered
+// directly on the website; English strings here would leak into the Chinese
+// page. In `idea.zh.yaml`, `topRisks` is a list of objects (no string items)
+// so this pattern simply does not match — no false positive.
+const LABEL_ITEM_PATH_PATTERNS = [
+  /^topRisks\[\d+\]$/,
+];
 
 // Fields that hold cross-reference titles which must exactly match a
 // `signals[].title` value in the same file.
@@ -151,6 +165,18 @@ function lintFile(absPath, signalTitles) {
         });
       }
     }
+    // R4 untranslated label on top-level string-array items (e.g.
+    // `topRisks[0]` in `index.zh.yaml`). Object-keyed labels are handled by
+    // the second walk below.
+    if (typeof node === 'string' && LABEL_ITEM_PATH_PATTERNS.some((re) => re.test(path))) {
+      if (ASCII_LETTER_RE.test(node) && !CJK_RE.test(node)) {
+        issues.push({
+          rule: 'R4-label-untranslated',
+          path,
+          message: `label "${node}" has no Chinese characters.`,
+        });
+      }
+    }
   });
 
   walk(parsed, '', (node, path) => {
@@ -181,7 +207,7 @@ function lintFile(absPath, signalTitles) {
         }
       }
       // R4 untranslated label
-      if (LABEL_KEYS.has(key) && typeof value === 'string') {
+      if (typeof value === 'string' && LABEL_PATH_PATTERNS.some((re) => re.test(childPath))) {
         if (ASCII_LETTER_RE.test(value) && !CJK_RE.test(value)) {
           issues.push({
             rule: 'R4-label-untranslated',

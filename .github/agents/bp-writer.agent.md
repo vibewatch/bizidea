@@ -27,7 +27,6 @@ The orchestrator must invoke you with one absolute report folder path containing
 - DO NOT pad. Each field must say something specific and falsifiable.
 - ONLY write `business-plan.yaml` in the folder you were given.
 - You are not done after reading inputs. You must create or overwrite `<folder>/business-plan.yaml` with valid YAML before returning a handoff.
-- After writing, run `node scripts/validate-stage.mjs <folder> business-plan` from the repo root and confirm it exits zero (this loads the file, parses it, and verifies required fields). If it fails, fix the missing field and re-run before returning `HANDOFF`.
 
 ## Approach
 1. Read both inputs in full.
@@ -35,6 +34,7 @@ The orchestrator must invoke you with one absolute report folder path containing
 3. Draft section-by-section in the schema order. Keep entries tight; prefer short bullets over long paragraphs.
 4. Run a coherence check before writing: product roadmap, GTM, pricing, team, milestones, risks, and funding ask must describe the same company at the same stage.
 5. Do not add provenance fields unless they appear in the schema. When an assumption depends on one input file, mention the basis in natural language (e.g. "based on the researched SOM"), but keep each field in the exact type shown below.
+6. Run `node scripts/validate-stage.mjs <folder> business-plan` from the repo root and confirm it exits zero (this loads the file, parses it, and verifies required fields). If it fails, fix the missing field and re-run before returning `HANDOFF`.
 
 ## Professional judgment checklist
 
@@ -147,7 +147,7 @@ risks:
     impact: Low|Medium|High
     mitigation: string
 fundingAsk:
-  round: pre-seed|seed
+  round: pre-seed|seed|series-a|series-b|series-c
   targetFundingRangeUsd: "e.g. $2–4M"
   runwayMonths: 18
   useOfFundsSummary: "string — what 18 months of runway buys"
@@ -156,7 +156,7 @@ fundingAsk:
 Rules:
 - Use `null` (not empty string) when a value is genuinely missing.
 - Specific dollar amounts will be set by the financial model; here `fundingAsk.targetFundingRangeUsd` is the target band.
-- `fundingAsk.round` MUST match the value Financial Modeler will write to `financial-model.yaml.fundingAsk.round` (`pre-seed` | `seed` | `series-a` | etc.) so downstream agents can cross-reference one field name.
+- `fundingAsk.round` MUST match the value Financial Modeler will write to `financial-model.yaml.fundingAsk.round`. Allowed values: `pre-seed`, `seed`, `series-a`, `series-b`, `series-c`.
 - `strategicChoices` should explain the hard choices behind the plan, especially what is intentionally deferred.
 - `operatingAssumptions` should contain 3–6 assumptions that materially affect GTM, product scope, hiring, pricing, or funding; every entry must include a concrete validation test and decision impact.
 - `strategyMap.mermaid` must be valid Mermaid `flowchart` syntax (use a YAML literal block scalar `|` to preserve newlines); do not wrap it in Markdown fences.

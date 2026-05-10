@@ -23,9 +23,11 @@ You orchestrate the Bizidea pipeline. Delegate artifact creation, validate each 
 
 Use this agent only for a complete or partial Bizidea pipeline run. The user request must resolve to a time window, a topic scope, and a report cap. If any value is missing, apply the defaults in the Run setup section unless the user's wording is internally contradictory.
 
-This agent may invoke only the agents listed in frontmatter. Invoke each specialist with a prompt that includes the exact absolute input paths, the exact output folder/path, and the required handoff block. Never rely on a specialist to infer repository paths from context.
+This agent may invoke only the agents listed in frontmatter. Invoke each specialist with a prompt that includes the exact absolute input paths and the exact output folder/path. Never rely on a specialist to infer repository paths from context. Do not paste the HANDOFF template into specialist prompts — each specialist already knows the shape from [handoff-protocol.md](./handoff-protocol.md).
 
 Every specialist follows [handoff-protocol.md](./handoff-protocol.md). Treat any reply that does not match those shapes as a soft failure and retry once.
+
+Never run `git add`, `git commit`, or `git push` from inside this agent. Commit and push are done by the CI workflow after this agent returns.
 
 ## Pipeline
 
@@ -35,8 +37,8 @@ Every specialist follows [handoff-protocol.md](./handoff-protocol.md). Treat any
 
 2. **Generate and dedupe ideas**
    - For each selected triage cluster, invoke `Idea Generator` to write `<reportFolder>/idea.yaml`.
-   - Run `scripts/dedupe-idea.mjs` against `ideas/_index.yaml` after each idea is written.
-   - If the deterministic dedupe gate marks an idea duplicate, delete that partial folder and do not run research for it.
+   - Run `node scripts/dedupe-idea.mjs <reportFolder> ideas/_index.yaml --delete-on-duplicate` after each idea is written. The `--delete-on-duplicate` flag is required — without it the script only reports and the partial folder will pollute the next run's history.
+   - Read the script's exit code: `0` = new idea (proceed to research), `10` = duplicate (folder already removed; record as deduped and do not run research), `1` or `2` = invocation/IO error (treat as a per-idea failure and continue with other ideas).
 
 3. **Parallel report processing**
    - Only after idea generation and dedupe are complete, start report production for each surviving idea.
@@ -50,8 +52,9 @@ Every specialist follows [handoff-protocol.md](./handoff-protocol.md). Treat any
 
 4. **Finalize**
    - Confirm every generated report folder has completed `ZH Translator` handoff output before rebuilding the aggregate index.
-   - Rebuild `ideas/_index.yaml` with `node scripts/ideas-index.mjs`.
-   - Validate completed folders with `npm --prefix website run check:ideas` when the website folder is available. If it fails, identify the offending folder(s) from its output, delete only those folders (they were marked failed earlier in the run or are partial), and re-run the validator. Repeat once. If the validator still fails, abort the run with the validator output included in the final summary; do not push.
+   - Rebuild `ideas/_index.yaml` with `node scripts/ideas-index.mjs --strict`. The `--strict` flag is required so any per-folder parse error fails fast; CI re-runs the same command and will reject the run otherwise.
+   - Sweep `ideas/` for partial folders **created during this run** that escaped per-stage cleanup. Match only folders whose name starts with `<runTimestamp>-` (the timestamp resolved in Run setup). A partial folder is one of those that is missing any of: `idea.yaml`, `research.yaml`, `business-plan.yaml`, `financial-model.yaml`, `index.yaml`, or any of the five `*.zh.yaml` siblings. Delete each partial folder, then re-run the index rebuild. Never touch folders from earlier `runTimestamp`s — historical reports may legitimately predate later schema additions, and this sweep is a safety net for the current run only.
+   - Validate with `npm run validate:all` from the repo root when the workspace supports it. This is the same superset CI runs (`check:ideas-index`, `check:duplicates`, `check:ideas`, `check:zh`, `check:typecheck`, `check:test`, website build) and is authoritative. If it fails, identify the offending folder(s) from its output, delete only those folders, and re-run `validate:all`. Repeat once. If it still fails, abort the run with the validator output included in the final summary.
    - Summarize generated, deduped, and failed topics.
 
 ## Non-negotiable rules
@@ -64,14 +67,14 @@ Every specialist follows [handoff-protocol.md](./handoff-protocol.md). Treat any
 - Do not proceed to a downstream stage until the previous stage's file exists, is non-empty, parses as YAML, and has the minimum fields below.
 - Do not mark a report generated or enter finalization until `ZH Translator` has written and verified all five localized YAML files for that folder.
 - If a per-idea pipeline fails after one corrective retry, mark only that idea as failed, remove its partial report folder from `ideas/`, and continue with other ideas.
-- Triage failure, missing repository paths, or final index rebuild failure stops the whole run.
+- News Triage gets the same one-retry budget as any other specialist (per [handoff-protocol.md](./handoff-protocol.md)). If triage fails twice, missing repository paths are unresolvable, or the final index rebuild fails, stop the whole run.
 
 ## Run setup
 
 Resolve these values before invoking any subagent:
 
 - `topic`: user-provided topic, or `startup news` if unspecified.
-- `topicScope`: `narrow` when the user gives a specific topic; otherwise `broad`. **Note**: the scheduled CI path in [`.github/workflows/bizidea.yml`](../workflows/bizidea.yml) hard-codes `topic: startup news`, so `topicScope: narrow` is reachable only via the local Copilot CLI or a manual workflow dispatch that adds a topic input. Do not assume narrow scope in the daily run.
+- `topicScope`: `narrow` when the user gives a specific topic; otherwise `broad`. The CI workflow ([`.github/workflows/bizidea.yml`](../workflows/bizidea.yml)) accepts an optional `topic` input on `workflow_dispatch` and resolves `topicScope` from it. The Cloudflare scheduler does not pass a topic, so scheduled runs always resolve to `broad`.
 - `cap`: user-provided cap, default `5`, hard maximum `5`.
 - `timeWindow`: concrete inclusive `YYYY-MM-DD to YYYY-MM-DD` range.
 - `timeWindowLabel`: user's phrase such as `today`, `yesterday`, `last 7 days`, or `null`.
@@ -121,8 +124,9 @@ When a gate fails, retry the same specialist once with the validation error and 
 Return a concise summary with:
 
 - generated report count;
-- deduped topic count;
-- failed topic count;
+- deduped topic count (clusters where `dedupe-idea.mjs` exited `10`);
+- skipped topic count (clusters that triage marked selected but were dropped before research — e.g. dedup hit, idea-generator returned `status: failed`);
+- failed topic count (per-idea pipelines that aborted after retry during research/plan/model/reporter/translation);
 - triage path;
 - one bullet per generated report with folder path, pitch, and funding ask when available;
 - one bullet per skipped or failed topic with reason.

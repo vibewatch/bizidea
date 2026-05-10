@@ -43,6 +43,11 @@ on:
           - "claude-sonnet-4.6"
         required: false
         default: "gpt-5.4"
+      topic:
+        description: "Topic scope; leave blank for broad 'startup news'"
+        type: string
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -101,17 +106,19 @@ jobs:
       - name: Install GitHub Copilot CLI
         run: npm install -g @github/copilot --no-audit --no-fund
 
-      - name: Validate and resolve run inputs (cap, time window, model)
+      - name: Validate and resolve run inputs (cap, time window, model, topic)
         id: inputs
         env:
           RAW_CAP: ${{ github.event.inputs.cap }}
           RAW_WINDOW: ${{ github.event.inputs.timeWindow }}
           RAW_MODEL: ${{ github.event.inputs.model }}
+          RAW_TOPIC: ${{ github.event.inputs.topic }}
         run: |
           set -euo pipefail
           CAP="${RAW_CAP:-}"
           WINDOW="${RAW_WINDOW:-}"
           MODEL="${RAW_MODEL:-}"
+          TOPIC="${RAW_TOPIC:-}"
           if [ -z "$CAP" ]; then CAP="5"; fi
           if [ -z "$WINDOW" ]; then WINDOW="yesterday"; fi
           if [ -z "$MODEL" ]; then MODEL="gpt-5.4"; fi
@@ -122,6 +129,17 @@ jobs:
           if [ "${#WINDOW}" -gt 80 ] || ! [[ "$WINDOW" =~ ^[A-Za-z0-9][A-Za-z0-9\ .,/_:+-]*$ ]]; then
             echo "Invalid timeWindow '$WINDOW'; use a short plain-text phrase like 'yesterday' or 'last 7 days'." >&2
             exit 2
+          fi
+          if [ -n "$TOPIC" ]; then
+            if [ "${#TOPIC}" -gt 120 ] || ! [[ "$TOPIC" =~ ^[A-Za-z0-9][A-Za-z0-9\ .,/_:+\&\(\)\'-]*$ ]]; then
+              echo "Invalid topic '$TOPIC'; use a short plain-text phrase." >&2
+              exit 2
+            fi
+            SCOPE="narrow"
+            EFFECTIVE_TOPIC="$TOPIC"
+          else
+            SCOPE="broad"
+            EFFECTIVE_TOPIC="startup news"
           fi
           case "$MODEL" in
             gpt-5.4)          EFFECT="xhigh" ;;
@@ -137,13 +155,15 @@ jobs:
           echo "window=$WINDOW" >> "$GITHUB_OUTPUT"
           echo "model=$MODEL" >> "$GITHUB_OUTPUT"
           echo "effect=$EFFECT" >> "$GITHUB_OUTPUT"
+          echo "topic=$EFFECTIVE_TOPIC" >> "$GITHUB_OUTPUT"
+          echo "scope=$SCOPE" >> "$GITHUB_OUTPUT"
 
       - name: Run Bizidea agent — triage → ideas → research → plan → model → report
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
         run: |
           set -euo pipefail
-          copilot --yolo --autopilot --model "${{ steps.inputs.outputs.model }}" --effort "${{ steps.inputs.outputs.effect }}" --agent "Bizidea" -p "Run the full Bizidea pipeline for ${{ steps.inputs.outputs.window }}. topic: startup news. cap: ${{ steps.inputs.outputs.cap }}. Orchestrate all stages yourself: News Triage once, generate and dedupe ideas from selected clusters, then run each surviving idea through research -> business plan -> financial model -> reporter. Do not invoke Bizidea recursively. Delete duplicate or failed partial report folders before final validation. Do not run git add or git commit."
+          copilot --yolo --autopilot --model "${{ steps.inputs.outputs.model }}" --effort "${{ steps.inputs.outputs.effect }}" --agent "Bizidea" -p "Run the full Bizidea pipeline for ${{ steps.inputs.outputs.window }}. topic: ${{ steps.inputs.outputs.topic }}. topicScope: ${{ steps.inputs.outputs.scope }}. cap: ${{ steps.inputs.outputs.cap }}. Orchestrate all stages yourself: News Triage once, generate and dedupe ideas from selected clusters, then run each surviving idea through research -> business plan -> financial model -> reporter. Do not invoke Bizidea recursively. Delete duplicate or failed partial report folders before final validation. Do not run git add or git commit."
 
       - name: Normalize generated YAML (repair flow style and bare colons)
         working-directory: website

@@ -29,16 +29,17 @@ The orchestrator must invoke you with one absolute report folder path containing
 ## Approach
 1. Read in order: `idea.yaml`, `research.yaml`, `business-plan.yaml`, `financial-model.yaml`.
 2. From `idea.yaml`: `slug`, `pitch`, `date`, `sector`, `topRisks` (use the `name` field of each risk).
-3. From `idea.yaml.sourceContext`: the `topic` prompt (verbatim), `timeWindow`, `timeWindowLabel`, and source-backed signal count.
+3. From `idea.yaml.sourceContext`: the `topic` prompt (verbatim), `timeWindow`, and `timeWindowLabel`.
 4. From `research.yaml`: `market.tam.value`, `market.sam.value`, `market.som.value` (preserve units like `$0.37B–$0.66B`, `$10M`).
 5. From `financial-model.yaml`: `totals.y1`/`y2`/`y3` for revenue, EBITDA, ending cash; `fundingAsk.amountM`, `fundingAsk.round`, `fundingAsk.runwayMonths`.
 6. Derive `kicker` from the topic. The website renders it as a short strap label (e.g. on cards joined to the sector with `·`), so keep it tight:
    - Drop trailing event-type or category nouns: `news`, `launch`, `launches`, `funding`, `round`, `raise`, `acquisition`, `merger`, `deal`, `announcement`, `pilot`, `ipo`, `report`, `update`.
    - Take the remaining 1–3 words — prefer the company or product name; fall back to the most distinctive topic noun.
-   - Uppercase the result; preserve internal hyphens; ASCII only; aim for ≤ 24 characters.
-   - Examples: `Collate AI analytics launch` → `COLLATE`; `JuliaHub industrial digital twins` → `JULIAHUB`; `non-dilutive DTC health capital` → `NON-DILUTIVE`; `clinical trial recruiting AI` → `CLINICAL TRIAL`; `climate-tech news` → `CLIMATE-TECH`.
+   - Uppercase the result; preserve internal hyphens; collapse runs of whitespace to a single space; ASCII only; aim for ≤ 24 characters.
+   - If stripping leaves zero words, use the first 1–3 words of the original `topic` (uppercased, ASCII only).
+   - Examples: `Collate AI analytics launch` → `COLLATE`; `JuliaHub industrial digital twins` → `JULIAHUB`; `non-dilutive DTC health capital` → `NON-DILUTIVE`; `clinical trial recruiting AI` → `CLINICAL TRIAL`; `climate-tech news` → `CLIMATE-TECH`; `Series A funding` → `SERIES A`.
 7. **Apply the rating rubric** (next section) using the four stage YAML files you just read.
-8. Write `index.yaml` matching the schema exactly. Use YAML with 2-space indent. If newer upstream fields such as `topicScope`, diagrams, canvases, analysis models, scenarios, or sensitivity tables are present but not in this schema, ignore them; they remain available in the stage YAML files.
+8. Write `index.yaml` matching the schema exactly. Use YAML with 2-space indent. Any field present in an upstream stage YAML but not listed in the schema below MUST be ignored — do not invent new keys in `index.yaml`. Examples of fields to drop here (still available in stage files): `topicScope`, `conceptDiagram`, `analysisModels`, `businessModelCanvas`, `jobsToBeDone`, `strategyMap`, `experimentRoadmap`, `scenarios`, `sensitivity`, `modelDiagram`, `modelSanity`, `evidenceCorpus`, `researchCoverage`.
 9. Run `node scripts/validate-stage.mjs <folder> index` from the repo root and confirm it exits zero (this loads the file, parses it, and verifies required fields). If it fails, fix the missing field and re-run before returning `HANDOFF`.
 
 ## Rating rubric (apply during step 7)
@@ -68,7 +69,7 @@ Rationale writing rules:
   Inputs: `idea.yaml.sourceContext.signals.length`, `idea.yaml.sourceContext.timeWindow`, `idea.yaml.whyNow`.
   Anchors: `1` = thin or stale signal; `3` = clear current trend with multiple sources; `5` = breakout moment with multiple converging recent signals.
 
-Compute `overall` = `round(0.30 * market + 0.30 * differentiation + 0.25 * execution + 0.15 * timeliness, 1)`. Always include all four dimensions even if you must default to `3` with rationale `"insufficient data"`.
+Compute `overall` = the weighted sum `0.30 * market + 0.30 * differentiation + 0.25 * execution + 0.15 * timeliness`, then round half-up to one decimal place (e.g. `3.55` → `3.6`, `3.54` → `3.5`). Always include all four dimensions even if you must default to `3` with rationale `"insufficient data"`.
 
 ## YAML syntax rules
 

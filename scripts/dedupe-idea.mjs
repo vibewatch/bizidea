@@ -17,6 +17,7 @@ const PITCH_JACCARD_THRESHOLD = 0.55;
 
 function usage() {
   console.error('Usage: node scripts/dedupe-idea.mjs <reportFolder> <ideas/_index.yaml> [--delete-on-duplicate] [--github-output <path>]');
+  console.error('Exit codes: 0 = new (no duplicate match); 10 = duplicate found; 1 = bad input/IO; 2 = bad invocation.');
   process.exit(2);
 }
 
@@ -86,10 +87,11 @@ if (match) {
   writeOutput(githubOutput, 'matchedRunFolder', match.runFolder);
   writeOutput(githubOutput, 'dedupeReason', match.reason);
   console.log(`[dedupe-idea] duplicate ${basename(reportFolder)} -> ${match.runFolder} (${match.reason})`);
-  process.exit(0);
+  process.exit(10);
 }
 
 writeOutput(githubOutput, 'duplicate', 'false');
 writeOutput(githubOutput, 'matchedRunFolder', '');
 writeOutput(githubOutput, 'dedupeReason', 'new');
 console.log(`[dedupe-idea] new idea: ${basename(reportFolder)}`);
+process.exit(0);

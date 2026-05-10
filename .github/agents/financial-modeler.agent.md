@@ -39,6 +39,10 @@ The orchestrator must invoke you with one absolute report folder path containing
 
 Follow [yaml-syntax.md](./yaml-syntax.md). The pipeline parses every artifact with a strict YAML loader; prefer block style for sequences of mappings (do not collapse `headcount`, `useOfFunds`, `y1Monthly`, etc. into flow style) and use a `|` literal block scalar for the Mermaid `modelDiagram` string.
 
+## Headcount column convention
+
+`headcount`, `headcountTotalsFte`, and `headcountAnnualizedPayrollK` use a fixed six-column shape: `q1y1, q2y1, q3y1, q4y1, q4y2, q4y3`. Y1 is fully quarterly; Y2 and Y3 expose only year-end snapshots because hiring slows down post-Y1 and the schema would balloon otherwise. The salary line of `y2y3Quarterly` must still be filled for every quarter — use the most recent snapshot or a smooth ramp consistent with `business-plan.yaml.team` and `sequencingRationale`, and surface any sharp step-change as an `assumptions[]` entry.
+
 ## Output Format
 
 Write to `<folder>/financial-model.yaml`. Use YAML with 2-space indent. All money fields ending in `K` are thousands of USD; ending in `M` are millions of USD. Negatives represent losses or outflows. Schema:
@@ -127,7 +131,7 @@ unitEconomics:
   ltvCacRatio: 0.0
   cacPaybackMonths: 0.0
 fundingAsk:
-  round: pre-seed|seed
+  round: pre-seed|seed|series-a|series-b|series-c
   amountM: 0.0
   runwayMonths: 0
   milestone: string

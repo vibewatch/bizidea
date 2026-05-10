@@ -24,6 +24,11 @@ const STAGES = {
     file: 'research.yaml',
     requiredKeys: ['slug', 'date', 'market', 'competitors', 'researchCoverage', 'deduplication', 'evidenceCorpus', 'sources'],
     requiredNested: [['reportMemo', 'incumbentThesis']],
+    requiredArrays: [
+      // (path, minLength) — incumbentThesis must be a non-empty array per the
+      // Market Researcher schema rule "should contain 3–5 entries".
+      [['reportMemo', 'incumbentThesis'], 1],
+    ],
   },
   'business-plan': {
     file: 'business-plan.yaml',
@@ -106,6 +111,21 @@ for (const path of spec.requiredNested ?? []) {
     cursor = cursor[segment];
   }
   if (!ok || cursor == null) missing.push(path.join('.'));
+}
+
+for (const [path, minLength] of spec.requiredArrays ?? []) {
+  let cursor = parsed;
+  let ok = true;
+  for (const segment of path) {
+    if (cursor == null || typeof cursor !== 'object' || !(segment in cursor)) { ok = false; break; }
+    cursor = cursor[segment];
+  }
+  if (!ok || cursor == null) continue; // already reported via requiredNested
+  if (!Array.isArray(cursor)) {
+    missing.push(`${path.join('.')} (must be a list)`);
+  } else if (cursor.length < minLength) {
+    missing.push(`${path.join('.')} (need at least ${minLength} entr${minLength === 1 ? 'y' : 'ies'})`);
+  }
 }
 
 if (missing.length > 0) {

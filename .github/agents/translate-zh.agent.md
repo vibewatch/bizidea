@@ -47,7 +47,7 @@ Write these files in the same folder:
 
 ## Pre-translation normalization (mandatory)
 
-When you load a source file, look for `colon-paste` artifacts: list items written without quotes whose value contains a colon, which YAML parses as a single-key map. The `key` is a fragment of English narrative, not a field name. Example in source:
+When you load a source file, look for `colon-paste` artifacts: list items written without quotes whose value contains a colon, which YAML parses as a single-key map. The `key` is a fragment of English narrative, not a field name. Example in source (`business-plan.yaml.problem`, which is a list of bullets):
 
 ```yaml
 problem:
@@ -71,14 +71,14 @@ Never translate values at these paths; the website depends on the exact ASCII to
 |---|---|
 | `**.riskHeatmap[*].likelihood` | `Low`, `Medium`, `High` |
 | `**.riskHeatmap[*].impact` | `Low`, `Medium`, `High` |
-| `**.topRisks[*].likelihood`, `**.risks[*].likelihood` | `Low`, `Medium`, `High` |
-| `**.topRisks[*].impact`, `**.risks[*].impact` | `Low`, `Medium`, `High` |
+| `**.risks[*].likelihood` | `Low`, `Medium`, `High` |
+| `**.risks[*].impact` | `Low`, `Medium`, `High` |
 | `**.pestle[*].impact` | `positive`, `negative`, `neutral` |
-| `fundingAsk.round` | `pre-seed`, `seed`, `series-a`, etc. |
+| `fundingAsk.round` | `pre-seed`, `seed`, `series-a`, `series-b`, `series-c` |
 | `sector`, `kicker`, `slug`, `runId`, `folderSlug` | source value verbatim |
 | `eventType`, `topicScope`, `timeWindow`, `timeWindowLabel` | source value verbatim |
 
-These are bucket keys, not labels. Translating them silently breaks the heatmap and pill colors.
+These are bucket keys, not labels. Translating them silently breaks the heatmap and pill colors. Note: `topRisks` carries no `likelihood/impact` in any current artifact (it is `[ {name, description, mitigation} ]` in `idea.yaml` and `[string]` in `index.yaml`); only `risks[]` and `riskHeatmap[]` (in `business-plan.yaml`) have those enum fields.
 
 ## Categorical labels to translate
 
@@ -118,7 +118,7 @@ The linter checks four things and exits non-zero on any violation:
 - **R1 colon-paste**: list items parsed as single-key maps with whitespace in the key.
 - **R2 enum-translated**: enum values at the paths in `Identifiers and enums to preserve` that contain Chinese.
 - **R3 signalref-drift**: `signalRefs` entries that do not match a translated `signals[].title` in the same file.
-- **R4 label-untranslated**: `incumbentClass`, `team[*].role`, `**.horizon`, etc. with no Chinese characters.
+- **R4 label-untranslated**: `incumbentClass`, `team[*].role`, `**.horizon`, and `topRisks[*]` items in `index.zh.yaml` with no Chinese characters.
 
 If the linter exits non-zero:
 

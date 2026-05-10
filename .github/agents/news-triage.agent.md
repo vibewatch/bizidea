@@ -44,11 +44,11 @@ A "cluster" is the unit a downstream Bizidea pipeline run will work on. Two stor
 ## Workflow
 
 1. Confirm inputs and create `triageFolder` if needed.
-2. Load the history index from `historyIndexPath` if it exists. Build in-memory sets of:
-   - `historicalEventKeys` — every `eventKeys` entry across all `entries`.
-   - `historicalUrls` — every `topSourceUrls` entry across all `entries`.
-   - `historicalSlugs` — every `slug`.
-   Keep the per-entry `entries[].keywords` arrays accessible (do not flatten them — step 8's overlap check is per-entry).
+2. Load the history index from `historyIndexPath` if it exists. Build an in-memory list of per-entry records (one record per `entries[]`), each with:
+   - `runFolder`, `slug`, `date`, `keywords` (do not flatten across entries),
+   - `topSourceUrls` (canonicalized list, kept per entry), and
+   - `monthKeys` derived from each entry's `eventKeys` by stripping the middle `|<eventType>|` segment, leaving `<companyLowercased>|<YYYY-MM>`.
+   Step 8 needs to report which entry matched, so do **not** collapse these into flat sets.
 3. Search the web broadly for startup-signal news inside `timeWindow`. Target **~120 candidate URLs** across the sectors below (broad scope) or around `topic` (narrow scope). The 120/80 numbers below are calibrated for the default `gpt-5.4` / `xhigh` profile in `bizidea.yml`; smaller models or shorter time windows may legitimately produce fewer. Use queries like `funding`, `seed`, `Series A`, `raises`, `launches`, `announces`, `partnership`, `acquires`, `spinout`, `pilot`, `regulation`, `outage`, `bottleneck`, `workflow`. Sectors to cover in broad scope: AI/ML; climate/energy/grid; health/eldercare/longevity; education/workforce; enterprise SaaS/dev tools; fintech/consumer/marketplaces; industrial/robotics/defense/bio.
 4. **Quick-fetch** each candidate URL — read enough of the page to extract: title, publisher, published date, primary company, one-sentence event summary, event type, and 1–3 key points. Aim for **~80 verified items** before clustering; do not pad with low-quality fetches to hit the number.
 5. Drop:
@@ -63,15 +63,18 @@ A "cluster" is the unit a downstream Bizidea pipeline run will work on. Two stor
    - `opportunityClarity`
    - `nonObviousness`
    Then compute `signalStrength = round(mean(sub-scores))` (banker's rounding is fine; ties round up). Drop clusters with `signalStrength < 2` OR with **any** sub-score `= 1`. Write a one-sentence `scoreRationale` that names the strongest and weakest sub-score (e.g. "strong opportunity clarity, weak non-obviousness").
-8. **Dedupe** each cluster against history:
-   - For each cluster, build candidate `eventKeys[]` (`<companyLowercased>|<eventType>|<YYYY-MM>` per primary item) and `keywords[]` (≤16 lowercase nouns from `headline` + cluster items).
-   - If any candidate `eventKey` is in `historicalEventKeys` AND the matching history entry's `date` is within 90 days of `runDate` → `dedupeStatus: duplicate-of:<runFolder>`.
-   - Else if `proposedSlug` matches a `historicalSlugs` entry exactly → `dedupeStatus: duplicate-of:<runFolder>`.
-   - Else if any candidate `topSourceUrl` (canonicalized) is in `historicalUrls` → `dedupeStatus: near-duplicate-of:<runFolder>`.
-   - Else if `keywords[]` overlap with any single history entry's `keywords[]` is `>= 6` items → `dedupeStatus: near-duplicate-of:<runFolder>`.
-   - Else → `dedupeStatus: new`.
+8. **Dedupe** each cluster against the per-entry history records from step 2. The history index records `eventKeys` with an event-type derived from a text heuristic (see [`scripts/ideas-index.mjs`](../../scripts/ideas-index.mjs)) that may not match this run's classification, so the comparison below ignores `eventType` and matches on `<companyLowercased>|<YYYY-MM>` instead. Continue to record the full `<companyLowercased>|<eventType>|<YYYY-MM>` form in the cluster's `eventKeys` field for the audit trail.
+   - For each cluster, build candidate `eventKeys[]` (`<companyLowercased>|<eventType>|<YYYY-MM>` per primary item) and `keywords[]` (≤ 16 lowercase nouns from `headline` + cluster items).
+   - Build `candidateMonthKeys[]` from candidate `eventKeys[]` by stripping the middle `|<eventType>|` segment.
+   - For each history record, check in this order and stop at the first match:
+     1. `monthKeys` overlap AND the record's `date` is within 90 days of `runDate` → `dedupeStatus: duplicate-of:<runFolder>`.
+     2. `proposedSlug` equals the record's `slug` → `dedupeStatus: duplicate-of:<runFolder>`.
+     3. Any candidate `topSourceUrl` (canonicalized) appears in the record's `topSourceUrls` → `dedupeStatus: near-duplicate-of:<runFolder>`.
+     4. Cluster `keywords[]` overlap with the record's `keywords[]` is `>= 6` items → `dedupeStatus: near-duplicate-of:<runFolder>`.
+   - When more than one record could match a tier, pick the most recent by `date` descending; for the keyword-overlap tier, pick the highest-overlap record and break ties by most recent `date`.
+   - If no record matches any tier → `dedupeStatus: new`.
    - Record a one-sentence `dedupeRationale` for every status (including `new`).
-9. Sort clusters by `signalStrength` descending, then `opportunityClarity` descending, then `itemCount` descending. Mark the top `cap` clusters with `dedupeStatus: new` as `selected: true`. All others `selected: false`.
+9. Sort clusters by `signalStrength` descending, then `opportunityClarity` descending, then `itemCount` descending. Walking that sorted list in order, mark the first `cap` clusters with `dedupeStatus: new` as `selected: true`; skip non-`new` clusters and keep walking until `cap` is filled or the list ends. All others `selected: false`.
 10. For every selected cluster, include `sourceBriefs` with the best 3–8 fetched sources from that cluster. These briefs must be good enough for `Idea Generator` to embed in `idea.yaml.sourceContext`.
 11. Write `<triageFolder>/triage.yaml`.
 12. Run `node scripts/validate-stage.mjs <triageFolder> triage` from the repo root and confirm it exits zero (this loads the file, parses it, and verifies required fields). If it fails, fix the missing field and re-run before returning the handoff.

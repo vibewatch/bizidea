@@ -26,7 +26,7 @@ The orchestrator must invoke you with one absolute report folder path containing
 
 ## Constraints
 - DO NOT fabricate market figures, source URLs, or competitor facts. If a number is an estimate, set `isEstimate: true` and show the calculation in `rationale`.
-- DO NOT cite a URL you have not opened and verified in this run. Every entry in both `sources` and `evidenceCorpus` must be fetched/opened successfully; `fetchVerified` must be `true`. Drop failed fetches and stubs.
+- DO NOT cite a URL you have not opened and verified in this run. Every entry in `evidenceCorpus` must be fetched/opened successfully (`fetchVerified: true`); drop failed fetches and stubs. `sources[]` is a strict subset of `evidenceCorpus[]` re-using the same `id`s, so verification is implicit there — do not repeat the `fetchVerified` field on `sources[]`.
 - DO NOT cite search-engine result pages (URLs containing `/search`, `?q=`, `bing.com/search`, `google.com/search`, `duckduckgo.com/?q=`, or similar SERP patterns). If a search yields no fetchable result, record the gap in `openQuestions`.
 - DO NOT propose business plans, pricing, or financials — those are downstream stages.
 - DO NOT exceed 5 competitors (depth over breadth).
@@ -254,14 +254,14 @@ sources:
   - id: 1
     publisher: string
     title: string
-    date: YYYY-MM-DD
+    date: YYYY-MM-DD|null
     url: https://...
 ```
 
 Rules:
 - 3–5 competitors max.
 - 3–5 open questions.
-- `researchCoverage.sourceTarget` MUST be `100`.
+- `researchCoverage.sourceTarget` is the calibration target for this run; default `100` for the `gpt-5.4` / `xhigh` profile in `bizidea.yml`. Smaller-model runs may set a lower number consistent with the model's effective fetch budget; the value must be the agent's actual target, not a placeholder.
 - `researchCoverage.sourcesFetched` SHOULD be at least `100`. If it is less than `100`, `researchCoverage.coverageGap` MUST explain why the topic/time window did not yield 100 credible fetchable sources.
 - `researchCoverage.sourcesRetained` MUST equal `evidenceCorpus.length` after duplicate removal.
 - `researchCoverage.duplicatesRemoved` MUST equal `deduplication.duplicatesRemoved`.

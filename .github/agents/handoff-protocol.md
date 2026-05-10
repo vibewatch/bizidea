@@ -1,9 +1,10 @@
 # Handoff protocol
 
 Every Bizidea specialist agent must end its turn with **exactly one** fenced
-`HANDOFF` block and no other prose after it. The orchestrator parses this
-block to decide whether to advance, retry, or skip. Inconsistent shapes break
-the dispatcher.
+`HANDOFF` block and no other prose after it. The orchestrator (the `Bizidea`
+agent itself, not a separate parser) reads this block to decide whether to
+advance, retry, or skip. Inconsistent shapes cause the orchestrator to treat
+the response as a soft failure.
 
 ## Emit once, then stop
 
@@ -18,8 +19,8 @@ write, and your turn ends immediately after the closing fence. Do not:
 
 If you have already emitted the block, you are done — do not write anything
 else, even if a later self-check makes you want to repeat or reformat it.
-Duplicate blocks are logged verbatim by the dispatcher and pollute CI output;
-they do not trigger a second run.
+Duplicate blocks pollute the orchestrator's reading and do not trigger a
+second run.
 
 ## Success block
 
@@ -53,6 +54,23 @@ reason: <one sentence explaining why no artifact was written>
 - The orchestrator retries the same specialist exactly once with the same
   inputs and the validation error. A second failure marks only that idea as
   failed; the partial folder is removed before the run continues.
+
+## Outcome taxonomy (orchestrator-only)
+
+Specialists emit only `status: ok` or `status: failed`. The orchestrator
+categorizes outcomes into three buckets when summarizing the run:
+
+- **generated** — the per-idea pipeline reached `ZH Translator` with
+  `status: ok` and the report folder passed validation.
+- **deduped** — `Idea Generator` returned `status: ok` but
+  `dedupe-idea.mjs` flagged the idea as a duplicate; the partial folder is
+  removed and no later stage runs.
+- **failed** — a specialist returned `status: failed` after one retry; the
+  partial folder is removed and the topic is reported as failed.
+
+A "skipped" topic in the orchestrator's final summary is shorthand for
+deduped or for triage selecting fewer clusters than `cap` allowed; it is not
+a specialist-level state.
 
 ## Why this is uniform
 
