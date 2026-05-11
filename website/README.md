@@ -34,7 +34,7 @@ and update `SITE_URL` in the workflow.
 
 Typography follows the GenisisIQ stack:
 
-- `Mona Sans` from `@font-face` in [`src/styles/tokens.css`](src/styles/tokens.css)
+- `Mona Sans` self-hosted from [`src/assets/fonts/mona-sans.woff2`](src/assets/fonts/mona-sans.woff2), wired via `@font-face` in [`src/styles/tokens.css`](src/styles/tokens.css) and preloaded in [`src/layouts/BaseLayout.astro`](src/layouts/BaseLayout.astro)
 - `Noto Sans SC` from Google Fonts in [`src/layouts/BaseLayout.astro`](src/layouts/BaseLayout.astro)
 
 Token stacks live in [`src/styles/tokens.css`](src/styles/tokens.css).
