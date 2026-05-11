@@ -118,28 +118,44 @@ function parseRunId(runId: string): { runTimestamp: string; folderSlug: string }
   return { runTimestamp: '00000000000000', folderSlug: runId };
 }
 
+// Bump when the loader's parsing/validation surface changes (schema, parseData
+// inputs, etc.) so digest comparisons invalidate stale entries in the persisted
+// content store under .astro/data-store.json.
+const LOADER_VERSION = '2';
+
+function fileDigest(path: string): string {
+  return createHash('sha1').update(LOADER_VERSION).update('\0').update(readFileSync(path)).digest('hex');
+}
+
 /**
  * Astro Content Collection Loader for ideas.
  * Loads all index.yaml files from ideas/<run>/ directories and validates them.
- * Reports warnings for missing/malformed files but continues building.
+ *
+ * Incremental behaviour: each entry's digest is the SHA-1 of LOADER_VERSION +
+ * the raw index.yaml bytes. When Astro's persisted store (.astro/data-store.json)
+ * already has an entry with the same digest, parseData / Zod validation is
+ * skipped. Stale entries (folders deleted upstream) are pruned at the end.
  */
 export function ideasLoader(): Loader {
   return {
     name: 'bizidea-ideas-loader',
     load: async ({ store, parseData, logger }) => {
-      store.clear();
       clearIdeaCaches();
       const runs = listRuns();
 
       if (runs.length === 0) {
         logger.info(`[ideas-loader] No idea runs found in ${IDEAS_DIR}`);
+        // Drop everything previously cached; the source is authoritative.
+        for (const id of Array.from(store.keys())) store.delete(id);
         return;
       }
 
       logger.info(`[ideas-loader] Loading ${runs.length} idea run(s) from ${IDEAS_DIR}`);
 
       let loaded = 0;
+      let reused = 0;
       let skipped = 0;
+      const seen = new Set<string>();
 
       for (const runId of runs) {
         const indexPath = join(IDEAS_DIR, runId, 'index.yaml');
@@ -147,6 +163,23 @@ export function ideasLoader(): Loader {
         if (!existsSync(indexPath)) {
           logger.warn(`[ideas-loader] skipped ${runId}: missing index.yaml`);
           skipped++;
+          continue;
+        }
+
+        seen.add(runId);
+
+        let digest: string;
+        try {
+          digest = fileDigest(indexPath);
+        } catch (digestErr) {
+          logger.error(`[ideas-loader] ${runId}: failed to read index.yaml — ${digestErr instanceof Error ? digestErr.message : String(digestErr)}`);
+          skipped++;
+          continue;
+        }
+
+        const existing = store.get(runId);
+        if (existing && existing.digest === digest) {
+          reused++;
           continue;
         }
 
@@ -169,7 +202,7 @@ export function ideasLoader(): Loader {
               id: runId,
               data: { ...repaired, runId, runTimestamp, folderSlug },
             });
-            store.set({ id: runId, data });
+            store.set({ id: runId, data, digest });
             loaded++;
           } catch (validationErr) {
             logger.error(`[ideas-loader] ${runId}: Zod validation failed — ${validationErr instanceof Error ? validationErr.message : String(validationErr)}`);
@@ -181,7 +214,15 @@ export function ideasLoader(): Loader {
         }
       }
 
-      logger.info(`[ideas-loader] ✓ loaded ${loaded}/${runs.length} run(s), skipped ${skipped}`);
+      let pruned = 0;
+      for (const id of Array.from(store.keys())) {
+        if (!seen.has(id)) {
+          store.delete(id);
+          pruned++;
+        }
+      }
+
+      logger.info(`[ideas-loader] ✓ ${loaded} new/changed, ${reused} cached, ${pruned} pruned, ${skipped} skipped (of ${runs.length})`);
     },
   };
 }

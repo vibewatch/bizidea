@@ -74,11 +74,12 @@ The minimum-fields contract for each stage YAML lives in [.github/agents/bizidea
 | Path | Purpose |
 |---|---|
 | `ideas/` | Report folders (English + `*.zh.yaml`). `_index.yaml` = aggregated history. `_triage/<ts>/` = daily triage. `_`-prefixed paths ignored by Astro. |
-| `website/` | [Astro 5](https://astro.build) site that renders reports. |
+| `website/` | [Astro 6](https://astro.build) site that renders reports. |
 | `cloudflare/` | Cloudflare Worker scheduler. |
 | `.github/agents/` | Copilot agents: `Bizidea` orchestrator, the seven specialists above, and shared references (`handoff-protocol.md`, `sector-vocabulary.md`, `yaml-syntax.md`). |
 | `.github/workflows/` | `bizidea.yml` (Cloudflare-dispatched run) and `deploy.yml` (publishes the site on `main` pushes touching `website/**` or `ideas/**`). |
 | `scripts/` | Deterministic Node helpers: `ideas-index.mjs`, `dedupe-idea.mjs`, `report-dir.mjs`, `validate-stage.mjs`, `check-agent-frontmatter.mjs`, `check-triage.mjs`, `check-zh-translation.mjs`, `check-near-duplicates.mjs`, `validate-all.mjs`, shared `text.mjs`. |
+| `.cache/` | Local-only digest manifests for incremental builds (gitignored; restored in CI via `actions/cache`). |
 | [AGENTS.md](AGENTS.md) | Coding-agent quick reference (commands, layout, YAML conventions). |
 
 YAML conventions (camelCase field names, units in numeric names like `revenueK`/`marginPct`, indentation/quoting/multi-line rules) live in [.github/agents/yaml-syntax.md](.github/agents/yaml-syntax.md).
@@ -105,6 +106,15 @@ Common checks from the repo root:
 | `npm run validate:all` | Full local validation gate. |
 | `npm run check:duplicates` | Flag likely near-duplicate report pairs (non-blocking). |
 | `npm run check:test` | Vitest. |
+
+### Incremental builds
+
+Both the website loader and `check:ideas` are digest-keyed, so unchanged report folders are skipped on rebuild:
+
+- [website/src/content/ideas-loader.ts](website/src/content/ideas-loader.ts) hashes each `index.yaml` (plus `LOADER_VERSION`) and reuses Astro's persistent content store at `website/.astro/data-store.json`. Bump `LOADER_VERSION` when the schema or `parseData` inputs change.
+- [website/scripts/check-ideas.mjs](website/scripts/check-ideas.mjs) hashes every YAML in each `ideas/<run>/` folder (plus `CHECK_VERSION`) and persists `.cache/check-ideas.json`. Failures are never cached. Bump `CHECK_VERSION` when validation rules change. Set `CHECK_IDEAS_NO_CACHE=1` to bypass.
+
+In CI, [`deploy.yml`](.github/workflows/deploy.yml) restores `website/.astro` and `.cache/` via `actions/cache@v4`, keyed by the hash of `website/src/**` and `ideas/**/*.yaml` so any source/idea change re-keys the cache automatically.
 
 ## Running the pipeline
 
@@ -143,6 +153,12 @@ Optional vars in [cloudflare/wrangler.toml](cloudflare/wrangler.toml) override d
 |---|---|---|
 | `COPILOT_PAT` | `bizidea.yml` | Copilot-licensed PAT, passed as `COPILOT_GITHUB_TOKEN` to the Copilot CLI. |
 | `BIZIDEA_PAT` | `bizidea.yml` | Repo-write PAT used for checkout and the daily commit, so downstream deploy workflows trigger reliably. |
+
+## Optional repository variables
+
+| Variable | Used by | Purpose |
+|---|---|---|
+| `PUBLIC_GA_ID` | `deploy.yml` | Google Analytics measurement ID (`G-XXXXXXX`). When set and matching the `G-...` shape, the production build injects `gtag.js` from [website/src/layouts/BaseLayout.astro](website/src/layouts/BaseLayout.astro). Unset → no analytics; dev builds never inject. |
 
 ## License
 

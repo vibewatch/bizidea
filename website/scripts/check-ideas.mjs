@@ -1,13 +1,57 @@
 #!/usr/bin/env node
 // Fail fast if any ideas/<run>/ folder is missing required YAML files,
 // contains unexpected YAML artifacts, or has YAML that cannot be parsed.
-import { readdirSync, statSync, existsSync, readFileSync } from 'node:fs';
+import { readdirSync, statSync, existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 import yaml from 'js-yaml';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const IDEAS_DIR = resolve(__dirname, '../../ideas');
+const REPO_ROOT = resolve(__dirname, '../..');
+const CACHE_FILE = join(REPO_ROOT, '.cache', 'check-ideas.json');
+// Bump when validation rules below change so cached digests invalidate everywhere.
+const CHECK_VERSION = '1';
+const USE_CACHE = process.env.CHECK_IDEAS_NO_CACHE !== '1';
+
+function folderDigest(dir, files) {
+  const hash = createHash('sha1').update(CHECK_VERSION).update('\0');
+  for (const file of [...files].sort()) {
+    if (!file.endsWith('.yaml')) continue;
+    hash.update(file).update('\0');
+    try {
+      hash.update(readFileSync(join(dir, file)));
+    } catch {
+      hash.update('<<unreadable>>');
+    }
+    hash.update('\0');
+  }
+  return hash.digest('hex');
+}
+
+function loadCache() {
+  if (!USE_CACHE) return {};
+  try {
+    const raw = JSON.parse(readFileSync(CACHE_FILE, 'utf8'));
+    if (raw && raw.version === CHECK_VERSION && raw.folders && typeof raw.folders === 'object') {
+      return raw.folders;
+    }
+  } catch {
+    // Missing or unreadable cache: fall through and re-validate everything.
+  }
+  return {};
+}
+
+function saveCache(folders) {
+  if (!USE_CACHE) return;
+  try {
+    mkdirSync(dirname(CACHE_FILE), { recursive: true });
+    writeFileSync(CACHE_FILE, JSON.stringify({ version: CHECK_VERSION, folders }, null, 2));
+  } catch (e) {
+    console.warn(`[check:ideas] could not persist cache: ${e.message}`);
+  }
+}
 const REQUIRED_ENGLISH = [
   'idea.yaml',
   'research.yaml',
@@ -319,6 +363,9 @@ try {
   const schemaShapeFailures = [];
   const referenceFailures = [];
   const modelFailures = [];
+  const cached = loadCache();
+  const nextDigests = {};
+  let cacheHits = 0;
   for (const run of runs) {
     const dir = join(IDEAS_DIR, run);
     const parsed = new Map();
@@ -330,6 +377,13 @@ try {
         return false;
       }
     });
+
+    const digest = folderDigest(dir, files);
+    nextDigests[run] = digest;
+    if (cached[run] === digest) {
+      cacheHits++;
+      continue;
+    }
 
     for (const file of REQUIRED) {
       const p = join(IDEAS_DIR, run, file);
@@ -434,10 +488,14 @@ try {
       for (const f of schemaShapeFailures.slice(0, 200)) console.error(`  - ${f}`);
       if (schemaShapeFailures.length > 200) console.error(`  - ...and ${schemaShapeFailures.length - 200} more`);
     }
+    // Don't persist the cache: we want failed folders re-checked next run.
     process.exit(1);
   }
 
-  console.log(`[check:ideas] ✓ ${runs.length} run(s) verified.`);
+  saveCache(nextDigests);
+  const reused = cacheHits;
+  const checked = runs.length - reused;
+  console.log(`[check:ideas] ✓ ${runs.length} run(s) verified (${checked} re-checked, ${reused} cached).`);
   process.exit(0);
 } catch (e) {
   console.error(`[check:ideas] fatal error: ${e.message}`);
