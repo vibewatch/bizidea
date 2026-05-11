@@ -40,13 +40,7 @@ The orchestrator must provide one absolute report folder path, `triagePath`, `cl
 
 1. Read `triagePath` end-to-end. Find `clusters[].clusterId == clusterId`. If it is not found, stop and report failure; do not invent context.
 2. Confirm the cluster is `selected: true` and `dedupeStatus: new`. If not, stop and report failure.
-3. Build `sourceContext` directly from the cluster:
-   - `topic`: `cluster.proposedTopic`.
-   - `topicScope`: copy verbatim from the triage root (`broad` or `narrow`); do not assume a fixed value.
-   - `timeWindow` and `timeWindowLabel` from the triage root.
-   - `sectorHint`, `headline`, `scoreRationale`, `selectionRationale`, `dedupeRationale` from the cluster.
-   - `sources`: `cluster.sourceBriefs` if present; otherwise convert `topSourceUrls` into minimal source entries and clearly note the evidence gap in `sourceContext.gaps`.
-   - `signals`: 3–5 source-grounded signals derived from the cluster headline, score rationale, selection rationale, source briefs, and key points.
+3. Build `sourceContext` directly from the cluster. Copy `topic` from `cluster.proposedTopic`; copy `topicScope`, `timeWindow`, and `timeWindowLabel` from the triage root; copy `sectorHint`, `headline`, `signalStrength`, `qualityScore`, `evidenceConfidence`, `incumbentGravity`, `selectionScore`, `scoreRationale`, `selectionRationale`, and `dedupeRationale` from the cluster. Set `sources` from `cluster.sourceBriefs` if present; otherwise convert `topSourceUrls` into minimal source entries and clearly note the evidence gap in `sourceContext.gaps`. Derive 3–5 source-grounded `signals` from the cluster headline, score rationale, selection rationale, source briefs, and key points.
 4. Brainstorm 3–5 candidate ideas privately. Score each against: signal strength, wedge specificity, customer pain, first-customer clarity, defensibility, 5-year addressable market, and historical duplicate risk. These seven dimensions are the brainstorming filter; the five `ideaScorecard` fields you write to disk (`signalStrength`, `painIntensity`, `wedgeClarity`, `defensibility`, `ventureScale`) are a different, narrower lens applied only to the surviving idea.
 5. Load `historyIndexPath` if present (treat the file as empty history if it is missing or empty) and let history awareness inform candidate selection: avoid candidates whose slug, sector + beachhead, or pitch are likely to collide with an existing history entry when a stronger differentiated alternative exists. The deterministic dedup gate ([scripts/dedupe-idea.mjs](../../scripts/dedupe-idea.mjs)) is authoritative and runs after this agent; do not write a known-duplicate idea on purpose. The dedup gate compares on `slug`, `sector + beachhead` token overlap, and `pitch` Jaccard similarity — a beachhead written as a one-word ICP (e.g. `"REITs"`) cannot trip the overlap threshold, and an extremely short pitch will rarely cross the Jaccard threshold. Write a beachhead specific enough to read like a one-line ICP description and a pitch specific enough that two unrelated ideas in the same sector would not collide.
 6. Pick the single highest-scoring idea. Discard the others; do not include runner-up ideas in the output.
@@ -87,6 +81,11 @@ sourceContext:
     - https://canonical-url
   eventKeys:
     - companylowercased|eventType|YYYY-MM
+  signalStrength: 1
+  qualityScore: 1.0
+  evidenceConfidence: 1
+  incumbentGravity: 1
+  selectionScore: 1.0
   scoreRationale: string
   selectionRationale: string
   dedupeRationale: string

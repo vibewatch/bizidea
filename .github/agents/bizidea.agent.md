@@ -31,11 +31,7 @@ Never run `git add`, `git commit`, or `git push` from inside this agent. Commit 
 
 ## Pipeline
 
-1. **News Triage once**
-   - Invoke `News Triage` once for the requested time window and cap.
-   - On `status: ok` it writes `ideas/_triage/<runTimestamp>/triage.yaml` with collected news, clusters, source briefs, and selected topics.
-   - If the handoff returns `selectedCount: 0` (clusters exist but all are duplicates or otherwise non-`new`), short-circuit: skip step 2 and 3, jump to step 4 finalize, and report a "no work today" summary (0 generated, 0 deduped beyond what triage already saw, 0 failed). Do not invoke any specialist downstream.
-   - If `News Triage` returns `status: failed`, retry once per [handoff-protocol.md](./handoff-protocol.md). A second failure aborts the whole run.
+1. **News Triage once** — Invoke `News Triage` once for the requested time window and cap. On `status: ok` it writes `ideas/_triage/<runTimestamp>/triage.yaml` with collected news, clusters, source briefs, weighted quality/evidence scores, and selected topics. If the handoff returns `selectedCount: 0` (clusters exist but all are duplicates, below the selection threshold, or blocked by portfolio-diversity rules), short-circuit: skip step 2 and 3, jump to step 4 finalize, and report a "no work today" summary (0 generated, 0 deduped beyond what triage already saw, 0 failed). Do not invoke any specialist downstream. If `News Triage` returns `status: failed`, retry once per [handoff-protocol.md](./handoff-protocol.md). A second failure aborts the whole run.
 
 2. **Generate and dedupe ideas**
    - Read `<triageFolder>/triage.yaml` once and enumerate every cluster with `selected: true`. Each such cluster contributes its `clusterId` and `proposedSlug`; keep them in source order so reruns are deterministic.
@@ -112,7 +108,7 @@ before advancing to the next stage.
 
 | File | Stage key for `validate-stage.mjs` | Minimum fields |
 |---|---|---|
-| `triage.yaml` | `triage` | `runDate`, `timeWindow`, `clustersFound`, `selectedCount`, `clusters` |
+| `triage.yaml` | `triage` | `triageSchemaVersion`, `runDate`, `timeWindow`, `clustersFound`, `selectedCount`, `clusters` with v2 scoring fields |
 | `idea.yaml` | `idea` | `slug`, `date`, `pitch`, `sourceContext`, `startupThesis`, `goToMarketSeed`, `solution` |
 | `research.yaml` | `research` | `slug`, `date`, `market`, `competitors`, `researchCoverage`, `deduplication`, `evidenceCorpus`, `sources`, `reportMemo.incumbentThesis` |
 | `business-plan.yaml` | `business-plan` | `slug`, `date`, `executiveSummary`, `strategicChoices`, `market`, `product`, `gtm`, `milestones`, `fundingAsk`, `investorMemo`, `operatingAssumptions` |
@@ -135,7 +131,7 @@ Return a concise summary using the outcome buckets defined in [handoff-protocol.
 - **generated**: per-idea pipelines that reached `ZH Translator` `status: ok` and passed final validation;
 - **deduped**: clusters where `dedupe-idea.mjs` exited `10`;
 - **failed**: any specialist returned `status: failed` after one retry, including `Idea Generator`. The partial folder has already been removed.
-- **not selected (info-only)**: clusters triage saw but did not flag `selected: true` (low score, dedup hit at triage time, or beyond `cap`); listed only when the user asked for visibility into triage — do not pad the summary with these by default.
+- **not selected (info-only)**: clusters triage saw but did not flag `selected: true` (low weighted score, thin evidence, dedup hit at triage time, portfolio-diversity collision, or beyond `cap`); listed only when the user asked for visibility into triage — do not pad the summary with these by default.
 
 Then list:
 

@@ -45,7 +45,7 @@ flowchart TD
 
 | # | Agent | Writes | Job |
 |---|---|---|---|
-| 1 | **News Triage** | `_triage/<ts>/triage.yaml` | One scan per run. Fetches ~120 URLs, keeps ~80, clusters them, scores 4 sub-axes, dedupes against `_index.yaml`, marks top `cap` `new` clusters as `selected`. |
+| 1 | **News Triage** | `_triage/<ts>/triage.yaml` | One scan per run. Fetches ~120 URLs, keeps ~80, clusters them, computes weighted quality + evidence scores, dedupes against `_index.yaml`, and selects up to `cap` diverse `new` clusters without force-filling weak days. |
 | 2 | **Idea Generator** | `<folder>/idea.yaml` | One cluster → one venture-scale idea: wedge, beachhead, GTM seed, source-grounded "why now". Embeds `sourceContext`; no web access. |
 | 2.5 | _gate_ | (deletes folder on dup) | `scripts/dedupe-idea.mjs` runs after every `idea.yaml`. Duplicates removed before any research starts. |
 | 3 | **Market Researcher** | `<folder>/research.yaml` | Auditable evidence corpus (100+ deduped fetched sources), bottom-up TAM/SAM/SOM, ≤5 competitors, regulation, customer signals, `openQuestions`. |
@@ -78,7 +78,7 @@ The minimum-fields contract for each stage YAML lives in [.github/agents/bizidea
 | `cloudflare/` | Cloudflare Worker scheduler. |
 | `.github/agents/` | Copilot agents: `Bizidea` orchestrator, the seven specialists above, and shared references (`handoff-protocol.md`, `sector-vocabulary.md`, `yaml-syntax.md`). |
 | `.github/workflows/` | `bizidea.yml` (Cloudflare-dispatched run) and `deploy.yml` (publishes the site on `main` pushes touching `website/**` or `ideas/**`). |
-| `scripts/` | Deterministic Node helpers: `ideas-index.mjs`, `dedupe-idea.mjs`, `report-dir.mjs`, `validate-stage.mjs`, `check-agent-frontmatter.mjs`, `check-zh-translation.mjs`, `check-near-duplicates.mjs`, `validate-all.mjs`, shared `text.mjs`. |
+| `scripts/` | Deterministic Node helpers: `ideas-index.mjs`, `dedupe-idea.mjs`, `report-dir.mjs`, `validate-stage.mjs`, `check-agent-frontmatter.mjs`, `check-triage.mjs`, `check-zh-translation.mjs`, `check-near-duplicates.mjs`, `validate-all.mjs`, shared `text.mjs`. |
 | [AGENTS.md](AGENTS.md) | Coding-agent quick reference (commands, layout, YAML conventions). |
 
 YAML conventions (camelCase field names, units in numeric names like `revenueK`/`marginPct`, indentation/quoting/multi-line rules) live in [.github/agents/yaml-syntax.md](.github/agents/yaml-syntax.md).
@@ -99,6 +99,8 @@ Common checks from the repo root:
 | Command | Purpose |
 |---|---|
 | `npm run build:ideas-index` | Rebuild `ideas/_index.yaml` from completed folders. |
+| `npm run check:agents` | Validate orchestrator/specialist agent frontmatter names. |
+| `npm run check:triage` | Validate historical `ideas/_triage/**/triage.yaml` artifacts. |
 | `npm run check:ideas-index` | Validate `_index.yaml` without rewriting. |
 | `npm run validate:all` | Full local validation gate. |
 | `npm run check:duplicates` | Flag likely near-duplicate report pairs (non-blocking). |

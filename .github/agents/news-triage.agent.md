@@ -5,7 +5,7 @@ model: "GPT-5.4 (copilot)"
 user-invocable: false
 ---
 
-Scan startup news once per Bizidea run. Write a ranked, deduplicated shortlist of opportunity clusters with enough verified source context for `Idea Generator`.
+Scan startup news once per Bizidea run. Write a ranked, deduplicated, evidence-weighted shortlist of opportunity clusters with enough verified source context for `Idea Generator`.
 
 ## Invocation contract
 
@@ -34,6 +34,8 @@ The orchestrator passes:
 - DO NOT include sources outside `timeWindow`.
 - DO NOT mark a cluster `selected: true` if its `dedupeStatus` is anything other than `new`.
 - DO NOT exceed `cap` selected clusters.
+- DO NOT force-fill `cap`; it is an upper bound, not a quota. Prefer fewer strong, well-evidenced, diverse clusters over padding with weak topics.
+- DO NOT mark a cluster `selected: true` unless it meets the selection eligibility thresholds in step 9.
 
 ## Mission
 
@@ -44,11 +46,7 @@ A "cluster" is the unit a downstream Bizidea pipeline run will work on. Two stor
 ## Workflow
 
 1. Confirm inputs and create `triageFolder` if needed.
-2. Load the history index from `historyIndexPath` if it exists. Build an in-memory list of per-entry records (one record per `entries[]`), each with:
-   - `runFolder`, `slug`, `date`, `keywords` (do not flatten across entries),
-   - `topSourceUrls` (canonicalized list, kept per entry), and
-   - `monthKeys` derived from each entry's `eventKeys` by stripping the middle `|<eventType>|` segment, leaving `<companyLowercased>|<YYYY-MM>`.
-   Step 8 needs to report which entry matched, so do **not** collapse these into flat sets.
+2. Load the history index from `historyIndexPath` if it exists. Build an in-memory list of per-entry records (one record per `entries[]`), keeping `runFolder`, `slug`, `date`, `keywords`, `eventKeys`, `topSourceUrls` (canonicalized list), and `monthKeys` derived from each entry's `eventKeys` by stripping the middle `|<eventType>|` segment, leaving `<companyLowercased>|<YYYY-MM>`. Step 8 needs to report which entry matched, so do **not** collapse these into flat sets.
 3. Search the web broadly for startup-signal news inside `timeWindow`. Target **~120 candidate URLs** across the sectors below (broad scope) or around `topic` (narrow scope). The 120/80 numbers below are calibrated for the default `gpt-5.4` / `xhigh` profile in `bizidea.yml`; smaller models or shorter time windows may legitimately produce fewer. Use queries like `funding`, `seed`, `Series A`, `raises`, `launches`, `announces`, `partnership`, `acquires`, `spinout`, `pilot`, `regulation`, `outage`, `bottleneck`, `workflow`. Sectors to cover in broad scope: AI/ML; climate/energy/grid; health/eldercare/longevity; education/workforce; enterprise SaaS/dev tools; fintech/consumer/marketplaces; industrial/robotics/defense/bio.
 4. **Quick-fetch** each candidate URL — read enough of the page to extract: title, publisher, published date, primary company, one-sentence event summary, event type, and 1–3 key points. Aim for **~80 verified items** before clustering; do not pad with low-quality fetches to hit the number.
 5. Drop:
@@ -57,24 +55,28 @@ A "cluster" is the unit a downstream Bizidea pipeline run will work on. Two stor
    - Famous news with no startup wedge (macro, public-company earnings recaps, celebrity drama, generic AI hype, opinion pieces with no underlying event).
    - Duplicates by canonical URL (after stripping tracking params + fragment).
 6. **Cluster** the survivors. Group items that share the same `(item.company, item.eventType, YYYY-MM)` tuple OR the same regulation/standard/incident. One cluster per distinct opportunity. Within a cluster, the resulting `primaryCompanies[]` is the de-duplicated set of `item.company` values seen on the items grouped into that cluster.
-7. **Score** each cluster. Assign four sub-scores (each integer 1–5) using the Scoring rubric section:
-   - `startupRelevance`
-   - `painIntensity`
-   - `opportunityClarity`
-   - `nonObviousness`
-   Then compute `signalStrength = round(mean(sub-scores))` using half-up rounding (e.g. `2.5 → 3`, `2.4 → 2`). The same rule is used by `Reporter.rating.overall` so the project has one rounding convention. Drop clusters with `signalStrength < 2` OR with **any** sub-score `= 1`. Write a one-sentence `scoreRationale` that names the strongest and weakest sub-score (e.g. "strong opportunity clarity, weak non-obviousness").
-8. **Dedupe** each cluster against the per-entry history records from step 2. The history index records `eventKeys` with an event-type derived from a text heuristic (see [`scripts/ideas-index.mjs`](../../scripts/ideas-index.mjs)) that may not match this run's classification, so the comparison below ignores `eventType` and matches on `<companyLowercased>|<YYYY-MM>` instead. Continue to record the full `<companyLowercased>|<eventType>|<YYYY-MM>` form in the cluster's `eventKeys` field for the audit trail.
+7. **Score** each cluster. Assign four core opportunity sub-scores (each integer 1–5) using the Scoring rubric section: `startupRelevance`, `painIntensity`, `opportunityClarity`, and `nonObviousness`. Also assign `evidenceConfidence` and `incumbentGravity` (each integer 1–5). Compute `qualityScore`, `signalStrength`, and `selectionScore` with the formulas in the Scoring rubric section. Drop clusters with `qualityScore < 2.0` OR with **any** core opportunity sub-score `= 1`. Write a one-sentence `scoreRationale` that names the strongest and weakest opportunity sub-score plus any evidence caveat (e.g. "strong opportunity clarity, weak non-obviousness; evidence is thin but concrete").
+8. **Dedupe** each cluster against the per-entry history records from step 2. The history index records `eventKeys` with an event-type derived from a text heuristic (see [`scripts/ideas-index.mjs`](../../scripts/ideas-index.mjs)) that may not match this run's classification, so use event type as corroborating evidence but do not let `<companyLowercased>|<YYYY-MM>` alone block a genuinely different same-company event. Continue to record the full `<companyLowercased>|<eventType>|<YYYY-MM>` form in the cluster's `eventKeys` field for the audit trail.
    - For each cluster, build candidate `eventKeys[]` — one entry per item grouped into that cluster (the same items that become `sourceBriefs` for selected clusters), formatted `<item.company.lower()>|<item.eventType>|<YYYY-MM of item.publishedDate>`. Use a `Set` so identical keys collapse. Also build `keywords[]` (≤ 16 lowercase nouns from `headline` + cluster items).
    - Build `candidateMonthKeys[]` from candidate `eventKeys[]` by stripping the middle `|<eventType>|` segment.
+   - Build a private `eventPhrase` from the headline and event summary (3–8 normalized nouns/verbs, no stopwords) for reasoning about whether same-company/month news is truly the same event. Do not write `eventPhrase` to YAML.
    - For each history record, check in this order and stop at the first match:
-     1. `monthKeys` overlap AND the record's `date` is within 90 days of `runDate` → `dedupeStatus: duplicate-of:<runFolder>`.
+     1. Exact candidate `eventKeys[]` overlap AND the record's `date` is within 90 days of `runDate` → `dedupeStatus: duplicate-of:<runFolder>`.
      2. `proposedSlug` equals the record's `slug` → `dedupeStatus: duplicate-of:<runFolder>`.
-     3. Any candidate `topSourceUrl` (canonicalized) appears in the record's `topSourceUrls` → `dedupeStatus: near-duplicate-of:<runFolder>`.
-     4. Cluster `keywords[]` overlap with the record's `keywords[]` is `>= 6` items → `dedupeStatus: near-duplicate-of:<runFolder>`.
+     3. `monthKeys` overlap AND the record's `date` is within 90 days of `runDate` AND either event-type overlap or cluster/history `keywords[]` overlap is `>= 4` items → `dedupeStatus: duplicate-of:<runFolder>`.
+     4. Any candidate `topSourceUrl` (canonicalized) appears in the record's `topSourceUrls` → `dedupeStatus: near-duplicate-of:<runFolder>`.
+     5. Cluster `keywords[]` overlap with the record's `keywords[]` is `>= 6` items → `dedupeStatus: near-duplicate-of:<runFolder>`.
    - When more than one record could match a tier, pick the most recent by `date` descending; for the keyword-overlap tier, pick the highest-overlap record and break ties by most recent `date`.
+   - If only `candidateMonthKeys[]` overlap but no tier above matches, keep `dedupeStatus: new`; mention the same-company/month history touch in `dedupeRationale` instead of blocking the cluster.
    - If no record matches any tier → `dedupeStatus: new`.
    - Record a one-sentence `dedupeRationale` for every status (including `new`).
-9. Sort clusters by `signalStrength` descending, then `opportunityClarity` descending, then `itemCount` descending. Walking that sorted list in order, mark the first `cap` clusters with `dedupeStatus: new` as `selected: true`; skip non-`new` clusters and keep walking until `cap` is filled or the list ends. All others `selected: false`. **If after step 7 no cluster survived scoring (`clusters` would be empty), do not write `triage.yaml`** — instead return the failure handoff with reason `"no clusters survived scoring inside <timeWindow>"`. The shape `clusters: []` is rejected by `validate-stage triage` and would force a useless retry. Having clusters but `selectedCount: 0` (all deduped) is OK and must still be written.
+9. Sort clusters by `selectionScore` descending, then `qualityScore` descending, then `opportunityClarity` descending, then `evidenceConfidence` descending, then `itemCount` descending. Build the selected set with a diversity-aware greedy pass:
+   - A cluster is selection-eligible only when `dedupeStatus: new`, `qualityScore >= 3.2`, `painIntensity >= 3`, `opportunityClarity >= 3`, and `evidenceConfidence >= 2`.
+   - `cap` is an upper bound. If fewer than `cap` clusters meet the eligibility and diversity rules, select fewer; do not backfill with weak or thinly evidenced clusters.
+   - In `topicScope: broad`, prefer a balanced portfolio: default maximum 2 selected clusters per `sectorHint`, maximum 3 with the same dominant `eventType`, and maximum 2 whose best source has the same publisher. If a narrow-scope run legitimately concentrates in one sector, skip only the sector cap but still avoid duplicate events.
+   - Do not select two clusters with `keywords[]` overlap `>= 6`; keep the higher `selectionScore` cluster and leave the other `selected: false` with a `selectionRationale` that explains the portfolio overlap.
+   - Mark eligible clusters chosen by this pass as `selected: true`; all others `selected: false`.
+   - **If after step 7 no cluster survived scoring (`clusters` would be empty), do not write `triage.yaml`** — instead return the failure handoff with reason `"no clusters survived scoring inside <timeWindow>"`. The shape `clusters: []` is rejected by `validate-stage triage` and would force a useless retry. Having clusters but `selectedCount: 0` (all deduped or below the selection threshold) is OK and must still be written.
 10. For every selected cluster, include `sourceBriefs` with the best 3–8 fetched sources from that cluster. These briefs must be good enough for `Idea Generator` to embed in `idea.yaml.sourceContext`.
 11. Write `<triageFolder>/triage.yaml`. Fill the tracking and root-level fields with real values, not the placeholders shown in the schema example:
     - `runDate` = the UTC date when this run started, formatted `YYYY-MM-DD`. Step 8's 90-day duplicate window is measured against this value.
@@ -97,7 +99,7 @@ Use the closed list and rules in [sector-vocabulary.md](./sector-vocabulary.md).
 
 ## Scoring rubric
 
-Each sub-score is an integer 1–5 with this anchor. Use the lowest level the cluster clearly meets; do not stretch.
+Each core opportunity sub-score is an integer 1–5 with this anchor. Use the lowest level the cluster clearly meets; do not stretch.
 
 | Score | Anchor (applies independently to each sub-score) |
 |---|---|
@@ -114,7 +116,66 @@ Sub-score definitions:
 - **opportunityClarity** — can a venture-stage product, wedge, buyer, or market opening be named in one sentence from this cluster alone?
 - **nonObviousness** — does the cluster reveal more than the headline everyone already saw (insight, second-order effect, overlooked buyer, hidden bottleneck)?
 
-A cluster with **any sub-score `= 1`** is dropped before sorting, regardless of `signalStrength`. This keeps a cluster from sneaking in on the strength of one dimension while being disqualifying on another.
+A cluster with **any core opportunity sub-score `= 1`** is dropped before sorting, regardless of `qualityScore`. This keeps a cluster from sneaking in on the strength of one dimension while being disqualifying on another.
+
+### Derived quality and selection scores
+
+Use half-up rounding for every derived score (the same convention used by `Reporter.rating.overall`). Keep `qualityScore` and `selectionScore` to one decimal place; keep `signalStrength` as an integer for backward-compatible handoffs.
+
+```text
+qualityScore = roundHalfUp(
+  0.15 * startupRelevance +
+  0.30 * painIntensity +
+  0.35 * opportunityClarity +
+  0.20 * nonObviousness,
+  1 decimal
+)
+
+signalStrength = roundHalfUp(qualityScore, integer)
+
+evidenceModifier = 0.75 + 0.05 * evidenceConfidence
+incumbentPenalty = 0.3 when incumbentGravity >= 4 AND opportunityClarity < 4, else 0
+selectionScore = roundHalfUp(max(0, qualityScore * evidenceModifier - incumbentPenalty), 1 decimal)
+```
+
+Rationale for weights: `painIntensity` and `opportunityClarity` drive downstream idea quality; `startupRelevance` is mostly a gate once a startup/new entrant is clearly involved; `nonObviousness` matters but should not overpower buyer pain or wedge clarity.
+
+### Evidence confidence
+
+`evidenceConfidence` is an integer 1–5 that measures how much trust to put in the cluster evidence, independent of how attractive the opportunity looks.
+
+| Score | Anchor |
+|---|---|
+| 5 | 3+ independent credible sources, including primary evidence such as a company announcement, filing, regulatory document, contract, customer case, or named customer/buyer quote. |
+| 4 | 2+ credible sources with mutually reinforcing facts and at least one concrete number, buyer, customer, or workflow detail. |
+| 3 | 1–2 credible sources with specific facts, but no primary evidence or only partial corroboration. |
+| 2 | Single credible source with some concrete facts; usable for triage but should be selected only if opportunity quality is strong. |
+| 1 | Single vague source, unverifiable claims, or mostly recycled coverage; cluster may be recorded if other scores survive but must not be selected. |
+
+### Incumbent gravity
+
+`incumbentGravity` is an integer 1–5 that measures whether a famous incumbent, public company, or mega-unicorn dominates the story enough to crowd out a new-startup wedge.
+
+| Score | Anchor |
+|---|---|
+| 5 | Story is overwhelmingly about a public company, hyperscaler, government giant, or mature mega-unicorn; a new entrant wedge is hard to name. |
+| 4 | Famous company dominates the headline, but a hidden buyer/workflow/bottleneck may still support a startup wedge. |
+| 3 | Mixed story: known company involved, but supplier/customer/ecosystem opportunity is visible. |
+| 2 | Emerging company is central; incumbents are mostly context or buyers. |
+| 1 | Little incumbent pull; new entrant or undercovered market actor is central. |
+
+High `incumbentGravity` does not automatically disqualify a cluster, but `selectionRationale` must explicitly name the new-entrant wedge or overlooked buyer if such a cluster is selected.
+
+### Selection eligibility
+
+Filtering into `clusters` is intentionally broader than selecting topics for the downstream report pipeline. A cluster may be recorded for audit but remain unselected. Selection requires all of:
+
+- `dedupeStatus: new`;
+- `qualityScore >= 3.2`;
+- `painIntensity >= 3`;
+- `opportunityClarity >= 3`;
+- `evidenceConfidence >= 2`;
+- no portfolio-diversity collision with already selected clusters in the same broad run.
 
 ## YAML syntax rules
 
@@ -125,6 +186,7 @@ Follow [yaml-syntax.md](./yaml-syntax.md). The pipeline parses every artifact wi
 Write exactly this structure to `<triageFolder>/triage.yaml`:
 
 ```yaml
+triageSchemaVersion: 2
 runDate: YYYY-MM-DD
 topic: verbatim topic from orchestrator (or "startup news" in broad mode)
 topicScope: broad|narrow
@@ -164,8 +226,12 @@ clusters:
     painIntensity: 1
     opportunityClarity: 1
     nonObviousness: 1
+    qualityScore: 1.0
     signalStrength: 1
-    scoreRationale: one sentence naming the strongest and weakest sub-score
+    evidenceConfidence: 1
+    incumbentGravity: 1
+    selectionScore: 1.0
+    scoreRationale: one sentence naming the strongest and weakest opportunity sub-score plus any evidence caveat
     selectionRationale: one sentence on why this cluster is investable
     dedupeStatus: new|duplicate-of:<runFolder>|near-duplicate-of:<runFolder>
     dedupeRationale: one sentence
@@ -174,15 +240,18 @@ clusters:
 
 Rules:
 
-- `clusters` is sorted by `signalStrength` descending, then by `opportunityClarity` descending as a tiebreaker, then by `itemCount` descending.
+- `triageSchemaVersion` must be `2` for this weighted evidence/diversity policy.
+- `clusters` is sorted by `selectionScore` descending, then `qualityScore` descending, then `opportunityClarity` descending, then `evidenceConfidence` descending, then `itemCount` descending.
 - `clusterId` is `c1`, `c2`, … in sorted order.
 - `selectedCount` equals the number of clusters with `selected: true` and is `<= cap`.
 - `topSourceUrls` are canonicalized (no tracking params, no fragments, lowercased host, trimmed trailing slash).
 - `sourceBriefs` must only include URLs fetched in this run. For selected clusters, include at least 3 source briefs unless fewer credible fetched sources exist; if fewer exist, explain the shortfall in `selectionRationale`.
 - Each `eventKeys` value uses the `<companyLowercased>|<eventType>|<YYYY-MM>` shape with `eventType ∈ {funding, launch, mna, regulation, incident, news}`.
-- All four sub-scores AND `signalStrength` are integers in `[1, 5]`. `signalStrength` MUST equal `round(mean(sub-scores))` using half-up rounding (`2.5 → 3`, `2.4 → 2`); see step 7 for the project's single rounding convention.
-- A cluster MUST NOT appear in `clusters` if any sub-score is `1` OR `signalStrength < 2`. Filter before sorting.
-- `selected: true` only when `dedupeStatus: new`.
+- All four core opportunity sub-scores, `signalStrength`, `evidenceConfidence`, and `incumbentGravity` are integers in `[1, 5]`.
+- `qualityScore` and `selectionScore` are numbers in `[0, 5]` with one decimal place and MUST follow the formulas above.
+- `signalStrength` MUST equal `roundHalfUp(qualityScore)` using half-up rounding.
+- A cluster MUST NOT appear in `clusters` if any core opportunity sub-score is `1` OR `qualityScore < 2.0`. Filter before sorting.
+- `selected: true` only when `dedupeStatus: new` and all Selection eligibility thresholds are met. `cap` is an upper bound, so `selectedCount < cap` is acceptable.
 
 ## Handoff
 
@@ -198,6 +267,9 @@ selected:
     proposedSlug: kebab-case-slug
     sectorHint: <sector>
     signalStrength: <integer>
+    qualityScore: <number>
+    evidenceConfidence: <integer>
+    selectionScore: <number>
   - clusterId: c2
     ...
 ```

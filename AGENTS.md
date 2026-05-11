@@ -8,7 +8,8 @@
 | Build website | `npm --prefix website run build` |
 | Type-check website | `npm --prefix website run typecheck` |
 | Validate one stage YAML | `node scripts/validate-stage.mjs <folder> <stage>` |
-| Check agent frontmatter | `node scripts/check-agent-frontmatter.mjs` |
+| Check agent frontmatter | `npm run check:agents` |
+| Check historical triage | `npm run check:triage` |
 | Validate all ideas | `npm run validate:all` |
 | Rebuild history index | `node scripts/ideas-index.mjs --strict` |
 | Repair generated YAML | `npm --prefix website run repair:yaml` |
@@ -22,7 +23,7 @@
 | `cloudflare/` | Cloudflare Worker scheduler (dispatches `bizidea.yml` daily) |
 | `.github/agents/` | Agent definitions: `Bizidea` orchestrator, stage specialists, `ZH Translator`, plus shared references (`handoff-protocol.md`, `sector-vocabulary.md`, `yaml-syntax.md`) |
 | `.github/workflows/` | `bizidea.yml` (main pipeline run), `deploy.yml` (site publish on push) |
-| `scripts/` | Node helpers: `ideas-index.mjs`, `dedupe-idea.mjs`, `report-dir.mjs`, `validate-stage.mjs`, `check-agent-frontmatter.mjs`, `text.mjs` |
+| `scripts/` | Node helpers: `ideas-index.mjs`, `dedupe-idea.mjs`, `report-dir.mjs`, `validate-stage.mjs`, `check-agent-frontmatter.mjs`, `check-triage.mjs`, `text.mjs` |
 
 ## YAML conventions
 
