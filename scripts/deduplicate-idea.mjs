@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Deterministic post-idea dedup gate. It compares a freshly generated
+// Deterministic post-idea deduplication gate. It compares a freshly generated
 // idea.yaml against ideas/_index.yaml and optionally removes partial folders.
 //
 // Sister script: `scripts/check-near-duplicates.mjs` is a post-hoc review of
@@ -21,7 +21,7 @@ const BEACHHEAD_OVERLAP_THRESHOLD = 6;
 const PITCH_JACCARD_THRESHOLD = 0.55;
 
 function usage() {
-  console.error('Usage: node scripts/dedupe-idea.mjs <reportFolder> <ideas/_index.yaml> [--delete-on-duplicate] [--github-output <path>]');
+  console.error('Usage: node scripts/deduplicate-idea.mjs <reportFolder> <ideas/_index.yaml> [--delete-on-duplicate] [--github-output <path>]');
   console.error('Exit codes: 0 = new (no duplicate match); 10 = duplicate found; 1 = bad input/IO; 2 = bad invocation.');
   process.exit(2);
 }
@@ -46,7 +46,7 @@ if (!reportFolder || !indexPath) usage();
 
 const ideaPath = join(reportFolder, 'idea.yaml');
 if (!existsSync(ideaPath)) {
-  console.error(`[dedupe-idea] missing ${ideaPath}`);
+  console.error(`[deduplicate-idea] missing ${ideaPath}`);
   process.exit(1);
 }
 
@@ -54,7 +54,7 @@ let idea;
 try {
   idea = loadYaml(ideaPath);
 } catch (err) {
-  console.error(`[dedupe-idea] failed to parse idea.yaml: ${err.message}`);
+  console.error(`[deduplicate-idea] failed to parse idea.yaml: ${err.message}`);
   process.exit(1);
 }
 
@@ -91,12 +91,12 @@ if (match) {
   writeOutput(githubOutput, 'duplicate', 'true');
   writeOutput(githubOutput, 'matchedRunFolder', match.runFolder);
   writeOutput(githubOutput, 'dedupeReason', match.reason);
-  console.log(`[dedupe-idea] duplicate ${basename(reportFolder)} -> ${match.runFolder} (${match.reason})`);
+  console.log(`[deduplicate-idea] duplicate ${basename(reportFolder)} -> ${match.runFolder} (${match.reason})`);
   process.exit(10);
 }
 
 writeOutput(githubOutput, 'duplicate', 'false');
 writeOutput(githubOutput, 'matchedRunFolder', '');
 writeOutput(githubOutput, 'dedupeReason', 'new');
-console.log(`[dedupe-idea] new idea: ${basename(reportFolder)}`);
+console.log(`[deduplicate-idea] new idea: ${basename(reportFolder)}`);
 process.exit(0);

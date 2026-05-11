@@ -21,8 +21,8 @@
 //                             character.
 //
 // Usage:
-//   node scripts/check-zh-translation.mjs <reportFolder>
-//   node scripts/check-zh-translation.mjs <ideasRoot>          # scans every
+//   node scripts/check-zh-translations.mjs <reportFolder>
+//   node scripts/check-zh-translations.mjs <ideasRoot>         # scans every
 //                                                              # report folder
 //
 // Exit code is 0 when clean, 1 when issues are reported, 2 on bad invocation.
@@ -81,7 +81,7 @@ const CJK_RE = /[\u3400-\u9fff\uf900-\ufaff]/;
 const ASCII_LETTER_RE = /[A-Za-z]/;
 
 function usage() {
-  console.error('Usage: node scripts/check-zh-translation.mjs <reportFolderOrIdeasRoot>');
+  console.error('Usage: node scripts/check-zh-translations.mjs <reportFolderOrIdeasRoot>');
   process.exit(2);
 }
 
@@ -273,7 +273,7 @@ function main() {
   if (!arg) usage();
   const target = resolve(arg);
   if (!existsSync(target) || !statSync(target).isDirectory()) {
-    console.error(`[check-zh-translation] not a directory: ${target}`);
+    console.error(`[check-zh-translations] not a directory: ${target}`);
     process.exit(2);
   }
 
@@ -291,10 +291,10 @@ function main() {
   }
 
   if (totalIssues === 0) {
-    console.log(`[check-zh-translation] ✓ ${scanned} folder(s) clean.`);
+    console.log(`[check-zh-translations] ✓ ${scanned} folder(s) clean.`);
     process.exit(0);
   }
-  console.log(`\n[check-zh-translation] ✗ ${totalIssues} issue(s) across ${scanned} folder(s).`);
+  console.log(`\n[check-zh-translations] ✗ ${totalIssues} issue(s) across ${scanned} folder(s).`);
   process.exit(1);
 }
 

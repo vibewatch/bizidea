@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Walk ideas/<run>/{index,idea}.yaml and write ideas/_index.yaml — the
-// aggregated history catalog used by News Triage to dedupe across runs.
+// aggregated history catalog used by News Triage to deduplicate across runs.
 //
 // Run from the repo root or any cwd; resolves the ideas/ folder relative to
 // this script. Pure read of source YAMLs + write of one summary file. Safe to
@@ -195,9 +195,9 @@ function build() {
   }
 
   if (errors.length) {
-    for (const err of errors) console.warn(`[ideas-index] ${err}`);
+    for (const err of errors) console.warn(`[build-ideas-index] ${err}`);
     if (STRICT) {
-      console.error(`[ideas-index] strict mode failed with ${errors.length} issue(s)`);
+      console.error(`[build-ideas-index] strict mode failed with ${errors.length} issue(s)`);
       process.exit(1);
     }
   }
@@ -206,21 +206,21 @@ function build() {
     const currentErrors = [];
     const current = safeLoad(OUT_PATH, currentErrors);
     if (currentErrors.length) {
-      for (const err of currentErrors) console.error(`[ideas-index] ${err}`);
+      for (const err of currentErrors) console.error(`[build-ideas-index] ${err}`);
       process.exit(1);
     }
 
     if (JSON.stringify(comparableIndex(current)) !== JSON.stringify(comparableIndex(out))) {
-      console.error(`[ideas-index] check failed: ${OUT_PATH} is stale; run npm run build:ideas-index`);
+      console.error(`[build-ideas-index] check failed: ${OUT_PATH} is stale; run npm run build:ideas-index`);
       process.exit(1);
     }
 
-    console.log(`[ideas-index] ✓ validated ${entries.length}/${runs.length} entries; checked ${OUT_PATH}; no files written`);
+    console.log(`[build-ideas-index] ✓ validated ${entries.length}/${runs.length} entries; checked ${OUT_PATH}; no files written`);
     return;
   }
 
   writeFileSync(OUT_PATH, dumped, 'utf8');
-  console.log(`[ideas-index] wrote ${OUT_PATH} with ${entries.length} entries`);
+  console.log(`[build-ideas-index] wrote ${OUT_PATH} with ${entries.length} entries`);
 }
 
 build();

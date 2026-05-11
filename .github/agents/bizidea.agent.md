@@ -36,9 +36,9 @@ Never run `git add`, `git commit`, or `git push` from inside this agent. Commit 
 2. **Generate and dedupe ideas**
    - Read `<triageFolder>/triage.yaml` once and enumerate every cluster with `selected: true`. Each such cluster contributes its `clusterId` and `proposedSlug`; keep them in source order so reruns are deterministic.
    - For each selected cluster, in this order:
-     1. Run `node scripts/report-dir.mjs <runTimestamp> <cluster.proposedSlug>` to create `<reportFolder>` and capture the absolute path it prints on stdout.
+    1. Run `node scripts/create-report-dir.mjs <runTimestamp> <cluster.proposedSlug>` to create `<reportFolder>` and capture the absolute path it prints on stdout.
      2. Invoke `Idea Generator` and pass these four inputs verbatim in the prompt: `folder=<reportFolder>`, `triagePath=<triageFolder>/triage.yaml`, `clusterId=<cluster.clusterId>`, `historyIndexPath=<historyIndexPath>`. The specialist requires all four (see [idea-generator.agent.md](./idea-generator.agent.md) `## Inputs`); omitting any forces a failure handoff.
-     3. Run `node scripts/dedupe-idea.mjs <reportFolder> ideas/_index.yaml --delete-on-duplicate`. The `--delete-on-duplicate` flag is required — without it the script only reports and the partial folder will pollute the next run's history.
+    3. Run `node scripts/deduplicate-idea.mjs <reportFolder> ideas/_index.yaml --delete-on-duplicate`. The `--delete-on-duplicate` flag is required — without it the script only reports and the partial folder will pollute the next run's history.
      4. Read the script's exit code: `0` = new idea (proceed to research), `10` = duplicate (folder already removed; record as deduped and do not run research), `1` or `2` = invocation/IO error (treat as a per-idea failure and continue with other ideas).
 
 3. **Parallel report processing**
@@ -54,10 +54,10 @@ Never run `git add`, `git commit`, or `git push` from inside this agent. Commit 
 4. **Finalize**
    - Confirm every generated report folder has completed `ZH Translator` handoff output.
    - Sweep `ideas/` for partial folders **created during this run** that escaped per-stage cleanup. Match only folders whose name starts with `<runTimestamp>-` (the timestamp resolved in Run setup). A partial folder is one of those that is missing any of: `idea.yaml`, `research.yaml`, `business-plan.yaml`, `financial-model.yaml`, `index.yaml`, or any of the five `*.zh.yaml` siblings. Delete each partial folder. Never touch folders from earlier `runTimestamp`s — historical reports may legitimately predate later schema additions, and this sweep is a safety net for the current run only. Sweep **before** the index rebuild because partial folders with malformed YAML can break `--strict` rebuild and prevent recovery.
-   - Rebuild `ideas/_index.yaml` with `node scripts/ideas-index.mjs --strict`. The `--strict` flag is required so any per-folder parse error fails fast; CI re-runs the same command and will reject the run otherwise.
-   - Validate by running `npm run validate:all` from the repo root. This is the same superset CI runs (`check:ideas-index`, `check:duplicates`, `check:ideas`, `check:zh`, `check:typecheck`, `check:test`, website build) and is authoritative. If it fails, distinguish the failure class:
-     - **Folder-scoped failure** (`check:ideas`, `check:zh`, website build pointing at a specific folder): identify the offending folder(s) from the output, delete only those folders within `<runTimestamp>-*`, re-run `node scripts/ideas-index.mjs --strict`, then re-run `validate:all` once.
-     - **Repo-scoped failure** (`check:test`, `check:typecheck`, `check:ideas-index`, `check:duplicates` without a folder pointer): do not delete any folder; abort the run and include the validator output in the final summary. Deleting folders would not fix a code or aggregate-index issue.
+   - Rebuild `ideas/_index.yaml` with `node scripts/build-ideas-index.mjs --strict`. The `--strict` flag is required so any per-folder parse error fails fast; CI re-runs the same command and will reject the run otherwise.
+   - Validate by running `npm run validate:all` from the repo root. This is the same superset CI runs (`check:ideas-index`, `check:duplicates`, `check:ideas`, `check:zh-translations`, `check:types`, `test`, website build) and is authoritative. If it fails, distinguish the failure class:
+     - **Folder-scoped failure** (`check:ideas`, `check:zh-translations`, website build pointing at a specific folder): identify the offending folder(s) from the output, delete only those folders within `<runTimestamp>-*`, re-run `node scripts/build-ideas-index.mjs --strict`, then re-run `validate:all` once.
+     - **Repo-scoped failure** (`test`, `check:types`, `check:ideas-index`, `check:duplicates` without a folder pointer): do not delete any folder; abort the run and include the validator output in the final summary. Deleting folders would not fix a code or aggregate-index issue.
      If the second `validate:all` still fails, abort and include the validator output in the final summary.
    - Summarize generated, deduped, and failed topics.
 
@@ -114,14 +114,14 @@ before advancing to the next stage.
 | `business-plan.yaml` | `business-plan` | `slug`, `date`, `executiveSummary`, `strategicChoices`, `market`, `product`, `gtm`, `milestones`, `fundingAsk`, `investorMemo`, `operatingAssumptions` |
 | `financial-model.yaml` | `financial-model` | `slug`, `date`, `totals`, `unitEconomics`, `fundingAsk`, `modelSanity` |
 | `index.yaml` | `index` | `slug`, `date`, `pitch`, `rating`, `files`, `financials` |
-| `*.zh.yaml` | (covered by `node scripts/check-zh-translation.mjs`) | all five files exist: `idea.zh.yaml`, `research.zh.yaml`, `business-plan.zh.yaml`, `financial-model.zh.yaml`, `index.zh.yaml`; each is non-empty, parses as YAML, and preserves the English source schema shape |
+| `*.zh.yaml` | (covered by `node scripts/check-zh-translations.mjs`) | all five files exist: `idea.zh.yaml`, `research.zh.yaml`, `business-plan.zh.yaml`, `financial-model.zh.yaml`, `index.zh.yaml`; each is non-empty, parses as YAML, and preserves the English source schema shape |
 
 When a gate fails, retry the same specialist once with the validation error and same folder path. If it still fails, record the topic as failed and do not run later stages for that topic.
 
 ## Report folder rules
 
-- Create one folder per selected idea by running `node scripts/report-dir.mjs <runTimestamp> <proposedSlug>` (`proposedSlug` comes from the triage cluster). The script prints the absolute folder path on stdout and creates the folder; if the folder already exists, it appends `-2`, `-3`, ... so collisions never overwrite earlier work.
-- The folder name is set from the triage `proposedSlug` and is stable for the life of the run. The `slug` written inside `idea.yaml` by `Idea Generator` may differ (it can be sharpened during idea brainstorming) and is the value `dedupe-idea.mjs` and `ideas-index.mjs` consider authoritative for cross-run dedup. Do not rename the folder to match the refined slug.
+- Create one folder per selected idea by running `node scripts/create-report-dir.mjs <runTimestamp> <proposedSlug>` (`proposedSlug` comes from the triage cluster). The script prints the absolute folder path on stdout and creates the folder; if the folder already exists, it appends `-2`, `-3`, ... so collisions never overwrite earlier work.
+- The folder name is set from the triage `proposedSlug` and is stable for the life of the run. The `slug` written inside `idea.yaml` by `Idea Generator` may differ (it can be sharpened during idea brainstorming) and is the value `deduplicate-idea.mjs` and `build-ideas-index.mjs` consider authoritative for cross-run dedup. Do not rename the folder to match the refined slug.
 - Partial folders must not remain directly under `ideas/` at finalization because website validation treats every non-underscore folder as a completed report. The Pipeline-step-4 sweep handles this scoped to the current `<runTimestamp>-` prefix; do not delete partial folders from earlier `runTimestamp`s under any circumstance.
 
 ## Handoff / final response
@@ -129,7 +129,7 @@ When a gate fails, retry the same specialist once with the validation error and 
 Return a concise summary using the outcome buckets defined in [handoff-protocol.md](./handoff-protocol.md):
 
 - **generated**: per-idea pipelines that reached `ZH Translator` `status: ok` and passed final validation;
-- **deduped**: clusters where `dedupe-idea.mjs` exited `10`;
+- **deduped**: clusters where `deduplicate-idea.mjs` exited `10`;
 - **failed**: any specialist returned `status: failed` after one retry, including `Idea Generator`. The partial folder has already been removed.
 - **not selected (info-only)**: clusters triage saw but did not flag `selected: true` (low weighted score, thin evidence, dedup hit at triage time, portfolio-diversity collision, or beyond `cap`); listed only when the user asked for visibility into triage — do not pad the summary with these by default.
 

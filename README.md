@@ -21,7 +21,7 @@ flowchart TD
     triageFile --> fanout{{"for each selected cluster"}}
     fanout --> idea["Idea Generator<br/>one cluster &rarr; one idea"]
     idea -->|"writes"| ideaFile[("idea.yaml<br/>+ embedded sourceContext")]
-    ideaFile --> dedup{{"scripts/dedupe-idea.mjs<br/>vs ideas/_index.yaml"}}
+    ideaFile --> dedup{{"scripts/deduplicate-idea.mjs<br/>vs ideas/_index.yaml"}}
     dedup -->|"duplicate"| drop["delete partial folder"]
     dedup -->|"new"| pipeline
 
@@ -35,7 +35,7 @@ flowchart TD
     end
 
     zhFiles --> finalize{{"Bizidea finalize"}}
-    finalize -->|"node scripts/ideas-index.mjs --strict"| indexFile[("ideas/_index.yaml<br/>aggregated history")]
+    finalize -->|"node scripts/build-ideas-index.mjs --strict"| indexFile[("ideas/_index.yaml<br/>aggregated history")]
     finalize -->|"npm run validate:all"| validate["validate everything"]
     indexFile --> push["git commit &amp; push"]
     push --> deploy[".github/workflows/deploy.yml<br/>Astro build &rarr; GitHub Pages"]
@@ -47,7 +47,7 @@ flowchart TD
 |---|---|---|---|
 | 1 | **News Triage** | `_triage/<ts>/triage.yaml` | One scan per run. Fetches ~120 URLs, keeps ~80, clusters them, computes weighted quality + evidence scores, dedupes against `_index.yaml`, and selects up to `cap` diverse `new` clusters without force-filling weak days. |
 | 2 | **Idea Generator** | `<folder>/idea.yaml` | One cluster → one venture-scale idea: wedge, beachhead, GTM seed, source-grounded "why now". Embeds `sourceContext`; no web access. |
-| 2.5 | _gate_ | (deletes folder on dup) | `scripts/dedupe-idea.mjs` runs after every `idea.yaml`. Duplicates removed before any research starts. |
+| 2.5 | _gate_ | (deletes folder on dup) | `scripts/deduplicate-idea.mjs` runs after every `idea.yaml`. Duplicates removed before any research starts. |
 | 3 | **Market Researcher** | `<folder>/research.yaml` | Auditable evidence corpus (100+ deduped fetched sources), bottom-up TAM/SAM/SOM, ≤5 competitors, regulation, customer signals, `openQuestions`. |
 | 4 | **Business Plan Writer** | `<folder>/business-plan.yaml` | Investor-ready plan: ICP, product sequencing, GTM, milestones, hiring, risks, funding ask, investor memo. No web; gaps surfaced as `null`. |
 | 5 | **Financial Modeler** | `<folder>/financial-model.yaml` | 3-year model: monthly Y1 + quarterly Y2/Y3 P&L, headcount, CAC/LTV/payback, runway-based funding ask, `sanityChecks.flags`, `modelSanity` summary. Every number ties to `assumptions[]`. |
@@ -61,7 +61,7 @@ flowchart TD
 - **Generate-then-research barrier.** All selected ideas are generated and deduped *before* any `Market Researcher` invocation, so the dedupe gate is authoritative across the batch.
 - **Parallel across ideas, sequential within.** Stages inside a pipeline wait for the previous file to exist, parse, and pass the minimum-fields gate.
 - **Gate-and-retry.** A failed gate triggers exactly one retry of the same specialist. A second failure marks only that idea as failed and deletes its partial folder.
-- **Stable folder names.** [scripts/report-dir.mjs](scripts/report-dir.mjs) creates `ideas/<runTimestamp>-<slug>/` once; the name never changes if the slug evolves.
+- **Stable folder names.** [scripts/create-report-dir.mjs](scripts/create-report-dir.mjs) creates `ideas/<runTimestamp>-<slug>/` once; the name never changes if the slug evolves.
 - **Hard stops.** Triage failure or final index-rebuild failure aborts the whole run; per-idea failures only abort that idea.
 - **Localization is part of "done".** A report is not generated until its five `*.zh.yaml` files exist and parse.
 
@@ -78,7 +78,7 @@ The minimum-fields contract for each stage YAML lives in [.github/agents/bizidea
 | `cloudflare/` | Cloudflare Worker scheduler. |
 | `.github/agents/` | Copilot agents: `Bizidea` orchestrator, the seven specialists above, and shared references (`handoff-protocol.md`, `sector-vocabulary.md`, `yaml-syntax.md`). |
 | `.github/workflows/` | `bizidea.yml` (Cloudflare-dispatched run) and `deploy.yml` (publishes the site on `main` pushes touching `website/**` or `ideas/**`). |
-| `scripts/` | Deterministic Node helpers: `ideas-index.mjs`, `dedupe-idea.mjs`, `report-dir.mjs`, `validate-stage.mjs`, `check-agent-frontmatter.mjs`, `check-triage.mjs`, `check-zh-translation.mjs`, `check-near-duplicates.mjs`, `validate-all.mjs`, shared `text.mjs`. |
+| `scripts/` | Deterministic Node helpers: `build-ideas-index.mjs`, `deduplicate-idea.mjs`, `create-report-dir.mjs`, `validate-stage.mjs`, `check-agent-frontmatter.mjs`, `check-triage.mjs`, `check-zh-translations.mjs`, `check-near-duplicates.mjs`, `validate-all.mjs`, shared `text.mjs`. |
 | `.cache/` | Local-only digest manifests for incremental builds (gitignored; restored in CI via `actions/cache`). |
 | [AGENTS.md](AGENTS.md) | Coding-agent quick reference (commands, layout, YAML conventions). |
 
@@ -103,9 +103,12 @@ Common checks from the repo root:
 | `npm run check:agents` | Validate orchestrator/specialist agent frontmatter names. |
 | `npm run check:triage` | Validate historical `ideas/_triage/**/triage.yaml` artifacts. |
 | `npm run check:ideas-index` | Validate `_index.yaml` without rewriting. |
-| `npm run validate:all` | Full local validation gate. |
 | `npm run check:duplicates` | Flag likely near-duplicate report pairs (non-blocking). |
-| `npm run check:test` | Vitest. |
+| `npm run check:ideas` | Validate report artifacts through the website schema. |
+| `npm run check:zh-translations` | Validate Simplified Chinese report translations. |
+| `npm run check:types` | Type-check the website. |
+| `npm run test` | Vitest. |
+| `npm run validate:all` | Full local validation gate. |
 
 ### Incremental builds
 

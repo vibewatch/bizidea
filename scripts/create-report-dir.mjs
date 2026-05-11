@@ -6,7 +6,7 @@ import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 function usage() {
-  console.error('Usage: node scripts/report-dir.mjs <runTimestamp> <proposedSlug>');
+  console.error('Usage: node scripts/create-report-dir.mjs <runTimestamp> <proposedSlug>');
   process.exit(2);
 }
 
@@ -21,11 +21,11 @@ const slug = rawSlug
   .replace(/-+/g, '-');
 
 if (!/^\d{14}$/.test(runTimestamp)) {
-  console.error(`[report-dir] invalid run timestamp: ${runTimestamp}`);
+  console.error(`[create-report-dir] invalid run timestamp: ${runTimestamp}`);
   process.exit(1);
 }
 if (!slug) {
-  console.error(`[report-dir] invalid slug: ${rawSlug}`);
+  console.error(`[create-report-dir] invalid slug: ${rawSlug}`);
   process.exit(1);
 }
 

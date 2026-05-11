@@ -83,7 +83,7 @@ These are bucket keys, not labels. Translating them silently breaks the heatmap 
 
 ## Categorical labels to translate
 
-These fields look short and structural but are rendered as visible text. They must contain Chinese characters in `*.zh.yaml`. The deterministic linter ([scripts/check-zh-translation.mjs](../../scripts/check-zh-translation.mjs)) enforces every entry in this list (rule R4):
+These fields look short and structural but are rendered as visible text. They must contain Chinese characters in `*.zh.yaml`. The deterministic linter ([scripts/check-zh-translations.mjs](../../scripts/check-zh-translations.mjs)) enforces every entry in this list (rule R4):
 
 - `**.incumbentThesis[*].incumbentClass` (e.g. `Workflow tools` → `工作流工具`)
 - `**.team[*].role` (e.g. `Founder CEO` → `创始人/CEO`)
@@ -301,7 +301,7 @@ Each segment must satisfy all four:
 After writing all five files, run the deterministic linter from the repo root:
 
 ```bash
-node scripts/check-zh-translation.mjs <absolute report folder path>
+node scripts/check-zh-translations.mjs <absolute report folder path>
 ```
 
 The linter checks four things and exits non-zero on any violation:
@@ -334,7 +334,7 @@ files:
   - business-plan.zh.yaml
   - financial-model.zh.yaml
   - index.zh.yaml
-linter: scripts/check-zh-translation.mjs passed
+linter: scripts/check-zh-translations.mjs passed
 quality: accuracy, fluency, style, and terminology consistency checked
 ```
 

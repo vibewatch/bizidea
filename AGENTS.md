@@ -4,14 +4,17 @@
 
 | Task | Command |
 |---|---|
-| Run tests | `npm run check:test` |
+| Run tests | `npm run test` |
 | Build website | `npm --prefix website run build` |
-| Type-check website | `npm --prefix website run typecheck` |
+| Type-check website | `npm run check:types` |
 | Validate one stage YAML | `node scripts/validate-stage.mjs <folder> <stage>` |
 | Check agent frontmatter | `npm run check:agents` |
 | Check historical triage | `npm run check:triage` |
-| Validate all ideas | `npm run validate:all` |
-| Rebuild history index | `node scripts/ideas-index.mjs --strict` |
+| Check history index freshness | `npm run check:ideas-index` |
+| Check near duplicates | `npm run check:duplicates` |
+| Check Chinese translations | `npm run check:zh-translations` |
+| Run full validation | `npm run validate:all` |
+| Rebuild history index | `node scripts/build-ideas-index.mjs --strict` |
 | Repair generated YAML | `npm --prefix website run repair:yaml` |
 
 ## Repository layout
@@ -23,7 +26,7 @@
 | `cloudflare/` | Cloudflare Worker scheduler (dispatches `bizidea.yml` daily) |
 | `.github/agents/` | Agent definitions: `Bizidea` orchestrator, stage specialists, `ZH Translator`, plus shared references (`handoff-protocol.md`, `sector-vocabulary.md`, `yaml-syntax.md`) |
 | `.github/workflows/` | `bizidea.yml` (main pipeline run), `deploy.yml` (site publish on push) |
-| `scripts/` | Node helpers: `ideas-index.mjs`, `dedupe-idea.mjs`, `report-dir.mjs`, `validate-stage.mjs`, `check-agent-frontmatter.mjs`, `check-triage.mjs`, `text.mjs` |
+| `scripts/` | Node helpers: `build-ideas-index.mjs`, `deduplicate-idea.mjs`, `create-report-dir.mjs`, `validate-stage.mjs`, `check-agent-frontmatter.mjs`, `check-triage.mjs`, `check-zh-translations.mjs`, `check-near-duplicates.mjs`, `validate-all.mjs`, shared `text.mjs` |
 
 ## YAML conventions
 

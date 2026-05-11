@@ -11,9 +11,9 @@ const checks = [
   { label: 'ideas index freshness', command: 'npm', args: ['run', 'check:ideas-index'] },
   { label: 'near duplicate review', command: 'npm', args: ['run', 'check:duplicates'] },
   { label: 'idea artifact validation', command: 'npm', args: ['run', 'check:ideas'] },
-  { label: 'Chinese translation validation', command: 'npm', args: ['run', 'check:zh'] },
-  { label: 'website typecheck', command: 'npm', args: ['run', 'check:typecheck'] },
-  { label: 'unit/regression tests', command: 'npm', args: ['run', 'check:test'] },
+  { label: 'Chinese translation validation', command: 'npm', args: ['run', 'check:zh-translations'] },
+  { label: 'website typecheck', command: 'npm', args: ['run', 'check:types'] },
+  { label: 'unit/regression tests', command: 'npm', args: ['run', 'test'] },
   { label: 'website static build', command: 'npm', args: ['--prefix', 'website', 'run', 'build'] },
 ];
 

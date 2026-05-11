@@ -63,7 +63,7 @@ categorizes outcomes into three buckets when summarizing the run:
 - **generated** — the per-idea pipeline reached `ZH Translator` with
   `status: ok` and the report folder passed validation.
 - **deduped** — `Idea Generator` returned `status: ok` but
-  `dedupe-idea.mjs` flagged the idea as a duplicate; the partial folder is
+  `deduplicate-idea.mjs` flagged the idea as a duplicate; the partial folder is
   removed and no later stage runs.
 - **failed** — a specialist returned `status: failed` after one retry; the
   partial folder is removed and the topic is reported as failed.
