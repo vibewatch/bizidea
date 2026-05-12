@@ -1,0 +1,214 @@
+slug: claude-aws-tenant-broker
+date: '2026-05-12'
+executiveSummary: Claude AWS Tenant Broker 是一套给大型 AWS 企业用的控制平面，帮助它们在不丢预算控制、IAM 纪律和可审计性的前提下，为多支内部团队开通原生 Claude Platform。首个客户画像是 Fortune 2000 企业：它有中央云平台团队、AWS 企业协议，而且在安全批准新的 AWS 采购路径后，至少有 5 支内部团队同时申请生产级 Claude 访问。Claude Platform on AWS 之所以重要，不是因为采购更方便这么简单，而是因为采购不再是主阻塞点，真正卡住 rollout 的变成了租户隔离、支出归属、CloudTrail 配置和审批流。MVP 应该收得很窄，只做自助租户申请、强制元数据、IAM 角色模板、预算上限、工具权限审批，以及绑定 AWS 账户结构的成本分摊导出。GTM 先由创始人亲自打，面向云平台工程总监和基础设施 VP，先卖 2–3 支内部团队的付费 rollout 试点，再转成按活跃租户和托管支出定价的年费合同。研究表明，初始市场真实存在，但规模并不大：TAM 约 $151.6M，SAM 约 $37.9M，第三年 SOM 约 $3.2M，所以公司必须先把切口打穿，再谈多模型或多云扩张。最值得相信的一点在于：Bedrock、网关产品和内部脚本都没有覆盖“按 AWS 组织原生方式管理 Claude 租户生命周期，并做财务级归属映射”这个精确工作流。最强的反证风险有三类：AWS 或 Anthropic 很快补齐一方管理功能；安全团队拒绝接受 AWS 边界之外、由 Anthropic 运营的处理路径；以及买家最后觉得表格加内部脚本已经够用。眼下还缺一条关键证据——真实买家最先愿意为哪类控制能力掏预算，所以前 12 个月必须证明：开通痛点能先转成付费试点，再转成生产合同。
+problem:
+- 原生 Claude 能直接通过 AWS 采购后，云平台团队立刻成了瓶颈，因为每新增一支内部团队，在 rollout 前都要先解决隔离访问、IAM 范围、审计日志和预算归属。
+- 现有替代方案是一套很脆的拼凑：共享账户、手工 IAM 配置、用表格做成本分摊，再加上一堆一次性的审批流。一旦 managed agents、code execution 和 tool use 在多团队里扩散，这套东西就会断。
+solution:
+- 提供一套 AWS 原生租户代理，按内部团队开通 Claude 工作区，并默认挂上经过批准的 IAM 模板、必填标签、预算上限和 CloudTrail 映射。
+- 给平台、FinOps 和安全团队一层共享的审批与成本分摊能力，让他们能同意更多 Claude 部署，而不用逼所有团队共用一个平台账户，也不用退回 Bedrock。
+whyWeWin:
+- 这个切口绑在一个刚刚变得紧急的工作流上：如何在现有 AWS 治理模型里开通原生 Claude Platform，而不是泛泛讲 AI 可观测性或路由。
+- 产品贴着大型企业今天的 AWS Organizations、Control Tower、Budgets 和成本分摊标签来设计，买家几乎不用改现有操作方式，就能接上。
+- 租户策略历史、IAM 模板、获批工具配置和支出归属映射会越积越厚，最终沉成实施护城河和数据护城河；横向网关在租户创建时拿不到这些数据。
+strategicChoices:
+  beachhead: Fortune 2000 的 AWS 企业：它们有集中式云平台团队、50+ 个 AWS 账户，而且至少已有 5 支内部团队在申请生产级 Claude agents 或带工具的应用。
+  wedgeRationale: 这批客户在安全批准和 AWS 承诺额度压力出现后，痛感是立刻爆发的；经济买家清晰，而且能用更快的租户上线和更干净的支出归属直接衡量成效。若一开始就做所有 LLM 治理、中小企业或非 AWS 云，反而会把最紧的工作流冲淡。
+  sequencingRationale: 先把开通、IAM 模板、预算执行和审计默认项做好，因为这些能力才能真正放行第一批生产 rollout。等拿到参考账户、把 AWS 组织映射跑顺，再加分析、迁移工具、伙伴交付，以及更后面的跨模型或多云策略。
+  notYet:
+  - 面向 Azure 和 GCP 的跨云 AI 控制平面
+  - 横向 LLM 网关与模型路由产品
+  - 终端 copilot 界面或面向 agent 构建的 IDE 功能
+  - 对驻留要求极高、短期内更可能优先走 Bedrock 的高监管场景
+market:
+  tam: 按模型估算，TAM 约为 $151.6M：基于美国 500 人以上企业，叠加 AWS 使用比例、GenAI 进入生产的采用率，以及约 $90k 的 ACV 假设得出。
+  sam: 按模型估算，SAM 约为 $37.9M：聚焦拥有集中式 AWS 平台团队、且内部 Claude 需求足够强，值得上租户代理的大企业。
+  som: 按模型估算，第三年 SOM 约为 $3.2M：假设约 35 家客户、混合 ACV 为 $90k。
+  segments:
+  - 正在把原生 Claude rollout 标准化的大型 AWS 企业中的中央云平台团队与内部 AI 平台团队
+  - 需要为内部 AI 部署拿到支出归因、审批流和审计证据的 FinOps 与安全工程相关方
+  buyingProcess: 第一单大概率由云平台工程总监或基础设施 VP 牵头：先批准 Claude Platform on AWS，再因为多个业务团队同时申请生产访问而启动采购。最现实的购买路径，是先做覆盖 2–3 支内部团队的付费试点，FinOps 和安全团队作为必经相关方参与；只有当租户上线时间明显缩短，且支出归因足够干净、能支撑成本分摊时，才会转成年费合同。
+product:
+  mvp: MVP 是一套控制平面：平台团队能审批租户申请、套用 IAM 与工具权限模板、执行必填元数据和预算上限，并导出与 CloudTrail、AWS 成本标签打通的成本分摊记录。它必须作为现有 AWS 组织结构上的只读加开通覆盖层存在，而不是要求客户先把平台全部重建。
+  sixMonth: 6 个月内交付租户申请工作流、AWS 组织映射、IAM 角色模板、预算与标签策略、CloudTrail 配置指引，以及 2–3 个付费 design partner 试点，并在真实内部 Claude rollout 上运行。
+  twelveMonth: 12 个月内补上审批策略包、支出与异常仪表盘、从直连 Anthropic 或 Bedrock 迁移的工具，并通过一家 AWS 咨询伙伴沉淀一套可复制的实施打法。
+  twentyFourMonth: 24 个月后，前提是 Claude-on-AWS 这个切口已经证明能稳定留住生产客户，再扩成更完整的企业 AI 控制平面：加入跨模型策略归一、更深的 FinOps 导出，以及更多云支持。
+  keyBets:
+  - 买家会先为 Claude 专用租户代理掏钱，而不是先买一套大而全的 AI 治理平台。
+  - 对首批买家来说，强制元数据和租户创建控制，比事后可观测性更痛、更值预算。
+  - 只读方式接入 AWS 组织结构，已经足够把试点跑起来，不需要一开始就堆重度专业服务。
+  - 早期客户一旦在 AWS 上把 Claude 标准化，后续就更可能从同一家厂商继续购买相邻的策略和跨模型控制。
+gtm:
+  wedge: 把“原生 Claude on AWS 的 rollout 加速”卖给云平台负责人：他们需要在不丢预算归属和可审计性的前提下，尽快批准多支内部团队上线。
+  channels:
+  - 创始人主导直销，面向云平台工程总监、基础设施 VP 和内部 AI 平台负责人
+  - 已经在做 landing zone 和治理项目的 AWS Control Tower / 多账户咨询公司
+  - FinOps 与云治理社区——AI 成本分摊和标签纪律正是这些圈子的活问题
+  funnelTargets: 目标账户到合格 discovery 25%+，合格 discovery 到付费试点 20%+，付费试点到年度生产合同 50%+，生产客户在 9 个月内扩到第二支团队的比例 60%+。
+  pricing: 报价采用按活跃 Claude 租户和托管 Claude 支出计价的年费订阅，另配一个可抵扣生产合同的付费试点或 onboarding 包。这和买家的价值公式是对上的：采购的不是另一个开发者席位，而是用软件替掉内部搭建成本，并换来财务级归属映射。
+businessModel:
+  revenueStreams:
+  - 租户开通、审批流和成本分摊控制的年度 SaaS 订阅
+  - AWS 组织配置与首轮 rollout 的 onboarding / 策略映射费用
+  - 高级审批、跨模型策略和扩展支出分析模块
+  unitOfValue: 纳管中的活跃 Claude 租户，扩张的主轴是托管 Claude 支出。
+  targetGrossMarginPct: 70
+  expansionLevers:
+  - 单个企业账户里接入更多内部团队、环境和业务单元
+  - 向 FinOps 与安全相关方加售审批、审计和分析模块
+  - 当控制平面嵌入后，从 Claude-on-AWS 扩到更广的多模型治理
+strategyMap:
+  northStarMetric: 带着已批准策略成功上线生产的 Claude 租户数量，以及至少 95% 的支出能准确归到具名团队或业务单元。
+  inputMetrics:
+  - 从租户申请到获批上线生产的中位天数
+  - 已映射到必填归属元数据的 Claude 支出占比
+  - 付费试点转年度生产合同的转化率
+  - 每个生产客户已上线的内部团队数
+  - 使用标准策略模板、无需手工重写的新租户申请占比
+  moatsToBuild:
+  - 一套可复用的 IAM、预算和工具权限模板库，并映射到真实 AWS 组织拓扑
+  - 把租户结构、策略选择和支出归属结果串起来的历史数据集，覆盖多家企业
+  - 嵌入式审批流和成本分摊导出，逐步成为企业内部云运营节奏的一部分
+  killCriteria:
+  - 前 20 家目标企业里，不到 5 家明确表示：原生 Claude on AWS rollout 已经急到值得在本预算周期里掏钱。
+  - 前 4 个付费试点里，不到 2 个能在试点结束后 6 个月内转成高于 $90k ACV 的年费合同。
+  - 超过 25% 的试点租户上线仍需要产品无法模板化的定制 IAM 或计费工作。
+  - 在拿下参考账户前，AWS 或 Anthropic 就已发布足够强的一方租户管理与成本分摊能力，让独立代理失去必要性。
+  mermaid: |
+    flowchart LR
+      Wedge[Claude on AWS rollout bottleneck] --> MVP[Tenant provisioning and chargeback MVP]
+      MVP --> Proof[Paid pilots with faster launches and clean ownership mapping]
+      Proof --> Expansion[Broader AI governance and cross-model control]
+investorMemo:
+  verdict:
+    call: 观察
+    conviction: 买方痛点很清楚，切口也足够克制；但在真实企业证明他们愿意先为一层 Claude 专用能力付费、且 AWS 还没把缺口补上之前，判断只能保持克制。
+    whyBelieve: 这家创业公司盯住的是 AWS 新采购路径催生出来的一个非常具体的运营问题：原生 Claude 的功能对齐、IAM 复杂度和内部成本分摊，共同构成了可信的滩头市场。
+    whyDoubt: 初始市场规模并不大，而且同时受到 Bedrock 替代、自研脚本和 AWS / Anthropic 快速功能补齐的挤压。
+    nextDiligence: 接下来要和 10–15 位目标买家确认：他们最先愿意为“开通与归属映射”买单，而不是泛泛的治理；并且至少有 3 家愿意在今年启动付费试点。
+  firstCustomer:
+    title: Fortune 2000 AWS 企业里的云平台工程总监
+    profile: 这类大企业已经有集中式 AWS 治理、现成的 AWS 承诺额度，而且有多支内部产品团队在申请生产级 Claude agents 或带工具的应用。
+    trigger: 安全团队批准 Claude Platform on AWS 后，管理层要求平台团队把 AI 用量纳入 AWS 承诺额度，并按团队或业务单元明确成本归属。
+    buyer: 云平台工程总监或基础设施 VP
+    initialContract: 先做 $40k-$60k 的付费试点，覆盖 2–3 支内部团队；若租户上线时间和成本分摊准确度足够改善，再抵扣到 $90k-$150k 的年度订阅。
+  mustBeTrue:
+  - 前 15 家目标企业里，至少有 5 家正在某些生产工作负载上主动选择原生 Claude Platform on AWS，而不是 Bedrock。
+  - 云平台负责人确实把租户开通和支出归属视为值得单独预算的问题，而不是内部脚本活。
+  - 对于敏感度较低的内部工作负载，即便推理处理发生在 AWS 安全边界之外、由 Anthropic 运营，安全评审依然能通过。
+  - 只读加开通的覆盖层可以在 30 天内跑出真实试点，而不会被定制集成吞掉毛利。
+  - 早期客户愿意从 Claude-on-AWS 控制能力，继续扩到更广的多模型或跨业务单元治理。
+  diligenceQuestions:
+  - 真实账户里，最先触发采购的控制点到底是哪一个——租户开通、IAM 模板、成本分摊，还是审计报表？
+  - 第一笔预算实际归谁管——云平台、中央 AI 团队、FinOps 还是安全团队？
+  - 买家会有多频繁因为推理发生在 AWS 安全边界之外，而直接拒绝原生 Claude on AWS？
+  - AWS 或 Anthropic 多快会补上一方租户管理和支出控制，把这个切口抹平？
+  - 什么样的试点证据，才足以让平台负责人放弃内部脚本，改签年度软件合同？
+operatingAssumptions:
+- assumption: 首个经济买家会落在云平台或基础设施负责人手里，而不是 FinOps 或安全团队，因为眼下最痛的是 rollout 速度。
+  basis: research.yaml
+  validationTest: 至少拿下 3 个付费试点，且商业 sponsor 是云平台工程总监、基础设施 VP 或同级平台负责人。
+  decisionImpact: 如果这条不成立，公司就得把产品重新包装给 FinOps 或安全买家，消息、路线图优先级和销售周期都会变。
+- assumption: 即便 Claude Platform on AWS 由 Anthropic 运营、推理可能发生在 AWS 安全边界之外，敏感度较低的内部 agent 工作负载仍能通过安全评审。
+  basis: research.yaml
+  validationTest: 在目标账户里记录至少 2 次成功的安全评审或获批试点上线，且不需要被迫退回 Bedrock。
+  decisionImpact: 如果这条不成立，可触达市场会立刻收窄，滩头市场必须转向监管更轻的客户或贴近 Bedrock 的产品。
+- assumption: 如果产品确实能显著缩短 rollout 时间、提升成本分摊准确度，企业愿意为一层 Claude 专用租户代理支付至少 $90k 年化费用。
+  basis: research.yaml
+  validationTest: 把 2 个付费试点转成不低于 $90k ACV 的年费合同，且买家明确把“搭建时间更短、归属映射更清楚”作为成交原因。
+  decisionImpact: 如果这条不成立，这个切口就撑不起风投级经济模型，除非产品做得更宽，或分发方式更轻。
+- assumption: 在公司拿下参考账户前，AWS 和 Anthropic 不会快到把原生租户管理与成本分摊补齐，从而抹掉独立切口。
+  basis: 运营判断
+  validationTest: 按季度追踪功能发布，并验证试点客户仍然需要原生平台不提供的外部审批流、成本分摊导出或跨团队策略模板。
+  decisionImpact: 如果这条不成立，公司就必须迅速转向跨模型治理、伙伴分发，或服务驱动的实施层。
+- assumption: AWS 组织映射、IAM 模板和成本分摊导出，能在企业之间被足够好地模板化，从而让实施保持可复制。
+  basis: idea.yaml
+  validationTest: 上线 3 个试点，每个账户不超过一组客户特有策略例外，且定制工程投入低于 20 小时。
+  decisionImpact: 如果这条不成立，服务负担会飙升，公司应进一步收窄 ICP，或者把实施费用明显抬高。
+experimentRoadmap:
+- horizon: 0–90 天
+  experiment: 访谈 20 位目标 AWS 企业中的云平台、FinOps 与安全负责人，给租户开通、IAM、成本分摊和审计控制四类痛点排先后。
+  hypothesis: 买家最先愿意为“开通速度”和“归属映射”买单，而不是事后分析。
+  successMetric: 至少 8 位合格买家把租户上线或支出归属排进前两位痛点，且至少 3 家愿意继续定义试点范围。
+  owner: 创始人/CEO
+- horizon: 0–90 天
+  experiment: 做一次 concierge 式共创：把某个潜在客户的 AWS 组织结构、必填元数据和审批流，映射成一套标准租户策略模板。
+  hypothesis: 模板化 onboarding 流程能覆盖真实的多账户企业架构，而不是每次都要重搭。
+  successMetric: 1 家共创客户接受标准模板，且自定义策略例外少于 3 项。
+  owner: 创始工程师
+- horizon: 90–180 天
+  experiment: 为 2–3 支内部团队启动 MVP 试点，跑通真实租户申请、IAM 模板、预算上限和成本分摊导出。
+  hypothesis: 在更广的可观测性能力补齐前，产品已经能先把租户上线时间打下来，并做出财务可用的归属映射。
+  successMetric: 试点期间中位上线时间降到 7 天以内，且至少 90% 的 Claude 支出能归到正确 owner。
+  owner: 创始工程师
+- horizon: 90–180 天
+  experiment: 围绕租户数与托管支出，测试试点定价和年度打包方案。
+  hypothesis: 如果把价值讲成“rollout 加速 + 成本分摊就绪”，买家会接受付费试点和年度订阅结构。
+  successMetric: 拿下 3 个付费试点，折扣不高于目标价格的 20%，且至少 2 份 proposal 里提前约好生产转化路径。
+  owner: 创始人/CEO
+- horizon: 180–365 天
+  experiment: 敲定 1 家 AWS 咨询实施伙伴，并沉淀 1 套对齐 Control Tower 的参考架构。
+  hypothesis: 伙伴实施能缩短企业建立信任的周期，并减少客户特定的搭建工作。
+  successMetric: 1 家伙伴带来 2 个合格机会，且有 1 个试点在不超出既定模板的前提下按参考架构落地。
+  owner: 解决方案架构师
+operations:
+- 标准化的 AWS Organizations 与 Control Tower onboarding 清单，覆盖租户创建、标签和日志默认项
+- 安全评审资料包，覆盖 IAM 范围、CloudTrail 配置、数据边界说明，以及可选的 ZDR 流程指引
+- 把租户元数据映射进现有 FinOps showback / 成本分摊工具的导出流程
+- 每个试点期间，都与平台、FinOps 和安全相关方保持按周实施节奏
+- 面向已在做 landing-zone 项目的 AWS 治理咨询伙伴，提供转介绍与交付 playbook
+team:
+- role: 创始人/CEO
+  startTiming: Month 0
+  rationale: 创始人主导销售是必须的，因为第一批单子靠的是发现买家、打磨包装和建立伙伴信任，而不是规模化获客。
+- role: 创始工程师
+  startTiming: Month 0
+  rationale: 核心技术风险在于 AWS 组织映射、IAM 模板和可复制的租户开通，所以第一天就需要资深基础设施工程能力。
+- role: 解决方案架构师
+  startTiming: Month 4
+  rationale: 没有人把客户现有 AWS 治理模式翻成标准模板和实施计划，企业试点很快就会卡住。
+- role: 产品工程师
+  startTiming: Month 7
+  rationale: 首批试点之后，路线图需要专门的人把审批流、仪表盘和自助管理能力做成产品，而不只是继续跟着定制部署走。
+- role: 客户经理/销售
+  startTiming: Month 12
+  rationale: 只有当创始人已经把信息、参考客户和试点转生产路径跑顺之后，才值得补第一位销售。
+milestones:
+- horizon: 0–12 个月
+  items:
+  - 在核心的 Fortune 2000 AWS 客群里拿下 3–5 个付费 design partner 试点
+  - 上线可用于生产的租户开通与成本分摊 MVP
+  - 至少把 2 个试点转成高于模型 ACV 底线的年费合同
+  - 拿下一家 AWS 治理咨询伙伴和一位参考客户
+- horizon: 12–24 个月
+  items:
+  - 把常见 AWS 组织拓扑的实施 playbook 标准化
+  - 在现有账户内扩到更多团队、环境和业务单元
+  - 加入迁移工具和高级审批/分析模块，抬高净收入留存
+- horizon: 24–36 个月
+  items:
+  - 在定制工程受控的前提下，证明多账户部署经济性可复制
+  - 从嵌入式 Claude-on-AWS 基座上，推出更广的多模型治理能力
+  - 建立足够大的企业参考账户集合，抵御一方功能追赶
+risks:
+- risk: AWS 或 Anthropic 很快补上原生租户管理、支出控制或审批流，压缩现有切口。
+  likelihood: High
+  impact: High
+  mitigation: 趁原生平台还没补齐，先把部署速度、跨团队成本分摊颗粒度和工作流深度做出来，再顺势往更广的治理市场上移。
+- risk: 安全团队不接受目标场景里由 Anthropic 运营、且发生在 AWS 边界之外的处理路径。
+  likelihood: Medium
+  impact: High
+  mitigation: 先做敏感度较低的内部工作负载，准备清楚的数据边界文档，并把 ICP 收窄到能快速通过安全评审的客户。
+- risk: 买家把这件事当成内部工具活，不愿给独立产品单独预算。
+  likelihood: Medium
+  impact: High
+  mitigation: 不要泛泛讲治理，先拿 rollout 加速和归属映射结果说话，并且坚持用付费试点验证经济价值。
+- risk: 每家企业的 IAM、标签和审批模式都太不一样，导致实施越来越像服务。
+  likelihood: Medium
+  impact: Medium
+  mitigation: 先把首段客群收在集中式 AWS 平台团队，模板化常见组织模式；在证明可复制之前，不急着扩更广的细分市场。
+fundingAsk:
+  round: pre-seed
+  targetFundingRangeUsd: $2-3M
+  runwayMonths: 18
+  useOfFundsSummary: 把 AWS 与 Claude 的开通控制平面做出来，完成 3–5 个付费试点，通过首轮企业安全评审，并至少把 2 个客户转成生产合同，同时跑通一条可复制的伙伴实施路径。
