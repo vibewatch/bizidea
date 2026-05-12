@@ -34,7 +34,7 @@ on:
         required: false
         default: "yesterday"
       model:
-        description: "Copilot model to use (effect is derived automatically)"
+        description: "Copilot model to use (effort is derived automatically)"
         type: choice
         options:
           - "gpt-5.4"
@@ -142,10 +142,10 @@ jobs:
             EFFECTIVE_TOPIC="startup news"
           fi
           case "$MODEL" in
-            gpt-5.4)          EFFECT="xhigh" ;;
-            gpt-5.5)          EFFECT="xhigh" ;;
-            claude-opus-4.6)  EFFECT="high" ;;
-            claude-sonnet-4.6) EFFECT="high" ;;
+            gpt-5.4)          EFFORT="xhigh" ;;
+            gpt-5.5)          EFFORT="xhigh" ;;
+            claude-opus-4.6)  EFFORT="high" ;;
+            claude-sonnet-4.6) EFFORT="high" ;;
             *)
               echo "Invalid model '$MODEL'; allowed: gpt-5.4, gpt-5.5, claude-opus-4.6, claude-sonnet-4.6." >&2
               exit 2
@@ -154,7 +154,7 @@ jobs:
           echo "cap=$CAP" >> "$GITHUB_OUTPUT"
           echo "window=$WINDOW" >> "$GITHUB_OUTPUT"
           echo "model=$MODEL" >> "$GITHUB_OUTPUT"
-          echo "effect=$EFFECT" >> "$GITHUB_OUTPUT"
+          echo "effort=$EFFORT" >> "$GITHUB_OUTPUT"
           echo "topic=$EFFECTIVE_TOPIC" >> "$GITHUB_OUTPUT"
           echo "scope=$SCOPE" >> "$GITHUB_OUTPUT"
 
@@ -163,7 +163,7 @@ jobs:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
         run: |
           set -euo pipefail
-          copilot --yolo --autopilot --model "${{ steps.inputs.outputs.model }}" --effort "${{ steps.inputs.outputs.effect }}" --agent "Bizidea" -p "Run the full Bizidea pipeline for ${{ steps.inputs.outputs.window }}. topic: ${{ steps.inputs.outputs.topic }}. topicScope: ${{ steps.inputs.outputs.scope }}. cap: ${{ steps.inputs.outputs.cap }}. Orchestrate all stages yourself: News Triage once, generate and dedupe ideas from selected clusters, then run each surviving idea through research -> business plan -> financial model -> reporter. Do not invoke Bizidea recursively. Delete duplicate or failed partial report folders before final validation. Do not run git add or git commit."
+          copilot --yolo --autopilot --model "${{ steps.inputs.outputs.model }}" --effort "${{ steps.inputs.outputs.effort }}" --agent "Bizidea" -p "Run the full Bizidea pipeline for ${{ steps.inputs.outputs.window }}. topic: ${{ steps.inputs.outputs.topic }}. topicScope: ${{ steps.inputs.outputs.scope }}. cap: ${{ steps.inputs.outputs.cap }}. Orchestrate all stages yourself: News Triage once, generate and dedupe ideas from selected clusters, then run each surviving idea through research -> business plan -> financial model -> reporter. Do not invoke Bizidea recursively. Delete duplicate or failed partial report folders before final validation. Do not run git add or git commit."
 
       - name: Normalize generated YAML (repair flow style and bare colons)
         working-directory: website

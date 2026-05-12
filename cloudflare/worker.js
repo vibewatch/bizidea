@@ -22,12 +22,7 @@ const DEFAULT_CAP = "5";
 const DEFAULT_TIME_WINDOW = "yesterday";
 const DEFAULT_MODEL = "gpt-5.4";
 
-const MODEL_EFFECTS = {
-  "gpt-5.4": "xhigh",
-  "gpt-5.5": "xhigh",
-  "claude-opus-4.6": "high",
-  "claude-sonnet-4.6": "high",
-};
+const ALLOWED_MODELS = ["gpt-5.4", "gpt-5.5", "claude-opus-4.6", "claude-sonnet-4.6"];
 
 export default {
   async scheduled(event, env, _ctx) {
@@ -39,7 +34,7 @@ export default {
     assertRequired(env.GITHUB_REPO, "GITHUB_REPO");
 
     console.log(
-      `[${now.toISOString()}] Dispatching ${WORKFLOW} on ${ref}: cap=${inputs.cap}, timeWindow=${JSON.stringify(inputs.timeWindow)}, model=${inputs.model}, effect=${inputs.effect}`,
+      `[${now.toISOString()}] Dispatching ${WORKFLOW} on ${ref}: cap=${inputs.cap}, timeWindow=${JSON.stringify(inputs.timeWindow)}, model=${inputs.model}`,
     );
 
     await dispatchWorkflow(env.GITHUB_TOKEN, env.GITHUB_REPO, WORKFLOW, ref, inputs);
@@ -62,14 +57,13 @@ function resolveInputs(env) {
     );
   }
 
-  const effect = MODEL_EFFECTS[model];
-  if (!effect) {
+  if (!ALLOWED_MODELS.includes(model)) {
     throw new Error(
-      `Invalid BIZIDEA_MODEL ${JSON.stringify(model)}; allowed: ${Object.keys(MODEL_EFFECTS).join(", ")}`,
+      `Invalid BIZIDEA_MODEL ${JSON.stringify(model)}; allowed: ${ALLOWED_MODELS.join(", ")}`,
     );
   }
 
-  return { cap, timeWindow, model, effect };
+  return { cap, timeWindow, model };
 }
 
 function assertRequired(value, name) {
