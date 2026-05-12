@@ -1,0 +1,522 @@
+slug: stablecoin-treasury-control-plane
+date: '2026-05-12'
+currency: USD
+modelStartMonth: '2026-07'
+
+assumptions:
+  - id: A1
+    name: Starting customers at M1
+    value: "0"
+    unit: count
+    source: "[BP milestones Y1] Design-partner discovery runs M1-M4; no paying customers at model start."
+  - id: A2
+    name: Production ACV (annual contract value)
+    value: "250000"
+    unit: USD/year
+    source: "[BP investorMemo.firstCustomer] Initial contract converts to $200k-$300k ARR; midpoint $250k used."
+  - id: A3
+    name: Pilot subscription rate (pre-production)
+    value: "200000"
+    unit: USD/year
+    source: "[BP investorMemo.firstCustomer] $75k-$150k paid pilot modelled as $100k/6-month engagement = $200k annualised."
+  - id: A4
+    name: Implementation fee per customer (one-time)
+    value: "50000"
+    unit: USD
+    source: "[BP investorMemo.firstCustomer] Pilot budget $75k-$150k; ~$50k attributed to non-recurring integration and onboarding services, remainder to pilot subscription."
+  - id: A5
+    name: Target gross margin at scale
+    value: "70"
+    unit: pct
+    source: "[BP businessModel.targetGrossMarginPct] Explicitly stated as 70%."
+  - id: A6
+    name: COGS floor (monthly infrastructure)
+    value: "8000"
+    unit: USD/month
+    source: "[Heuristic] Early-stage SaaS infra, compliance APIs, cloud costs ~$8k/month before any customers; source: Stripe Atlas SaaS cost benchmarks."
+  - id: A7
+    name: Variable COGS rate on subscription revenue
+    value: "15"
+    unit: pct
+    source: "[Heuristic] Stablecoin-provider API fees, ERP connector licensing, AML tooling; enterprise SaaS variable COGS typically 10-20%; source: OpenView 2024 SaaS benchmarks."
+  - id: A8
+    name: Implementation delivery cost (% of impl fee)
+    value: "30"
+    unit: pct
+    source: "[Heuristic] Solutions-engineer time and contractor integrations; standard professional-services margin 65-75% for vertical SaaS at early stage."
+  - id: A9
+    name: Per-customer monthly infrastructure cost
+    value: "1500"
+    unit: USD/month/customer
+    source: "[Heuristic] Wallet-provider data feeds, reconciliation pipeline compute, ERP sync jobs per active customer; estimated from AWS/GCP enterprise integration patterns."
+  - id: A10
+    name: Founding team at M0 (2 FTEs)
+    value: "2"
+    unit: FTE
+    source: "[BP team] Founding eng (Month 0) + Product and compliance lead (Month 0)."
+  - id: A11
+    name: Solutions engineer joins M4
+    value: "1"
+    unit: FTE
+    source: "[BP team] startTiming Month 4; shortens enterprise implementation cycles."
+  - id: A12
+    name: Treasury solutions lead joins M6
+    value: "1"
+    unit: FTE
+    source: "[BP team] startTiming Month 6; owns ROI proof around prefunding and close metrics."
+  - id: A13
+    name: Account executive joins M9
+    value: "1"
+    unit: FTE
+    source: "[BP team] startTiming Month 9; added after pilot-to-production conversion is repeatable."
+  - id: A14
+    name: Average fully-loaded annual headcount cost
+    value: "175000"
+    unit: USD/FTE/year
+    source: "[Heuristic] US/UK fintech startup salary $130-200k base + ~25-30% benefits and payroll taxes; Levels.fyi fintech SaaS ranges 2024-2025."
+  - id: A15
+    name: Seed raise (starting cash)
+    value: "3000000"
+    unit: USD
+    source: "[BP fundingAsk] $2-4M range; model uses $3M (midpoint) to provide conservative buffer and align with 12-month proof-point milestone at M18."
+  - id: A16
+    name: Non-salary operating overhead per month
+    value: "20000-50000"
+    unit: USD/month
+    source: "[Heuristic] SaaS overhead (tools, D&O insurance, legal, accounting, remote stipends, marketing) scales from ~$20k/mo at 2 FTEs to ~$50k/mo at 13+ FTEs; Kruze Consulting startup cost benchmarks."
+  - id: A17
+    name: First paid customer signed M5
+    value: "5"
+    unit: month
+    source: "[BP milestones Y1] 90-180 day experiment target: two paid corridor pilots; discovery and prototype run M1-M4 per experimentRoadmap."
+  - id: A18
+    name: Second customer signed M9
+    value: "9"
+    unit: month
+    source: "[BP milestones Y1] 2 paid pilots within first 12 months; BP funnelTargets: design-partner to paid-pilot 30%+ conversion."
+  - id: A19
+    name: Third customer signed M12
+    value: "12"
+    unit: month
+    source: "[BP milestones Y1] Sign 3 design partners in payroll, EOR, or contractor payouts within 0-12 months."
+  - id: A20
+    name: Y3 total customers target
+    value: "12"
+    unit: count
+    source: "[BP market.som] $3.0M Y3 SOM based on 12 customers at ~$250k ARR."
+  - id: A21
+    name: Y2 headcount scale-up (5 to 10 FTEs)
+    value: "+5"
+    unit: FTE over Y2
+    source: "[Heuristic] Seed-funded enterprise SaaS doubles headcount in Y2 to add implementation capacity and second sales resource; BP milestones Y2: repeatable implementation playbook."
+  - id: A22
+    name: Y3 headcount scale-up (10 to 15 FTEs)
+    value: "+5"
+    unit: FTE over Y3
+    source: "[Heuristic] Post-Series-A growth supporting 12-customer base; revenue-per-FTE at Y3 end ~$169k (stage-appropriate for enterprise SaaS pre-Series B)."
+  - id: A23
+    name: Annual customer churn rate (enterprise)
+    value: "14"
+    unit: pct/year
+    source: "[Heuristic] Enterprise SaaS annual contract churn 10-20%; OpenView 2024 SaaS retention benchmarks; monthly equivalent 1.2%."
+  - id: A24
+    name: Customer acquisition cost (CAC)
+    value: "80000"
+    unit: USD
+    source: "[Heuristic] 2 sales FTEs (~$180k FL avg each) closing ~4.5 deals/year combined = $80k CAC; enterprise SaaS CAC typically 0.25-0.5x first-year ACV; aligns with 0.32x here."
+  - id: A25
+    name: Y2 sharp headcount step-change Q3Y2 (+2 FTEs)
+    value: "+2"
+    unit: FTE in Q3Y2
+    source: "[BP milestones Y2] Establish 2 channel partnerships and add multi-provider routing; requires BD/partnerships hire and second AE simultaneously in Q3Y2."
+
+headcount:
+  - role: Engineering
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 3
+    q4y3: 5
+  - role: Product and Compliance
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 2
+    q4y3: 3
+  - role: Sales and GTM
+    q1y1: 0
+    q2y1: 1
+    q3y1: 2
+    q4y1: 3
+    q4y2: 4
+    q4y3: 5
+  - role: G&A and Ops
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 2
+
+headcountTotalsFte:
+  q1y1: 2
+  q2y1: 3
+  q3y1: 4
+  q4y1: 5
+  q4y2: 10
+  q4y3: 15
+
+headcountAnnualizedPayrollK:
+  q1y1: 355.0
+  q2y1: 525.0
+  q3y1: 705.0
+  q4y1: 875.0
+  q4y2: 1685.0
+  q4y3: 2510.0
+
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 8.0
+    grossProfitK: -8.0
+    salesMarketingK: 5.0
+    researchDevelopmentK: 32.0
+    generalAdministrativeK: 14.0
+    opexK: 51.0
+    ebitdaK: -59.0
+    cashEopK: 2941.0
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 8.0
+    grossProfitK: -8.0
+    salesMarketingK: 5.0
+    researchDevelopmentK: 32.0
+    generalAdministrativeK: 14.0
+    opexK: 51.0
+    ebitdaK: -59.0
+    cashEopK: 2882.0
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 8.0
+    grossProfitK: -8.0
+    salesMarketingK: 5.0
+    researchDevelopmentK: 32.0
+    generalAdministrativeK: 14.0
+    opexK: 51.0
+    ebitdaK: -59.0
+    cashEopK: 2823.0
+  - month: M4
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 8.0
+    grossProfitK: -8.0
+    salesMarketingK: 21.0
+    researchDevelopmentK: 32.0
+    generalAdministrativeK: 14.0
+    opexK: 67.0
+    ebitdaK: -75.0
+    cashEopK: 2748.0
+  - month: M5
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 50.0
+    cogsK: 23.0
+    grossProfitK: 27.0
+    salesMarketingK: 21.0
+    researchDevelopmentK: 32.0
+    generalAdministrativeK: 14.0
+    opexK: 67.0
+    ebitdaK: -40.0
+    cashEopK: 2708.0
+  - month: M6
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 17.0
+    cogsK: 11.0
+    grossProfitK: 6.0
+    salesMarketingK: 37.0
+    researchDevelopmentK: 32.0
+    generalAdministrativeK: 15.0
+    opexK: 84.0
+    ebitdaK: -78.0
+    cashEopK: 2630.0
+  - month: M7
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 17.0
+    cogsK: 11.0
+    grossProfitK: 6.0
+    salesMarketingK: 37.0
+    researchDevelopmentK: 32.0
+    generalAdministrativeK: 15.0
+    opexK: 84.0
+    ebitdaK: -78.0
+    cashEopK: 2552.0
+  - month: M8
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 17.0
+    cogsK: 11.0
+    grossProfitK: 6.0
+    salesMarketingK: 37.0
+    researchDevelopmentK: 32.0
+    generalAdministrativeK: 15.0
+    opexK: 84.0
+    ebitdaK: -78.0
+    cashEopK: 2474.0
+  - month: M9
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 67.0
+    cogsK: 26.0
+    grossProfitK: 41.0
+    salesMarketingK: 52.0
+    researchDevelopmentK: 32.0
+    generalAdministrativeK: 16.0
+    opexK: 100.0
+    ebitdaK: -59.0
+    cashEopK: 2415.0
+  - month: M10
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 34.0
+    cogsK: 13.0
+    grossProfitK: 21.0
+    salesMarketingK: 52.0
+    researchDevelopmentK: 32.0
+    generalAdministrativeK: 16.0
+    opexK: 100.0
+    ebitdaK: -79.0
+    cashEopK: 2336.0
+  - month: M11
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 34.0
+    cogsK: 13.0
+    grossProfitK: 21.0
+    salesMarketingK: 52.0
+    researchDevelopmentK: 32.0
+    generalAdministrativeK: 16.0
+    opexK: 100.0
+    ebitdaK: -79.0
+    cashEopK: 2257.0
+  - month: M12
+    customersEop: 3
+    newCustomers: 1
+    revenueK: 64.0
+    cogsK: 25.0
+    grossProfitK: 39.0
+    salesMarketingK: 52.0
+    researchDevelopmentK: 32.0
+    generalAdministrativeK: 16.0
+    opexK: 100.0
+    ebitdaK: -61.0
+    cashEopK: 2196.0
+
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 4
+    revenueK: 240.0
+    grossProfitK: 167.0
+    opexK: 369.0
+    ebitdaK: -202.0
+    cashEopK: 1994.0
+  - quarter: Q2Y2
+    customersEop: 5
+    revenueK: 300.0
+    grossProfitK: 216.0
+    opexK: 424.0
+    ebitdaK: -208.0
+    cashEopK: 1786.0
+  - quarter: Q3Y2
+    customersEop: 6
+    revenueK: 362.0
+    grossProfitK: 266.0
+    opexK: 525.0
+    ebitdaK: -259.0
+    cashEopK: 1527.0
+  - quarter: Q4Y2
+    customersEop: 7
+    revenueK: 425.0
+    grossProfitK: 318.0
+    opexK: 564.0
+    ebitdaK: -246.0
+    cashEopK: 1281.0
+  - quarter: Q1Y3
+    customersEop: 8
+    revenueK: 520.0
+    grossProfitK: 395.0
+    opexK: 520.0
+    ebitdaK: -125.0
+    cashEopK: 1156.0
+  - quarter: Q2Y3
+    customersEop: 9
+    revenueK: 581.0
+    grossProfitK: 444.0
+    opexK: 608.0
+    ebitdaK: -164.0
+    cashEopK: 992.0
+  - quarter: Q3Y3
+    customersEop: 10
+    revenueK: 644.0
+    grossProfitK: 493.0
+    opexK: 652.0
+    ebitdaK: -159.0
+    cashEopK: 833.0
+  - quarter: Q4Y3
+    customersEop: 12
+    revenueK: 785.0
+    grossProfitK: 619.0
+    opexK: 686.0
+    ebitdaK: -67.0
+    cashEopK: 766.0
+
+totals:
+  y1:
+    revenueK: 300.0
+    ebitdaK: -804.0
+    cashEopK: 2196.0
+  y2:
+    revenueK: 1327.0
+    ebitdaK: -915.0
+    cashEopK: 1281.0
+  y3:
+    revenueK: 2530.0
+    ebitdaK: -515.0
+    cashEopK: 766.0
+
+unitEconomics:
+  arpuAnnualK: 250.0
+  grossMarginPct: 70.0
+  cacK: 80.0
+  monthlyChurnPct: 1.2
+  avgCustomerLifeMonths: 83.0
+  ltvK: 1458.0
+  ltvCacRatio: 18.2
+  cacPaybackMonths: 5.5
+
+fundingAsk:
+  round: seed
+  amountM: 3.0
+  runwayMonths: 36
+  milestone: "5 paid production customers with documented ≥15% prefunding reduction or ≥30% close-time savings on live corridors, enabling a Series A raise by M18-M24"
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 1200000
+      percentage: 40
+    - bucket: GTM
+      amountUsd: 750000
+      percentage: 25
+    - bucket: G&A
+      amountUsd: 450000
+      percentage: 15
+    - bucket: "Buffer (6 mo)"
+      amountUsd: 600000
+      percentage: 20
+
+scenarios:
+  downside:
+    description: "Rail-vendor bundling accelerates and CFOs stay in pilot mode; only 7 production customers by EOY3, 50% longer sales cycles, no expansion ARR."
+    y3RevenueK: 1380.0
+    y3EbitdaK: -1340.0
+    cashLowPointK: -59.0
+    keyAssumptionChanges:
+      - "Customer count at EOY3 drops from 12 to 7 (A20)"
+      - "Sales cycle extends from 6 to 12 months, raising effective CAC from $80k to $130k (A24)"
+      - "No second-corridor expansion revenue; ARPU stays at $200k annualised pilot rate (A2, A3)"
+  base:
+    description: "12 production customers by EOY3 at $250k ACV; pilot-to-production conversion 60%+; two provider integrations and one ERP connector live by M12."
+    y3RevenueK: 2530.0
+    y3EbitdaK: -515.0
+    cashLowPointK: 766.0
+    keyAssumptionChanges:
+      - "All assumptions held at modelled values (A1-A25)"
+  upside:
+    description: "15 customers by EOY3, expanded-corridor upsell lifts average ACV to $300k, partnership channel delivers 3 qualified leads by M18."
+    y3RevenueK: 3480.0
+    y3EbitdaK: -180.0
+    cashLowPointK: 1100.0
+    keyAssumptionChanges:
+      - "Customers reach 15 by EOY3 vs 12 base (A20)"
+      - "Average ACV rises to $300k from $250k via second-corridor upsell (A2)"
+      - "Channel partnerships reduce CAC by 20% to $64k (A24)"
+
+sensitivity:
+  - variable: ARPU
+    downsideCase: "$175k (pilots don't convert fully, only one corridor in production)"
+    baseCase: "$250k (two production corridors at annual contract)"
+    upsideCase: "$325k (three corridors plus usage fee scale)"
+    y3RevenueImpactK: -900.0
+    cashImpactK: -630.0
+  - variable: CAC
+    downsideCase: "$130k (12-month average sales cycle, 2 reps)"
+    baseCase: "$80k (6-month cycle, 4.5 deals per year)"
+    upsideCase: "$55k (partner co-sell reduces direct selling effort)"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -250.0
+  - variable: churn
+    downsideCase: "2.5%/mo (20% annual; one logo churns each year)"
+    baseCase: "1.2%/mo (14% annual; enterprise annual contracts)"
+    upsideCase: "0.6%/mo (7% annual; sticky reconciliation graph moat)"
+    y3RevenueImpactK: -320.0
+    cashImpactK: -220.0
+  - variable: "sales cycle"
+    downsideCase: "12 months average (CFOs require extended compliance review)"
+    baseCase: "6 months average (corridor-limited pilot with clear ROI)"
+    upsideCase: "4 months average (partner-referred inbound with existing trust)"
+    y3RevenueImpactK: -500.0
+    cashImpactK: -350.0
+  - variable: "gross margin"
+    downsideCase: "55% (integration-heavy deployments require more solutions-eng time)"
+    baseCase: "70% (subscription-led mix by Y2 end)"
+    upsideCase: "78% (multi-corridor expansion leverages existing integrations)"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -380.0
+  - variable: "hiring pace"
+    downsideCase: "All Y2 hires slip one quarter (key talent market tightness)"
+    baseCase: "Hires on schedule per BP team plan"
+    upsideCase: "Y2 sales hire pulled forward one quarter to Q2Y2"
+    y3RevenueImpactK: -200.0
+    cashImpactK: 150.0
+
+modelDiagram:
+  title: unit economics flow
+  mermaid: |
+    flowchart LR
+      Leads[CFO and treasury outbound plus partner referrals] --> Pilots[Corridor-limited paid pilots]
+      Pilots --> Customers[Production customers on annual contracts]
+      Customers --> ARR[ARR at 250K per customer]
+      ARR --> GrossProfit[Gross profit at 70 pct GM]
+      GrossProfit --> Cash[Operating cash]
+      Customers --> Expansion[Second corridor and provider upsell]
+      Expansion --> ARR
+
+modelSanity:
+  - checkName: Revenue engine
+    finding: "Base-case revenue grows from $300K in Y1 to $2.5M in Y3 driven by 12 enterprise customers at ~$250K ACV each, acquired through high-touch corridor pilots that convert to annual production contracts per the BP investorMemo firstCustomer model."
+  - checkName: Must go right
+    finding: "Pilot-to-production conversion must exceed 60% and average sales cycle must stay at or below 6 months, or monthly burn at Q4Y2 rates (~$82K/mo) will exhaust the $3M seed before a Series A can be raised."
+  - checkName: Model breaks if
+    finding: "Rail vendors (BVNK, Circle, Fireblocks) bundle sufficient provider-neutral controls before the 4th or 5th production logo, collapsing the differentiation thesis and extending sales cycles past 12 months, which the sensitivity analysis shows removes $500K+ of Y3 revenue and pushes the downside case cash position negative."
+  - checkName: Next-round proof
+    finding: "Series A is justified when 5-6 customers document ≥15% prefunding reduction or ≥30% close-time savings on live corridors by M18-M24, as specified in BP milestones Y1 and the fundingAsk milestone above."
+
+sanityChecks:
+  ruleOf40: "Y3 revenue growth 91% ((2530-1327)/1327) + Y3 EBITDA margin -20% (-515/2530) = 71 (Rule of 40 passes comfortably; hypergrowth offsets pre-profitability burn)"
+  burnMultiple: "Y3 net burn $515K / net new ARR added in Y3 ~$1250K (5 new customers x $250K) = 0.41x (excellent; below 1.0x benchmark for efficient growth)"
+  revenuePerFte: "$169K/FTE at EOY3 (15 FTEs; below the $200-400K SaaS benchmark but stage-appropriate for a 15-person enterprise build still in pre-Series-A growth)"
+  flags:
+    - "Very low customer count (12 by EOY3) means single-logo churn removes ~8% of revenue and re-opens cash risk; no statistical diversification until Y4+."
+    - "Y1 gross margin is only 45% because fixed infra COGS and implementation delivery costs dominate; 70% target requires subscription revenue to represent 80%+ of mix by Q3Y2."
+    - "Model assumes $3M seed provides 36 months of runway, but Series A readiness is the actual M18-24 trigger; any delay beyond M24 in closing Series A increases execution risk even if cash remains available."
+    - "CAC of $80K assumes 4.5 deals/year across 2 sales FTEs; if close rate falls or headcount slips, effective CAC rises rapidly and LTV/CAC compresses from the modelled 18x toward the 10x floor."
+    - "Downside case cash turns negative in Q4Y3 (-$59K); a bridge round or expense reduction would be required six months earlier (Q2Y3) if the downside trajectory materialises."
