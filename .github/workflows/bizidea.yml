@@ -64,7 +64,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - name: Verify required secrets are present
+      - name: Verify secrets
         env:
           BIZIDEA_PAT: ${{ secrets.BIZIDEA_PAT }}
           COPILOT_PAT: ${{ secrets.COPILOT_PAT }}
@@ -81,13 +81,24 @@ jobs:
           fi
           exit "$missing"
 
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ secrets.BIZIDEA_PAT }}
 
-      - name: Set up Node.js 22
+      - name: Snapshot ideas/
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/bizidea-snapshot
+          if [ -d ideas ]; then
+            find ideas -type f | LC_ALL=C sort > /tmp/bizidea-snapshot/before.txt
+          else
+            : > /tmp/bizidea-snapshot/before.txt
+          fi
+          echo "Snapshotted $(wc -l < /tmp/bizidea-snapshot/before.txt) file(s) in ideas/."
+
+      - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: "22"
@@ -96,17 +107,17 @@ jobs:
             package-lock.json
             website/package-lock.json
 
-      - name: Install root dependencies
+      - name: Install root deps
         run: npm ci --no-audit --no-fund
 
-      - name: Install website dependencies
+      - name: Install website deps
         working-directory: website
         run: npm ci --no-audit --no-fund
 
-      - name: Install GitHub Copilot CLI
+      - name: Install Copilot CLI
         run: npm install -g @github/copilot --no-audit --no-fund
 
-      - name: Validate and resolve run inputs (cap, time window, model, topic)
+      - name: Resolve inputs
         id: inputs
         env:
           RAW_CAP: ${{ github.event.inputs.cap }}
@@ -158,24 +169,24 @@ jobs:
           echo "topic=$EFFECTIVE_TOPIC" >> "$GITHUB_OUTPUT"
           echo "scope=$SCOPE" >> "$GITHUB_OUTPUT"
 
-      - name: Run Bizidea agent — triage → ideas → research → plan → model → report
+      - name: Run Bizidea agent
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
         run: |
           set -euo pipefail
           copilot --yolo --autopilot --model "${{ steps.inputs.outputs.model }}" --effort "${{ steps.inputs.outputs.effort }}" --agent "Bizidea" -p "Run the full Bizidea pipeline for ${{ steps.inputs.outputs.window }}. topic: ${{ steps.inputs.outputs.topic }}. topicScope: ${{ steps.inputs.outputs.scope }}. cap: ${{ steps.inputs.outputs.cap }}. Orchestrate all stages yourself: News Triage once, generate and dedupe ideas from selected clusters, then run each surviving idea through research -> business plan -> financial model -> reporter. Do not invoke Bizidea recursively. Delete duplicate or failed partial report folders before final validation. Do not run git add or git commit."
 
-      - name: Normalize generated YAML (repair flow style and bare colons)
+      - name: Repair YAML
         working-directory: website
         run: npm run repair:yaml
 
-      - name: Rebuild aggregate history index (ideas/_index.yaml)
+      - name: Rebuild index
         run: node scripts/build-ideas-index.mjs --strict
 
-      - name: Validate all generated report folders
+      - name: Validate reports
         run: npm run validate:all
 
-      - name: Commit and push completed reports to main
+      - name: Commit & push
         run: |
           set -euo pipefail
           git config user.name "bizidea-bot"
@@ -191,3 +202,48 @@ jobs:
           STAMP="$(date -u +%F)"
           git commit -m "chore(ideas): daily run $STAMP"
           git push origin HEAD:${{ github.ref_name }}
+
+      - name: Collect new ideas/ files
+        if: failure()
+        id: collect_new_ideas
+        run: |
+          set -euo pipefail
+          BEFORE="/tmp/bizidea-snapshot/before.txt"
+          STAGE="/tmp/bizidea-snapshot/new-files"
+          if [ ! -f "$BEFORE" ]; then
+            echo "No baseline snapshot found; skipping new-file collection."
+            echo "has_new=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          rm -rf "$STAGE"
+          mkdir -p "$STAGE"
+          if [ -d ideas ]; then
+            find ideas -type f | LC_ALL=C sort > /tmp/bizidea-snapshot/after.txt
+          else
+            : > /tmp/bizidea-snapshot/after.txt
+          fi
+          comm -13 "$BEFORE" /tmp/bizidea-snapshot/after.txt > /tmp/bizidea-snapshot/new.txt
+          COUNT=$(wc -l < /tmp/bizidea-snapshot/new.txt | tr -d ' ')
+          if [ "$COUNT" = "0" ]; then
+            echo "No new files in ideas/ since snapshot."
+            echo "has_new=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Collecting $COUNT new file(s) for artifact upload."
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            dest="$STAGE/$f"
+            mkdir -p "$(dirname "$dest")"
+            cp -p "$f" "$dest"
+          done < /tmp/bizidea-snapshot/new.txt
+          cp /tmp/bizidea-snapshot/new.txt "$STAGE/_new-files.txt"
+          echo "has_new=true" >> "$GITHUB_OUTPUT"
+
+      - name: Upload new ideas/ files
+        if: failure() && steps.collect_new_ideas.outputs.has_new == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ideas-new-on-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/bizidea-snapshot/new-files
+          if-no-files-found: ignore
+          retention-days: 14
