@@ -1,0 +1,304 @@
+slug: long-context-inference-scheduler
+date: '2026-05-14'
+executiveSummary: >-
+  Long Context Inference Scheduler is a control plane for AI teams whose
+  document-analysis and code-analysis workloads now hit long-context inference
+  cost and queueing limits before they can justify new hardware. The first
+  customer is a 10-80 engineer Series A-C AI-native startup already spending
+  roughly $50k-$120k per month on inference and seeing either a budget shock or
+  an SLA breach on 64k-200k token jobs. The product wedges in as a drop-in SDK
+  and proxy that classifies requests by context length, priority, and deadline,
+  then batches and routes deferrable jobs to the cheapest endpoint that still
+  meets policy. Research supports a focused starting market rather than a broad
+  inference platform story, with an estimated $600.0M TAM, $72.0M SAM, and
+  $5.4M year-3 SOM for the initial long-context control-plane category. The
+  buyer case is credible because clouds, model vendors, and managed inference
+  platforms already train customers to pay for batching, caching, and throughput
+  optimization, but most tools remain provider-specific or require substantial
+  internal platform work. The deliberate strategy is to win one narrow workflow
+  first, prove incremental savings after native provider optimizations are
+  enabled, and only then expand into broader inference FinOps and multi-hardware
+  brokerage. The main reasons to stay cautious are intense substitution risk
+  from hyperscalers and open source, governance friction for sensitive document
+  routing, and limited direct customer evidence beyond the research corpus and
+  one headline catalyst around Fractile's financing. This should therefore be
+  treated as a strong operating thesis with clear falsification tests, not yet
+  as a de-risked infrastructure investment.
+problem:
+  - AI-native teams running 64k-200k token document or code-analysis jobs on vLLM, TGI, or cloud model APIs end up overprovisioning GPUs, absorbing queue spikes, and losing cost visibility because current serving stacks treat long-context workloads like low-latency requests.
+  - Provider-native batch, caching, and provisioned-throughput controls help inside one stack, but buyers still lack a neutral system that decides which jobs are deferrable, which endpoint is cheapest under policy, and how spend maps back to workload-level business value.
+solution:
+  - Deploy a thin proxy plus Python SDK in front of OpenAI-compatible endpoints so each request is profiled by context length, SLA tier, and deadline before execution.
+  - Use shadow mode first, then controlled routing to batch compatible long-context jobs, steer overnight or low-priority work toward cheaper capacity, and expose job-level cost attribution that proves savings beyond native vendor features.
+whyWeWin:
+  - The beachhead is a narrow but urgent workflow where the buyer already owns a visible monthly bill and can measure savings, queue reduction, and deployment speed faster than in a broad platform sale.
+  - A neutral scheduler can sit above AWS, Azure, self-hosted vLLM stacks, and emerging hardware instead of forcing workload migration onto one vendor's commercial stack.
+  - Proprietary telemetry on context shape, deadline slack, cache reuse, and realized savings can compound into a routing and policy moat that open-source primitives do not accumulate by default.
+strategicChoices:
+  beachhead: >-
+    Series A-C AI-native startups with 10-80 engineers running production
+    document-analysis or code-analysis agents that regularly process 64k-200k
+    token contexts and already spend more than $30k per month on inference.
+  wedgeRationale: >-
+    This slice feels pain immediately, has a technical buyer who can install a
+    proxy quickly, and has enough deferrable or overnight work to show savings
+    fast. Starting with broader enterprise AI programs, latency-sensitive chat,
+    or full model hosting would add security reviews, integrations, and
+    competitive surface area before the company proves incremental value over
+    native batch and cache features.
+  sequencingRationale: >-
+    The company should begin with read-only telemetry and savings dashboards,
+    then enable policy-based routing for a limited class of long-context jobs,
+    then add broader FinOps controls and hardware-aware brokerage only after
+    pilot customers convert. Hiring and partnerships should follow the same
+    order: build the scheduler core first, sell founder-led to design partners,
+    and only add solutions, partnerships, and broader compliance packaging after
+    repeatable pilot-to-production conversion exists.
+  notYet:
+    - Latency-critical chat inference for end-user interactive workloads
+    - Full managed model hosting or GPU cloud resale
+    - Highly sensitive EU and UK document-routing use cases before policy controls are proven
+    - Broad enterprise observability positioning disconnected from long-context scheduling ROI
+market:
+  tam: "Modeled TAM of $600.0M based on roughly 20,000 global organizations with production GenAI workloads heavy enough to justify a dedicated inference control-plane budget."
+  sam: "Modeled SAM of $72.0M based on about 3,000 reachable North America and Europe teams with long-context document or code workloads and an estimated $24k annual budget for optimization software."
+  som: "Modeled year-3 SOM of $5.4M based on 150 customers at roughly $36k average annual spend through direct sales and open-source-led conversion."
+  segments:
+    - AI-native startups running production document-analysis, code-analysis, or agentic batch workflows
+    - Mid-market and enterprise platform teams adopting LLM-backed document processing after the startup wedge is proven
+  buyingProcess: >-
+    The day-to-day user is the ML infrastructure or platform engineer, but the
+    economic buyer is usually the VP Engineering, Head of ML Infrastructure, or
+    central platform owner with direct accountability for inference spend and
+    reliability. The practical motion is a short pilot on one workload after a
+    bill shock or SLA incident, then annual production deployment only if the
+    scheduler proves incremental savings over native provider tools without
+    creating unacceptable hot-path or governance risk.
+product:
+  mvp: >-
+    The MVP is a shadow-mode and limited-control scheduler for OpenAI-compatible
+    endpoints that profiles jobs, measures context length and deadline slack,
+    recommends batching and cheaper execution venues, and shows verified
+    workload-level savings in a dashboard. It must work with existing vLLM,
+    LiteLLM, or cloud API stacks before the company asks buyers to move all
+    inference traffic.
+  sixMonth: >-
+    Ship production-ready SDK instrumentation, shadow-mode telemetry, job-level
+    cost attribution, policy controls for one class of deferrable long-context
+    jobs, and 2 to 3 design-partner pilots on live document or code-analysis
+    workloads.
+  twelveMonth: >-
+    Add write-path routing for more workload classes, provider-specific pricing
+    normalization, region and endpoint policy controls, benchmark reporting
+    against native batch and cache features, and the first repeatable production
+    conversions.
+  twentyFourMonth: >-
+    Expand into a broader inference FinOps and brokerage layer with capacity
+    planning, reserved-versus-spot policy automation, and routing across
+    heterogeneous clouds and specialized inference hardware while preserving the
+    neutral control-plane position.
+  keyBets:
+    - Enough target workloads are deferrable or batch-friendly that a scheduler can save money without harming critical latency paths.
+    - Buyers will install a neutral proxy in shadow mode sooner than they will migrate inference stacks to a single managed platform.
+    - The company can prove savings after native provider batch and caching features are already enabled, not only before buyers operationalize them.
+    - Governance controls for region, provider approval, and audit logging will be sufficient for the first wave of document-heavy customers.
+gtm:
+  wedge: >-
+    Sell a 90-day pilot to the Head of ML Infrastructure or VP Engineering at an
+    AI-native startup immediately after monthly inference spend becomes material
+    or a long-context SLA breach triggers executive attention; start in shadow
+    mode on one document or code-analysis workflow, then convert to production
+    once savings and queue reduction are verified.
+  channels:
+    - Founder-led outbound to ML infrastructure and platform leaders at AI-native startups with visible inference spend
+    - Open-source profiling and benchmarking tooling distributed into vLLM, LiteLLM, Ray, BentoML, and KServe communities
+    - Cloud, model, and accelerator partnerships after the initial scheduler wedge proves repeatable demand
+  funnelTargets: "Target account to qualified pilot 20-30%, qualified pilot to paid pilot 50%+, paid pilot to production 50%+, production account to referenceable case study 50%+."
+  pricing: >-
+    Use percentage-of-savings pricing during the pilot so the first buyer can
+    justify deployment against a live bill, then convert to a monthly platform
+    fee of roughly $2k-$8k per managed cluster plus usage overages tied to
+    scheduled token volume. This keeps the first contract aligned to a measurable
+    cost-reduction event and later shifts to predictable software spend once the
+    scheduler becomes operational infrastructure.
+businessModel:
+  revenueStreams:
+    - Savings-share pilot fees tied to documented reduction in inference spend
+    - Recurring platform subscription per managed cluster or deployment
+    - Usage overages and premium modules for advanced FinOps controls, policy governance, and multi-provider brokerage
+  unitOfValue: Managed inference cluster and scheduled long-context workload volume
+  targetGrossMarginPct: 70
+  expansionLevers:
+    - More workloads and clusters inside each customer after the first long-context deployment
+    - Upsell from routing and savings analytics into broader inference FinOps and policy controls
+    - Expand from startup customers into larger platform teams once governance and region controls mature
+strategyMap:
+  northStarMetric: Long-context jobs completed under scheduler control with verified cost savings and SLA compliance
+  inputMetrics:
+    - Percentage of monitored workloads classified as deferrable or batch-friendly
+    - Incremental savings versus native provider features alone
+    - Pilot to production conversion rate
+    - P95 latency compliance on routed workloads
+    - Median time from SDK install to first savings report
+  moatsToBuild:
+    - Cross-provider telemetry set on context length, cache reuse, deadline slack, and realized cost per completed job
+    - Policy engine and benchmark corpus that shows when native batch, caching, or specialized hardware do or do not outperform default routing
+    - Deep integrations with open-source serving stacks and provider APIs that shorten deployment versus internal builds
+  killCriteria:
+    - Fewer than 5 of the first 20 target accounts show a workload where at least 20% of long-context volume is credibly deferrable or batchable.
+    - Benchmarks on 5 production workloads fail to deliver at least 15% incremental savings after native provider batch and caching features are already enabled.
+    - Fewer than 2 of the first 4 paid pilots convert to production contracts within 6 months of pilot completion.
+    - Security or platform teams reject hot-path deployment in most qualified deals, forcing the product to remain a dashboard with no control authority.
+  mermaid: |
+    flowchart LR
+      Wedge[Long-context document and code workloads] --> MVP[Shadow-mode scheduler and savings dashboard]
+      MVP --> Proof[Paid pilots with verified savings and SLA protection]
+      Proof --> Expansion[Inference FinOps and multi-hardware brokerage]
+investorMemo:
+  verdict:
+    call: Watch
+    conviction: Real pain and a coherent wedge, but conviction stays moderate until the team proves incremental savings beyond native tools and shows buyers accept a hot-path control plane.
+    whyBelieve: The company targets a specific budget owner, a measurable cost event, and a neutral cross-provider gap that incumbents only partially address today.
+    whyDoubt: Clouds, managed inference vendors, and open-source communities can close much of the surface area quickly unless the startup captures proprietary workload data and proves faster deployment with better accountability.
+    nextDiligence: The next proof point is 2 paid pilots on live long-context workloads that show double-digit incremental savings after native optimizations and convert into annual contracts.
+  firstCustomer:
+    title: Head of ML Infrastructure at a Series B AI-native startup
+    profile: A 30-60 person startup running production document-review or code-analysis agents on 64k-200k token contexts with visible monthly spend across cloud APIs or self-hosted inference.
+    trigger: Monthly inference spend crosses roughly $50k or a long-context queueing incident causes a customer-facing escalation.
+    buyer: VP Engineering or Head of ML Infrastructure
+    initialContract: 90-day paid pilot priced as 20% of verified savings with a practical range of roughly $15k-$40k, converting to about $30k-$80k annual recurring software spend for one to two managed clusters plus usage overages.
+  mustBeTrue:
+    - At least one quarter of qualified target accounts must have enough deferrable long-context work to save money through batching and routing without breaking latency commitments.
+    - Buyers must still see at least 15% incremental savings after they enable native batch, cached-input, or throughput-reservation features on their current provider.
+    - A shadow-mode deployment must reach first benchmark output within one day and first controlled routing within two weeks in the majority of pilots.
+    - The economic buyer must fund the purchase from infrastructure or platform budget rather than an experimental AI budget in at least the first several paid pilots.
+    - Early customers must show willingness to expand into broader FinOps or multi-provider brokerage once the first workload is proven, or the wedge will cap out as a narrow utility.
+  diligenceQuestions:
+    - What share of the target customer's long-context volume is truly deadline-flexible rather than user-facing and latency-critical?
+    - How much savings remains after the customer fully enables native batch, prompt caching, and reserved-throughput options on its existing provider?
+    - Why would a buyer install a neutral proxy instead of moving more traffic to Baseten, Fireworks, Together, or cloud-native controls?
+    - Which governance objections appear first in real deals: hot-path reliability, provider approval, or data residency?
+    - Does one workload land at $30k-$80k annual spend without requiring services-heavy custom deployment?
+operatingAssumptions:
+  - assumption: The initial beachhead has enough deferrable long-context jobs to let a scheduler improve cost materially without touching latency-critical user traffic.
+    basis: idea.yaml
+    validationTest: Instrument 10 design-partner workloads and confirm that at least 20% of long-context volume has deadline slack large enough for batching or cheaper routing.
+    decisionImpact: If false, the company must narrow to offline document ingestion workflows or abandon the scheduling thesis for pure observability.
+  - assumption: Buyers will pay for a neutral control plane only if it shows incremental savings beyond provider-native batch and caching tools.
+    basis: research.yaml
+    validationTest: Run pre and post benchmarks on 5 production workloads with native optimizations enabled first and prove at least 15% additional savings in 3 of them.
+    decisionImpact: If false, pricing power falls sharply and the company must reposition around governance, benchmarking, or migration tooling instead of savings capture.
+  - assumption: Shadow-mode deployment and policy-limited routing are acceptable first steps for platform teams worried about putting a startup in the inference hot path.
+    basis: research.yaml
+    validationTest: In the first 8 qualified opportunities, at least 4 prospects agree to a shadow-mode pilot and at least 2 allow controlled routing on one workload within 60 days.
+    decisionImpact: If false, sales cycles lengthen and the product likely needs deeper partnerships or a non-inline deployment model.
+  - assumption: A first production contract in the roughly $30k-$80k annual range is attainable for one to two managed clusters at the target customer profile.
+    basis: idea.yaml
+    validationTest: Secure 2 production proposals or signed conversions in that range or above by month 12 with limited custom services.
+    decisionImpact: If false, the reachable SOM and capital efficiency weaken, pushing the company toward a smaller bootstrapped business or a different ICP.
+  - assumption: The wedge expands into broader inference FinOps and multi-hardware brokerage under the same buyer after initial savings proof.
+    basis: operator judgment
+    validationTest: By month 15, at least 3 pilot or production customers request additional workloads, region policies, or provider-routing features beyond the original beachhead use case.
+    decisionImpact: If false, the roadmap should stay narrow and fundraising expectations should reset away from a broad infra-platform outcome.
+experimentRoadmap:
+  - horizon: 0-90 days
+    experiment: Interview 20 ML infrastructure and platform leaders and collect anonymized workload traces for document and code-analysis jobs above 64k tokens.
+    hypothesis: The target beachhead has a repeatable pattern of deferrable work, bill shock, and queue pain that justifies a focused scheduler purchase.
+    successMetric: At least 8 targets confirm budget-worthy pain and at least 5 share enough telemetry to classify deadline slack and workload shape.
+    owner: Founder / CEO
+  - horizon: 0-90 days
+    experiment: Build a shadow-mode SDK and dashboard that measures context length, queue depth, provider choice, and workload-level cost on one existing stack.
+    hypothesis: Buyers will install read-only instrumentation quickly if time to first benchmark is short and no traffic is intercepted.
+    successMetric: Two design partners install the SDK in under one day and produce a usable savings baseline within one week.
+    owner: Founding eng
+  - horizon: 90-180 days
+    experiment: Run controlled bake-offs against native batch and caching features on five production workloads.
+    hypothesis: A workload-aware scheduler can still deliver at least 15% incremental savings beyond provider-native optimizations.
+    successMetric: Three of five workloads show at least 15% incremental savings with no material breach of agreed latency thresholds.
+    owner: Founding ML systems eng
+  - horizon: 90-180 days
+    experiment: Convert two shadow-mode accounts into paid pilots with limited routing authority on overnight or low-priority workloads.
+    hypothesis: Buyers will fund a pilot once the dashboard quantifies savings and hot-path risk is contained to one workload class.
+    successMetric: Two paid pilots signed and at least one workload moved from observe-only to controlled routing within 60 days of kickoff.
+    owner: Founder / CEO
+  - horizon: 180-365 days
+    experiment: Ship region and provider policy controls plus audit logs for sensitive document-routing accounts.
+    hypothesis: Governance objections can be reduced enough to unlock larger contracts without abandoning the neutral multi-endpoint thesis.
+    successMetric: Three late-stage prospects clear security review with policy-based routing controls and at least one converts to production.
+    owner: Product engineer
+  - horizon: 180-365 days
+    experiment: Launch an open-source profiling tool and benchmark dataset for long-context workload economics.
+    hypothesis: Open-source distribution will create qualified pipeline more efficiently than paid top-of-funnel marketing in this technical category.
+    successMetric: Ten qualified inbound conversations and three pilot evaluations sourced directly from the open-source channel.
+    owner: Developer relations / founder
+operations:
+  - Shadow-mode telemetry pipeline that records context length, queue depth, provider used, realized latency, and workload-level cost
+  - Routing policy engine that can enforce approved endpoints, regions, and SLA tiers before any write-path automation is enabled
+  - Benchmark harness that compares scheduler performance against native batch, caching, and reserved-throughput configurations
+  - Integrations with vLLM, LiteLLM, Ray, BentoML, KServe, and major model API providers so deployment is faster than internal buildouts
+  - Design-partner program with explicit data-sharing, security review, and reference-customer terms
+team:
+  - role: Founder / CEO
+    startTiming: Month 0
+    rationale: Founder-led sales and design-partner discovery are required because the wedge depends on nuanced buyer pain, live telemetry access, and fast pricing iteration.
+  - role: Founding eng
+    startTiming: Month 0
+    rationale: The company needs an owner for the SDK, proxy, routing policy engine, and initial dashboard before it can run credible pilots.
+  - role: Founding ML systems eng
+    startTiming: Month 1
+    rationale: Benchmarking, provider-specific tuning, and workload-shape analysis are core to proving incremental savings over native infrastructure features.
+  - role: Product engineer
+    startTiming: Month 4
+    rationale: The dashboard, policy controls, and operator workflow must become production-ready once the first pilots start sharing live traces.
+  - role: Solutions engineer
+    startTiming: Month 6
+    rationale: Deployment support, security reviews, and ROI instrumentation become bottlenecks only after the company reaches repeatable paid pilots.
+milestones:
+  - horizon: 0-12 months
+    items:
+      - Sign 2 to 3 design partners in the core AI-native startup beachhead
+      - Launch shadow-mode telemetry and workload-level savings dashboard
+      - Complete five comparative benchmarks versus native provider features
+      - Convert at least 2 paid pilots and 1 production customer
+  - horizon: 12-24 months
+    items:
+      - Standardize policy-based routing for approved providers and regions
+      - Reach repeatable pilot-to-production conversion on one workload class
+      - Expand from one workload into broader inference FinOps controls inside existing accounts
+      - Establish initial cloud, model, or accelerator partnerships that widen endpoint coverage
+  - horizon: 24-36 months
+    items:
+      - Support heterogeneous endpoint routing across clouds, self-hosted clusters, and emerging inference hardware
+      - Build a referenceable benchmark corpus and policy dataset that improves routing quality over time
+      - Expand into larger platform teams and selected enterprise accounts with stronger governance requirements
+      - Reach the modeled year-3 SOM trajectory through multi-workload expansion inside lighthouse customers
+risks:
+  - risk: Native batch, caching, and provisioned-throughput features absorb most of the available savings before the startup lands.
+    likelihood: High
+    impact: High
+    mitigation: Benchmark against native controls first and sell only where cross-provider routing or workload classification still shows measurable incremental savings.
+  - risk: Platform teams resist putting a startup proxy in the inference hot path.
+    likelihood: High
+    impact: High
+    mitigation: Start in shadow mode, limit early routing authority to non-critical workloads, and ship strong audit and rollback controls before expanding scope.
+  - risk: Open-source projects or internal platform teams replicate the basic scheduler primitives.
+    likelihood: Medium
+    impact: High
+    mitigation: Compete on time to deployment, benchmark accountability, proprietary telemetry, and policy controls rather than on routing logic alone.
+  - risk: Sensitive document workflows trigger provider approval, data residency, or governance objections that reduce endpoint flexibility.
+    likelihood: Medium
+    impact: Medium
+    mitigation: Prioritize lower-sensitivity US-first accounts, add provider and region policy controls early, and avoid broad enterprise expansion until these controls are proven.
+  - risk: The beachhead does not expand into a broader inference FinOps or brokerage product.
+    likelihood: Medium
+    impact: High
+    mitigation: Test expansion demand in every pilot, instrument adjacent buyer requests, and keep hiring modest until multi-workload expansion is real.
+fundingAsk:
+  round: pre-seed
+  targetFundingRangeUsd: $2-4M
+  runwayMonths: 18
+  useOfFundsSummary: >-
+    Fund an initial 4 to 6 person team to build the shadow-mode scheduler and
+    routing engine, complete security and policy controls, win 2 to 4 paid
+    pilots, convert the first production accounts, and establish benchmark and
+    integration credibility before a larger seed-scale expansion.

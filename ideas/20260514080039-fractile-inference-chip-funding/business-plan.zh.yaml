@@ -1,0 +1,225 @@
+slug: long-context-inference-scheduler
+date: '2026-05-14'
+executiveSummary: Long Context Inference Scheduler 是一层给 AI 团队用的控制平面：当文档分析和代码分析负载已经先被 long-context 推理成本和排队拖住，而还没到必须上新硬件的时候，它先把问题扛下来。第一个客户画像，是 10–80 名工程师的 Series A–C AI-native 创业公司；它们每月已经在推理上花掉约 $50k–$120k，并且在 64k–200k token 任务上碰到了预算冲击或 SLA 失守。产品以可直接接入的 SDK 和代理切进来，按上下文长度、优先级和截止时间给请求分类，再把可延后的任务打包并路由到仍满足策略要求的最便宜端点。研究支持它先打一个聚焦市场，而不是一开始就讲大而全的推理平台故事：初始 long-context 控制平面类别的 TAM 约 $600.0M，SAM 约 $72.0M，Y3 SOM 约 $5.4M。买方逻辑站得住，因为云厂商、模型厂商和托管推理平台，已经把“为批处理、缓存和吞吐优化付费”这件事教育出来了，只是大多数工具仍绑在单一提供方，或者要求团队自己做不少平台工程。更稳妥的打法，是先打穿一个窄而深的工作流，在买家已经打开原生优化开关之后，仍证明自己能带来增量节省，再往更广的 inference FinOps 和多硬件 brokerage 扩。需要保持克制的地方也很清楚：超大云和开源的替代风险很强，敏感文档路由会碰到治理摩擦，而直接客户证据目前主要还是研究语料和 Fractile 融资这一条 headline catalyst。换句话说，这更像一套值得推进的运营型 thesis，且能被清晰证伪，还谈不上已经去完风险的基础设施投资。
+problem:
+- 在 vLLM、TGI 或云模型 API 上跑 64k–200k token 文档/代码分析任务的 AI-native 团队，因为当前 serving stack 把 long-context 负载当成低时延请求来处理，最后只能超配 GPU、吞下队列尖峰，还看不清成本。
+- 云厂商原生的 batch、缓存和预留吞吐控制，只能在单一栈里起作用；买家仍然缺一套中立系统，来判断哪些任务能延后、在策略约束下哪个端点最便宜，以及花出去的钱到底对应了哪类工作负载和业务价值。
+solution:
+- 在兼容 OpenAI 的端点前部署一层轻代理和 Python SDK，让每个请求在执行前先按上下文长度、SLA 分层和截止时间完成画像。
+- 先用 shadow mode 跑，再逐步放开受控路由，把兼容的 long-context 任务做批处理，把隔夜或低优先级任务导向更便宜的算力，并把任务级成本归因露出来，证明节省来自原生厂商特性之外的增量。
+whyWeWin:
+- 滩头市场虽然窄，但痛得很急：买家手里已经有一张看得见的月账单，也能比采购一个大平台更快量出节省、排队减少和部署速度。
+- 中立调度器可以架在 AWS、Azure、自托管 vLLM 栈和新硬件之上，而不是逼客户把负载迁到某一家厂商的商业栈里。
+- 围绕上下文形态、截止时间松弛度、缓存复用和真实节省积累起来的专有遥测，能慢慢长成路由和策略护城河，而开源原语默认并不会沉淀这些东西。
+strategicChoices:
+  beachhead: Series A–C 的 AI-native 创业公司，团队规模 10–80 人，已经把文档分析或代码分析 agent 跑到生产环境，常态处理 64k–200k token 上下文，而且每月推理支出超过 $30k。
+  wedgeRationale: 这个切片现在就疼，技术买家也能很快装上代理，而且手里有足够多可延后或隔夜跑的任务，省钱效果很快能看出来。如果一开始就去打更广的企业 AI 方案、对时延极敏感的聊天场景，或全托管模型托管，就会在还没证明自己相对原生 batch 和缓存功能有增量价值之前，先背上安全审查、集成成本和更大的竞争面。
+  sequencingRationale: 公司应该先从只读遥测和节省看板起步，再对一类受限的 long-context 任务开启策略路由，等 pilot 客户转正后，才加更广的 FinOps 控制和感知硬件的 brokerage。招聘和合作也要按这个顺序来：先把调度器核心搭起来，创始人亲自去卖给共创客户，等 pilot 到 production 的转化开始可复制后，再补 solutions、合作伙伴和更完整的合规封装。
+  notYet:
+  - 面向终端交互场景、时延极敏感的聊天推理
+  - 全托管模型托管或 GPU 云转售
+  - 在策略控制尚未被验证前，就去做高敏感度的 EU 和 UK 文档路由场景
+  - 脱离 long-context 调度 ROI、泛泛讲企业可观测性定位
+market:
+  tam: 建模得到的 TAM 为 $600.0M：大约 20,000 家全球组织已经有足够重的生产级 GenAI 负载，值得为专门的推理控制平面单独列预算。
+  sam: 建模得到的 SAM 为 $72.0M：大约 3,000 支位于北美和欧洲、可触达的团队，今天就有 long-context 文档或代码负载，并愿意为优化软件支付约 $24k 年预算。
+  som: 建模得到的 Y3 SOM 为 $5.4M：通过直销和开源导流转化，拿下 150 家客户、每家平均年支出约 $36k。
+  segments:
+  - 把文档分析、代码分析或 agentic 批处理工作流跑到生产环境的 AI-native 创业公司
+  - 在创业公司切口被验证后，开始采用 LLM 文档处理的中端与企业平台团队
+  buyingProcess: 日常用户是 ML infrastructure 或平台工程师，但真正掏钱的通常是对推理支出和稳定性直接负责的 VP Engineering、ML Infrastructure 负责人或中央平台 owner。实际销售动作会从一次单工作负载的短期 pilot 开始，触发点通常是账单冲高或 SLA 事故；只有当调度器能在不引入不可接受的热路径风险和治理风险前提下，证明自己比原生厂商工具多省出一截，才会转成年度 production 部署。
+product:
+  mvp: MVP 是一套跑在 shadow mode、控制权有限的兼容 OpenAI 调度器：给任务做画像，量上下文长度和截止时间松弛度，推荐如何拼批、该往哪种更便宜的执行环境发，并在看板里展示已验证的工作负载级节省。它必须先兼容现有 vLLM、LiteLLM 或云 API 栈，不能一上来就要求买家把所有推理流量搬走。
+  sixMonth: 6 个月内，交付可用于生产的 SDK 埋点、shadow-mode 遥测、任务级成本归因、针对一类可延后 long-context 任务的策略控制，以及 2–3 个跑在真实文档或代码分析负载上的共创客户 pilot。
+  twelveMonth: 12 个月内，扩到更多工作负载类别的写路径路由，补齐按提供方归一化的定价、区域和端点策略控制、对标原生 batch 与缓存功能的 benchmark 报告，并拿到第一批可复制的 production 转化。
+  twentyFourMonth: 24 个月内，扩成更完整的 inference FinOps 与 brokerage 层：做容量规划、预留与 spot 的策略自动化，并在保持中立控制平面位置的前提下，跨异构云和专用推理硬件做路由。
+  keyBets:
+  - 目标客户里，有足够多任务是可延后、适合批处理的，调度器才能在不伤关键时延路径的前提下省下真金白银。
+  - 相比把推理栈整体迁往单一托管平台，买家会更早接受以 shadow mode 部署一层中立代理。
+  - 即便买家已经把原生 batch 和缓存功能开起来，公司仍然能证明自己有增量节省，而不是只在对方还没用好原生功能时才有效。
+  - 对于第一波重文档客户来说，区域、提供方审批和审计日志这类治理控制足够顶住需求。
+gtm:
+  wedge: 当 AI-native 创业公司的月度推理支出开始变得足够大，或一次 long-context SLA 失守引发高层关注时，把 90 天 pilot 卖给 Head of ML Infrastructure 或 VP Engineering；先在一个文档或代码分析工作流上用 shadow mode 跑，等节省和排队改善被验证后，再转生产。
+  channels:
+  - 创始人主导 outbound，直接找已经有明显推理支出的 AI-native 创业公司里的 ML infra 和平台负责人
+  - 把开源的 profiling 和 benchmark 工具分发到 vLLM、LiteLLM、Ray、BentoML 和 KServe 社区
+  - 等调度器切口验证出可复制需求后，再做云厂商、模型厂商和加速器合作
+  funnelTargets: 目标账户到合格 pilot 20–30%，合格 pilot 到付费 pilot 50%+，付费 pilot 到 production 50%+，production 账户到可公开案例 50%+。
+  pricing: pilot 阶段按节省额抽成，让第一个买家能直接拿着真实账单来论证部署合理性；之后转成每个托管 cluster 每月约 $2k–$8k 的平台费，并按调度 token 量加收超额费用。这样第一份合同就直接绑定可测量的降本时刻，等调度器变成运营基础设施后，再切到更可预测的软件支出。
+businessModel:
+  revenueStreams:
+  - 按已验证推理支出降幅收取分成的 pilot 费用
+  - 按托管 cluster 或部署收取的经常性平台订阅费
+  - 针对高级 FinOps 控制、策略治理和多提供方 brokerage 的用量超额费与高级模块费
+  unitOfValue: 托管推理 cluster 与被调度的 long-context 工作负载量
+  targetGrossMarginPct: 70
+  expansionLevers:
+  - 客户完成第一批 long-context 部署后，在同一账户里扩更多工作负载和 cluster
+  - 从路由与节省分析上探，卖更广的 inference FinOps 和策略控制
+  - 等治理和区域控制成熟后，从创业公司扩到更大的平台团队
+strategyMap:
+  northStarMetric: 在调度器控制下完成、且已验证实现成本节省并满足 SLA 的 long-context 任务数
+  inputMetrics:
+  - 被监控工作负载中，被判定为可延后或适合批处理的比例
+  - 相对原生提供方特性的增量节省
+  - pilot 到 production 的转化率
+  - 被路由工作负载的 P95 时延达标率
+  - 从安装 SDK 到拿到第一份节省报告的中位时间
+  moatsToBuild:
+  - 跨提供方的遥测数据集：包括上下文长度、缓存复用、截止时间松弛度，以及每个已完成任务的真实成本
+  - 一套策略引擎和 benchmark 语料库，能回答原生 batch、缓存或专用硬件在什么场景下比默认路由更强，什么场景下并不会
+  - 和开源 serving stack 及提供方 API 的深度集成，把部署速度做到比客户内部自建更快
+  killCriteria:
+  - 前 20 个目标账户里，少于 5 个账户能找到至少 20% 的 long-context 量，且这部分量可信地可延后或可拼批。
+  - 在 5 个生产负载上的 benchmark，在客户已先启用原生 batch 和缓存功能后，仍做不到至少 15% 的增量节省。
+  - 前 4 个付费 pilot 里，少于 2 个能在 pilot 结束后 6 个月内转成 production 合同。
+  - 大多数合格机会里，安全或平台团队都拒绝把产品放进热路径，导致它始终只能做一个没有控制权的看板。
+  mermaid: |
+    flowchart LR
+      Wedge[Long-context document and code workloads] --> MVP[Shadow-mode scheduler and savings dashboard]
+      MVP --> Proof[Paid pilots with verified savings and SLA protection]
+      Proof --> Expansion[Inference FinOps and multi-hardware brokerage]
+investorMemo:
+  verdict:
+    call: 观察
+    conviction: 痛点真实，切口也顺，但在团队证明自己能在原生工具之外再多省出一截，并让买家接受热路径控制平面之前，判断仍应保持中等强度。
+    whyBelieve: 公司打的是一个明确预算 owner、一场可量化的成本事件，以及一个现有厂商今天只部分覆盖的跨提供方空白。
+    whyDoubt: 如果创业公司不能尽快拿到专有工作负载数据，并证明自己部署更快、问责更清楚，云厂商、托管推理平台和开源社区很快就会把大部分表层空间填平。
+    nextDiligence: 下一步最关键的验证点，是在真实 long-context 负载上拿到 2 个付费 pilot：在原生优化已经打开的前提下，仍能跑出双位数增量节省，并最终转成年框合同。
+  firstCustomer:
+    title: Series B AI-native 创业公司的 ML Infrastructure 负责人
+    profile: 一家 30–60 人的创业公司，已经把文档审阅或代码分析 agent 跑到生产环境，处理 64k–200k token 上下文，并在云 API 或自托管推理上有看得见的月度支出。
+    trigger: 月度推理支出跨过约 $50k，或一次 long-context 排队事故升级成面向客户的问题。
+    buyer: VP Engineering 或 ML Infrastructure 负责人
+    initialContract: 先签 90 天付费 pilot，按已验证节省额的 20% 收费，实际区间大致在 $15k–$40k；转正后，1–2 个托管 cluster 加使用量超额费，对应约 $30k–$80k 年度经常性软件收入。
+  mustBeTrue:
+  - 至少四分之一的合格目标账户，必须有足够多可延后的 long-context 工作，才能靠拼批和路由省钱，同时不打穿时延承诺。
+  - 即便客户已经启用当前提供方的原生 batch、缓存输入或预留吞吐功能，仍然要能看到至少 15% 的增量节省。
+  - 在大多数 pilot 里，shadow-mode 部署必须在 1 天内跑出第一版 benchmark 结果，并在 2 周内进入第一轮受控路由。
+  - 至少在最早几单付费 pilot 里，真正买单的人必须来自基础设施或平台预算，而不是实验性质的 AI 预算。
+  - 早期客户在首个工作负载被验证后，必须愿意扩到更广的 FinOps 或多提供方 brokerage；否则这个切口最后只会停在一个窄工具上。
+  diligenceQuestions:
+  - 目标客户的 long-context 负载里，真正有截止时间弹性的比例是多少？又有多少是面向用户、时延极敏感的流量？
+  - 在客户把现有提供方的原生 batch、prompt caching 和预留吞吐都开足后，还剩多少节省空间？
+  - 为什么买家会装一层中立代理，而不是把更多流量直接迁去 Baseten、Fireworks、Together 或云厂商原生控制？
+  - 真实交易里，最先冒出来的治理阻力是什么：热路径可靠性、提供方审批，还是数据驻留？
+  - 单个工作负载能不能在不依赖重服务化定制部署的前提下，就落到 $30k–$80k 年支出？
+operatingAssumptions:
+- assumption: 最初的滩头市场里，有足够多可延后的 long-context 任务，让调度器在不碰用户侧关键时延流量的前提下，仍能显著降本。
+  basis: idea.yaml
+  validationTest: 给 10 个共创客户工作负载做埋点，确认至少 20% 的 long-context 量有足够大的截止时间松弛度，可以做批处理或发往更便宜的路由。
+  decisionImpact: 如果不成立，公司就得收窄到离线文档导入类工作流，或者放弃调度 thesis，转成纯可观测性工具。
+- assumption: 只有当中立控制平面能在云厂商原生 batch 和缓存工具之外，再证明出增量节省时，买家才会愿意付费。
+  basis: research.yaml
+  validationTest: 先把原生优化打开，再在 5 个生产负载上跑前后 benchmark；其中至少 3 个要证明还能多省出 15% 以上。
+  decisionImpact: 如果不成立，定价权会明显变弱，公司就得从“省钱”改口到治理、benchmark 或迁移工具，而不是继续拿节省额去收费。
+- assumption: 对于担心把创业公司放进推理热路径的平台团队，shadow mode 部署和受策略限制的路由，能成为可接受的第一步。
+  basis: research.yaml
+  validationTest: 在前 8 个合格机会里，至少 4 个 prospect 愿意做 shadow-mode pilot，且其中至少 2 个会在 60 天内同意把一个工作负载切到受控路由。
+  decisionImpact: 如果不成立，销售周期会拉长，产品大概率需要更深的合作伙伴绑定，或者改成非 inline 的部署形态。
+- assumption: 在目标客户画像上，1–2 个托管 cluster 的第一份 production 合同，有机会落在约 $30k–$80k 年度区间。
+  basis: idea.yaml
+  validationTest: 到第 12 个月前，拿下 2 份这个区间或更高的 production proposal 或已签转化，并且所需定制服务保持有限。
+  decisionImpact: 如果不成立，可触达的 SOM 和资本效率都会变弱，公司更可能变成一个更小、偏 bootstrap 的业务，或需要换 ICP。
+- assumption: 在首轮节省被证明后，同一买家会继续把产品扩到更广的 inference FinOps 和多硬件 brokerage。
+  basis: operator judgment
+  validationTest: 到第 15 个月前，至少 3 个 pilot 或 production 客户提出超出原始滩头场景的新增工作负载、区域策略或 provider-routing 需求。
+  decisionImpact: 如果不成立，路线图就该继续收窄，融资预期也要从“大基础设施平台”下修。
+experimentRoadmap:
+- horizon: 0–90 天
+  experiment: 访谈 20 位 ML infrastructure 和平台负责人，并收集匿名化工作负载 trace，覆盖超过 64k tokens 的文档和代码分析任务。
+  hypothesis: 目标滩头市场里，确实重复出现可延后任务、账单冲击和排队痛点，足以支撑一个聚焦调度器采购。
+  successMetric: 至少 8 个目标对象确认痛点已经值得单独列预算，至少 5 个愿意分享足够的遥测，帮助团队判断截止时间松弛度和任务形态。
+  owner: 创始人/CEO
+- horizon: 0–90 天
+  experiment: 做出一版 shadow-mode SDK 和看板，在现有栈上量上下文长度、队列深度、provider 选择和工作负载级成本。
+  hypothesis: 只要拿到第一份 benchmark 的时间够短，而且不拦截流量，买家会很快装上只读埋点。
+  successMetric: 两个共创客户能在 1 天内装好 SDK，并在 1 周内跑出可用的节省基线。
+  owner: 创始工程师
+- horizon: 90–180 天
+  experiment: 在 5 个生产负载上，与原生 batch 和缓存功能做受控对照测试。
+  hypothesis: 一个真正理解任务形态的调度器，即便在 provider-native 优化之外，也还能多省出至少 15%。
+  successMetric: 5 个工作负载里有 3 个在不明显打破约定时延阈值的前提下，跑出至少 15% 的增量节省。
+  owner: 创始 ML 系统工程师
+- horizon: 90–180 天
+  experiment: 把两个 shadow-mode 账户转成付费 pilot，并只对隔夜或低优先级工作负载授予有限路由权。
+  hypothesis: 只要看板把节省量清楚量出来，而且热路径风险被限制在一类工作负载内，买家就会愿意掏钱做 pilot。
+  successMetric: 签下 2 个付费 pilot，并且至少有 1 个工作负载在 kickoff 后 60 天内，从纯观察升级到受控路由。
+  owner: 创始人/CEO
+- horizon: 180–365 天
+  experiment: 给敏感文档路由账户上线区域与 provider 策略控制，以及审计日志。
+  hypothesis: 只要治理阻力能被压到可接受，团队就有机会在不放弃中立多端点 thesis 的前提下，拿下更大的合同。
+  successMetric: 3 个后期 prospect 通过带策略路由控制的安全审查，至少 1 个转成 production。
+  owner: 产品工程师
+- horizon: 180–365 天
+  experiment: 发布一个开源 profiling 工具和 benchmark 数据集，专门分析 long-context 工作负载的经济性。
+  hypothesis: 在这个技术性很强的类别里，开源分发比花钱买顶部流量，更容易拉来合格 pipeline。
+  successMetric: 直接从开源渠道拿到 10 次合格 inbound 对话和 3 次 pilot 评估。
+  owner: 开发者关系 / 创始人
+operations:
+- 一套 shadow-mode 遥测流水线，记录上下文长度、队列深度、所用 provider、真实时延和工作负载级成本
+- 在任何写路径自动化开启前，就能先执行 approved endpoints、regions 和 SLA 分层的路由策略引擎
+- 对比调度器与原生 batch、缓存和预留吞吐配置表现的 benchmark harness
+- 与 vLLM、LiteLLM、Ray、BentoML、KServe 和主流模型 API 提供方的集成，让部署速度快过客户内部自建
+- 一套有明确数据共享、安全审查和 reference-customer 条款的共创客户计划
+team:
+- role: 创始人/CEO
+  startTiming: Month 0
+  rationale: 这个切口要靠创始人亲自卖和亲自做共创客户发现，因为买家痛点很细，得碰真实遥测，还要快速迭代定价。
+- role: 创始工程师
+  startTiming: Month 0
+  rationale: 在跑出可信 pilot 前，公司必须有人把 SDK、代理、路由策略引擎和第一版看板扛起来。
+- role: 创始 ML 系统工程师
+  startTiming: Month 1
+  rationale: benchmark、按 provider 调优，以及工作负载形态分析，是证明自己比原生基础设施功能多省出一截的核心。
+- role: 产品工程师
+  startTiming: Month 4
+  rationale: 等第一批 pilot 开始共享真实 trace，看板、策略控制和 operator workflow 就必须够得上 production。
+- role: 解决方案工程师
+  startTiming: Month 6
+  rationale: 只有当公司拿到可复制的付费 pilot 后，部署支持、安全审查和 ROI 埋点才会开始变成瓶颈。
+milestones:
+- horizon: 0–12 个月
+  items:
+  - 在核心 AI-native 创业公司滩头市场签下 2–3 个共创客户
+  - 上线 shadow-mode 遥测和工作负载级节省看板
+  - 完成 5 组与原生 provider 功能的对照 benchmark
+  - 至少转出 2 个付费 pilot 和 1 个 production 客户
+- horizon: 12–24 个月
+  items:
+  - 把 approved providers 和 regions 的策略路由标准化
+  - 在一类工作负载上跑通可复制的 pilot 到 production 转化
+  - 在现有账户里，从单一工作负载扩到更广的 inference FinOps 控制
+  - 建立初步的云厂商、模型厂商或加速器合作，扩大可覆盖端点
+- horizon: 24–36 个月
+  items:
+  - 支持跨云、自托管集群和新型推理硬件的异构端点路由
+  - 建出可对外引用的 benchmark 语料库和策略数据集，让路由质量随时间提升
+  - 把客户群扩到更大的平台团队，以及少量治理要求更强的企业账户
+  - 靠灯塔客户里的多工作负载扩张，跑到建模中的 Y3 SOM 轨迹
+risks:
+- risk: 原生 batch、缓存和预留吞吐功能，在创业公司切入前就把大部分节省空间吃掉。
+  likelihood: High
+  impact: High
+  mitigation: 先拿原生控制做 benchmark，只在跨 provider 路由或工作负载分类仍能量出明显增量节省的场景里卖。
+- risk: 平台团队不愿让一家创业公司的代理进推理热路径。
+  likelihood: High
+  impact: High
+  mitigation: 先从 shadow mode 起步，早期只对非关键工作负载开放有限路由权，并在扩权限前先把审计和回滚控制补齐。
+- risk: 开源项目或客户内部平台团队会把基础调度原语自己补出来。
+  likelihood: Medium
+  impact: High
+  mitigation: 不要只在路由逻辑上硬拼，而是围绕上线速度、benchmark 问责、专有遥测和策略控制竞争。
+- risk: 敏感文档工作流会触发 provider 审批、数据驻留或治理异议，压缩端点灵活性。
+  likelihood: Medium
+  impact: Medium
+  mitigation: 优先做敏感度较低、美国优先的账户，尽早上线 provider 和 region 策略控制，在这些控制被验证前不要大举扩向企业。
+- risk: 滩头市场最终扩不成更广的 inference FinOps 或 brokerage 产品。
+  likelihood: Medium
+  impact: High
+  mitigation: 每个 pilot 都顺手验证扩张需求，埋点相邻买家请求，并在多工作负载扩张没坐实前保持克制招聘。
+fundingAsk:
+  round: pre-seed
+  targetFundingRangeUsd: $2-4M
+  runwayMonths: 18
+  useOfFundsSummary: 这笔钱用来搭一支最初 4–6 人的团队，把 shadow-mode 调度器和路由引擎做出来，补齐安全与策略控制，拿下 2–4 个付费 pilot，转出第一批 production 账户，并在做更大 seed 规模扩张前把 benchmark 与集成可信度站住。

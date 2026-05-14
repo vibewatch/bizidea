@@ -1,0 +1,1954 @@
+slug: long-context-inference-scheduler
+date: '2026-05-14'
+researchCoverage:
+  sourceTarget: 100
+  sourcesFound: 143
+  sourcesFetched: 110
+  sourcesRetained: 110
+  duplicatesRemoved: 17
+  memoSourcesUsed: 40
+  reputablePublisherCount: 29
+  searchedQueries:
+  - long-context inference cost batching prefix caching vLLM TGI enterprise pain
+  - AI inference market growth 2025 2030 generative AI adoption enterprise
+  - AWS Bedrock batch inference pricing Azure OpenAI batch PTU Vertex AI throughput quota
+  - Baseten Fireworks Together Anyscale inference pricing and docs
+  - Fractile Groq Cerebras SambaNova inference funding hardware
+  - NIST generative AI profile EU AI Act ICO AI data protection
+  - LLM inference papers PagedAttention SARATHI Splitwise
+  - LiteLLM routing BentoML LLM inference handbook KServe generative inference
+  sourceQualityMix:
+    primarySources: 72
+    tierOneNews: 0
+    analystOrMarketData: 4
+    tradePress: 1
+    regulatoryOrGovernment: 3
+    communityOrReview: 1
+  coverageGap: null
+deduplication:
+  method: canonical URL + normalized title + event/company/date + fetched-body similarity + source-family check
+  candidateUrlsFound: 143
+  candidateUrlsFetched: 151
+  duplicatesRemoved: 17
+  uniqueCorpusItems: 110
+  uniqueMemoSources: 40
+  duplicateClusters:
+  - canonicalTopic: Automatic Prefix Caching - vLLM
+    keptEvidenceId: 40
+    keptSourceId: 40
+    removedUrls:
+    - https://docs.vllm.ai/en/latest/features/automatic_prefix_caching
+    reason: same canonical URL
+  - canonicalTopic: Prompt caching
+    keptEvidenceId: 4
+    keptSourceId: 4
+    removedUrls:
+    - https://platform.claude.com/docs/en/build-with-claude/prompt-caching
+    reason: same canonical URL
+  - canonicalTopic: Batch processing
+    keptEvidenceId: 3
+    keptSourceId: 3
+    removedUrls:
+    - https://platform.claude.com/docs/en/build-with-claude/batch-processing
+    reason: same canonical URL
+  - canonicalTopic: Process multiple prompts with batch inference - Amazon Bedrock
+    keptEvidenceId: 2
+    keptSourceId: 2
+    removedUrls:
+    - https://docs.aws.amazon.com/bedrock/latest/userguide/batch-inference.html
+    reason: same canonical URL
+  - canonicalTopic: What Is Provisioned Throughput for Foundry Models? - Microsoft Foundry
+    keptEvidenceId: 30
+    keptSourceId: 30
+    removedUrls:
+    - https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/provisioned-throughput?tabs=global-ptum
+    reason: same canonical URL
+  - canonicalTopic: Azure OpenAI Service - Pricing | Microsoft Azure
+    keptEvidenceId: 29
+    keptSourceId: 29
+    removedUrls:
+    - https://azure.microsoft.com/en-us/pricing/details/azure-openai
+    reason: same canonical URL
+  - canonicalTopic: Batch predictions | Generative AI on Vertex AI | Google Cloud Documentation
+    keptEvidenceId: 20
+    keptSourceId: 20
+    removedUrls:
+    - https://docs.cloud.google.com/vertex-ai/generative-ai/docs/maas/capabilities/batch-prediction
+    reason: same canonical URL
+reportMemo:
+  executiveTakeaways:
+  - long-context 推理已经是实打实的运营问题，但现有厂商大多给的是点状优化——batch API、prompt caching 或 provider-specific serving stack——而不是一套按上下文长度、SLA 和最便宜可行端点来分类任务的中立调度器 [18][2][4][40]。
+  - 最适合起步的买家，仍然是已经为生产推理付费的 ML infra 负责人，因为企业 AI 正从 pilot 走向规模化部署，而组织在扩实验和补治理这两件事上依然卡得很厉害 [11][13]。
+  - 竞争很激烈，但格局仍然分散：超大云卖吞吐预留，托管平台卖自己云上的更快推理，开源栈给原语；真正的空白，是跨 provider 的成本归因，加上对 long-context 任务做 SLA 感知路由 [1][30][9][16][28]。
+  - 技术 thesis 站得住，因为文献已经证明，持续批处理、prefix caching 和 prefill/decode 解耦都能带来明显增益；在 Fractile 或 Cerebras 这类定制芯片还没全面普及前，创业公司先把编排层商业化是可行的 [37][38][39][12]。
+  - 监管摩擦可控，但绝不轻：买家一旦把敏感文档路由到多个端点，就需要能审计的治理、区域控制和数据保护姿态，而不只是更低时延 [31][14][25][29]。
+  marketDefinition: 这个市场指的是：服务于 long-context LLM 推理的控制平面软件，位于模型 API、自托管 runtime 和托管推理云之上。它给任务做形态画像、把兼容请求排队拼批、结合 batch/caching 感知做路由，并按工作负载归因支出。这个市场不包括通用模型托管，也不包括泛可观测性工具，除非它们明确在优化 long-context 批处理经济性和跨 provider 调度 [2][30][35][41]。
+  customerAndBuyer: 主要用户是 ML infrastructure 工程师和平台团队：他们在运营生产级的文档分析、代码分析或 agentic 工作流，提示词很长、截止时间也参差不齐。真正的经济买家通常是 Head of ML Infrastructure、VP Engineering，或对吞吐、时延和云 GPU 支出负责的中央平台 owner [11][13][9]。
+  buyingTriggers:
+  - point: 当月度推理支出大到值得系统化地运营 batch、缓存和预留吞吐折扣，而不是再靠人工管理时，采购意愿会起来。
+    sourceRefs:
+    - 1
+    - 29
+    - 4
+    - 16
+    - 36
+  - point: 当 long-context 任务或隔夜文档批处理在现有 vLLM/TGI 栈上带来明显排队、解码变慢或尾时延失稳时，买方会开始找解法。
+    sourceRefs:
+    - 19
+    - 9
+    - 5
+  - point: 当管理层把推理视为下一个基础设施瓶颈，并在下一代硬件大规模落地前先拨预算做优化时，购买就会被推进。
+    sourceRefs:
+    - 18
+    - 22
+    - 7
+    - 26
+  willingnessToPay:
+    summary: 市场已经接受为优化能力做明确价格分层。Anthropic 对 cache read 收费远低于基础输入价，AWS 和 Azure 都公开打出 50% 的 batch 折扣，Fireworks 对缓存 token 和 batch token 也给折扣，Together 则直接宣传 batch inference 成本低 50%。这给调度器留出了可信的预算空间——前提是它能证明自己在单一 provider 之外还能再多省一截 [4][1][29][16][36]。
+    sourceRefs:
+    - 4
+    - 1
+    - 29
+    - 16
+    - 36
+  competitiveLandscape: 竞争格局可以拆成四类。超大云（AWS、Azure、Vertex）在单一云里卖 batch、缓存和预留吞吐 [1][30][21]。Baseten、Fireworks、Together 这类托管推理平台，卖的是它们自己基础设施上的更快、更便宜推理 [9][16][36]。Anyscale、vLLM、LiteLLM、BentoML、KServe 这类开源编排层提供的是原语，但集成和策略工作仍然压在买家身上 [6][41][28][10][27]。Groq、Cerebras、SambaNova、Fractile 这类专用硬件厂商则把性能天花板继续往上抬，同时也让端点异构性更强，反而进一步强化了中立路由层的价值 [22][12][26][18]。
+  incumbentThesis:
+  - incumbentClass: 云平台
+    point: AWS、Azure 和 Vertex 越来越多地暴露 batch 与预留吞吐控制，但这些能力都长在云厂商自己的体系里，默认并不能解决跨 provider 调度或硬件无关的 FinOps。
+    sourceRefs:
+    - 2
+    - 1
+    - 30
+    - 29
+    - 21
+  - incumbentClass: 托管推理平台
+    point: Baseten、Fireworks 和 Together 已经能把速度和成本效率卖出去，但它们的胜法是把工作负载留在自家栈里，而不是在多套栈之间替客户挑最便宜端点。
+    sourceRefs:
+    - 9
+    - 8
+    - 16
+    - 36
+    - 35
+  - incumbentClass: 开源与自建
+    point: vLLM、LiteLLM、Ray Serve、BentoML 和 KServe 给了强团队足够多原始零件，但买家仍要自己设计路由策略、节省归因和可靠性运营。
+    sourceRefs:
+    - 40
+    - 41
+    - 6
+    - 28
+    - 10
+    - 27
+  - incumbentClass: 专用推理硬件
+    point: Groq、Cerebras、SambaNova 和 Fractile 能把 tokens-per-second 抬高，但它们并没有解决“先分类工作负载、在多个端点间裁决、再按任务类型解释支出”这件事。
+    sourceRefs:
+    - 22
+    - 23
+    - 12
+    - 26
+    - 18
+  regulatoryLandscape: 真正的主要约束不是芯片监管，而是企业在模型路由和敏感数据上的治理要求。NIST 的 GenAI profile 推动组织建立结构化的 govern-map-measure-manage 控制，EU AI Act 提高了企业 AI 治理审视强度，ICO 也提醒 UK 买家：AI 系统依然要承担数据保护问责。与此同时，云部署选择本身也很关键，因为 provider 之间对 global、regional 和 data-zone 吞吐模式的区分越来越细 [31][14][25][29]。
+  technologyLandscape: 底层原语已经齐了。PagedAttention 让 KV-cache 内存管理变得可行，SARATHI 和 Splitwise 证明更聪明的批处理与阶段拆分能带来吞吐/成本收益，NVIDIA 也开始直接宣传 disaggregated serving 工具，因为调优复杂度已经是现实问题。与此同时，vLLM、TGI、Ray Serve、BentoML 和 KServe 说明：runtime 创新的推进速度，已经快过大多数企业团队自己把它们运营起来的速度 [37][38][39][32][41][24][10][27]。
+  distributionChannels:
+  - point: 通过 vLLM、LiteLLM、BentoML、Ray 和 KServe 社区做开源分发，能直接触达那些已经在自己缝补批处理和路由的操盘手。
+    sourceRefs:
+    - 40
+    - 6
+    - 28
+    - 10
+    - 27
+  - point: 直接 outbound 找 AI-native 创业公司的 ML infra 负责人也成立，因为很多买家本来就已经背着推理账单，急需一个马上能落地的运营修复工具。
+    sourceRefs:
+    - 11
+    - 13
+    - 9
+  - point: 云厂商和加速器合作是有机会的，因为异构端点越来越多，厂商希望负载被导向自己的容量，却又不想强迫客户整个平台迁移。
+    sourceRefs:
+    - 30
+    - 22
+    - 12
+    - 26
+  partnershipEcosystem:
+  - point: 模型与云 API 提供方是天然合作伙伴，因为 batch、缓存和预留吞吐这些能力，只有被更好的编排和策略默认值接住，利用率才会上去。
+    sourceRefs:
+    - 1
+    - 30
+    - 21
+    - 4
+  - point: 开源 serving 项目是渠道互补，而不是正面替代：调度器可以架在 vLLM、Ray Serve、LiteLLM、BentoML 或 KServe 之上。
+    sourceRefs:
+    - 41
+    - 6
+    - 28
+    - 10
+    - 27
+  - point: 专用硬件厂商也会受益于中立控制平面，因为它能只把合适的工作负载导到这些基础设施上。
+    sourceRefs:
+    - 18
+    - 22
+    - 12
+    - 26
+  dataMoats:
+  - point: 跨 provider 的遥测——上下文长度、prefix 复用率、截止时间松弛度，以及每个完成任务的真实成本——能沉淀成一套通用 runtime 看不到的专有路由数据集。
+    sourceRefs:
+    - 4
+    - 17
+    - 40
+    - 23
+  - point: 历史策略结果——何时该拼批、何时该拆 prefill/decode、何时该降级到 async 端点——会慢慢长成一套难以靠静态文档复现的调度模型。
+    sourceRefs:
+    - 38
+    - 39
+    - 32
+    - 5
+  geographicConsiderations:
+  - point: 美国优先、敏感度较低的工作负载最适合起步，因为买家可以在不立刻触发驻留争议的前提下，优化更多端点。
+    sourceRefs:
+    - 29
+    - 22
+    - 12
+  - point: EU 和 UK 买家仍然值得做，但必须先把路由控制讲清楚，因为 AI 治理和数据保护问责会压缩可接受的模型与区域范围。
+    sourceRefs:
+    - 14
+    - 25
+    - 29
+  sensitivityCases:
+  - case: 超大云把 batch、缓存和预留吞吐做得更容易原生运营
+    impact: 除非创业公司能证明自己在跨 provider 分配、任务级成本归因或部署速度上，比单云控制更强，否则切口会迅速收窄。
+    sourceRefs:
+    - 2
+    - 1
+    - 30
+    - 21
+  - case: prompt caching 和更便宜的 async API 把重复前缀工作负载里最容易拿的节省先吃掉
+    impact: 价值会从“直接打折”转向策略、可观测性和跨端点调度，重点服务那些本来就吃不到缓存红利的负载。
+    sourceRefs:
+    - 4
+    - 17
+    - 36
+  - case: 专用推理硬件显著提升 long-context 吞吐
+    impact: 调度器反而可能更有用，因为端点异构性更强；但“纯软件就能在现有 GPU 上大幅降本”的说法需要重新包装。
+    sourceRefs:
+    - 18
+    - 22
+    - 12
+    - 26
+  validationPlan:
+  - priority: high
+    question: 目标账户里，到底有多少 long-context 任务是真正能延后的，而不是全部都面向用户、必须低时延？
+    evidenceToGather: 做 15 次共创客户访谈，并拿 1 周匿名任务 trace，按上下文长度和截止时间做切分。
+  - priority: high
+    question: 买家究竟更愿意装一个中立控制平面，还是更愿意直接迁去 Baseten、Fireworks、Together 或某家云厂商？
+    evidenceToGather: 在 3 套真实栈上做对照 bake-off，并统一用同一套节省与时延看板来比较。
+  - priority: medium
+    question: 在装第三方调度器之前，原生 provider 的 batch 或缓存功能已经拿走了多少节省？
+    evidenceToGather: 至少在 5 个生产工作负载上，先只开原生厂商功能做前后 benchmark。
+  - priority: medium
+    question: 最先卡 adoption 的治理控制是什么：驻留、模型审批，还是可观测性缺口？
+    evidenceToGather: 收集 UK/EU 与美国敏感文档 prospect 的安全审查记录。
+analysisModels:
+  marketMapDiagram:
+    title: 长上下文推理控制版图
+    mermaid: |-
+      quadrantChart
+        title Long-context inference control landscape
+        x-axis Low cross-provider neutrality --> High cross-provider neutrality
+        y-axis Low optimization depth --> High optimization depth
+        AWS Bedrock: [0.30, 0.63]
+        Baseten: [0.48, 0.83]
+        Fireworks AI: [0.46, 0.80]
+        Together AI: [0.55, 0.72]
+        LiteLLM: [0.76, 0.47]
+        Proposed startup: [0.88, 0.90]
+  fiveForces:
+    supplierPower:
+      score: 4
+      rationale: 模型 API、GPU 云和新兴推理硬件厂商掌控着创业公司必须跨越的关键定价与性能界面。
+      sourceRefs:
+      - 1
+      - 30
+      - 22
+      - 12
+    buyerPower:
+      score: 4
+      rationale: 目标买家技术成熟度很高；如果创业公司证明不出增量节省，他们完全可以自己拼开源 runtime、托管推理平台和原生 provider 控制。
+      sourceRefs:
+      - 41
+      - 6
+      - 28
+      - 9
+    threatOfEntrants:
+      score: 3
+      rationale: 开源原语让入局变得可行，但生产级调度仍需要持续集成、遥测，以及足够深的工作负载数据，才能跑赢默认方案。
+      sourceRefs:
+      - 40
+      - 37
+      - 38
+      - 39
+    threatOfSubstitutes:
+      score: 5
+      rationale: 替代方案已经遍地都是：云 batch API、prompt caching、托管推理平台，乃至客户内部平台工程。
+      sourceRefs:
+      - 2
+      - 4
+      - 17
+      - 35
+      - 28
+    competitiveRivalry:
+      score: 4
+      rationale: 市场里同时挤着云厂商、托管推理平台、开源栈和硬件挑战者，大家都在讲更快或更便宜。
+      sourceRefs:
+      - 7
+      - 22
+      - 12
+      - 26
+      - 24
+  pestle:
+  - factor: 政治
+    impact: neutral
+    point: Government-backed AI governance 动作在上升，一方面提高审查，另一方面也在为“受控 AI 基础设施”这类企业采购背书。
+    sourceRefs:
+    - 31
+    - 14
+  - factor: 经济
+    impact: positive
+    point: 推理支出增长很快，企业 AI 预算仍在上升，只是它们越来越要求 ROI 讲得清楚。
+    sourceRefs:
+    - 13
+    - 33
+  - factor: 社会
+    impact: positive
+    point: GenAI 进入主流、AI agents 使用增加，让需要生产级推理控制的团队池子继续变大。
+    sourceRefs:
+    - 11
+    - 13
+  - factor: 技术
+    impact: positive
+    point: 研究和厂商工具越来越支持批处理、解耦和缓存复用，这让软件调度器今天就能落地。
+    sourceRefs:
+    - 37
+    - 38
+    - 39
+    - 32
+  - factor: 法律
+    impact: negative
+    point: 敏感文档工作流一旦跨多个端点路由，仍然需要可审计的数据处理、驻留选择和治理映射。
+    sourceRefs:
+    - 25
+    - 14
+    - 29
+  adoptionFrictionMatrix:
+  - friction: 买家可能会觉得原生 batch 和缓存功能已经把成本问题解决了
+    severity: high
+    affectedBuyer: Head of ML Infrastructure
+    mitigation: 先拿原生 provider 优化做 benchmark，再证明跨 provider 路由和任务分类还能带来增量节省。
+    sourceRefs:
+    - 1
+    - 29
+    - 4
+  - friction: 在生产推理前面装一层代理，对平台团队来说天然有风险
+    severity: high
+    affectedBuyer: 平台工程负责人
+    mitigation: 先从 shadow mode 和只读遥测开始，只对一小类可延后任务开放控制，再逐步扩到全流量。
+    sourceRefs:
+    - 9
+    - 27
+    - 10
+  - friction: 驻留和治理顾虑，会让敏感工作负载的多端点路由卡住
+    severity: medium
+    affectedBuyer: 安全与合规相关方
+    mitigation: 提供基于区域/提供方的策略路由，并保留映射到 approved endpoints 的可审计任务日志。
+    sourceRefs:
+    - 25
+    - 14
+    - 29
+  - friction: 有些团队完全可以自己在 vLLM、Ray 或 LiteLLM 上继续搭
+    severity: medium
+    affectedBuyer: 资深 ML 系统工程师
+    mitigation: 不要只卖基础路由原语，而是靠 time-to-value、工作负载数据和节省问责来赢。
+    sourceRefs:
+    - 41
+    - 6
+    - 28
+market:
+  tam:
+    value: $600.0M
+    rationale: 自下而上估算：约 20,000 家全球组织已经有足够重的生产级 GenAI 负载，会在意调度器经济性；按每家约 $30k 年度控制平面预算估算，同时与一个 2025 年已超过 $100B 的 AI inference 市场做交叉验证，意味着调度器层拿走不到 1% 的软件切片就成立。
+    isEstimate: true
+    sourceRefs:
+    - 11
+    - 15
+    - 33
+  sam:
+    value: $72.0M
+    rationale: 估算值：北美和欧洲今天约有 3,000 支可触达的 AI-native 与企业团队，已经有 long-context 文档/代码负载，并愿意给优化/控制软件配约 $24k 年预算。
+    isEstimate: true
+    sourceRefs:
+    - 11
+    - 13
+    - 29
+    - 36
+  som:
+    value: $5.4M
+    rationale: Y3 可触达情景：靠直销和开源导流，拿下 150 家客户，每家平均年支出约 $36k，主要集中在高推理支出团队。
+    isEstimate: true
+    sourceRefs:
+    - 8
+    - 16
+    - 36
+    - 11
+bottomUpSizingDrivers:
+- driver: 总可服务单元数
+  value: 约 20,000 家全球组织，已经有需要成本/性能治理的生产级 GenAI 负载
+  source: 由 [3][4][5] 估算
+- driver: 可触达滩头市场单元数
+  value: 约 3,000 支北美/欧洲 long-context 高占比团队
+  source: 由 [3][4] 估算
+- driver: 隐含年度控制平面预算
+  value: 每个账户 $24k–$36k
+  source: 结合相邻平台定价和已披露优化折扣 [10][12][24][26][28] 估算
+categoryDynamics:
+  growthRate: 19.2% CAGR
+  growthRateSourceRefs:
+  - 33
+  tailwinds:
+  - point: 企业 GenAI 正从 pilot 走向规模化项目，真正需要优化推理运营的组织数量还会继续增加。
+    sourceRefs:
+    - 11
+    - 13
+  - point: 基础设施资本正从训练转向推理，这一点从 Fractile、Groq、Baseten 和 SambaNova/Intel 的信号都能看到。
+    sourceRefs:
+    - 18
+    - 22
+    - 7
+    - 26
+  - point: 云厂商和平台已经明确对 batch、cache 和 throughput 选项定价，这让买家越来越习惯按工作负载类别讨论节省空间。
+    sourceRefs:
+    - 1
+    - 29
+    - 4
+    - 16
+    - 36
+  headwinds:
+  - point: 一大块最容易拿的节省，本来就可以靠原生 provider 的 batch 或缓存功能吃到。
+    sourceRefs:
+    - 1
+    - 29
+    - 4
+    - 17
+    - 35
+  - point: 技术强的买家可以直接在开源栈上自建，降低他们为无差异路由逻辑付费的意愿。
+    sourceRefs:
+    - 41
+    - 6
+    - 28
+    - 27
+  - point: Governance and data-protection requirements can limit endpoint choice for the exact document-heavy workloads that most need cost optimization.
+    sourceRefs:
+    - 31
+    - 14
+    - 25
+competitors:
+- name: AWS Bedrock
+  stage: 现有厂商
+  wedge: AWS 体系内原生的 batch inference、缓存定价和预留/预配云控制。
+  pricing: 按 token 用量收费；支持模型的 batch 定价低 50%；预配吞吐通过客户团队报价。
+  strength: 企业采购路径成熟，日志、配额和周边 AWS 服务一体化。
+  weaknessVsUs: 主要优化留在 AWS 上的工作负载，不是面向跨云、自托管栈和新硬件的中立 broker。
+  sourceRefs:
+  - 2
+  - 1
+- name: Baseten
+  stage: 成长期
+  wedge: 托管推理平台，把基础设施和 runtime 优化打包，卖稳定性、速度和成本。
+  pricing: 公开 token 定价，另有按算力计费的专属部署和企业方案。
+  strength: 强生产导向、支持 self-host，且在推理赛道里品牌很强，最近也拿到新资金。
+  weaknessVsUs: 它希望客户把负载留在 Baseten，而不是在买家已使用的所有端点之间做路由。
+  sourceRefs:
+  - 9
+  - 8
+  - 7
+- name: Fireworks AI
+  stage: 成长期
+  wedge: 高性能 serverless 与部署式推理，公开给出 cached token 与 batch 折扣。
+  pricing: 公开 serverless 按 token 定价，cached-input 折扣 50%，batch 折扣 50%，也提供按 GPU 小时计费的按需价格。
+  strength: 速度/成本叙事清楚，针对重复前缀工作负载的 prompt caching 机制也成熟。
+  weaknessVsUs: 它仍然是单一执行场所，不是一个跨云和自托管集群的优化层。
+  sourceRefs:
+  - 16
+  - 17
+- name: Together AI
+  stage: 成长期
+  wedge: 把 serverless、dedicated 和 batch inference 放在同一商业体系下的开源模型云。
+  pricing: 公开按 token 定价，且对很多模型宣传 batch inference 成本低 50%。
+  strength: 模型目录广，对偏好开源模型的 AI-native 团队吸引力强。
+  weaknessVsUs: 它的经济激励是把更多流量留在 Together，而不是在多个 provider 之间做套利。
+  sourceRefs:
+  - 36
+  - 35
+- name: Anyscale
+  stage: 成长期
+  wedge: 提供 Ray Serve 编排加 vLLM serving，适合愿意使用更可定制平台的团队。
+  pricing: 企业导向的定制定价，公开页面未给出明确数字。
+  strength: 开源信誉强，面向高级团队的编排叙事也完整。
+  weaknessVsUs: 相比可直接接入的调度器，它的采用路径更重，而且成本归因与策略工作仍要客户自己补。
+  sourceRefs:
+  - 6
+  - 5
+regulatoryTechnicalConstraints:
+- point: batch API 往往不支持工具调用或结构化输出这类交互能力，所以调度器能延后的工作，不能靠改变应用行为来硬做。
+  sourceRefs:
+  - 2
+  - 3
+  - 35
+- point: prompt caching 的收益取决于前缀是否稳定，有时还依赖 session 亲和性或 replica locality，所以软件调度不能只看价格表，还得懂工作负载形态。
+  sourceRefs:
+  - 4
+  - 17
+  - 40
+- point: 吞吐预留和区域部署模式高度 provider-specific，这会显著增加中立控制平面对配额、时延和驻留选项的归一化难度。
+  sourceRefs:
+  - 30
+  - 21
+  - 23
+- point: 只要请求可能跨区域或跨模型提供方，敏感企业文档流就需要可审计的治理与数据保护控制。
+  sourceRefs:
+  - 31
+  - 14
+  - 25
+validationSignals:
+- point: Fractile 的 $220M 融资，明确把推理时延定义成训练之后的下一个瓶颈。
+  sourceRefs:
+  - 18
+- point: Baseten 和 Groq 都围绕推理基础设施拿到大额融资，说明这个类别还在持续吸资本。
+  sourceRefs:
+  - 7
+  - 22
+- point: 云厂商和托管平台已经把 batch 与缓存折扣直接写进定价页，说明买家早就在按工作负载类别，而不只是模型质量，来优化成本。
+  sourceRefs:
+  - 1
+  - 29
+  - 16
+  - 36
+  - 4
+- point: 社区和一线操盘材料里仍不断冒出 long-context 性能痛点和 continuous batching 的收益，说明这不是一个抽象问题。
+  sourceRefs:
+  - 19
+  - 5
+  - 10
+openQuestions:
+- 目标工作负载里，真正可延后的 batch 任务占比是多少？又有多少是不能排队的低时延用户交互？
+- 当客户把当前 provider 的原生 batch、cached-input 和 provisioned-throughput 全部开足后，还剩多少增量节省？
+- 如果中立 broker 必须跑在热路径上，买家还会偏向它吗？还是安全团队会先要求云原生控制？
+- 专用推理硬件要多久才会通过主流云渠道大规模可得，并进而改变调度器可优化的端点组合？
+evidenceCorpus:
+- id: 1
+  publisher: AWS
+  title: Amazon Bedrock Pricing – AWS
+  date: null
+  url: https://aws.amazon.com/bedrock/pricing
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: AWS 定价页展示了 batch 与 cache-read 相对按需调用的折扣。
+- id: 2
+  publisher: AWS
+  title: Process multiple prompts with batch inference - Amazon Bedrock
+  date: null
+  url: https://docs.aws.amazon.com/bedrock/latest/userguide/batch-inference.html
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: AWS 的 batch inference 文档说明，超大云已经支持异步长时任务。
+- id: 3
+  publisher: Anthropic
+  title: Batch processing
+  date: null
+  url: https://platform.claude.com/docs/en/build-with-claude/batch-processing
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 支持低优先级工作负载的异步 batch processing。
+- id: 4
+  publisher: Anthropic
+  title: Prompt caching
+  date: null
+  url: https://platform.claude.com/docs/en/build-with-claude/prompt-caching
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 解释 prompt caching 的机制与大幅 cache-read 折扣。
+- id: 5
+  publisher: Anyscale
+  title: How continuous batching enables 23x throughput in LLM inference
+  date: null
+  url: https://speakerdeck.com/anyscale/how-continuous-batching-enables-23x-throughput-in-llm-inference
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: Anyscale 关于 continuous batching 带来 23 倍吞吐提升的材料。
+- id: 6
+  publisher: Anyscale
+  title: LLMs and agentic AI on Anyscale | Anyscale Docs
+  date: null
+  url: https://docs.anyscale.com/llm
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: Anyscale 对 Ray Serve 加 vLLM 编排的 LLM 服务总览。
+- id: 7
+  publisher: Baseten
+  title: Announcing Baseten’s $75M Series C
+  date: null
+  url: https://www.baseten.co/blog/announcing-baseten-75m-series-c
+  sourceType: primary
+  topicBucket: funding-news
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 说明托管推理赛道仍然具备战略价值的融资信号。
+- id: 8
+  publisher: Baseten
+  title: Cloud Pricing
+  date: null
+  url: https://www.baseten.co/pricing
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: Baseten 面向托管推理的公开定价与套餐结构。
+- id: 9
+  publisher: Baseten
+  title: The Baseten Inference Stack | Guides
+  date: null
+  url: https://www.baseten.co/resources/guide/the-baseten-inference-stack
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: Baseten 把速度、可靠性和成本都定义成生产推理的核心瓶颈。
+- id: 10
+  publisher: BentoML
+  title: LLM Inference Handbook
+  date: null
+  url: https://www.bentoml.com/llm
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 把 batching、prefix caching 与 goodput 概念串起来的 LLM 推理手册。
+- id: 11
+  publisher: Capgemini
+  title: 'Harnessing the value of AI: Unlocking scalable advantage'
+  date: '2025-09-05'
+  url: https://www.capgemini.com/insights/research-library/generative-ai-in-organizations-2025
+  sourceType: analyst-market-data
+  topicBucket: market-size
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 关于企业 AI 采用、扩容和治理的数据。
+- id: 12
+  publisher: Cerebras
+  title: Inference - Cerebras
+  date: null
+  url: https://www.cerebras.ai/inference
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 强调速度与 OpenAI 兼容性的专用推理硬件竞品。
+- id: 13
+  publisher: Deloitte
+  title: State of Generative AI Q4 – Press Release
+  date: null
+  url: https://www.deloitte.com/us/en/about/press-room/state-of-generative-ai.html
+  sourceType: analyst-market-data
+  topicBucket: market-size
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 关于扩规模难度、ROI 与监管障碍的调研证据。
+- id: 14
+  publisher: EU AI Act
+  title: EU Artificial Intelligence Act | Up-to-date developments and analyses of the EU AI Act
+  date: null
+  url: https://artificialintelligenceact.eu/
+  sourceType: regulatory-government
+  topicBucket: regulation
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 与企业买家相关的 EU AI Act 实施背景。
+- id: 15
+  publisher: Exploding Topics
+  title: How Many AI Companies Are There? (2025)
+  date: '2025-10-13'
+  url: https://explodingtopics.com/blog/number-ai-companies
+  sourceType: analyst-market-data
+  topicBucket: market-size
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 关于 AI 公司数量与融资增长的易读二手汇总。
+- id: 16
+  publisher: Fireworks AI
+  title: Fireworks - Pricing
+  date: null
+  url: https://fireworks.ai/pricing
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 公开定价页，展示 cached token 与 batch 折扣 50%。
+- id: 17
+  publisher: Fireworks AI
+  title: Prompt caching - Fireworks AI Docs
+  date: null
+  url: https://docs.fireworks.ai/guides/prompt-caching
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: prompt caching 文档量化了 TTFT 改善与路由约束。
+- id: 18
+  publisher: Fractile
+  title: https://www.fractile.ai/news/fractile-raises-220m-to-build-the-next-generation-of-inference-hardware
+  date: null
+  url: https://www.fractile.ai/news/fractile-raises-220m-to-build-the-next-generation-of-inference-hardware
+  sourceType: primary
+  topicBucket: funding-news
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 官方公告，把 long-context 推理时延定义成下一代硬件瓶颈。
+- id: 19
+  publisher: GitHub / vLLM
+  title: '[Performance]: decoding speed on long context · Issue #11286 · vllm-project/vllm'
+  date: null
+  url: https://github.com/vllm-project/vllm/issues/11286
+  sourceType: community-review
+  topicBucket: customer-pain
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 来自社区的 long-context 解码速度痛点信号。
+- id: 20
+  publisher: Google Cloud
+  title: Batch predictions | Generative AI on Vertex AI | Google Cloud Documentation
+  date: null
+  url: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/maas/capabilities/batch-prediction
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: Vertex AI 对生成式工作负载的 batch prediction 支持。
+- id: 21
+  publisher: Google Cloud
+  title: Throughput quota | Generative AI on Vertex AI | Google Cloud Documentation
+  date: null
+  url: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/resources/throughput-quota
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: Vertex AI 对动态共享配额与预留吞吐取舍的说明。
+- id: 22
+  publisher: Groq
+  title: Groq Raises $750 Million as Inference Demand Surges
+  date: null
+  url: https://groq.com/newsroom/groq-raises-750-million-as-inference-demand-surges
+  sourceType: primary
+  topicBucket: funding-news
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 显示资本仍在追逐推理专用硬件与基础设施。
+- id: 23
+  publisher: Groq
+  title: Rate Limits - GroqDocs
+  date: null
+  url: https://console.groq.com/docs/rate-limits
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 展示 provider 级限流，以及 batch/flex processing 这类替代路径。
+- id: 24
+  publisher: Hugging Face
+  title: Text Generation Inference · Hugging Face
+  date: null
+  url: https://huggingface.co/docs/text-generation-inference/en/index
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: TGI 文档展示推理引擎格局，以及相对新引擎已进入维护模式的信号。
+- id: 25
+  publisher: ICO
+  title: Guidance on AI and data protection
+  date: null
+  url: https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/artificial-intelligence/guidance-on-ai-and-data-protection
+  sourceType: regulatory-government
+  topicBucket: regulation
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 面向文档处理场景的英国 AI 与数据保护指引。
+- id: 26
+  publisher: Intel
+  title: Intel, SambaNova Planning Multi-Year Collaboration for Xeon-Based AI Inference
+  date: '2026-02-24'
+  url: https://newsroom.intel.com/data-center/intel-and-sambanova-planning-multi-year-collaboration-for-xeon-based-ai-inference
+  sourceType: primary
+  topicBucket: funding-news
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 大厂层面的验证：异构推理基础设施已具战略意义。
+- id: 27
+  publisher: KServe
+  title: Overview | KServe
+  date: null
+  url: https://kserve.github.io/website/docs/admin-guide/overview
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: KServe 文档展示基于 Kubernetes 的生成式推理部署取舍。
+- id: 28
+  publisher: LiteLLM
+  title: Router - Load Balancing | liteLLM
+  date: null
+  url: https://docs.litellm.ai/docs/routing
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 开源路由、回退和成本感知负载均衡能力，构成替代方案。
+- id: 29
+  publisher: Microsoft Azure
+  title: Azure OpenAI Service - Pricing | Microsoft Azure
+  date: null
+  url: https://azure.microsoft.com/en-us/pricing/details/azure-openai
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: Azure OpenAI 定价页展示了 Batch API 的 50% 折扣与区域部署选项。
+- id: 30
+  publisher: Microsoft Learn
+  title: What Is Provisioned Throughput for Foundry Models? - Microsoft Foundry
+  date: null
+  url: https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/provisioned-throughput?tabs=global-ptum
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: Azure 关于预配吞吐概念、折扣和可预测性能的说明。
+- id: 31
+  publisher: NIST
+  title: 'Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile'
+  date: '2024-07-26'
+  url: https://www.nist.gov/publications/artificial-intelligence-risk-management-framework-generative-artificial-intelligence
+  sourceType: regulatory-government
+  topicBucket: regulation
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 企业生成式 AI 部署的风险管理基线。
+- id: 32
+  publisher: NVIDIA
+  title: Removing the Guesswork from Disaggregated Serving | NVIDIA Technical Blog
+  date: '2026-03-09'
+  url: https://developer.nvidia.com/blog/removing-the-guesswork-from-disaggregated-serving
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: NVIDIA 说明 disaggregated serving 的复杂度和调优负担。
+- id: 33
+  publisher: PR Newswire / MarketsandMarkets
+  title: AI Inference Market worth $254.98 billion by 2030 - Exclusive Report by MarketsandMarkets™
+  date: '2025-02-28'
+  url: https://www.prnewswire.com/news-releases/ai-inference-market-worth-254-98-billion-by-2030---exclusive-report-by-marketsandmarkets-302388315.html
+  sourceType: analyst-market-data
+  topicBucket: market-size
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 对 AI inference 市场规模与 CAGR 的自上而下交叉验证。
+- id: 34
+  publisher: Tech Funding News
+  title: British AI chipmaker Fractile secures $220M to challenge Nvidia, gets funding from Accel and Founders Fund — TFN
+  date: '2026-05-13'
+  url: https://techfundingnews.com/british-ai-chipmaker-fractile-secures-220m-to-challenge-nvidia-gets-funding-from-accel-and-founders-fund
+  sourceType: trade-press
+  topicBucket: funding-news
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 对 Fractile 融资与吞吐说法的独立媒体报道。
+- id: 35
+  publisher: Together AI
+  title: Overview - Together AI docs
+  date: null
+  url: https://docs.together.ai/docs/inference/batch/overview
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: Together AI 针对低成本异步推理的 batch processing 文档。
+- id: 36
+  publisher: Together AI
+  title: Pricing | Together AI
+  date: null
+  url: https://www.together.ai/pricing
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 面向开源模型推理的公开 serverless 与 batch 定价。
+- id: 37
+  publisher: arXiv
+  title: Efficient Memory Management for Large Language Model Serving with PagedAttention
+  date: null
+  url: https://arxiv.org/abs/2309.06180
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 支撑内存高效 continuous batching 与 KV-cache serving 的核心论文。
+- id: 38
+  publisher: arXiv
+  title: 'SARATHI: Efficient LLM Inference by Piggybacking Decodes with Chunked Prefills'
+  date: null
+  url: https://arxiv.org/abs/2308.16369
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 证明 chunked-prefill 与 decode-maximal batching 能提升吞吐的论文。
+- id: 39
+  publisher: arXiv
+  title: 'Splitwise: Efficient generative LLM inference using phase splitting'
+  date: null
+  url: https://arxiv.org/abs/2311.18677
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 证明 prefill/decode phase splitting 能优化吞吐与成本的论文。
+- id: 40
+  publisher: vLLM
+  title: Automatic Prefix Caching - vLLM
+  date: null
+  url: https://docs.vllm.ai/en/latest/features/automatic_prefix_caching
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 开源证据表明 prefix caching 对 long-context 复用很关键。
+- id: 41
+  publisher: vLLM
+  title: Parallelism and Scaling - vLLM
+  date: null
+  url: https://docs.vllm.ai/en/latest/serving/parallelism_scaling
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 展示分布式扩展与 serving 在生产环境中的复杂度。
+- id: 42
+  publisher: AWS
+  title: Code example for batch inference - Amazon Bedrock
+  date: null
+  url: https://docs.aws.amazon.com/bedrock/latest/userguide/batch-inference-example.html
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 AWS 的补充定价文档。
+- id: 43
+  publisher: AWS
+  title: Create a batch inference job - Amazon Bedrock
+  date: null
+  url: https://docs.aws.amazon.com/bedrock/latest/userguide/batch-inference-create.html
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 AWS 的补充定价文档。
+- id: 44
+  publisher: AWS
+  title: Monitor batch inference jobs - Amazon Bedrock
+  date: null
+  url: https://docs.aws.amazon.com/bedrock/latest/userguide/batch-inference-monitor.html
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 AWS 的补充定价文档。
+- id: 45
+  publisher: AWS
+  title: Prerequisites for batch inference - Amazon Bedrock
+  date: null
+  url: https://docs.aws.amazon.com/bedrock/latest/userguide/batch-inference-prereq.html
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 AWS 的补充定价文档。
+- id: 46
+  publisher: AWS
+  title: Stop a batch inference job - Amazon Bedrock
+  date: null
+  url: https://docs.aws.amazon.com/bedrock/latest/userguide/batch-inference-stop.html
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 AWS 的补充定价文档。
+- id: 47
+  publisher: AWS
+  title: Submit a batch of prompts with the OpenAI Batch API - Amazon Bedrock
+  date: null
+  url: https://docs.aws.amazon.com/bedrock/latest/userguide/inference-openai-batch.html
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 AWS 的补充定价文档。
+- id: 48
+  publisher: AWS
+  title: Supported Regions and models for batch inference - Amazon Bedrock
+  date: null
+  url: https://docs.aws.amazon.com/bedrock/latest/userguide/batch-inference-supported.html
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 AWS 的补充定价文档。
+- id: 49
+  publisher: AWS
+  title: Supported Regions and models for inference profiles - Amazon Bedrock
+  date: null
+  url: https://docs.aws.amazon.com/bedrock/latest/userguide/inference-profiles-support.html
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 AWS 的补充定价文档。
+- id: 50
+  publisher: AWS
+  title: View the results of a batch inference job - Amazon Bedrock
+  date: null
+  url: https://docs.aws.amazon.com/bedrock/latest/userguide/batch-inference-results.html
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 AWS 的补充定价文档。
+- id: 51
+  publisher: Anthropic
+  title: Create a Message Batch - Claude API Reference
+  date: null
+  url: https://platform.claude.com/docs/en/api/messages/batches/create
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Anthropic 的补充定价文档。
+- id: 52
+  publisher: Anthropic
+  title: Parallel tool use
+  date: null
+  url: https://platform.claude.com/docs/en/agents-and-tools/tool-use/parallel-tool-use
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Anthropic 的补充定价文档。
+- id: 53
+  publisher: Anthropic
+  title: Pricing
+  date: null
+  url: https://platform.claude.com/docs/en/about-claude/pricing
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Anthropic 的补充定价文档。
+- id: 54
+  publisher: Anthropic
+  title: Prompt caching through the Claude API
+  date: null
+  url: https://platform.claude.com/cookbook/misc-prompt-caching
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Anthropic 的补充定价文档。
+- id: 55
+  publisher: Anthropic
+  title: Rate limits
+  date: null
+  url: https://platform.claude.com/docs/en/api/rate-limits
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Anthropic 的补充定价文档。
+- id: 56
+  publisher: Anthropic
+  title: Remote MCP servers
+  date: null
+  url: https://platform.claude.com/docs/en/agents-and-tools/remote-mcp-servers
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Anthropic 的补充定价文档。
+- id: 57
+  publisher: Anthropic
+  title: Server tools
+  date: null
+  url: https://platform.claude.com/docs/en/agents-and-tools/tool-use/server-tools
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Anthropic 的补充定价文档。
+- id: 58
+  publisher: Anthropic
+  title: Tool use with prompt caching
+  date: null
+  url: https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-use-with-prompt-caching
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Anthropic 的补充定价文档。
+- id: 59
+  publisher: Baseten
+  title: Canopy Labs selects Baseten as preferred inference provider for Orpheus TTS models
+  date: null
+  url: https://www.baseten.co/blog/canopy-labs-selects-baseten-as-preferred-inference-provider-for-orpheus-tts-model
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Baseten 的补充竞品文档。
+- id: 60
+  publisher: Baseten
+  title: 'From datasets to deployed models: How Oxen helps companies train faster'
+  date: null
+  url: https://www.baseten.co/resources/customers/from-datasets-to-deployed-models-how-oxen-ai-builds-on-baseten
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Baseten 的补充竞品文档。
+- id: 61
+  publisher: Baseten
+  title: How Zed is reimagining the code editor from the ground up
+  date: null
+  url: https://www.baseten.co/resources/customers/zed-industries-serves-2x-faster-code-completions-with-baseten
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Baseten 的补充竞品文档。
+- id: 62
+  publisher: Baseten
+  title: Inference at Scale with Dedicated Deployments | Baseten
+  date: null
+  url: https://www.baseten.co/products/dedicated-inference
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Baseten 的补充竞品文档。
+- id: 63
+  publisher: Baseten
+  title: 'Introducing Baseten Embeddings Inference: The fastest embeddings solution available'
+  date: null
+  url: https://www.baseten.co/blog/introducing-baseten-embeddings-inference-bei
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Baseten 的补充竞品文档。
+- id: 64
+  publisher: Baseten
+  title: Scaled Cognition offers ultra-fast AI agents you can trust
+  date: null
+  url: https://www.baseten.co/resources/customers/scaled-cognition-offers-ultra-fast-ai-agents-you-can-trust
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Baseten 的补充竞品文档。
+- id: 65
+  publisher: BentoML
+  title: Foundations | LLM Inference Handbook
+  date: null
+  url: https://www.bentoml.com/llm/llm-inference-basics
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 BentoML 的补充技术文档。
+- id: 66
+  publisher: BentoML
+  title: How does LLM inference work? | LLM Inference Handbook
+  date: null
+  url: https://www.bentoml.com/llm/llm-inference-basics/how-does-llm-inference-work
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 BentoML 的补充技术文档。
+- id: 67
+  publisher: BentoML
+  title: Key metrics for LLM inference | LLM Inference Handbook
+  date: null
+  url: https://www.bentoml.com/llm/llm-inference-basics/llm-inference-metrics
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 BentoML 的补充技术文档。
+- id: 68
+  publisher: BentoML
+  title: LLM Benchmark and Optimization Explorer
+  date: null
+  url: https://www.bentoml.com/llm-perf
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 BentoML 的补充技术文档。
+- id: 69
+  publisher: BentoML
+  title: Training vs. inference | LLM Inference Handbook
+  date: null
+  url: https://www.bentoml.com/llm/llm-inference-basics/training-inference-differences
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 BentoML 的补充技术文档。
+- id: 70
+  publisher: BentoML
+  title: What is LLM inference? | LLM Inference Handbook
+  date: null
+  url: https://www.bentoml.com/llm/llm-inference-basics/what-is-llm-inference
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 BentoML 的补充技术文档。
+- id: 71
+  publisher: BentoML
+  title: Where is LLM inference run? | LLM Inference Handbook
+  date: null
+  url: https://www.bentoml.com/llm/llm-inference-basics/cpu-vs-gpu-vs-tpu
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 BentoML 的补充技术文档。
+- id: 72
+  publisher: Fireworks AI
+  title: Autoscaling - Fireworks AI Docs
+  date: null
+  url: https://docs.fireworks.ai/deployments/autoscaling
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Fireworks AI 的补充技术文档。
+- id: 73
+  publisher: Fireworks AI
+  title: Batch API - Fireworks AI Docs
+  date: null
+  url: https://docs.fireworks.ai/guides/batch-inference
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Fireworks AI 的补充技术文档。
+- id: 74
+  publisher: Fireworks AI
+  title: Deployments - Fireworks AI Docs
+  date: null
+  url: https://docs.fireworks.ai/guides/ondemand-deployments
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Fireworks AI 的补充技术文档。
+- id: 75
+  publisher: Fireworks AI
+  title: Serverless Overview - Fireworks AI Docs
+  date: null
+  url: https://docs.fireworks.ai/serverless/overview
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Fireworks AI 的补充技术文档。
+- id: 76
+  publisher: Fireworks AI
+  title: Serverless Pricing - Fireworks AI Docs
+  date: null
+  url: https://docs.fireworks.ai/serverless/pricing
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Fireworks AI 的补充技术文档。
+- id: 77
+  publisher: Fireworks AI
+  title: Serverless Priority and Fast - Fireworks AI Docs
+  date: null
+  url: https://docs.fireworks.ai/serverless/priority-and-fast
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Fireworks AI 的补充技术文档。
+- id: 78
+  publisher: Fireworks AI
+  title: Serverless Rate Limits - Fireworks AI Docs
+  date: null
+  url: https://docs.fireworks.ai/serverless/rate-limits
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Fireworks AI 的补充技术文档。
+- id: 79
+  publisher: Google Cloud
+  title: Gemini 3 prompting guide | Generative AI on Vertex AI | Google Cloud Documentation
+  date: null
+  url: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/start/gemini-3-prompting-guide
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Google Cloud 的补充定价文档。
+- id: 80
+  publisher: Google Cloud
+  title: Generative AI prompt samples | Generative AI on Vertex AI | Google Cloud Documentation
+  date: null
+  url: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/prompt-gallery
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Google Cloud 的补充定价文档。
+- id: 81
+  publisher: Google Cloud
+  title: Imagen 3 | Generative AI on Vertex AI | Google Cloud Documentation
+  date: null
+  url: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/models/imagen/3-0-generate
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Google Cloud 的补充定价文档。
+- id: 82
+  publisher: Google Cloud
+  title: Imagen 4 | Generative AI on Vertex AI | Google Cloud Documentation
+  date: null
+  url: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/models/imagen/4-0-generate
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Google Cloud 的补充定价文档。
+- id: 83
+  publisher: Google Cloud
+  title: Imagen 4.0 upscale Preview | Generative AI on Vertex AI | Google Cloud Documentation
+  date: null
+  url: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/models/imagen/4-0-upscale
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Google Cloud 的补充定价文档。
+- id: 84
+  publisher: Google Cloud
+  title: Migrate from Google AI Studio to Vertex AI | Generative AI on Vertex AI | Google Cloud Documentation
+  date: null
+  url: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/migrate/migrate-google-ai
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Google Cloud 的补充定价文档。
+- id: 85
+  publisher: Google Cloud
+  title: Migrate to the latest Gemini models | Generative AI on Vertex AI | Google Cloud Documentation
+  date: null
+  url: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/migrate
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Google Cloud 的补充定价文档。
+- id: 86
+  publisher: Google Cloud
+  title: Observability and monitoring | Google Cloud Documentation
+  date: null
+  url: https://docs.cloud.google.com/docs/observability
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Google Cloud 的补充定价文档。
+- id: 87
+  publisher: Google Cloud
+  title: 'Quickstart: Deploy your Vertex AI Studio prompt as a web application | Generative AI on Vertex AI | Google Cloud Documentation'
+  date: null
+  url: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/deploy-vais-prompt
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Google Cloud 的补充定价文档。
+- id: 88
+  publisher: KServe
+  title: Deploy Your First GenAI Service | KServe
+  date: null
+  url: https://kserve.github.io/website/docs/getting-started/genai-first-isvc
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 KServe 的补充技术文档。
+- id: 89
+  publisher: KServe
+  title: Deploy Your First LLM InferenceService | KServe
+  date: null
+  url: https://kserve.github.io/website/docs/getting-started/genai-first-llmisvc
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 KServe 的补充技术文档。
+- id: 90
+  publisher: KServe
+  title: Deploy Your First Predictive AI Service | KServe
+  date: null
+  url: https://kserve.github.io/website/docs/getting-started/predictive-first-isvc
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 KServe 的补充技术文档。
+- id: 91
+  publisher: KServe
+  title: KServe
+  date: null
+  url: https://kserve.github.io/website
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 KServe 的补充技术文档。
+- id: 92
+  publisher: KServe
+  title: Quickstart Guide | KServe
+  date: null
+  url: https://kserve.github.io/website/docs/getting-started/quickstart-guide
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 KServe 的补充技术文档。
+- id: 93
+  publisher: KServe
+  title: Swagger UI | KServe
+  date: null
+  url: https://kserve.github.io/website/docs/getting-started/swagger-ui
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 KServe 的补充技术文档。
+- id: 94
+  publisher: KServe
+  title: Welcome to KServe | KServe
+  date: null
+  url: https://kserve.github.io/website/docs/intro
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 KServe 的补充技术文档。
+- id: 95
+  publisher: LiteLLM
+  title: Getting Started | liteLLM
+  date: null
+  url: https://docs.litellm.ai/docs
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 LiteLLM 的补充技术文档。
+- id: 96
+  publisher: LiteLLM
+  title: Integrations | liteLLM
+  date: null
+  url: https://docs.litellm.ai/docs/integrations
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 LiteLLM 的补充技术文档。
+- id: 97
+  publisher: LiteLLM
+  title: Learn LiteLLM | liteLLM
+  date: null
+  url: https://docs.litellm.ai/docs/learn
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 LiteLLM 的补充技术文档。
+- id: 98
+  publisher: LiteLLM
+  title: liteLLM
+  date: null
+  url: https://docs.litellm.ai/
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 LiteLLM 的补充技术文档。
+- id: 99
+  publisher: LiteLLM
+  title: ✨ Enterprise | liteLLM
+  date: null
+  url: https://docs.litellm.ai/docs/enterprise
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 LiteLLM 的补充技术文档。
+- id: 100
+  publisher: Microsoft Azure
+  title: Azure Kubernetes Service (AKS) | Microsoft Azure
+  date: null
+  url: https://azure.microsoft.com/en-us/products/kubernetes-service
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Microsoft Azure 的补充定价文档。
+- id: 101
+  publisher: Microsoft Azure
+  title: Foundry Agent Service | Microsoft Azure
+  date: null
+  url: https://azure.microsoft.com/en-us/products/ai-foundry/agent-service
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Microsoft Azure 的补充定价文档。
+- id: 102
+  publisher: Microsoft Azure
+  title: Observability in Foundry Control Plane | Microsoft Azure
+  date: null
+  url: https://azure.microsoft.com/en-us/products/ai-foundry/observability
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Microsoft Azure 的补充定价文档。
+- id: 103
+  publisher: Microsoft Azure
+  title: Virtual Machine Scale Sets | Microsoft Azure
+  date: null
+  url: https://azure.microsoft.com/en-us/products/virtual-machine-scale-sets
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Microsoft Azure 的补充定价文档。
+- id: 104
+  publisher: Microsoft Azure
+  title: Windows Server on Azure | Microsoft Azure
+  date: null
+  url: https://azure.microsoft.com/en-us/products/windows-server
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Microsoft Azure 的补充定价文档。
+- id: 105
+  publisher: Microsoft Learn
+  title: Buy an Azure reservation - Microsoft Cost Management
+  date: null
+  url: https://learn.microsoft.com/en-us/azure/cost-management-billing/reservations/prepare-buy-reservation
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Microsoft Learn 的补充定价文档。
+- id: 106
+  publisher: Microsoft Learn
+  title: Manage Azure OpenAI in Microsoft Foundry Models quota (classic) - Microsoft Foundry (classic) portal
+  date: null
+  url: https://learn.microsoft.com/en-us/azure/foundry-classic/openai/how-to/quota
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Microsoft Learn 的补充定价文档。
+- id: 107
+  publisher: Microsoft Learn
+  title: Model Capacities - List - REST API (Azure Azure AI Services)
+  date: '2024-10-01'
+  url: https://learn.microsoft.com/en-us/rest/api/aiservices/accountmanagement/model-capacities/list?view=rest-aiservices-accountmanagement-2024-10-01
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Microsoft Learn 的补充定价文档。
+- id: 108
+  publisher: Microsoft Learn
+  title: Principles for AI-Generated Content
+  date: null
+  url: https://learn.microsoft.com/en-us/principles-for-ai-generated-content
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Microsoft Learn 的补充定价文档。
+- id: 109
+  publisher: Microsoft Learn
+  title: Provisioned throughput unit (PTU) costs and billing - Microsoft Foundry
+  date: null
+  url: https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/provisioned-throughput-onboarding
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Microsoft Learn 的补充定价文档。
+- id: 110
+  publisher: Microsoft Learn
+  title: Save costs with Microsoft Foundry Provisioned Throughput Reservations - Microsoft Cost Management
+  date: null
+  url: https://learn.microsoft.com/en-us/azure/cost-management-billing/reservations/microsoft-foundry
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 来自 Microsoft Learn 的补充定价文档。
+sources:
+- id: 1
+  publisher: AWS
+  title: Amazon Bedrock Pricing – AWS
+  date: null
+  url: https://aws.amazon.com/bedrock/pricing
+- id: 2
+  publisher: AWS
+  title: Process multiple prompts with batch inference - Amazon Bedrock
+  date: null
+  url: https://docs.aws.amazon.com/bedrock/latest/userguide/batch-inference.html
+- id: 3
+  publisher: Anthropic
+  title: Batch processing
+  date: null
+  url: https://platform.claude.com/docs/en/build-with-claude/batch-processing
+- id: 4
+  publisher: Anthropic
+  title: Prompt caching
+  date: null
+  url: https://platform.claude.com/docs/en/build-with-claude/prompt-caching
+- id: 5
+  publisher: Anyscale
+  title: How continuous batching enables 23x throughput in LLM inference
+  date: null
+  url: https://speakerdeck.com/anyscale/how-continuous-batching-enables-23x-throughput-in-llm-inference
+- id: 6
+  publisher: Anyscale
+  title: LLMs and agentic AI on Anyscale | Anyscale Docs
+  date: null
+  url: https://docs.anyscale.com/llm
+- id: 7
+  publisher: Baseten
+  title: Announcing Baseten’s $75M Series C
+  date: null
+  url: https://www.baseten.co/blog/announcing-baseten-75m-series-c
+- id: 8
+  publisher: Baseten
+  title: Cloud Pricing
+  date: null
+  url: https://www.baseten.co/pricing
+- id: 9
+  publisher: Baseten
+  title: The Baseten Inference Stack | Guides
+  date: null
+  url: https://www.baseten.co/resources/guide/the-baseten-inference-stack
+- id: 10
+  publisher: BentoML
+  title: LLM Inference Handbook
+  date: null
+  url: https://www.bentoml.com/llm
+- id: 11
+  publisher: Capgemini
+  title: 'Harnessing the value of AI: Unlocking scalable advantage'
+  date: '2025-09-05'
+  url: https://www.capgemini.com/insights/research-library/generative-ai-in-organizations-2025
+- id: 12
+  publisher: Cerebras
+  title: Inference - Cerebras
+  date: null
+  url: https://www.cerebras.ai/inference
+- id: 13
+  publisher: Deloitte
+  title: State of Generative AI Q4 – Press Release
+  date: null
+  url: https://www.deloitte.com/us/en/about/press-room/state-of-generative-ai.html
+- id: 14
+  publisher: EU AI Act
+  title: EU Artificial Intelligence Act | Up-to-date developments and analyses of the EU AI Act
+  date: null
+  url: https://artificialintelligenceact.eu/
+- id: 15
+  publisher: Exploding Topics
+  title: How Many AI Companies Are There? (2025)
+  date: '2025-10-13'
+  url: https://explodingtopics.com/blog/number-ai-companies
+- id: 16
+  publisher: Fireworks AI
+  title: Fireworks - Pricing
+  date: null
+  url: https://fireworks.ai/pricing
+- id: 17
+  publisher: Fireworks AI
+  title: Prompt caching - Fireworks AI Docs
+  date: null
+  url: https://docs.fireworks.ai/guides/prompt-caching
+- id: 18
+  publisher: Fractile
+  title: https://www.fractile.ai/news/fractile-raises-220m-to-build-the-next-generation-of-inference-hardware
+  date: null
+  url: https://www.fractile.ai/news/fractile-raises-220m-to-build-the-next-generation-of-inference-hardware
+- id: 19
+  publisher: GitHub / vLLM
+  title: '[Performance]: decoding speed on long context · Issue #11286 · vllm-project/vllm'
+  date: null
+  url: https://github.com/vllm-project/vllm/issues/11286
+- id: 20
+  publisher: Google Cloud
+  title: Batch predictions | Generative AI on Vertex AI | Google Cloud Documentation
+  date: null
+  url: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/maas/capabilities/batch-prediction
+- id: 21
+  publisher: Google Cloud
+  title: Throughput quota | Generative AI on Vertex AI | Google Cloud Documentation
+  date: null
+  url: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/resources/throughput-quota
+- id: 22
+  publisher: Groq
+  title: Groq Raises $750 Million as Inference Demand Surges
+  date: null
+  url: https://groq.com/newsroom/groq-raises-750-million-as-inference-demand-surges
+- id: 23
+  publisher: Groq
+  title: Rate Limits - GroqDocs
+  date: null
+  url: https://console.groq.com/docs/rate-limits
+- id: 24
+  publisher: Hugging Face
+  title: Text Generation Inference · Hugging Face
+  date: null
+  url: https://huggingface.co/docs/text-generation-inference/en/index
+- id: 25
+  publisher: ICO
+  title: Guidance on AI and data protection
+  date: null
+  url: https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/artificial-intelligence/guidance-on-ai-and-data-protection
+- id: 26
+  publisher: Intel
+  title: Intel, SambaNova Planning Multi-Year Collaboration for Xeon-Based AI Inference
+  date: '2026-02-24'
+  url: https://newsroom.intel.com/data-center/intel-and-sambanova-planning-multi-year-collaboration-for-xeon-based-ai-inference
+- id: 27
+  publisher: KServe
+  title: Overview | KServe
+  date: null
+  url: https://kserve.github.io/website/docs/admin-guide/overview
+- id: 28
+  publisher: LiteLLM
+  title: Router - Load Balancing | liteLLM
+  date: null
+  url: https://docs.litellm.ai/docs/routing
+- id: 29
+  publisher: Microsoft Azure
+  title: Azure OpenAI Service - Pricing | Microsoft Azure
+  date: null
+  url: https://azure.microsoft.com/en-us/pricing/details/azure-openai
+- id: 30
+  publisher: Microsoft Learn
+  title: What Is Provisioned Throughput for Foundry Models? - Microsoft Foundry
+  date: null
+  url: https://learn.microsoft.com/en-us/azure/foundry/openai/concepts/provisioned-throughput?tabs=global-ptum
+- id: 31
+  publisher: NIST
+  title: 'Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile'
+  date: '2024-07-26'
+  url: https://www.nist.gov/publications/artificial-intelligence-risk-management-framework-generative-artificial-intelligence
+- id: 32
+  publisher: NVIDIA
+  title: Removing the Guesswork from Disaggregated Serving | NVIDIA Technical Blog
+  date: '2026-03-09'
+  url: https://developer.nvidia.com/blog/removing-the-guesswork-from-disaggregated-serving
+- id: 33
+  publisher: PR Newswire / MarketsandMarkets
+  title: AI Inference Market worth $254.98 billion by 2030 - Exclusive Report by MarketsandMarkets™
+  date: '2025-02-28'
+  url: https://www.prnewswire.com/news-releases/ai-inference-market-worth-254-98-billion-by-2030---exclusive-report-by-marketsandmarkets-302388315.html
+- id: 35
+  publisher: Together AI
+  title: Overview - Together AI docs
+  date: null
+  url: https://docs.together.ai/docs/inference/batch/overview
+- id: 36
+  publisher: Together AI
+  title: Pricing | Together AI
+  date: null
+  url: https://www.together.ai/pricing
+- id: 37
+  publisher: arXiv
+  title: Efficient Memory Management for Large Language Model Serving with PagedAttention
+  date: null
+  url: https://arxiv.org/abs/2309.06180
+- id: 38
+  publisher: arXiv
+  title: 'SARATHI: Efficient LLM Inference by Piggybacking Decodes with Chunked Prefills'
+  date: null
+  url: https://arxiv.org/abs/2308.16369
+- id: 39
+  publisher: arXiv
+  title: 'Splitwise: Efficient generative LLM inference using phase splitting'
+  date: null
+  url: https://arxiv.org/abs/2311.18677
+- id: 40
+  publisher: vLLM
+  title: Automatic Prefix Caching - vLLM
+  date: null
+  url: https://docs.vllm.ai/en/latest/features/automatic_prefix_caching
+- id: 41
+  publisher: vLLM
+  title: Parallelism and Scaling - vLLM
+  date: null
+  url: https://docs.vllm.ai/en/latest/serving/parallelism_scaling
