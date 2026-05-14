@@ -1,0 +1,281 @@
+slug: privileged-agent-attestation-layer
+date: "2026-05-14"
+executiveSummary: >-
+  Enterprises are deploying write-capable coding and IT agents into GitHub, cloud IAM, Jira, Slack, and finance
+  systems while still provisioning those agents like long-lived service accounts with no task-scoped delegation,
+  no verifiable attestation chain, and no fast revocation path when an exploit appears. The proposed product—a
+  purpose-built agent identity broker—sits inline between the agent runtime and high-risk write surfaces, issues
+  short-lived per-task attestations, enforces policy-bound delegation, and triggers revocation automatically when
+  exploit conditions or workflow context change. The beachhead is Series B–E software companies with 100–1,000
+  engineers that already run internal coding or IT automation agents with GitHub and cloud write access, where a
+  security review or a vulnerability disclosure creates the immediate buying trigger. The SAM is estimated at
+  $300M (5,000 qualifying accounts at ~$60k ACV), and the year-3 reachable market is ~$6M from 80 design-partner
+  style customers at ~$75k ACV; no independent customer-case study was available at research time, so these
+  estimates are bottom-up proxies that require validation through design-partner pilots.
+
+problem:
+  - "Autonomous coding and IT agents gain write access to GitHub, cloud consoles, Jira, Slack, and SaaS admin tools but are provisioned as shared long-lived service accounts, leaving no verifiable delegation chain."
+  - "Security teams cannot prove which agent acted, which human approved the delegation, or what scope was in effect—making audit, compliance, and incident response manual and slow."
+  - "When an agent-specific vulnerability is disclosed, the only containment option is a broad shutdown because there is no scoped revocation control plane."
+  - "Existing IAM, PAM, and secrets tools were built for humans and static workloads; they do not model per-task attestations, autonomous delegation graphs, or exploit-aware revocation for agents."
+
+solution:
+  - "An agent identity broker that intercepts every write-capable agent action, issues a short-lived per-task attestation token binding the action to a delegation chain, policy scope, and human owner, then allows or blocks execution."
+  - "Exploit-aware revocation: the system maps disclosed agent vulnerabilities (MCP misconfigs, leaked secrets, vulnerable runtimes) to active identities and can downgrade, pause, or re-scope affected agents automatically."
+  - "Audit trail emitted per action without manual log stitching—SIEM-ready, covering agent identity, tool, action, outcome, and revocation state."
+  - "Initial integrations target GitHub, AWS IAM, Okta, Jira, Slack, and common agent orchestrators; built on existing OIDC/SPIFFE/workload-federation primitives rather than a proprietary runtime."
+
+whyWeWin:
+  - "Incumbents (Okta, CyberArk, Teleport, Aembit) stop at their own trust domains or broad workload identity—none deliver a unified cross-GitHub-cloud-SaaS delegation graph with exploit-aware revocation specific to coding agents."
+  - "Posture vendors (Astrix, Oasis) provide inventory and discovery; we provide inline enforcement at the moment of write action, which is the only control that can prevent—not merely report—unauthorized agent behavior."
+  - "The delegation graph (human owner → agent runtime → repository/job → issued token → downstream action → revocation outcome) compounds as a data moat with every integrated workflow, making displacement progressively harder."
+  - "Standards-friendly architecture (OAuth/OIDC, SPIFFE, MCP authorization) avoids proprietary runtime lock-in and lowers buyer fear of dead-end architecture choices."
+  - "Early design-partner focus on the GitHub-to-cloud write path creates proof-of-value (time-to-approve and time-to-revoke metrics) before incumbents can respond with equivalent agent-native depth."
+
+strategicChoices:
+  beachhead: "Series B–E US software companies (100–1,000 engineers) that already run internal coding or IT automation agents with write access to GitHub and at least one cloud environment, and whose platform team faces a pending security review or vulnerability-triggered rollback."
+  wedgeRationale: >-
+    This slice has agents in production, a concrete security-review forcing function, and a platform team that can
+    champion a tool that unblocks rather than slows automation adoption. Discovery-first or broad-enterprise plays
+    require longer proof cycles; the inline attestation wedge produces a measurable time-to-approve and
+    time-to-revoke metric in weeks, not quarters.
+  sequencingRationale: >-
+    Build GitHub-to-AWS delegation and revocation first because that is the highest-frequency write path for
+    coding agents and the one where GitGuardian documents the fastest credential sprawl. Land with a design-partner
+    security review, prove the metric, then expand integrations to Okta, Jira, Slack, and additional cloud targets.
+    Hire integrations engineering before enterprise sales because buyer POCs gate on depth, not positioning.
+  notYet:
+    - "Finance, procurement, and partner-facing agent workflows (deferred until GitHub-cloud wedge is proven)."
+    - "On-prem and air-gapped enterprise deployments (deferred; adds delivery complexity before product-market fit)."
+    - "Generalized posture/dashboard product competing with Astrix and Oasis (focus stays on inline enforcement)."
+    - "MSSP or consulting-led OEM model (deferred until 20+ production customers validate the direct-sales motion)."
+
+market:
+  tam: "$3.8B (bottom-up: 50,000 Copilot-adopting organizations × ~$75k fully developed ACV; research estimate)"
+  sam: "$300M (5,000 qualifying 100–1,000 engineer orgs with live write-capable agents × ~$60k ACV; research estimate)"
+  som: "$6.0M year-3 ARR (80 customers × ~$75k ACV; requires validated design-partner conversion; research estimate)"
+  segments:
+    - "Primary: security and platform engineering teams at Series B–E software companies deploying internal coding agents with GitHub and cloud write access."
+    - "Secondary: identity architects and AppSec leaders at larger enterprises discovering NHI sprawl through secrets incidents or compliance audits."
+  buyingProcess: >-
+    CISO or VP Platform Engineering sponsors the purchase, typically triggered by a write-capable agent rollout or a
+    security review; platform engineers evaluate integration depth (GitHub, cloud IAM) and time-to-revoke in a
+    4–8 week paid pilot before approving an annual platform subscription.
+
+product:
+  mvp: "Inline attestation broker for GitHub-to-AWS write actions: per-task short-lived token issuance, delegation chain logging, policy enforcement, and one-click revocation dashboard; integrated via GitHub OIDC and AWS STS."
+  sixMonth: "Add Okta and Jira integrations; ship exploit-to-identity mapping for MCP and common agent frameworks; launch design-partner pilot program with 5–8 customers."
+  twelveMonth: "Add Slack admin and GCP integrations; ship automated revocation triggered by vulnerability feed; reach 15–20 production customers and publish first time-to-revoke benchmark."
+  twentyFourMonth: "Expand to finance and HR agent workflows; launch partner co-sell with GitHub and AWS Marketplace; build delegation-graph analytics layer for CISO reporting; target 60–80 customers."
+  keyBets:
+    - "OIDC/SPIFFE-native architecture means no new runtime for customers—attestations ride existing token plumbing."
+    - "Exploit-to-identity mapping is the defensible differentiator; invest in a continuously updated agent vulnerability knowledge graph."
+    - "Measurable time-to-approve and time-to-revoke metrics will be the primary conversion proof in pilots."
+
+gtm:
+  wedge: "GitHub-to-cloud delegated token issuance and instant revocation for internal coding agents undergoing a platform security review."
+  channels:
+    - "Direct outbound to security and platform engineering leads at Series B–E software companies already publicly shipping AI coding agent features."
+    - "Design-partner pipeline via developer security conferences and GitHub Copilot ecosystem partner events."
+    - "Co-sell referrals from GitHub, AWS, and Azure partner programs once 10+ production customers are live."
+    - "NHI and cloud-security consultancies as force multipliers for accounts discovering service-account sprawl."
+  funnelTargets: "Outbound to qualified pilot: 15–25%; pilot to annual contract: 50%+ (based on comparable identity-control-plane conversion benchmarks; unvalidated assumption)."
+  pricing: "Annual platform fee ($24k–$48k base) plus per-active-agent-identity fee (~$600–$1,200/agent-identity/year); usage-based component aligns cost with agent fleet size and keeps land ACVs accessible while expanding naturally as customers scale agent programs."
+
+businessModel:
+  revenueStreams:
+    - "Annual platform subscription (base access, policy engine, audit trail)."
+    - "Per-active-agent-identity fee (scales with customer's agent fleet growth)."
+    - "Premium incident-response automation module (exploit-aware auto-revocation, tabletop simulation tooling)."
+  unitOfValue: "Active agent identity under management."
+  targetGrossMarginPct: 75
+  expansionLevers:
+    - "New integration surfaces: additional cloud, SaaS admin, and finance tools expand per-seat and per-identity count."
+    - "Agent fleet growth: as customers scale agent programs, active identity count and protected action volume grow automatically."
+    - "Incident-response module upsell triggered by exploit disclosures or tabletop exercises."
+    - "Expansion from engineering/IT agents to finance, support, and procurement agent workflows."
+
+strategyMap:
+  northStarMetric: "Active agent identities under management with verified delegation chain."
+  inputMetrics:
+    - "Number of write-capable agent integrations live per customer."
+    - "Median time-to-revoke from exploit disclosure to affected-identity scope reduction."
+    - "Pilot-to-production conversion rate."
+    - "Net revenue retention (expansion via new integrations and agent fleet growth)."
+  moatsToBuild:
+    - "Cross-tool delegation graph linking human owner, agent runtime, repository, issued token, and revocation outcome."
+    - "Exploit-to-identity mapping dataset continuously updated for agent-specific CVEs, MCP misconfigs, and framework vulnerabilities."
+    - "Integration depth with GitHub, AWS, Okta, Jira, Slack: switching cost compounds with every workflow connected."
+    - "Time-to-revoke benchmark: first vendor to publish verifiable metrics owns the RFP evaluation criterion."
+  killCriteria:
+    - "Fewer than 5 design partners convert to paid contracts within 12 months of product launch."
+    - "Median pilot time-to-revoke metric is not demonstrably better than existing PAM or vault-based approaches."
+    - "A major cloud or dev platform (GitHub, AWS, or Okta) ships native cross-tool agent delegation and revocation with comparable scope coverage."
+    - "Win rate against Aembit or Oasis in competitive evaluations falls below 40% after 10 qualified opportunities."
+  mermaid: |
+    flowchart LR
+      Beachhead["Series B-E coding agent teams\n(GitHub + cloud write access)"] --> Pilot["Design-partner pilot\n(GitHub-to-AWS attestation + revoke)"]
+      Pilot --> Proof["Proof points\n(time-to-approve, time-to-revoke)"]
+      Proof --> Expand["Integration expansion\n(Okta, Jira, Slack, GCP)"]
+      Expand --> Graph["Delegation graph moat\n(cross-tool identity dataset)"]
+      Graph --> Platform["Trust platform\n(finance, HR, partner agents)"]
+
+investorMemo:
+  verdict:
+    call: "Meet / investigate further"
+    conviction: "High pain intensity and wedge clarity, but thin public evidence base and strong adjacent-vendor competition require design-partner validation before conviction on timing."
+    whyBelieve: "Write-capable agents are moving into production before enterprises have a control plane, and no existing IAM or posture vendor delivers unified cross-GitHub-cloud-SaaS delegation with exploit-aware revocation."
+    whyDoubt: "Aembit, Oasis, and Astrix are well-funded and repositioning aggressively; if cloud platforms bundle adequate native controls, the startup's pricing power may compress before it builds a delegation-graph moat."
+    nextDiligence: "Conduct 8–10 design-partner discovery calls with platform security leads at Series B–E software companies to confirm willingness to pay for inline attestation before write-capable agent deployments reach critical mass."
+  firstCustomer:
+    title: "Platform security lead at a Series B–E B2B software company."
+    profile: "300–2,000 person software company whose platform team has already enabled internal coding agents to open PRs, modify infrastructure configs, or execute SaaS admin tasks, and whose security team is blocking broader rollout pending audit controls."
+    trigger: "A security review blocking further agent rollout, or a new agent-specific vulnerability disclosure that forces a temporary global rollback of automation."
+    buyer: "CISO or VP Platform Engineering."
+    initialContract: "$24k–$48k pilot ACV for GitHub-to-cloud attestation footprint, with expansion path to $75k–$120k as integrations and agent fleet grow; conversion from pilot to annual contract expected within 60–90 days of go-live."
+  mustBeTrue:
+    - "Write-capable coding and IT agents are already in production at enough Series B–E software companies in 2026 to generate active budget for inline identity controls, not just awareness."
+    - "Security and platform engineering teams will pay for a third-party broker rather than extend existing IAM/PAM or wait for cloud-native bundling, because integration breadth and exploit-aware revocation are not on vendor roadmaps within 12–18 months."
+    - "The delegation graph and exploit-to-identity dataset compound into a switching cost that makes displacement by a single-vendor bundle economically unattractive after 12–18 months of production use."
+    - "Time-to-revoke can be reduced from hours/days (spreadsheet + global kill switch) to under 30 minutes per the product's inline control plane, and customers will treat this metric as an RFP-qualifying criterion."
+    - "The startup can close 5+ paying design-partner contracts within 12 months of product launch using a direct outbound motion at pre-seed/seed scale, before requiring a scaled sales team."
+  diligenceQuestions:
+    - "Have you spoken with 10+ platform security leads at Series B–E software companies to confirm an active budget line for agent identity controls in 2026, separate from existing IAM/PAM spend?"
+    - "In competitive evaluations, what is the win/loss record against Aembit, Oasis, and Astrix, and what is the primary decision criterion that drives each outcome?"
+    - "Do buyers prefer an inline token broker or a posture/discovery layer first, and how does that preference affect time-to-close and initial ACV?"
+    - "What is the technical depth of the GitHub-to-AWS delegation path today: is it demo-ready, pilot-ready, or production-ready, and how many engineering months separate those stages?"
+    - "Has the exploit-to-identity mapping dataset generated any customer proof of faster triage or revocation versus a baseline vault or PAM workflow?"
+    - "What is the founding team's prior experience in identity, security infrastructure, or enterprise SaaS, and how does that affect the ability to win CISO-level deals within the first year?"
+
+operatingAssumptions:
+  - assumption: "5–10% of current Copilot-adopting organizations have write-capable agents in production today and are actively seeking identity controls."
+    basis: research.yaml
+    validationTest: "Design-partner outreach campaign targeting 50 Series B–E platform security leads; measure what fraction report active write-capable agent deployments and a stated need for identity controls."
+    decisionImpact: "If fewer than 3% qualify, the TAM addressable in year 1–2 is too thin for a direct-sales motion at seed scale; pivot to posture/discovery as an on-ramp."
+  - assumption: "Buyers will pay $40k–$75k ACV for inline attestation before they have dozens of agents in production, framing the product as a prerequisite for security approval rather than a governance overlay."
+    basis: research.yaml
+    validationTest: "Negotiate LOIs or pilot agreements at stated ACV with at least 5 design partners during pre-product phase; if no LOI above $20k, reprice or reframe."
+    decisionImpact: "If willingness-to-pay anchors below $20k ACV, the unit economics may not support a direct enterprise sales motion and a PLG or partner-led model becomes necessary."
+  - assumption: "GitHub OIDC and AWS STS integrations can be built to pilot-ready quality within 3 months by a 2–3 engineer founding team."
+    basis: "operator judgment"
+    validationTest: "Internal proof-of-concept delivering end-to-end attestation and revocation for a synthetic GitHub Actions coding-agent workflow within 60 days of founding."
+    decisionImpact: "If integration complexity exceeds 6 months for the GitHub-to-AWS path alone, the MVP must be scoped narrower (e.g., GitHub only) or engineering headcount must be hired sooner."
+  - assumption: "Exploit-aware revocation (mapping disclosed CVEs and MCP misconfigs to active agent identities) is a meaningful differentiator versus generic short-lived credentialing within the first 12 months."
+    basis: research.yaml
+    validationTest: "Run 3 tabletop exercises with design partners using a real or synthetic agent vulnerability disclosure; measure whether the automated scope-reduction workflow is faster and more targeted than their existing kill-switch."
+    decisionImpact: "If customers treat exploit-aware revocation as a nice-to-have rather than a decision criterion, the product roadmap should de-prioritize the vulnerability knowledge graph and accelerate integration breadth instead."
+  - assumption: "The startup can win competitive evaluations against Aembit, Oasis, and Astrix on GitHub-first depth and exploit-aware revocation speed, even without matching their broader NHI inventory coverage."
+    basis: research.yaml
+    validationTest: "Win/loss tracking across first 10 qualified enterprise opportunities; accept deals only after a documented head-to-head comparison."
+    decisionImpact: "If win rate against funded competitors falls below 40%, the differentiation story must shift or the startup must acquire a posture capability to avoid being positioned as feature-incomplete."
+
+experimentRoadmap:
+  - horizon: "0–90 days"
+    experiment: "Design-partner discovery sprint"
+    hypothesis: "Platform security leads at 8–10 Series B–E software companies will confirm that write-capable agent rollouts are blocked by identity/audit gaps, not by other factors."
+    successMetric: "6+ of 10 conversations confirm an active security-review blocker and willingness to engage in a paid pilot."
+    owner: "Founding CEO / GTM lead"
+  - horizon: "0–90 days"
+    experiment: "GitHub-to-AWS attestation proof-of-concept"
+    hypothesis: "OIDC-based per-task token issuance and revocation for a GitHub Actions coding-agent workflow can be built to demo quality in 60 days."
+    successMetric: "Live demo showing end-to-end attestation, delegation-chain log, and one-click revocation for a synthetic write action."
+    owner: "Founding engineer"
+  - horizon: "90–180 days"
+    experiment: "Paid pilot with 3 design partners"
+    hypothesis: "Inline attestation reduces time-to-approve for new write-capable agent workflows and time-to-revoke on a simulated vulnerability from days to under 30 minutes."
+    successMetric: "3 signed pilot agreements at $10k–$24k each; measured time-to-revoke under 30 minutes in at least 2 pilots."
+    owner: "Founding CEO + engineer"
+  - horizon: "90–180 days"
+    experiment: "Exploit-to-identity mapping prototype"
+    hypothesis: "Mapping GitGuardian-style MCP misconfiguration patterns to active agent identities is technically feasible with publicly available vulnerability feeds and agent metadata."
+    successMetric: "Prototype maps at least one real or synthetic MCP vulnerability disclosure to affected agent identities in a design-partner environment within 24 hours of disclosure."
+    owner: "Founding engineer"
+  - horizon: "180–270 days"
+    experiment: "Competitive win/loss tracking"
+    hypothesis: "GitHub-first depth and exploit-aware revocation speed wins over Aembit and Oasis in evaluations at companies with active coding agent deployments."
+    successMetric: "Win rate ≥ 50% in first 10 qualified competitive evaluations."
+    owner: "Founding CEO"
+  - horizon: "270–365 days"
+    experiment: "GitHub and AWS Marketplace co-sell motion"
+    hypothesis: "Listing on GitHub Marketplace and AWS Marketplace accelerates inbound pipeline once 10+ production customers can be referenced."
+    successMetric: "At least 2 inbound qualified leads per month attributable to marketplace listing within 90 days of launch."
+    owner: "GTM lead + partnership"
+
+operations:
+  - "Policy engine: rule evaluation for delegation scope and token issuance; must be highly available because all agent write actions gate on it."
+  - "Integration layer: maintain certified connectors for GitHub OIDC, AWS STS, Azure Workload Identity, GCP WIF, Okta, Jira, and Slack; connector reliability is a contractual SLA."
+  - "Vulnerability knowledge graph: continuously ingest agent-specific CVEs, MCP misconfiguration patterns, and framework advisories; map each to affected agent identity profiles."
+  - "Audit log pipeline: emit structured per-action audit events to customer SIEM (Splunk, Datadog, AWS Security Lake) without requiring a new query language."
+  - "Incident-response runbooks: ship documented playbooks for the three most common scenarios—new agent rollout, vulnerability disclosure, and rogue agent containment."
+  - "Key partners: GitHub, AWS, Azure, GCP, Okta (technical integration), HashiCorp Vault (revocation primitive), security consultancies (deal sourcing and implementation support)."
+
+team:
+  - role: "Founding CEO / GTM lead"
+    startTiming: "Month 0"
+    rationale: "Enterprise security sales to CISOs requires a founder who can run design-partner discovery, negotiate LOIs, and build a trusted advisor relationship before the product is complete."
+  - role: "Founding engineer (identity/security infrastructure)"
+    startTiming: "Month 0"
+    rationale: "GitHub OIDC, AWS STS, and SPIFFE integration depth is the product's proof-of-value in pilots; needs deep workload identity and cloud IAM experience, not general full-stack."
+  - role: "Second engineer (integrations and policy engine)"
+    startTiming: "Month 3"
+    rationale: "Expanding from GitHub-to-AWS to Okta, Jira, and Slack connectors is the primary product milestone at months 4–9; a dedicated integrations engineer unblocks this without distracting the founding engineer from the core attestation and revocation primitives."
+  - role: "Head of security research (exploit-to-identity mapping)"
+    startTiming: "Month 9"
+    rationale: "The vulnerability knowledge graph is the durable differentiator; a dedicated security researcher is needed once the core product is in production with 10+ customers to prevent the knowledge graph from becoming stale."
+  - role: "Enterprise account executive"
+    startTiming: "Month 12"
+    rationale: "Hire only after the pilot-to-production conversion motion is documented and at least 5 paying customers are live; premature sales hiring without a repeatable proof-of-value wastes runway."
+
+milestones:
+  - horizon: "0–12 months"
+    items:
+      - "Deliver GitHub-to-AWS attestation and revocation proof-of-concept (month 2)."
+      - "Sign 3–5 paid design-partner pilots at $10k–$24k ACV each (months 4–7)."
+      - "Demonstrate time-to-revoke under 30 minutes in at least 2 production pilot environments (month 8)."
+      - "Ship Okta and Jira integrations; expand pilot customers to full platform subscription (months 9–12)."
+      - "Close seed round based on pilot metrics and LOI pipeline (month 10–12)."
+  - horizon: "12–24 months"
+    items:
+      - "Reach 20 paying production customers at average $60k ACV (~$1.2M ARR)."
+      - "Launch exploit-aware automated revocation triggered by live vulnerability feed (month 14)."
+      - "Add Slack admin and GCP integrations; list on GitHub Marketplace and AWS Marketplace (month 18)."
+      - "Publish first public time-to-revoke benchmark establishing the product as the category reference metric."
+      - "Hire first enterprise AE and begin structured outbound to 200-person+ target account list."
+  - horizon: "24–36 months"
+    items:
+      - "Reach 80 paying customers at average $75k ACV (~$6M ARR, matching researched SOM)."
+      - "Expand product to finance and HR agent workflows; launch delegation-graph analytics for CISO reporting."
+      - "Win/loss rate against Aembit, Oasis, Astrix ≥ 50% across documented competitive evaluations."
+      - "Evaluate Series A raise based on NRR, CAC payback, and pipeline coverage."
+
+risks:
+  - risk: "Incumbent cloud or dev platform (GitHub, AWS, Okta) ships native cross-tool agent delegation and revocation that covers the GitHub-to-cloud path with comparable depth."
+    likelihood: Medium
+    impact: High
+    mitigation: "Accelerate integration breadth beyond GitHub-AWS (Jira, Slack, Okta, GCP) so the cross-vendor delegation graph is not replicable by any single platform; publish exploit-aware revocation benchmarks before incumbents enter."
+  - risk: "Well-funded competitors (Aembit, Oasis, Astrix) commoditize short-lived agent credentialing faster than the startup can build the delegation graph moat."
+    likelihood: High
+    impact: High
+    mitigation: "Focus pilot evaluations on the exploit-aware revocation metric and cross-tool delegation completeness, not generic NHI inventory—these are not on competitor near-term roadmaps per research."
+  - risk: "Write-capable agent deployments stay mostly read-only or in pilot stages through 2026–2027, shrinking the addressable base of buyers with urgent budget."
+    likelihood: Medium
+    impact: Medium
+    mitigation: "Target only companies with agents already in production (confirmed in discovery call); do not waste sales cycles on companies still evaluating agent tooling."
+  - risk: "Protocol fragmentation (MCP, SPIFFE, OpenID agent-identity work, vendor-specific token formats) makes a universal control plane interface technically costly to maintain."
+    likelihood: Medium
+    impact: Medium
+    mitigation: "Build on OIDC/OAuth standards-layer primitives; expose a plugin API for new runtimes rather than hardcoding each framework."
+  - risk: "Platform team latency or reliability concerns block adoption—buyers fear the attestation broker becomes a single point of failure for all agent automation."
+    likelihood: High
+    impact: Medium
+    mitigation: "Design for zero-additional-RTT hot path using OIDC token exchange; publish reliability SLA with 99.9% uptime guarantee and support async audit-only mode for latency-sensitive workflows."
+  - risk: "Security buyers deprioritize inline enforcement in favor of posture/discovery overlays, delaying conversion from pilot to production contract."
+    likelihood: Medium
+    impact: Medium
+    mitigation: "Package discovery and simulation modules as an on-ramp to inline enforcement; let buyers start with read-only visibility and escalate to enforcement after an internal tabletop exercise."
+
+fundingAsk:
+  round: seed
+  targetFundingRangeUsd: "$3–5M"
+  runwayMonths: 20
+  useOfFundsSummary: "20 months of runway buys: 2 additional engineers (integrations and policy engine), 1 security researcher at month 9, product infrastructure and integration maintenance, 5–8 design-partner pilots with white-glove onboarding, and a sales/GTM co-founder or first AE at month 12—targeting 20 paying customers and ~$1.2M ARR as the Series A trigger."
