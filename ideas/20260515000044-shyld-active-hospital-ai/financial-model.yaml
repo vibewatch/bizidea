@@ -1,0 +1,553 @@
+slug: or-turnover-control-plane
+date: '2026-05-15'
+currency: USD
+modelStartMonth: 2026-06
+assumptions:
+- id: A1
+  name: Model start month
+  value: 2026-06
+  unit: month
+  source: '[BP date 2026-05-15] modeled as the first full month after the business-plan date.'
+- id: A2
+  name: Customer unit in the model
+  value: active paid campus
+  unit: definition
+  source: '[BP investorMemo.firstCustomer] sells one-campus paid pilots that expand to annual campus contracts, so customersEop is modeled as campuses under contract rather than individual logos or ORs.'
+- id: A3
+  name: Average monitored ORs per active campus
+  value: Y1 10 ORs; Y2 12.5 ORs; Y3 15 ORs
+  unit: ORs per campus
+  source: '[BP investorMemo.firstCustomer] paid pilot covers 8-12 monitored ORs and [RS market.som] uses 15 ORs per campus in the year-3 footprint.'
+- id: A4
+  name: Blended annual recurring revenue per active campus
+  value: Y1 $180K; Y2 $225K; Y3 $270K
+  unit: USDk per campus per year
+  source: '[RS bottomUpSizingDrivers annual software ARPU $18K per monitored OR] multiplied by [A3 average ORs per campus]; Y1 reflects pilot-scale room counts and Y3 reaches the researched steady-state campus footprint.'
+- id: A5
+  name: Revenue recognition method
+  value: average active campuses during the period
+  unit: formula
+  source: 'Startup finance heuristic named source: Financial Modeler mid-period go-live rule; revenue = ((BoP campuses + EoP campuses) / 2) × annual campus ARPU ÷ periods per year.'
+- id: A6
+  name: Year 1 campus adds
+  value: '[0,0,0,0,1,0,0,1,0,0,1,0]'
+  unit: new campuses by month
+  source: '[BP milestones 0–12 months] targets 3-5 design partners and at least 3 paid pilots; base case assumes three paid campuses land in M5, M8, and M11.'
+- id: A7
+  name: Year 2 campus endpoints
+  value: '[4,6,8,12]'
+  unit: campuses EOP by quarter
+  source: '[BP milestones 12–24 months] and [BP experimentRoadmap] imply converting the first campuses, adding second-campus expansions, and reaching 8-10 production systems by the end of year two.'
+- id: A8
+  name: Year 3 campus endpoints
+  value: '[17,24,32,40]'
+  unit: campuses EOP by quarter
+  source: '[BP milestones 24–36 months] and [RS market.som] point to roughly 20 systems × 2 campuses by year three, modeled as 40 active campuses by Q4Y3.'
+- id: A9
+  name: Gross margin ramp
+  value: Y1 42%-58% on revenue months; Y2 61%,64%,67%,69%; Y3 69%,70%,71%,72%
+  unit: gross margin percent
+  source: '[BP businessModel.targetGrossMarginPct 70] and [BP investorMemo.mustBeTrue] require margin to clear 70% after implementation labor, human review, and hardware support normalize.'
+- id: A10
+  name: Loaded annual salaries by role
+  value: Founder/CEO 180; founding engineer 192; clinical implementation lead 144; edge/ML engineer 192; enterprise sales lead 180; implementation manager 144; field deployment specialist 120; product/data engineer 168; customer success manager 132; partnerships AE 168; ops/admin 108; applied AI engineer II 180
+  unit: USDk annual per FTE
+  source: '[BP team] plus startup-finance heuristic for lean seed-stage U.S. healthcare workflow software compensation including payroll burden.'
+- id: A11
+  name: Hiring sequence
+  value: Founder and founding engineer at M1; clinical implementation lead M2; edge/ML engineer M4; enterprise sales lead M10; implementation manager M16; field deployment specialist M18; product/data engineer M20; customer success manager M22; partnerships AE M28; ops/admin M30; applied AI engineer II M33
+  unit: timing
+  source: '[BP team] and [BP fundingAsk.useOfFundsSummary] call for a small implementation and partnership team only after pilot conversion evidence appears.'
+- id: A12
+  name: Year 1 non-payroll operating spend
+  value: Sales & marketing $5K-$16K/month; R&D $14K-$20K/month; G&A $8K-$12K/month
+  unit: USDk per month
+  source: '[BP gtm channels], [BP operations], and startup-finance heuristic for hospital travel, governance reviews, cloud/edge tooling, and legal overhead before scale.'
+- id: A13
+  name: Year 2-3 non-payroll operating spend
+  value: Y2 quarterly opex $210K, $230K, $250K, $270K; Y3 quarterly opex $300K, $320K, $340K, $360K
+  unit: USDk per quarter
+  source: '[BP operations] plus startup-finance heuristic for higher deployment travel, cloud processing, compliance, and partner-development costs as campuses scale.'
+- id: A14
+  name: Opening cash at M1
+  value: '3200.0'
+  unit: USDk
+  source: '[BP fundingAsk targetFundingRangeUsd $3-5M] and [BP fundingAsk round seed]; base case uses a $3.2M close near the low-middle of the stated range.'
+- id: A15
+  name: Blended CAC per active campus
+  value: '180.0'
+  unit: USDk per campus
+  source: Calculated from modeled founder-led healthcare enterprise selling plus partner development and travel, kept consistent with [BP gtm funnelTargets] and [BP investorMemo.firstCustomer] campus-sized contracts.
+- id: A16
+  name: Monthly churn
+  value: '2.5'
+  unit: percent
+  source: Startup finance heuristic for early-stage enterprise healthcare software where contracts can be sticky but trust, governance, and incumbent overlap still create material renewal risk.
+- id: A17
+  name: Funding sizing rule
+  value: Capital sized for 24 months to the next milestone plus 6 months of buffer
+  unit: policy
+  source: Developer instruction plus [BP fundingAsk.runwayMonths 18]; the model adds the required 6-month buffer to the stated operating plan.
+- id: A18
+  name: Revenue conservatism
+  value: Base case excludes one-time deployment and validation fees
+  unit: policy
+  source: '[BP businessModel.revenueStreams] includes implementation fees, but the model excludes them to keep revenue tied cleanly to recurring campus subscriptions and avoid double-counting services.'
+- id: A19
+  name: Cash flow simplification
+  value: cash approximates EBITDA with no debt, capex, taxes, or working-capital timing modeled
+  unit: heuristic
+  source: 'Startup finance heuristic named source: early-stage planning model simplification.'
+headcount:
+- role: Founder / CEO
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Founding engineer
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Clinical implementation lead
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Edge / ML engineer
+  q1y1: 0
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Enterprise sales lead
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Implementation manager
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: Field deployment specialist
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: Product / data engineer
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: Customer success manager
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: Partnerships AE
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 0
+  q4y3: 1
+- role: Ops / admin
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 0
+  q4y3: 1
+- role: Applied AI engineer II
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 0
+  q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 4
+  q4y1: 5
+  q4y2: 9
+  q4y3: 12
+headcountAnnualizedPayrollK:
+  q1y1: 516.0
+  q2y1: 708.0
+  q3y1: 708.0
+  q4y1: 888.0
+  q4y2: 1452.0
+  q4y3: 1908.0
+y1Monthly:
+- month: M1
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 31.0
+  salesMarketingK: 5.0
+  researchDevelopmentK: 14.0
+  generalAdministrativeK: 8.0
+  opexK: 27.0
+  ebitdaK: -58.0
+  cashEopK: 3142.0
+- month: M2
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 43.0
+  salesMarketingK: 5.0
+  researchDevelopmentK: 14.0
+  generalAdministrativeK: 8.0
+  opexK: 27.0
+  ebitdaK: -70.0
+  cashEopK: 3072.0
+- month: M3
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 43.0
+  salesMarketingK: 5.0
+  researchDevelopmentK: 14.0
+  generalAdministrativeK: 8.0
+  opexK: 27.0
+  ebitdaK: -70.0
+  cashEopK: 3002.0
+- month: M4
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 59.0
+  salesMarketingK: 6.0
+  researchDevelopmentK: 15.0
+  generalAdministrativeK: 8.0
+  opexK: 29.0
+  ebitdaK: -88.0
+  cashEopK: 2914.0
+- month: M5
+  customersEop: 1
+  newCustomers: 1
+  revenueK: 7.5
+  cogsK: 4.35
+  grossProfitK: 3.15
+  salaryK: 59.0
+  salesMarketingK: 6.0
+  researchDevelopmentK: 16.0
+  generalAdministrativeK: 9.0
+  opexK: 31.0
+  ebitdaK: -86.85
+  cashEopK: 2827.15
+- month: M6
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 15.0
+  cogsK: 8.4
+  grossProfitK: 6.6
+  salaryK: 59.0
+  salesMarketingK: 6.0
+  researchDevelopmentK: 16.0
+  generalAdministrativeK: 9.0
+  opexK: 31.0
+  ebitdaK: -83.4
+  cashEopK: 2743.75
+- month: M7
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 15.0
+  cogsK: 8.25
+  grossProfitK: 6.75
+  salaryK: 59.0
+  salesMarketingK: 8.0
+  researchDevelopmentK: 17.0
+  generalAdministrativeK: 10.0
+  opexK: 35.0
+  ebitdaK: -87.25
+  cashEopK: 2656.5
+- month: M8
+  customersEop: 2
+  newCustomers: 1
+  revenueK: 22.5
+  cogsK: 11.7
+  grossProfitK: 10.8
+  salaryK: 59.0
+  salesMarketingK: 8.0
+  researchDevelopmentK: 18.0
+  generalAdministrativeK: 10.0
+  opexK: 36.0
+  ebitdaK: -84.2
+  cashEopK: 2572.3
+- month: M9
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 30.0
+  cogsK: 15.0
+  grossProfitK: 15.0
+  salaryK: 59.0
+  salesMarketingK: 8.0
+  researchDevelopmentK: 18.0
+  generalAdministrativeK: 10.0
+  opexK: 36.0
+  ebitdaK: -80.0
+  cashEopK: 2492.3
+- month: M10
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 30.0
+  cogsK: 14.4
+  grossProfitK: 15.6
+  salaryK: 74.0
+  salesMarketingK: 14.0
+  researchDevelopmentK: 18.0
+  generalAdministrativeK: 12.0
+  opexK: 44.0
+  ebitdaK: -102.4
+  cashEopK: 2389.9
+- month: M11
+  customersEop: 3
+  newCustomers: 1
+  revenueK: 37.5
+  cogsK: 16.88
+  grossProfitK: 20.63
+  salaryK: 74.0
+  salesMarketingK: 14.0
+  researchDevelopmentK: 20.0
+  generalAdministrativeK: 12.0
+  opexK: 46.0
+  ebitdaK: -99.37
+  cashEopK: 2290.53
+- month: M12
+  customersEop: 3
+  newCustomers: 0
+  revenueK: 45.0
+  cogsK: 18.9
+  grossProfitK: 26.1
+  salaryK: 74.0
+  salesMarketingK: 16.0
+  researchDevelopmentK: 20.0
+  generalAdministrativeK: 12.0
+  opexK: 48.0
+  ebitdaK: -95.9
+  cashEopK: 2194.63
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 4
+  revenueK: 196.88
+  grossProfitK: 120.09
+  salaryK: 222.0
+  opexK: 210.0
+  ebitdaK: -311.91
+  cashEopK: 1882.72
+- quarter: Q2Y2
+  customersEop: 6
+  revenueK: 281.25
+  grossProfitK: 180.0
+  salaryK: 268.0
+  opexK: 230.0
+  ebitdaK: -318.0
+  cashEopK: 1564.72
+- quarter: Q3Y2
+  customersEop: 8
+  revenueK: 393.75
+  grossProfitK: 263.81
+  salaryK: 316.0
+  opexK: 250.0
+  ebitdaK: -302.19
+  cashEopK: 1262.53
+- quarter: Q4Y2
+  customersEop: 12
+  revenueK: 562.5
+  grossProfitK: 388.13
+  salaryK: 363.0
+  opexK: 270.0
+  ebitdaK: -244.87
+  cashEopK: 1017.66
+- quarter: Q1Y3
+  customersEop: 17
+  revenueK: 978.75
+  grossProfitK: 675.34
+  salaryK: 363.0
+  opexK: 300.0
+  ebitdaK: 12.34
+  cashEopK: 1029.99
+- quarter: Q2Y3
+  customersEop: 24
+  revenueK: 1383.75
+  grossProfitK: 968.63
+  salaryK: 414.0
+  opexK: 320.0
+  ebitdaK: 234.63
+  cashEopK: 1264.62
+- quarter: Q3Y3
+  customersEop: 32
+  revenueK: 1890.0
+  grossProfitK: 1341.9
+  salaryK: 447.0
+  opexK: 340.0
+  ebitdaK: 554.9
+  cashEopK: 1819.52
+- quarter: Q4Y3
+  customersEop: 40
+  revenueK: 2430.0
+  grossProfitK: 1749.6
+  salaryK: 477.0
+  opexK: 360.0
+  ebitdaK: 912.6
+  cashEopK: 2732.12
+totals:
+  y1:
+    revenueK: 202.5
+    ebitdaK: -1005.37
+    cashEopK: 2194.63
+  y2:
+    revenueK: 1434.38
+    ebitdaK: -1176.97
+    cashEopK: 1017.66
+  y3:
+    revenueK: 6682.5
+    ebitdaK: 1714.47
+    cashEopK: 2732.12
+unitEconomics:
+  arpuAnnualK: 270.0
+  grossMarginPct: 70.0
+  cacK: 180.0
+  monthlyChurnPct: 2.5
+  avgCustomerLifeMonths: 40.0
+  ltvK: 630.0
+  ltvCacRatio: 3.5
+  cacPaybackMonths: 11.4
+fundingAsk:
+  round: seed
+  amountM: 3.2
+  runwayMonths: 24
+  milestone: Reach 8-10 production health systems, prove second-campus expansion, and standardize deployment to under eight weeks while the benchmark module begins driving expansion.
+  useOfFunds:
+  - bucket: Engineering
+    amountUsd: 1440000
+    percentage: 45
+  - bucket: GTM
+    amountUsd: 800000
+    percentage: 25
+  - bucket: G&A
+    amountUsd: 320000
+    percentage: 10
+  - bucket: Buffer (6 mo)
+    amountUsd: 640000
+    percentage: 20
+scenarios:
+  downside:
+    description: Privacy review drag and lower pilot room counts keep pricing and campus expansion below the base conversion plan.
+    y3RevenueK: 4800.0
+    y3EbitdaK: 350.0
+    cashLowPointK: 250.0
+    keyAssumptionChanges:
+    - Steady-state campus ARPU reaches only $240K because average monitored rooms stay closer to 12-13 per campus.
+    - Y3 ends at roughly 32 active campuses instead of 40 as procurement and facilities approvals lengthen expansion timing.
+    - Gross margin exits near 67% because human review and deployment labor stay elevated for longer.
+  base:
+    description: Three paid pilot campuses convert into repeatable multi-campus rollouts and the business reaches the researched 40-campus footprint by Q4Y3.
+    y3RevenueK: 6682.5
+    y3EbitdaK: 1714.47
+    cashLowPointK: 1017.66
+    keyAssumptionChanges:
+    - Campus ARPU ramps from $180K in pilot-scale year one to the researched $270K steady-state campus value by year three.
+    - Active campuses grow from 3 at Y1 exit to 12 at Y2 exit and 40 at Y3 exit as second-campus expansion begins working.
+    - Gross margin reaches the 70% target once deployment templates and exception review improve across repeat rollouts.
+  upside:
+    description: One partner channel starts working and benchmark-led expansion pushes both campus count and realized room density above plan.
+    y3RevenueK: 8265.0
+    y3EbitdaK: 2900.0
+    cashLowPointK: 1400.0
+    keyAssumptionChanges:
+    - Steady-state campus ARPU reaches about $285K as more campuses deploy the full 15-16 room configuration plus benchmark analytics.
+    - Y3 ends at roughly 48 active campuses because partner-sourced accounts expand faster after the first production proofs.
+    - Gross margin exits near 73% as implementation labor per campus falls faster than expected.
+sensitivity:
+- variable: ARPU
+  downsideCase: $240K annual campus ARPU
+  baseCase: $270K annual campus ARPU
+  upsideCase: $285K annual campus ARPU
+  y3RevenueImpactK: -742.5
+  cashImpactK: -520.0
+- variable: CAC
+  downsideCase: $230K CAC per campus
+  baseCase: $180K CAC per campus
+  upsideCase: $150K CAC per campus
+  y3RevenueImpactK: 0.0
+  cashImpactK: -400.0
+- variable: churn
+  downsideCase: 3.5% monthly campus churn
+  baseCase: 2.5% monthly campus churn
+  upsideCase: 1.8% monthly campus churn
+  y3RevenueImpactK: -420.0
+  cashImpactK: -300.0
+- variable: sales cycle
+  downsideCase: 9-12 months from workflow audit to production expansion
+  baseCase: 6-9 months
+  upsideCase: 4-6 months after first proofs
+  y3RevenueImpactK: -1350.0
+  cashImpactK: -650.0
+- variable: gross margin
+  downsideCase: 67% exit gross margin
+  baseCase: 70%-72% exit gross margin
+  upsideCase: 73% exit gross margin
+  y3RevenueImpactK: 0.0
+  cashImpactK: -360.0
+- variable: hiring pace
+  downsideCase: Implementation and support hires pulled two quarters earlier
+  baseCase: Support hiring follows converted campuses
+  upsideCase: Delay one field hire until benchmark-led expansions are visible
+  y3RevenueImpactK: -180.0
+  cashImpactK: -420.0
+modelDiagram:
+  title: unit economics flow
+  mermaid: |-
+    flowchart LR
+      WorkflowAudits --> PaidCampuses
+      PaidCampuses --> ActiveCampuses
+      ActiveCampuses --> Revenue
+      Revenue --> GrossProfit
+      GrossProfit --> Cash
+modelSanity:
+- checkName: Revenue engine
+  finding: The base case is driven by paid campuses growing from 3 at Y1 exit to 40 at Y3 exit while annual recurring revenue per campus ramps to the researched $270K steady state.
+- checkName: Must go right
+  finding: The company must prove a trusted room-ready signal and sub-eight-week deployment so first-campus pilots actually expand to second campuses inside the same health system.
+- checkName: Model breaks if
+  finding: If privacy reviews keep Y3 campus count in the low 30s or steady-state ARPU stalls near $240K, the cash cushion compresses sharply and the next round likely pulls forward.
+- checkName: Next-round proof
+  finding: The next financing is justified by reaching 8-10 production systems, showing second-campus expansion, and proving benchmark analytics can increase contract scope without a services-heavy reset.
+sanityChecks:
+  ruleOf40: Y3 growth 365.9% + EBITDA margin 25.7% = 391.5%
+  burnMultiple: Approx. Y2 burn multiple 0.5x using exit ARR growth from 3 campuses at $180K to 12 campuses at $225K; Y3 is cash-generative.
+  revenuePerFte: $556.9K Y3 (benchmark $200–400K SaaS)
+  flags:
+  - Rule-of-40 looks unusually high because Y2 revenue is still small, so the metric overstates mature operating efficiency.
+  - CAC and churn are modeled at the campus-equivalent level even though real procurement happens at health-system level, so cohort metrics are still heuristics until actual renewals exist.
+  - Base-case margin improvement assumes implementation templates and exception handling reduce white-glove labor after the first few deployments.
+  - The model excludes one-time deployment fees, which is conservative on revenue but means cash collection timing for services is not explicitly shown.

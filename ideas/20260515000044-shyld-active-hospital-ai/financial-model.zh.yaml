@@ -1,0 +1,553 @@
+slug: or-turnover-control-plane
+date: '2026-05-15'
+currency: USD
+modelStartMonth: 2026-06
+assumptions:
+- id: A1
+  name: 模型起始月份
+  value: 2026-06
+  unit: month
+  source: '[BP date 2026-05-15] 建模为商业计划日期后的第一个完整月份。'
+- id: A2
+  name: 模型中的客户单元定义
+  value: active paid campus
+  unit: definition
+  source: '[BP investorMemo.firstCustomer] 销售单院区付费试点，并扩展为年度院区合同，因此 customersEop 建模为合同在执行的院区数，而非独立客户数或手术室数。'
+- id: A3
+  name: 每个在执行院区的平均监控手术室数
+  value: Y1 10 ORs; Y2 12.5 ORs; Y3 15 ORs
+  unit: ORs per campus
+  source: '[BP investorMemo.firstCustomer] 付费试点覆盖 8–12 间监控手术室，[RS market.som] 第 3 年规模使用每院区 15 间。'
+- id: A4
+  name: 每个在执行院区的混合年度经常性收入
+  value: Y1 $180K; Y2 $225K; Y3 $270K
+  unit: USDk per campus per year
+  source: '[RS bottomUpSizingDrivers 年软件 ARPU $18K/监控手术室] 乘以 [A3 平均每院区手术室数]；Y1 反映试点规模手术间数，Y3 达到研究中稳态院区规模。'
+- id: A5
+  name: 收入确认方式
+  value: average active campuses during the period
+  unit: formula
+  source: '初创公司财务启发式规则：Financial Modeler 期中上线规则；收入 = ((期初院区数 + 期末院区数) / 2) × 年院区 ARPU ÷ 每年期数。'
+- id: A6
+  name: 第 1 年院区新增
+  value: '[0,0,0,0,1,0,0,1,0,0,1,0]'
+  unit: new campuses by month
+  source: '[BP milestones 0–12 months] 目标 3–5 家共创客户和至少 3 个付费试点；基础情景假设三个付费院区分别在 M5、M8 和 M11 落地。'
+- id: A7
+  name: 第 2 年院区期末数
+  value: '[4,6,8,12]'
+  unit: campuses EOP by quarter
+  source: '[BP milestones 12–24 months] 和 [BP experimentRoadmap] 意味着转化首批院区、增加第二院区扩展，并在第二年末达到 8–10 家生产系统。'
+- id: A8
+  name: 第 3 年院区期末数
+  value: '[17,24,32,40]'
+  unit: campuses EOP by quarter
+  source: '[BP milestones 24–36 months] 和 [RS market.som] 指向约 20 家系统 × 2 个院区（第 3 年），建模为 Q4Y3 共 40 个在执行院区。'
+- id: A9
+  name: 毛利率爬坡
+  value: Y1 42%-58% on revenue months; Y2 61%,64%,67%,69%; Y3 69%,70%,71%,72%
+  unit: gross margin percent
+  source: '[BP businessModel.targetGrossMarginPct 70] 和 [BP investorMemo.mustBeTrue] 要求在实施人工、人工复核和硬件支持常态化后毛利率维持在 70% 以上。'
+- id: A10
+  name: 各岗位含载薪年薪
+  value: Founder/CEO 180; founding engineer 192; clinical implementation lead 144; edge/ML engineer 192; enterprise sales lead 180; implementation manager 144; field deployment specialist 120; product/data engineer 168; customer success manager 132; partnerships AE 168; ops/admin 108; applied AI engineer II 180
+  unit: USDk annual per FTE
+  source: '[BP team] 加初创公司财务启发式，适用于精简种子期美国医疗工作流软件薪酬（含工资税负担）。'
+- id: A11
+  name: 招聘顺序
+  value: Founder and founding engineer at M1; clinical implementation lead M2; edge/ML engineer M4; enterprise sales lead M10; implementation manager M16; field deployment specialist M18; product/data engineer M20; customer success manager M22; partnerships AE M28; ops/admin M30; applied AI engineer II M33
+  unit: timing
+  source: '[BP team] 和 [BP fundingAsk.useOfFundsSummary] 要求只有在试点转化证据出现后才建立小型实施和合作伙伴团队。'
+- id: A12
+  name: 第 1 年非薪资运营支出
+  value: Sales & marketing $5K-$16K/month; R&D $14K-$20K/month; G&A $8K-$12K/month
+  unit: USDk per month
+  source: '[BP gtm channels]、[BP operations] 加初创公司财务启发式，涵盖医院差旅、治理审查、云/边缘工具和规模化前的法务开销。'
+- id: A13
+  name: 第 2–3 年非薪资运营支出
+  value: Y2 quarterly opex $210K, $230K, $250K, $270K; Y3 quarterly opex $300K, $320K, $340K, $360K
+  unit: USDk per quarter
+  source: '[BP operations] 加初创公司财务启发式，随院区规模增长考虑更高的部署差旅、云计算、合规和合作伙伴开发成本。'
+- id: A14
+  name: M1 期初现金
+  value: '3200.0'
+  unit: USDk
+  source: '[BP fundingAsk targetFundingRangeUsd $3-5M] 和 [BP fundingAsk round seed]；基础情景使用接近区间低中段的 $3.2M 完成融资。'
+- id: A15
+  name: 每个在执行院区的混合 CAC
+  value: '180.0'
+  unit: USDk per campus
+  source: '由建模的创始人主导医疗企业销售加合作伙伴开发和差旅计算得出，与 [BP gtm funnelTargets] 和 [BP investorMemo.firstCustomer] 院区规模合同保持一致。'
+- id: A16
+  name: 月度流失率
+  value: '2.5'
+  unit: percent
+  source: '初创公司财务启发式，适用于早期企业医疗软件——合同可能黏性较强，但信任度、治理和在位竞品重叠仍会带来实质性续约风险。'
+- id: A17
+  name: 融资规模规则
+  value: Capital sized for 24 months to the next milestone plus 6 months of buffer
+  unit: policy
+  source: '开发者规则加 [BP fundingAsk.runwayMonths 18]；模型在陈述运营计划基础上增加 6 个月缓冲。'
+- id: A18
+  name: 收入保守处理
+  value: Base case excludes one-time deployment and validation fees
+  unit: policy
+  source: '[BP businessModel.revenueStreams] 包含实施费，但模型将其排除，以使收入清晰绑定经常性院区订阅，避免服务收入双重计算。'
+- id: A19
+  name: 现金流简化
+  value: cash approximates EBITDA with no debt, capex, taxes, or working-capital timing modeled
+  unit: heuristic
+  source: '初创公司财务启发式：早期规划模型简化处理。'
+headcount:
+- role: Founder / CEO
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Founding engineer
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Clinical implementation lead
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Edge / ML engineer
+  q1y1: 0
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Enterprise sales lead
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Implementation manager
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: Field deployment specialist
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: Product / data engineer
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: Customer success manager
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: Partnerships AE
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 0
+  q4y3: 1
+- role: Ops / admin
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 0
+  q4y3: 1
+- role: Applied AI engineer II
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 0
+  q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 4
+  q4y1: 5
+  q4y2: 9
+  q4y3: 12
+headcountAnnualizedPayrollK:
+  q1y1: 516.0
+  q2y1: 708.0
+  q3y1: 708.0
+  q4y1: 888.0
+  q4y2: 1452.0
+  q4y3: 1908.0
+y1Monthly:
+- month: M1
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 31.0
+  salesMarketingK: 5.0
+  researchDevelopmentK: 14.0
+  generalAdministrativeK: 8.0
+  opexK: 27.0
+  ebitdaK: -58.0
+  cashEopK: 3142.0
+- month: M2
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 43.0
+  salesMarketingK: 5.0
+  researchDevelopmentK: 14.0
+  generalAdministrativeK: 8.0
+  opexK: 27.0
+  ebitdaK: -70.0
+  cashEopK: 3072.0
+- month: M3
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 43.0
+  salesMarketingK: 5.0
+  researchDevelopmentK: 14.0
+  generalAdministrativeK: 8.0
+  opexK: 27.0
+  ebitdaK: -70.0
+  cashEopK: 3002.0
+- month: M4
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 59.0
+  salesMarketingK: 6.0
+  researchDevelopmentK: 15.0
+  generalAdministrativeK: 8.0
+  opexK: 29.0
+  ebitdaK: -88.0
+  cashEopK: 2914.0
+- month: M5
+  customersEop: 1
+  newCustomers: 1
+  revenueK: 7.5
+  cogsK: 4.35
+  grossProfitK: 3.15
+  salaryK: 59.0
+  salesMarketingK: 6.0
+  researchDevelopmentK: 16.0
+  generalAdministrativeK: 9.0
+  opexK: 31.0
+  ebitdaK: -86.85
+  cashEopK: 2827.15
+- month: M6
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 15.0
+  cogsK: 8.4
+  grossProfitK: 6.6
+  salaryK: 59.0
+  salesMarketingK: 6.0
+  researchDevelopmentK: 16.0
+  generalAdministrativeK: 9.0
+  opexK: 31.0
+  ebitdaK: -83.4
+  cashEopK: 2743.75
+- month: M7
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 15.0
+  cogsK: 8.25
+  grossProfitK: 6.75
+  salaryK: 59.0
+  salesMarketingK: 8.0
+  researchDevelopmentK: 17.0
+  generalAdministrativeK: 10.0
+  opexK: 35.0
+  ebitdaK: -87.25
+  cashEopK: 2656.5
+- month: M8
+  customersEop: 2
+  newCustomers: 1
+  revenueK: 22.5
+  cogsK: 11.7
+  grossProfitK: 10.8
+  salaryK: 59.0
+  salesMarketingK: 8.0
+  researchDevelopmentK: 18.0
+  generalAdministrativeK: 10.0
+  opexK: 36.0
+  ebitdaK: -84.2
+  cashEopK: 2572.3
+- month: M9
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 30.0
+  cogsK: 15.0
+  grossProfitK: 15.0
+  salaryK: 59.0
+  salesMarketingK: 8.0
+  researchDevelopmentK: 18.0
+  generalAdministrativeK: 10.0
+  opexK: 36.0
+  ebitdaK: -80.0
+  cashEopK: 2492.3
+- month: M10
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 30.0
+  cogsK: 14.4
+  grossProfitK: 15.6
+  salaryK: 74.0
+  salesMarketingK: 14.0
+  researchDevelopmentK: 18.0
+  generalAdministrativeK: 12.0
+  opexK: 44.0
+  ebitdaK: -102.4
+  cashEopK: 2389.9
+- month: M11
+  customersEop: 3
+  newCustomers: 1
+  revenueK: 37.5
+  cogsK: 16.88
+  grossProfitK: 20.63
+  salaryK: 74.0
+  salesMarketingK: 14.0
+  researchDevelopmentK: 20.0
+  generalAdministrativeK: 12.0
+  opexK: 46.0
+  ebitdaK: -99.37
+  cashEopK: 2290.53
+- month: M12
+  customersEop: 3
+  newCustomers: 0
+  revenueK: 45.0
+  cogsK: 18.9
+  grossProfitK: 26.1
+  salaryK: 74.0
+  salesMarketingK: 16.0
+  researchDevelopmentK: 20.0
+  generalAdministrativeK: 12.0
+  opexK: 48.0
+  ebitdaK: -95.9
+  cashEopK: 2194.63
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 4
+  revenueK: 196.88
+  grossProfitK: 120.09
+  salaryK: 222.0
+  opexK: 210.0
+  ebitdaK: -311.91
+  cashEopK: 1882.72
+- quarter: Q2Y2
+  customersEop: 6
+  revenueK: 281.25
+  grossProfitK: 180.0
+  salaryK: 268.0
+  opexK: 230.0
+  ebitdaK: -318.0
+  cashEopK: 1564.72
+- quarter: Q3Y2
+  customersEop: 8
+  revenueK: 393.75
+  grossProfitK: 263.81
+  salaryK: 316.0
+  opexK: 250.0
+  ebitdaK: -302.19
+  cashEopK: 1262.53
+- quarter: Q4Y2
+  customersEop: 12
+  revenueK: 562.5
+  grossProfitK: 388.13
+  salaryK: 363.0
+  opexK: 270.0
+  ebitdaK: -244.87
+  cashEopK: 1017.66
+- quarter: Q1Y3
+  customersEop: 17
+  revenueK: 978.75
+  grossProfitK: 675.34
+  salaryK: 363.0
+  opexK: 300.0
+  ebitdaK: 12.34
+  cashEopK: 1029.99
+- quarter: Q2Y3
+  customersEop: 24
+  revenueK: 1383.75
+  grossProfitK: 968.63
+  salaryK: 414.0
+  opexK: 320.0
+  ebitdaK: 234.63
+  cashEopK: 1264.62
+- quarter: Q3Y3
+  customersEop: 32
+  revenueK: 1890.0
+  grossProfitK: 1341.9
+  salaryK: 447.0
+  opexK: 340.0
+  ebitdaK: 554.9
+  cashEopK: 1819.52
+- quarter: Q4Y3
+  customersEop: 40
+  revenueK: 2430.0
+  grossProfitK: 1749.6
+  salaryK: 477.0
+  opexK: 360.0
+  ebitdaK: 912.6
+  cashEopK: 2732.12
+totals:
+  y1:
+    revenueK: 202.5
+    ebitdaK: -1005.37
+    cashEopK: 2194.63
+  y2:
+    revenueK: 1434.38
+    ebitdaK: -1176.97
+    cashEopK: 1017.66
+  y3:
+    revenueK: 6682.5
+    ebitdaK: 1714.47
+    cashEopK: 2732.12
+unitEconomics:
+  arpuAnnualK: 270.0
+  grossMarginPct: 70.0
+  cacK: 180.0
+  monthlyChurnPct: 2.5
+  avgCustomerLifeMonths: 40.0
+  ltvK: 630.0
+  ltvCacRatio: 3.5
+  cacPaybackMonths: 11.4
+fundingAsk:
+  round: seed
+  amountM: 3.2
+  runwayMonths: 24
+  milestone: 达到 8–10 家生产级医疗系统，证明第二院区扩展可行，并将部署周期标准化至 8 周以内，同时基准模块开始驱动扩展。
+  useOfFunds:
+  - bucket: 工程
+    amountUsd: 1440000
+    percentage: 45
+  - bucket: GTM
+    amountUsd: 800000
+    percentage: 25
+  - bucket: G&A
+    amountUsd: 320000
+    percentage: 10
+  - bucket: 储备资金（6 个月）
+    amountUsd: 640000
+    percentage: 20
+scenarios:
+  downside:
+    description: 隐私审查拖延和较低的试点手术室数量，使定价和院区扩展低于基础转化计划。
+    y3RevenueK: 4800.0
+    y3EbitdaK: 350.0
+    cashLowPointK: 250.0
+    keyAssumptionChanges:
+    - 稳态院区 ARPU 仅达到 $240K，因为平均监控手术室数维持在每院区 12–13 间左右。
+    - 由于采购和设施审批延长扩展时间，Y3 结束时约为 32 个在执行院区，而非 40 个。
+    - 毛利率退出时约 67%，因为人工复核和部署人工成本居高不下的时间更长。
+  base:
+    description: 三个付费试点院区转化为可复制的多院区上线，业务在 Q4Y3 达到研究中 40 个院区的规模。
+    y3RevenueK: 6682.5
+    y3EbitdaK: 1714.47
+    cashLowPointK: 1017.66
+    keyAssumptionChanges:
+    - 院区 ARPU 从第一年试点规模的 $180K 爬坡至第 3 年研究稳态的 $270K。
+    - 在执行院区从 Y1 末 3 个增长至 Y2 末 12 个和 Y3 末 40 个，随第二院区扩展逐步生效。
+    - 随着重复上线的部署模板和异常处理改善，毛利率在第 3 年达到 70% 目标。
+  upside:
+    description: 一个合作伙伴渠道开始见效，基准主导的扩展将院区数量和实际手术室密度都推超计划。
+    y3RevenueK: 8265.0
+    y3EbitdaK: 2900.0
+    cashLowPointK: 1400.0
+    keyAssumptionChanges:
+    - 随着更多院区部署完整 15–16 间手术室配置加基准分析，稳态院区 ARPU 达到约 $285K。
+    - 由于合作伙伴来源账户在首批生产验证后扩展更快，Y3 结束时约 48 个在执行院区。
+    - 每院区实施人工成本下降速度快于预期，毛利率退出时约 73%。
+sensitivity:
+- variable: ARPU
+  downsideCase: $240K annual campus ARPU
+  baseCase: $270K annual campus ARPU
+  upsideCase: $285K annual campus ARPU
+  y3RevenueImpactK: -742.5
+  cashImpactK: -520.0
+- variable: CAC
+  downsideCase: $230K CAC per campus
+  baseCase: $180K CAC per campus
+  upsideCase: $150K CAC per campus
+  y3RevenueImpactK: 0.0
+  cashImpactK: -400.0
+- variable: churn
+  downsideCase: 3.5% monthly campus churn
+  baseCase: 2.5% monthly campus churn
+  upsideCase: 1.8% monthly campus churn
+  y3RevenueImpactK: -420.0
+  cashImpactK: -300.0
+- variable: sales cycle
+  downsideCase: 9-12 months from workflow audit to production expansion
+  baseCase: 6-9 months
+  upsideCase: 4-6 months after first proofs
+  y3RevenueImpactK: -1350.0
+  cashImpactK: -650.0
+- variable: gross margin
+  downsideCase: 67% exit gross margin
+  baseCase: 70%-72% exit gross margin
+  upsideCase: 73% exit gross margin
+  y3RevenueImpactK: 0.0
+  cashImpactK: -360.0
+- variable: hiring pace
+  downsideCase: Implementation and support hires pulled two quarters earlier
+  baseCase: Support hiring follows converted campuses
+  upsideCase: Delay one field hire until benchmark-led expansions are visible
+  y3RevenueImpactK: -180.0
+  cashImpactK: -420.0
+modelDiagram:
+  title: 单位经济模型流程
+  mermaid: |-
+    flowchart LR
+      WorkflowAudits --> PaidCampuses
+      PaidCampuses --> ActiveCampuses
+      ActiveCampuses --> Revenue
+      Revenue --> GrossProfit
+      GrossProfit --> Cash
+modelSanity:
+- checkName: 收入引擎
+  finding: 基础情景由付费院区从 Y1 末 3 个增长至 Y3 末 40 个驱动，每院区年经常性收入爬坡至研究稳态 $270K。
+- checkName: 必须做对的事
+  finding: 公司必须证明可信的房间就绪信号和 8 周以内的部署，使首院区试点在同一医疗系统内真正扩展至第二院区。
+- checkName: 模型崩溃条件
+  finding: 若隐私审查导致 Y3 院区数停留在 30 出头，或稳态 ARPU 停滞在 $240K 附近，现金缓冲将大幅压缩，下一轮融资很可能提前。
+- checkName: 下一轮融资证明
+  finding: 下一轮融资的依据是达到 8–10 家生产系统、展示第二院区扩展，并证明基准分析能在不大规模重置服务的情况下扩大合同范围。
+sanityChecks:
+  ruleOf40: Y3 growth 365.9% + EBITDA margin 25.7% = 391.5%
+  burnMultiple: Approx. Y2 burn multiple 0.5x using exit ARR growth from 3 campuses at $180K to 12 campuses at $225K; Y3 is cash-generative.
+  revenuePerFte: $556.9K Y3 (benchmark $200–400K SaaS)
+  flags:
+  - Rule-of-40 数值异常高，因为 Y2 收入基数仍小，该指标夸大了成熟运营效率。
+  - CAC 和流失率在院区等效层面建模，但实际采购发生在医疗系统层面，因此客户群指标在实际续约数据存在前仍是启发式估算。
+  - 基础情景毛利率改善假设部署模板和异常处理在最初几次上线后降低了高触达人工成本。
+  - 模型排除了一次性部署费，收入端较为保守，但这意味着服务收款时间未被明确呈现。
