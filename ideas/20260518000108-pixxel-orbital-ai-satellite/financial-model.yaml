@@ -1,0 +1,607 @@
+slug: orbital-pipeline-alerting-os
+date: '2026-05-18'
+currency: USD
+modelStartMonth: '2026-06'
+
+assumptions:
+  - id: A1
+    name: Starting cash (pre-seed raise at model start)
+    value: "3000"
+    unit: K USD
+    source: "[BP fundingAsk targetFundingRangeUsd $2–4M; midpoint $3M modeled]"
+  - id: A2
+    name: Base monitoring price per km per year
+    value: "66"
+    unit: USD/km/year
+    source: "[BP market: TAM $1.9M from 28,300 km ÷ $66/km/yr]"
+  - id: A3
+    name: Audit and investigation add-on per km per year
+    value: "10"
+    unit: USD/km/year
+    source: "[BP businessModel: premium audit-reporting and confirmed-anomaly workflow fees; blended estimate]"
+  - id: A4
+    name: Average corridor size (unit of sale)
+    value: "1000"
+    unit: km
+    source: "[BP investorMemo firstCustomer: 2,000–8,000 km operator; pilot corridor 500–1,500 km; midpoint ~1,000 km for ARPU calculation]"
+  - id: A5
+    name: Annual ARPU per corridor
+    value: "76"
+    unit: K USD/year
+    source: "[A2+A3: ($66+$10) × 1,000 km = $76K/yr per corridor]"
+  - id: A6
+    name: Target gross margin
+    value: "70"
+    unit: pct
+    source: "[BP businessModel targetGrossMarginPct: 70]"
+  - id: A7
+    name: COGS as pct of revenue (Pixxel data licensing + cloud compute)
+    value: "30"
+    unit: pct
+    source: "[1 − GM 70%; estimated $15/km/yr data cost + $5/km/yr compute = $20/km = 30% of $66 base; heuristic for EO data subscriptions]"
+  - id: A8
+    name: First paid pilot signed month
+    value: "M8"
+    unit: month
+    source: "[BP experimentRoadmap horizon 90–180 days: one paid corridor pilot signed; conservative end of range to reflect PSU procurement cycles]"
+  - id: A9
+    name: First pilot contract value (onboarding + M1 subscription)
+    value: "22"
+    unit: K USD
+    source: "[BP investorMemo firstCustomer initialContract $75k–$150k; model uses $16K onboarding recognition + $6K first-month subscription; conservative within range]"
+  - id: A10
+    name: Monthly subscription revenue per corridor (Year 1)
+    value: "6"
+    unit: K USD/month
+    source: "[A5 ÷ 12 = $6.33K/month; rounded to $6K for conservatism in pilot phase]"
+  - id: A11
+    name: New corridor onboarding fee (one-time recognition)
+    value: "20"
+    unit: K USD
+    source: "[BP gtm pricing: corridor onboarding and GIS integration fees are a line item; estimated at ~25% of first-year ACV based on EO-to-workflow integration heuristic]"
+  - id: A12
+    name: Founding engineer annual salary (pre-overhead)
+    value: "90"
+    unit: K USD/year
+    source: "[India-based deep-tech founding engineer with remote-sensing background; competitive USD-equivalent salary for equity-backed role; startup-finance heuristic $80–100K]"
+  - id: A13
+    name: Founding GTM annual salary (pre-overhead)
+    value: "80"
+    unit: K USD/year
+    source: "[India-based founder-led sales into enterprise; heuristic $70–90K for technical GTM at pre-seed]"
+  - id: A14
+    name: Remote sensing lead annual salary (pre-overhead)
+    value: "85"
+    unit: K USD/year
+    source: "[BP team: Remote sensing lead starts Month 3; specialist in methane/EO model tuning; heuristic $80–90K]"
+  - id: A15
+    name: CS/Ops lead annual salary (pre-overhead)
+    value: "60"
+    unit: K USD/year
+    source: "[BP team: Customer success and operations lead starts Month 6; heuristic $55–65K for ops-focused role]"
+  - id: A16
+    name: Data scientist annual salary (pre-overhead)
+    value: "80"
+    unit: K USD/year
+    source: "[Added Q2Y2 to scale ML pipeline; heuristic $75–85K for India-based ML engineer]"
+  - id: A17
+    name: Account manager annual salary (pre-overhead)
+    value: "65"
+    unit: K USD/year
+    source: "[Added Q4Y2 as second corridor requires dedicated account management; heuristic $60–70K enterprise AM]"
+  - id: A18
+    name: Senior engineer annual salary (pre-overhead)
+    value: "95"
+    unit: K USD/year
+    source: "[Added Q2Y3 to handle platform scaling and orbital-inference migration; heuristic $90–100K senior eng]"
+  - id: A19
+    name: Enterprise sales annual salary (pre-overhead)
+    value: "80"
+    unit: K USD/year
+    source: "[Added Q4Y3 for adjacent-infrastructure expansion; heuristic $75–85K enterprise sales India]"
+  - id: A20
+    name: Headcount overhead multiplier (benefits, taxes, PF)
+    value: "1.25"
+    unit: ratio
+    source: "[India employer costs: PF 12%, gratuity, health insurance, payroll tax ~20–25% on-cost; heuristic 1.25x]"
+  - id: A21
+    name: Cloud and data infrastructure cost (monthly, Year 1 start)
+    value: "8"
+    unit: K USD/month
+    source: "[Pixxel imagery API access ~$5K/mo + AWS/GCP processing ~$2K/mo + dev tools $1K/mo; scales to $15K/mo by Y3 as corridors grow; heuristic for EO-to-analytics pipeline]"
+  - id: A22
+    name: Marketing and sales travel (monthly)
+    value: "2"
+    unit: K USD/month
+    source: "[Pre-revenue: founder-led sales travel within India, conference, materials; scales to $4K/mo by Y3; startup-finance heuristic for B2B enterprise field sales]"
+  - id: A23
+    name: Admin, legal, and office (monthly)
+    value: "2"
+    unit: K USD/month
+    source: "[India-based, lean pre-seed: co-working, legal retainer, compliance; scales to $3K/mo by Y2+; heuristic]"
+  - id: A24
+    name: Monthly churn rate per corridor
+    value: "1.5"
+    unit: pct/month
+    source: "[~18% annual churn; enterprise pipeline monitoring with GIS integration is sticky but early-stage pilots carry cancellation risk; heuristic for B2B infrastructure SaaS early cohorts]"
+  - id: A25
+    name: CAC per new production corridor
+    value: "80"
+    unit: K USD
+    source: "[S&M spend over avg 6-month sales cycle: ~6 × $11.3K/mo = $67.8K direct + $12K travel/overhead = ~$80K blended; reflects PSU procurement friction noted in BP risks]"
+  - id: A26
+    name: Second corridor acquired end of Q2Y2
+    value: "Q2Y2"
+    unit: quarter
+    source: "[BP milestones 12–24 months: convert pilot to production and expand to at least one additional corridor]"
+  - id: A27
+    name: Third corridor acquired end of Q2Y3
+    value: "Q2Y3"
+    unit: quarter
+    source: "[BP milestones 24–36 months: reach repeatable multi-corridor deployments inside at least 2 operator or contractor accounts]"
+  - id: A28
+    name: Year 3 SOM
+    value: "220"
+    unit: K USD ARR
+    source: "[BP market SOM ~$0.2M from ~3,000 km; model reaches $220K ARR from 3 corridors × $76K, marginally above SOM reflecting audit add-ons]"
+
+headcount:
+  - role: Founding Eng
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Founding GTM
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Remote Sensing Lead
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: CS/Ops Lead
+    q1y1: 0
+    q2y1: 0
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Data Scientist
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+  - role: Account Manager
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+  - role: Senior Engineer
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 0
+    q4y3: 1
+  - role: Enterprise Sales
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 0
+    q4y3: 1
+
+headcountTotalsFte:
+  q1y1: 2
+  q2y1: 3
+  q3y1: 4
+  q4y1: 4
+  q4y2: 6
+  q4y3: 8
+
+headcountAnnualizedPayrollK:
+  q1y1: 212.5
+  q2y1: 318.8
+  q3y1: 393.8
+  q4y1: 393.8
+  q4y2: 575.0
+  q4y3: 793.8
+
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 10.3
+    researchDevelopmentK: 17.4
+    generalAdministrativeK: 2.0
+    opexK: 29.7
+    ebitdaK: -29.7
+    cashEopK: 2970.3
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 10.3
+    researchDevelopmentK: 17.4
+    generalAdministrativeK: 2.0
+    opexK: 29.7
+    ebitdaK: -29.7
+    cashEopK: 2940.6
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 10.3
+    researchDevelopmentK: 17.4
+    generalAdministrativeK: 2.0
+    opexK: 29.7
+    ebitdaK: -29.7
+    cashEopK: 2910.9
+  - month: M4
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 10.3
+    researchDevelopmentK: 28.3
+    generalAdministrativeK: 2.0
+    opexK: 40.6
+    ebitdaK: -40.6
+    cashEopK: 2870.3
+  - month: M5
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 10.3
+    researchDevelopmentK: 28.3
+    generalAdministrativeK: 2.0
+    opexK: 40.6
+    ebitdaK: -40.6
+    cashEopK: 2829.7
+  - month: M6
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 10.3
+    researchDevelopmentK: 28.3
+    generalAdministrativeK: 2.0
+    opexK: 40.6
+    ebitdaK: -40.6
+    cashEopK: 2789.1
+  - month: M7
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 11.3
+    researchDevelopmentK: 30.3
+    generalAdministrativeK: 8.8
+    opexK: 50.4
+    ebitdaK: -50.4
+    cashEopK: 2738.7
+  - month: M8
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 22.0
+    cogsK: 6.6
+    grossProfitK: 15.4
+    salesMarketingK: 11.3
+    researchDevelopmentK: 30.3
+    generalAdministrativeK: 8.8
+    opexK: 50.4
+    ebitdaK: -35.0
+    cashEopK: 2703.7
+  - month: M9
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 6.0
+    cogsK: 1.8
+    grossProfitK: 4.2
+    salesMarketingK: 11.3
+    researchDevelopmentK: 30.3
+    generalAdministrativeK: 8.8
+    opexK: 50.4
+    ebitdaK: -46.2
+    cashEopK: 2657.5
+  - month: M10
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 6.0
+    cogsK: 1.8
+    grossProfitK: 4.2
+    salesMarketingK: 11.3
+    researchDevelopmentK: 30.3
+    generalAdministrativeK: 8.8
+    opexK: 50.4
+    ebitdaK: -46.2
+    cashEopK: 2611.3
+  - month: M11
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 6.0
+    cogsK: 1.8
+    grossProfitK: 4.2
+    salesMarketingK: 11.3
+    researchDevelopmentK: 30.3
+    generalAdministrativeK: 8.8
+    opexK: 50.4
+    ebitdaK: -46.2
+    cashEopK: 2565.1
+  - month: M12
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 6.0
+    cogsK: 1.8
+    grossProfitK: 4.2
+    salesMarketingK: 11.3
+    researchDevelopmentK: 30.3
+    generalAdministrativeK: 8.8
+    opexK: 50.4
+    ebitdaK: -46.2
+    cashEopK: 2518.9
+
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 1
+    revenueK: 19.0
+    grossProfitK: 13.3
+    opexK: 151.2
+    ebitdaK: -137.9
+    cashEopK: 2381.0
+  - quarter: Q2Y2
+    customersEop: 2
+    revenueK: 49.0
+    grossProfitK: 34.3
+    opexK: 176.1
+    ebitdaK: -141.8
+    cashEopK: 2239.2
+  - quarter: Q3Y2
+    customersEop: 2
+    revenueK: 38.0
+    grossProfitK: 26.6
+    opexK: 180.6
+    ebitdaK: -154.0
+    cashEopK: 2085.2
+  - quarter: Q4Y2
+    customersEop: 2
+    revenueK: 38.0
+    grossProfitK: 26.6
+    opexK: 201.0
+    ebitdaK: -174.4
+    cashEopK: 1910.8
+  - quarter: Q1Y3
+    customersEop: 2
+    revenueK: 49.0
+    grossProfitK: 34.3
+    opexK: 204.0
+    ebitdaK: -169.7
+    cashEopK: 1741.1
+  - quarter: Q2Y3
+    customersEop: 3
+    revenueK: 57.0
+    grossProfitK: 39.9
+    opexK: 236.7
+    ebitdaK: -196.8
+    cashEopK: 1544.3
+  - quarter: Q3Y3
+    customersEop: 3
+    revenueK: 57.0
+    grossProfitK: 39.9
+    opexK: 239.7
+    ebitdaK: -199.8
+    cashEopK: 1344.5
+  - quarter: Q4Y3
+    customersEop: 3
+    revenueK: 57.0
+    grossProfitK: 39.9
+    opexK: 264.6
+    ebitdaK: -224.7
+    cashEopK: 1119.8
+
+totals:
+  y1:
+    revenueK: 46.0
+    ebitdaK: -481.1
+    cashEopK: 2518.9
+  y2:
+    revenueK: 144.0
+    ebitdaK: -608.1
+    cashEopK: 1910.8
+  y3:
+    revenueK: 220.0
+    ebitdaK: -791.0
+    cashEopK: 1119.8
+
+unitEconomics:
+  arpuAnnualK: 76.0
+  grossMarginPct: 70.0
+  cacK: 80.0
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 67.0
+  ltvK: 295.6
+  ltvCacRatio: 3.7
+  cacPaybackMonths: 18.1
+
+fundingAsk:
+  round: pre-seed
+  amountM: 3.0
+  runwayMonths: 36
+  milestone: >-
+    Reach 3 production corridors with field-confirmed alert precision above 70%,
+    $220K+ ARR, and a first adjacent-infrastructure pilot, providing the proof
+    points to justify a seed or Series A for GTM scale and corridor expansion.
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 1500000
+      percentage: 50
+    - bucket: GTM
+      amountUsd: 600000
+      percentage: 20
+    - bucket: "G&A"
+      amountUsd: 360000
+      percentage: 12
+    - bucket: "Buffer (6 mo)"
+      amountUsd: 540000
+      percentage: 18
+
+scenarios:
+  downside:
+    description: >-
+      Orbital launch slips and first paid pilot is delayed to M11; 30% revenue
+      miss across all three years; hiring pace maintained; cash position tighter
+      but not critically low due to lean team.
+    y3RevenueK: 154.0
+    y3EbitdaK: -837.2
+    cashLowPointK: 1033.7
+    keyAssumptionChanges:
+      - First paid pilot delays from M8 to M11
+      - Revenue 30% below base in all years
+      - Pixxel orbital inference not available until 2028; ground-inference only
+  base:
+    description: >-
+      First paid pilot signed M8 converts to production Q1Y2; second corridor
+      added Q2Y2; third corridor Q2Y3; 3 production corridors and $220K ARR by
+      end of Year 3; matches BP SOM target.
+    y3RevenueK: 220.0
+    y3EbitdaK: -791.0
+    cashLowPointK: 1119.8
+    keyAssumptionChanges:
+      - All assumptions as modeled
+  upside:
+    description: >-
+      Incident-driven urgency accelerates first pilot to M6; 50% revenue
+      outperformance from faster conversion and second operator win; adjacent
+      infrastructure pilot generates incremental revenue in Q4Y3.
+    y3RevenueK: 330.0
+    y3EbitdaK: -714.0
+    cashLowPointK: 1263.3
+    keyAssumptionChanges:
+      - First paid pilot pulled forward to M6
+      - Revenue 50% above base in all years
+      - Adjacent infrastructure category adds one paid pilot in Q4Y3
+
+sensitivity:
+  - variable: ARPU
+    downsideCase: "$50/km/yr (buyer pushes back on pricing, accepts $50/km base)"
+    baseCase: "$66/km/yr base + $10/km audit add-on = $76K/corridor/yr"
+    upsideCase: "$85/km/yr (audit and investigation premium adds $19/km)"
+    y3RevenueImpactK: -53.0
+    cashImpactK: -37.1
+  - variable: CAC
+    downsideCase: "$120K CAC (12-month PSU procurement cycle, extra sales overhead)"
+    baseCase: "$80K CAC (6-month sales cycle, founder-led with contractor assist)"
+    upsideCase: "$50K CAC (3-month incident-driven fast close, inbound referral)"
+    y3RevenueImpactK: -57.0
+    cashImpactK: -39.9
+  - variable: churn
+    downsideCase: "3%/month (pilot-to-production conversion fails on 2nd corridor)"
+    baseCase: "1.5%/month (enterprise contract, sticky GIS integration)"
+    upsideCase: "0.5%/month (deep workflow embed, no churn in 3 years)"
+    y3RevenueImpactK: -30.0
+    cashImpactK: -21.0
+  - variable: sales cycle
+    downsideCase: "12 months to first paid pilot (extended PSU diligence)"
+    baseCase: "6 months to first paid pilot (incident-driven urgency)"
+    upsideCase: "3 months to first paid pilot (warm contractor intro)"
+    y3RevenueImpactK: -57.0
+    cashImpactK: -39.9
+  - variable: gross margin
+    downsideCase: "55% GM (SAR all-weather partner adds data cost, COGS rises to 45%)"
+    baseCase: "70% GM (Pixxel data + cloud compute at 30% COGS)"
+    upsideCase: "75% GM (volume data pricing discount from Pixxel partnership)"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -33.0
+  - variable: hiring pace
+    downsideCase: "Hire 2 additional FTEs in Q2Y2 (DS + AM simultaneously)"
+    baseCase: "DS Q2Y2, AM Q4Y2, Sr Eng Q2Y3, Ent Sales Q4Y3"
+    upsideCase: "Defer Sr Eng and Ent Sales to Y4 to reduce burn by $190K in Y3"
+    y3RevenueImpactK: 0.0
+    cashImpactK: 190.0
+
+modelDiagram:
+  title: unit economics flow
+  mermaid: |
+    flowchart LR
+      Leads[Operator Leads] --> Pilot[Paid Corridor Pilot]
+      Pilot --> Precision[Field-Confirmed Precision]
+      Precision --> Production[Production Corridor]
+      Production --> ARPU["ARPU $76K/corridor/yr"]
+      ARPU --> Revenue[Annual Revenue]
+      Revenue --> GP["Gross Profit 70% GM"]
+      GP --> Cash[Cash Position]
+      Production --> Dataset[Labeled Anomaly Dataset]
+      Dataset --> Moat[Corridor Data Moat]
+      Moat --> Expansion[Adjacent Infrastructure]
+
+modelSanity:
+  - checkName: Revenue engine
+    finding: >-
+      Revenue scales by adding production corridors at $76K/corridor/year with
+      70% gross margin, gated by enterprise sales cycles of 6–12 months per new
+      corridor as anchored in the base scenario and sensitivity table.
+  - checkName: Must go right
+    finding: >-
+      The first paid pilot must convert to production by Q1Y2 and establish
+      field-confirmed alert precision above 70% to justify the second corridor
+      and begin building the labeled dataset moat that drives renewals and
+      expansion.
+  - checkName: Model breaks if
+    finding: >-
+      Annual corridor churn exceeds 20% or Pixxel orbital delays force a
+      12-month product pivot, either of which collapses the 3.7x LTV/CAC and
+      depletes runway before the proof points needed for the next financing round
+      are reached, as quantified in the downside scenario ($1.03M cash floor).
+  - checkName: Next-round proof
+    finding: >-
+      Reaching 3 production corridors with $220K+ ARR and sub-20-month CAC
+      payback by end of Year 3 validates the corridor-to-closure workflow and
+      justifies a seed or Series A to scale GTM and expand into adjacent linear
+      infrastructure.
+
+sanityChecks:
+  ruleOf40: >-
+    Y3 revenue growth 52.8% (from $144K to $220K) + Y3 EBITDA margin -359%
+    = -306; Rule of 40 is not meaningful at this pre-scale stage and is flagged
+    accordingly; revisit at $2M+ ARR.
+  burnMultiple: >-
+    Y3 net burn $791K divided by Y3 net new ARR $76K (one new corridor) = 10.4x;
+    above the <2x efficient benchmark but consistent with enterprise pre-scale
+    and a small beachhead market; expected to improve post-Series A when GTM
+    scales across corridors.
+  revenuePerFte: >-
+    $27.5K per FTE in Y3 ($220K / 8 FTEs); well below the $200–400K SaaS
+    benchmark; reflects early-stage beachhead with small TAM; expansion into
+    adjacent infrastructure is required for venture-scale efficiency.
+  flags:
+    - "Market is small: TAM $1.9M, SOM $0.2M in Y3; gas-pipeline beachhead alone does not support venture-scale outcomes without adjacent-infrastructure expansion by Y4."
+    - "Burn multiple 10.4x in Y3 indicates capital-inefficient early scaling; acceptable for pre-seed but must compress to <5x by seed-to-A to attract growth capital."
+    - "Revenue per FTE $27.5K in Y3 is 7–14x below SaaS benchmark; efficiency is structurally limited until ARR reaches $1M+ across multiple infrastructure verticals."
+    - "Orbital inference dependency: Pixxel/Sarvam timeline slip is rated High/High in BP risks; any delay beyond Q4 2026 forces ground-inference-only product and may slow pilot conversion."
+    - "LTV/CAC ratio 3.7x is acceptable but hinges on <18% annual churn; if early corridors churn above 20% the ratio drops below 3x and the business case weakens materially."
+    - "PSU procurement risk: BP notes that PSU and large-operator cycles stretch longer than planned; a 12-month first-pilot delay (downside scenario) reduces Y3 cash floor to $1.03M, still safe but tight."
+    - "Monsoon/cloud coverage gaps could force SAR partner data cost, pushing COGS to ~45% and compressing gross margin from 70% to 55% as shown in sensitivity table."

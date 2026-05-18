@@ -1,0 +1,556 @@
+slug: orbital-pipeline-alerting-os
+date: '2026-05-18'
+currency: USD
+modelStartMonth: 2026-06
+assumptions:
+- id: A1
+  name: 起始现金（模型开始时完成 pre-seed 融资）
+  value: '3000'
+  unit: K USD
+  source: '[BP fundingAsk targetFundingRangeUsd $2–4M；模型取中点 $3M]'
+- id: A2
+  name: 基础监测单价（每 km / 年）
+  value: '66'
+  unit: USD/km/year
+  source: '[BP market：TAM $1.9M ÷ 28,300 km = $66/km/yr]'
+- id: A3
+  name: 审计与调查附加收费（每 km / 年）
+  value: '10'
+  unit: USD/km/year
+  source: '[BP businessModel：审计报告和已确认异常工作流收费；混合估算]'
+- id: A4
+  name: 平均走廊规模（销售单元）
+  value: '1000'
+  unit: km
+  source: '[BP investorMemo firstCustomer：运营商规模 2,000–8,000 km；试点走廊 500–1,500 km；为算 ARPU，模型取中点约 1,000 km]'
+- id: A5
+  name: 每条走廊年 ARPU
+  value: '76'
+  unit: K USD/year
+  source: '[A2+A3：($66+$10) × 1,000 km = 每条走廊每年 $76K]'
+- id: A6
+  name: 目标毛利率
+  value: '70'
+  unit: pct
+  source: '[BP businessModel targetGrossMarginPct：70]'
+- id: A7
+  name: COGS 占收入比例（Pixxel 数据授权 + 云算力）
+  value: '30'
+  unit: pct
+  source: '[1 − GM 70%；估算数据成本 $15/km/yr + 算力 $5/km/yr = $20/km，约为 $66 基础单价的 30%；EO 订阅启发式假设]'
+- id: A8
+  name: 首个付费试点签约月份
+  value: M8
+  unit: month
+  source: '[BP experimentRoadmap horizon 90–180 days：签下 1 个付费走廊试点；考虑 PSU 采购周期，模型保守取区间后段]'
+- id: A9
+  name: 首个试点合同金额（导入 + 首月订阅）
+  value: '22'
+  unit: K USD
+  source: '[BP investorMemo firstCustomer initialContract $75k–$150k；模型按 $16K 导入确认 + $6K 首月订阅，保守落在区间内]'
+- id: A10
+  name: 每条走廊月订阅收入（第 1 年）
+  value: '6'
+  unit: K USD/month
+  source: '[A5 ÷ 12 = $6.33K/month；试点期出于保守，四舍五入到 $6K]'
+- id: A11
+  name: 新走廊导入费（一次性确认）
+  value: '20'
+  unit: K USD
+  source: '[BP gtm pricing：走廊导入和 GIS 集成费是单独一项；按 EO 到工作流集成启发式，估为首年 ACV 的约 25%]'
+- id: A12
+  name: 创始工程师年薪（不含附加成本）
+  value: '90'
+  unit: K USD/year
+  source: '[印度 deep-tech 创始工程师、具遥感背景；以股权驱动岗位的美元等值薪酬，启发式 $80–100K]'
+- id: A13
+  name: 创始 GTM 年薪（不含附加成本）
+  value: '80'
+  unit: K USD/year
+  source: '[印度本地、创始人主导企业销售；pre-seed 阶段技术型 GTM 启发式 $70–90K]'
+- id: A14
+  name: 遥感负责人年薪（不含附加成本）
+  value: '85'
+  unit: K USD/year
+  source: '[BP team：遥感负责人第 3 个月入职；负责甲烷/EO 模型调优；启发式 $80–90K]'
+- id: A15
+  name: 客户成功/运营负责人年薪（不含附加成本）
+  value: '60'
+  unit: K USD/year
+  source: '[BP team：客户成功与运营负责人第 6 个月入职；偏运营角色，启发式 $55–65K]'
+- id: A16
+  name: 数据科学家年薪（不含附加成本）
+  value: '80'
+  unit: K USD/year
+  source: '[为扩展 ML 流水线，于第 2 年 Q2 增配；印度本地 ML 工程师启发式 $75–85K]'
+- id: A17
+  name: 客户经理年薪（不含附加成本）
+  value: '65'
+  unit: K USD/year
+  source: '[第 2 年 Q4 增配；第二条走廊需要专门客户管理，企业客户经理启发式 $60–70K]'
+- id: A18
+  name: 高级工程师年薪（不含附加成本）
+  value: '95'
+  unit: K USD/year
+  source: '[第 3 年 Q2 增配，负责平台扩展与迁往在轨推理；高级工程师启发式 $90–100K]'
+- id: A19
+  name: 企业销售年薪（不含附加成本）
+  value: '80'
+  unit: K USD/year
+  source: '[第 3 年 Q4 增配，用于相邻基础设施扩张；印度企业销售启发式 $75–85K]'
+- id: A20
+  name: 人力附加成本系数（福利、税费、PF）
+  value: '1.25'
+  unit: ratio
+  source: '[印度雇主成本：PF 12%、离职金、医保、工资税等加总约 20–25%；启发式取 1.25x]'
+- id: A21
+  name: 云与数据基础设施成本（月度，第 1 年起点）
+  value: '8'
+  unit: K USD/month
+  source: '[Pixxel 影像 API 约 $5K/月 + AWS/GCP 处理约 $2K/月 + 开发工具 $1K/月；到 Y3 随走廊增长升至 $15K/月；EO 到分析流水线启发式]'
+- id: A22
+  name: 市场与销售差旅（月度）
+  value: '2'
+  unit: K USD/month
+  source: '[收入前阶段：创始人主导的印度本地销售差旅、会议和物料；到 Y3 升至 $4K/月；B2B 企业销售启发式]'
+- id: A23
+  name: 行政、法务与办公（月度）
+  value: '2'
+  unit: K USD/month
+  source: '[印度本地、轻团队 pre-seed：联合办公、法务顾问、合规；到 Y2+ 升至 $3K/月；启发式]'
+- id: A24
+  name: 每条走廊月流失率
+  value: '1.5'
+  unit: pct/month
+  source: '[约合年流失率 18%；带 GIS 集成的企业管道监控粘性较高，但早期试点仍有取消风险；基础设施 SaaS 早期 cohort 启发式]'
+- id: A25
+  name: 每条新生产级走廊的 CAC
+  value: '80'
+  unit: K USD
+  source: '[S&M 花费覆盖平均 6 个月销售周期：约 6 × $11.3K/月 = $67.8K 直接成本 + $12K 差旅/附加成本 = 约 $80K 混合 CAC；体现 BP risks 里提到的 PSU 采购摩擦]'
+- id: A26
+  name: 第 2 年 Q2 末拿下第二条走廊
+  value: Q2Y2
+  unit: quarter
+  source: '[BP milestones 12–24 months：把试点转生产，并至少扩到一条额外走廊]'
+- id: A27
+  name: 第 3 年 Q2 末拿下第三条走廊
+  value: Q2Y3
+  unit: quarter
+  source: '[BP milestones 24–36 months：在至少 2 个运营商或承包商账户内，跑出可复制的多走廊部署]'
+- id: A28
+  name: 第 3 年 SOM
+  value: '220'
+  unit: K USD ARR
+  source: '[BP market：SOM 约 $0.2M，来自约 3,000 km；模型按 3 条走廊 × 每条 $76K = $220K ARR，略高于 SOM，反映审计附加收费]'
+headcount:
+- role: 创始工程师
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 创始 GTM
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 遥感负责人
+  q1y1: 0
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 客户成功/运营负责人
+  q1y1: 0
+  q2y1: 0
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 数据科学家
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: 客户经理
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: 高级工程师
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 0
+  q4y3: 1
+- role: 企业销售
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 0
+  q4y3: 1
+headcountTotalsFte:
+  q1y1: 2
+  q2y1: 3
+  q3y1: 4
+  q4y1: 4
+  q4y2: 6
+  q4y3: 8
+headcountAnnualizedPayrollK:
+  q1y1: 212.5
+  q2y1: 318.8
+  q3y1: 393.8
+  q4y1: 393.8
+  q4y2: 575.0
+  q4y3: 793.8
+y1Monthly:
+- month: M1
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 10.3
+  researchDevelopmentK: 17.4
+  generalAdministrativeK: 2.0
+  opexK: 29.7
+  ebitdaK: -29.7
+  cashEopK: 2970.3
+- month: M2
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 10.3
+  researchDevelopmentK: 17.4
+  generalAdministrativeK: 2.0
+  opexK: 29.7
+  ebitdaK: -29.7
+  cashEopK: 2940.6
+- month: M3
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 10.3
+  researchDevelopmentK: 17.4
+  generalAdministrativeK: 2.0
+  opexK: 29.7
+  ebitdaK: -29.7
+  cashEopK: 2910.9
+- month: M4
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 10.3
+  researchDevelopmentK: 28.3
+  generalAdministrativeK: 2.0
+  opexK: 40.6
+  ebitdaK: -40.6
+  cashEopK: 2870.3
+- month: M5
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 10.3
+  researchDevelopmentK: 28.3
+  generalAdministrativeK: 2.0
+  opexK: 40.6
+  ebitdaK: -40.6
+  cashEopK: 2829.7
+- month: M6
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 10.3
+  researchDevelopmentK: 28.3
+  generalAdministrativeK: 2.0
+  opexK: 40.6
+  ebitdaK: -40.6
+  cashEopK: 2789.1
+- month: M7
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 11.3
+  researchDevelopmentK: 30.3
+  generalAdministrativeK: 8.8
+  opexK: 50.4
+  ebitdaK: -50.4
+  cashEopK: 2738.7
+- month: M8
+  customersEop: 1
+  newCustomers: 1
+  revenueK: 22.0
+  cogsK: 6.6
+  grossProfitK: 15.4
+  salesMarketingK: 11.3
+  researchDevelopmentK: 30.3
+  generalAdministrativeK: 8.8
+  opexK: 50.4
+  ebitdaK: -35.0
+  cashEopK: 2703.7
+- month: M9
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 6.0
+  cogsK: 1.8
+  grossProfitK: 4.2
+  salesMarketingK: 11.3
+  researchDevelopmentK: 30.3
+  generalAdministrativeK: 8.8
+  opexK: 50.4
+  ebitdaK: -46.2
+  cashEopK: 2657.5
+- month: M10
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 6.0
+  cogsK: 1.8
+  grossProfitK: 4.2
+  salesMarketingK: 11.3
+  researchDevelopmentK: 30.3
+  generalAdministrativeK: 8.8
+  opexK: 50.4
+  ebitdaK: -46.2
+  cashEopK: 2611.3
+- month: M11
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 6.0
+  cogsK: 1.8
+  grossProfitK: 4.2
+  salesMarketingK: 11.3
+  researchDevelopmentK: 30.3
+  generalAdministrativeK: 8.8
+  opexK: 50.4
+  ebitdaK: -46.2
+  cashEopK: 2565.1
+- month: M12
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 6.0
+  cogsK: 1.8
+  grossProfitK: 4.2
+  salesMarketingK: 11.3
+  researchDevelopmentK: 30.3
+  generalAdministrativeK: 8.8
+  opexK: 50.4
+  ebitdaK: -46.2
+  cashEopK: 2518.9
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 1
+  revenueK: 19.0
+  grossProfitK: 13.3
+  opexK: 151.2
+  ebitdaK: -137.9
+  cashEopK: 2381.0
+- quarter: Q2Y2
+  customersEop: 2
+  revenueK: 49.0
+  grossProfitK: 34.3
+  opexK: 176.1
+  ebitdaK: -141.8
+  cashEopK: 2239.2
+- quarter: Q3Y2
+  customersEop: 2
+  revenueK: 38.0
+  grossProfitK: 26.6
+  opexK: 180.6
+  ebitdaK: -154.0
+  cashEopK: 2085.2
+- quarter: Q4Y2
+  customersEop: 2
+  revenueK: 38.0
+  grossProfitK: 26.6
+  opexK: 201.0
+  ebitdaK: -174.4
+  cashEopK: 1910.8
+- quarter: Q1Y3
+  customersEop: 2
+  revenueK: 49.0
+  grossProfitK: 34.3
+  opexK: 204.0
+  ebitdaK: -169.7
+  cashEopK: 1741.1
+- quarter: Q2Y3
+  customersEop: 3
+  revenueK: 57.0
+  grossProfitK: 39.9
+  opexK: 236.7
+  ebitdaK: -196.8
+  cashEopK: 1544.3
+- quarter: Q3Y3
+  customersEop: 3
+  revenueK: 57.0
+  grossProfitK: 39.9
+  opexK: 239.7
+  ebitdaK: -199.8
+  cashEopK: 1344.5
+- quarter: Q4Y3
+  customersEop: 3
+  revenueK: 57.0
+  grossProfitK: 39.9
+  opexK: 264.6
+  ebitdaK: -224.7
+  cashEopK: 1119.8
+totals:
+  y1:
+    revenueK: 46.0
+    ebitdaK: -481.1
+    cashEopK: 2518.9
+  y2:
+    revenueK: 144.0
+    ebitdaK: -608.1
+    cashEopK: 1910.8
+  y3:
+    revenueK: 220.0
+    ebitdaK: -791.0
+    cashEopK: 1119.8
+unitEconomics:
+  arpuAnnualK: 76.0
+  grossMarginPct: 70.0
+  cacK: 80.0
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 67.0
+  ltvK: 295.6
+  ltvCacRatio: 3.7
+  cacPaybackMonths: 18.1
+fundingAsk:
+  round: pre-seed
+  amountM: 3.0
+  runwayMonths: 36
+  milestone: 做到 3 条生产级走廊，现场确认后的预警精度高于 70%，ARR 超过 $220K，并拿下首个相邻基础设施试点；这些 proof points 足以支撑下一轮 seed 或 Series A，去放大 GTM 和走廊扩张。
+  useOfFunds:
+  - bucket: 工程
+    amountUsd: 1500000
+    percentage: 50
+  - bucket: GTM
+    amountUsd: 600000
+    percentage: 20
+  - bucket: G&A
+    amountUsd: 360000
+    percentage: 12
+  - bucket: 缓冲（6 个月）
+    amountUsd: 540000
+    percentage: 18
+scenarios:
+  downside:
+    description: 轨道发射后移，首个付费试点推迟到 M11；三年收入整体低于基准 30%；招聘节奏不变；由于团队本身够轻，现金位会更紧，但还没低到危险线。
+    y3RevenueK: 154.0
+    y3EbitdaK: -837.2
+    cashLowPointK: 1033.7
+    keyAssumptionChanges:
+    - 首个付费试点从 M8 推迟到 M11
+    - 各年收入都比基准低 30%
+    - Pixxel 的在轨推理到 2028 年前都不可用；只能做地面推理
+  base:
+    description: 首个付费试点在 M8 签下，并于 Q1Y2 转成生产；第二条走廊在 Q2Y2 拿下；第三条走廊在 Q2Y3 拿下；到第 3 年末共 3 条生产级走廊、ARR 达 $220K，与 BP 的 SOM 目标一致。
+    y3RevenueK: 220.0
+    y3EbitdaK: -791.0
+    cashLowPointK: 1119.8
+    keyAssumptionChanges:
+    - 所有假设均按当前模型执行
+  upside:
+    description: 事故驱动的紧迫性把首个试点提前到 M6；更快转化加上第二家运营商胜单，带来 50% 的收入超预期；相邻基础设施试点在 Q4Y3 再贡献增量收入。
+    y3RevenueK: 330.0
+    y3EbitdaK: -714.0
+    cashLowPointK: 1263.3
+    keyAssumptionChanges:
+    - 首个付费试点提前到 M6
+    - 各年收入都比基准高 50%
+    - 相邻基础设施品类在 Q4Y3 新增 1 个付费试点
+sensitivity:
+- variable: ARPU
+  downsideCase: $50/km/yr（买家压价，只接受 $50/km 的基础单价）
+  baseCase: $66/km/yr 基础价 + $10/km 审计附加费 = 每条走廊每年 $76K
+  upsideCase: $85/km/yr（审计与调查溢价额外增加 $19/km）
+  y3RevenueImpactK: -53.0
+  cashImpactK: -37.1
+- variable: CAC
+  downsideCase: $120K CAC（PSU 采购周期拉到 12 个月，销售附加成本更高）
+  baseCase: $80K CAC（6 个月销售周期，创始人主导并有承包商协助）
+  upsideCase: $50K CAC（3 个月事故驱动快成交，加上转介绍）
+  y3RevenueImpactK: -57.0
+  cashImpactK: -39.9
+- variable: 流失率
+  downsideCase: 3%/月（第二条走廊的试点转生产失败）
+  baseCase: 1.5%/月（企业合同 + 粘性强的 GIS 集成）
+  upsideCase: 0.5%/月（工作流深嵌，3 年内几乎不流失）
+  y3RevenueImpactK: -30.0
+  cashImpactK: -21.0
+- variable: 销售周期
+  downsideCase: 拿下首个付费试点要 12 个月（PSU 尽调拉长）
+  baseCase: 拿下首个付费试点要 6 个月（事故驱动的紧迫性）
+  upsideCase: 拿下首个付费试点只要 3 个月（承包商热介绍）
+  y3RevenueImpactK: -57.0
+  cashImpactK: -39.9
+- variable: 毛利率
+  downsideCase: 55% GM（若接入 SAR 全天候伙伴，数据成本上升，COGS 提到 45%）
+  baseCase: 70% GM（Pixxel 数据 + 云算力，COGS 为 30%）
+  upsideCase: 75% GM（因与 Pixxel 合作拿到更低的大宗数据价）
+  y3RevenueImpactK: 0.0
+  cashImpactK: -33.0
+- variable: 招聘节奏
+  downsideCase: 在 Q2Y2 一次性多招 2 名 FTE（DS + AM 同时上）
+  baseCase: DS 在 Q2Y2，AM 在 Q4Y2，Sr Eng 在 Q2Y3，Ent Sales 在 Q4Y3
+  upsideCase: 把 Sr Eng 和 Ent Sales 推迟到 Y4，使 Y3 burn 降低 $190K
+  y3RevenueImpactK: 0.0
+  cashImpactK: 190.0
+modelDiagram:
+  title: 单位经济流转图
+  mermaid: |
+    flowchart LR
+      Leads[Operator Leads] --> Pilot[Paid Corridor Pilot]
+      Pilot --> Precision[Field-Confirmed Precision]
+      Precision --> Production[Production Corridor]
+      Production --> ARPU["ARPU $76K/corridor/yr"]
+      ARPU --> Revenue[Annual Revenue]
+      Revenue --> GP["Gross Profit 70% GM"]
+      GP --> Cash[Cash Position]
+      Production --> Dataset[Labeled Anomaly Dataset]
+      Dataset --> Moat[Corridor Data Moat]
+      Moat --> Expansion[Adjacent Infrastructure]
+modelSanity:
+- checkName: 收入引擎
+  finding: 收入靠新增生产级走廊来放大：每条走廊每年 $76K，毛利率 70%；而每拿下一条新走廊，都受 6–12 个月企业销售周期约束，这一点已经体现在基准情景和敏感性表里。
+- checkName: 必须跑通的环节
+  finding: 首个付费试点必须在 Q1Y2 前转成生产，并把现场确认后的预警精度拉到 70% 以上，这样第二条走廊才站得住，标注数据集护城河也才开始形成并支撑续费与扩张。
+- checkName: 模型会失效的情况
+  finding: 如果年化走廊流失率超过 20%，或 Pixxel 的轨道延迟逼出 12 个月的产品转向，3.7x 的 LTV/CAC 就会塌掉，runway 也会在下一轮融资所需 proof points 形成前被消耗过多——下行情景里现金底线仅 $1.03M。
+- checkName: 下一轮融资证明点
+  finding: 到第 3 年末做到 3 条生产级走廊、ARR 超过 $220K，且 CAC 回收期低于 20 个月，就证明“走廊到关单”工作流成立，足以支撑下一轮 seed 或 Series A 去加速 GTM，并扩到相邻线性基础设施。
+sanityChecks:
+  ruleOf40: Y3 收入增速 52.8%（从 $144K 到 $220K）+ Y3 EBITDA 利润率 -359% = -306；在这个尚未放量的阶段，Rule of 40 没有实质意义，因此标记为不适用，等 ARR 超过 $2M 再看。
+  burnMultiple: Y3 净 burn 为 $791K，除以 Y3 净新增 ARR $76K（1 条新增走廊）= 10.4x；高于 <2x 的高效基准，但符合企业级 pre-scale 和小滩头市场的现实；等 Series A 后 GTM 能跨走廊放大，指标才应明显改善。
+  revenuePerFte: Y3 每 FTE 对应收入 $27.5K（$220K / 8 FTE）；显著低于 $200–400K 的 SaaS 基准，反映出早期滩头市场太小；若不扩到相邻基础设施，很难具备风投级效率。
+  flags:
+  - 市场太小：TAM 仅 $1.9M，Y3 SOM 仅 $0.2M；若到 Y4 仍不能扩到相邻基础设施，单靠天然气管道滩头市场撑不起风投级结果。
+  - Y3 的 burn multiple 为 10.4x，说明早期扩张非常吃资本；pre-seed 阶段还能接受，但到 seed-to-A 必须压到 <5x，增长资本才愿意接。
+  - Y3 每 FTE 收入 $27.5K，较 SaaS 基准低 7–14 倍；在 ARR 过 $1M、并切到多个基础设施垂直前，效率会被结构性限制。
+  - 强依赖在轨推理：BP 风险里已把 Pixxel/Sarvam 时间线后移评为 High/High；只要超过 2026 年 Q4，产品就会被迫退回“只做地面推理”，试点转化也可能放慢。
+  - LTV/CAC 3.7x 算过得去，但前提是年流失率守在 18% 以下；若早期走廊年流失率超过 20%，该比值会跌破 3x，商业论证明显变弱。
+  - PSU 采购风险：BP 已指出，PSU 和大型运营商周期可能比计划更长；如果首个试点延后 12 个月（下行情景），Y3 现金底线会降到 $1.03M，虽然还安全，但已经偏紧。
+  - 季风和云层缺口可能逼公司采购 SAR 伙伴数据，使 COGS 升到约 45%，毛利率也会像敏感性表展示的那样，从 70% 压到 55%。
