@@ -1,0 +1,606 @@
+slug: helmet-vision-calibration-os
+date: '2026-05-19'
+currency: USD
+modelStartMonth: 2026-06
+assumptions:
+  - id: A1
+    name: 模型起始月份
+    value: "2026-06"
+    unit: YYYY-MM
+    source: >-
+      [BP date 2026-05-19] 基准情形从计划日期后一个月开始，以便融资款项覆盖运营爬坡而非零碎月份。
+  - id: A2
+    name: 期初现金
+    value: "2800.0"
+    unit: USDK
+    source: >-
+      [BP fundingAsk targetFundingRangeUsd $2-4M] 基准情形使用 $2.8M pre-seed，接近区间中点，因为切入点真实但仍属观察级市场。
+  - id: A3
+    name: 模型中的客户单元
+    value: "active paid device program"
+    unit: definition
+    source: >-
+      [BP businessModel.unitOfValue active helmet or wearable program] customersEop 跟踪付费项目数，而非客户数或席位数。
+  - id: A4
+    name: 起始活跃项目数（第 1 个月）
+    value: "0"
+    unit: count
+    source: >-
+      [BP milestones 0-12 months] 公司从零营收起步，仅在 SDK 和首个报告工作流就绪后才签署首个付费项目。
+  - id: A5
+    name: 第 1 年每月净新增活跃项目数
+    value: "[0,0,0,0,1,0,0,1,0,0,0,0]"
+    unit: count
+    source: >-
+      [BP milestones 0-12 months] 节奏安排为第一年签署 2 个付费头盔项目先行。
+  - id: A6
+    name: 第 2 年每季度净新增活跃项目数
+    value: "[1,1,1,0]"
+    unit: count
+    source: >-
+      [BP milestones 12-24 months] 在 Q4Y2 达到 5 个活跃项目，与 3—5 个活跃量产项目加一个早期相邻扩张动作的预期一致。
+  - id: A7
+    name: 第 3 年每季度净新增活跃项目数
+    value: "[1,1,0,1]"
+    unit: count
+    source: >-
+      [BP market SOM $1.2M at 8 active programs; BP milestones 24-36 months] 第 3 年末达到 8 个活跃项目，与研究支撑的 SOM 形态吻合。
+  - id: A8
+    name: 按阶段划分的每活跃项目混合收入
+    value: "Y1 M5-M11 15.0 monthly; M12 18.0 monthly; Y2 144.0 annualized; Y3 180.0 annualized"
+    unit: USDK per active program
+    source: >-
+      [BP gtm pricing $40k-$80k pilot and $120k-$200k annual plus usage; Research bottomUpSizingDrivers $150k-$250k annually] 第 3 年假设公司在量产和遥测用量上线后，销售定价接近区间中高端。
+  - id: A9
+    name: 收入确认方式
+    value: "average active programs in period multiplied by staged price"
+    unit: formula
+    source: >-
+      初创财务惯例：新项目平均在期间中点上线，因此收入采用 ((期初项目数 + 期末项目数) / 2) × 已实现项目单价。
+  - id: A10
+    name: 毛利率爬坡
+    value: "45% first pilot months; 50-55% late Y1; 60-65% in Y2; 68-70% in Y3"
+    unit: percent
+    source: >-
+      [BP businessModel targetGrossMarginPct 70; BP risks on SDK resistance and services-heavy integration] 团队仍在进行高触达入驻和集成工作期间，毛利率低于目标值。
+  - id: A11
+    name: 含负担的薪资区间
+    value: "Founder 140; engineering 135; optics 150; product-solutions 120; solutions engineer 110; sales 120; ops 90"
+    unit: annual USDK per FTE
+    source: >-
+      [BP team] 加上针对精简欧洲优先技术团队的初创财务惯例，含工资税和福利。
+  - id: A12
+    name: 招聘时间表
+    value: "FounderCEO M1; founding eng M1; optics lead M2; product-solutions lead M4; solutions engineer M6; sales lead M10; second engineer M16; ops lead M25"
+    unit: timing
+    source: >-
+      [BP team startTiming; BP strategicChoices.sequencingRationale] 后续招聘推迟至标杆先行和集成复用可见后再进行。
+  - id: A13
+    name: 薪资分摊政策
+    value: "Founder 45% S&M / 55% G&A; product-solutions 45% S&M / 35% R&D / 20% G&A; solutions engineer 70% S&M / 30% R&D; engineering and optics 100% R&D; sales 100% S&M; ops 100% G&A"
+    unit: policy
+    source: >-
+      [BP team rationale] 反映创始人主导的企业销售、重实施的入驻和产品优先的组织架构。
+  - id: A14
+    name: 非薪资运营支出爬坡
+    value: "R&D other 6-13 monthly; S&M other 4-12 monthly; G&A other 7-10 monthly"
+    unit: USDK per month
+    source: >-
+      [BP operations; BP risks; Research regulatoryLandscape] 涵盖云服务、现场测试差旅、开发套件、隐私法律顾问和数据托管成本。
+  - id: A15
+    name: 隐私与合规顾问处理方式
+    value: "modeled as recurring external G&A spend rather than full-time headcount"
+    unit: policy
+    source: >-
+      [BP team privacy and compliance advisor; Research regulatoryLandscape] 保持团队精简，同时为 GDPR 和 AI 治理工作提供资金支持。
+  - id: A16
+    name: 单位经济模型使用的稳态月流失率
+    value: "1.5"
+    unit: percent
+    source: >-
+      初创财务惯例：年度项目合同和嵌入式发布工作流应产生较强的留存率，但买家基础集中，硬件项目时机仍可能引发流失事件。
+  - id: A17
+    name: 混合 CAC
+    value: "124.4"
+    unit: USDK per program
+    source: >-
+      由建模的第 2—3 年销售和营销支出约 $871K 除以 7 个净新增活跃项目计算所得；对创始人主导面向小型 OEM 市场的企业销售而言，这一数值偏高但合理。
+  - id: A18
+    name: 融资规模规则
+    value: "raise enough to reach repeatable production proof plus six months of cash buffer"
+    unit: policy
+    source: >-
+      [Developer instruction; BP fundingAsk runwayMonths 18; BP milestones 12-24 months] 本轮规模设计为达到 5 个活跃项目、2—3 个已支持集成和首个相邻可穿戴设计赢单后再进行下一轮融资。
+  - id: A19
+    name: 现金流简化
+    value: "ending cash equals opening cash plus cumulative EBITDA"
+    unit: formula
+    source: >-
+      初创财务惯例：这一轻资产软件模型假设资本支出、债务和营运资金扭曲均可忽略不计。
+headcount:
+  - role: FounderCEO
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Engineering
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 2
+    q4y3: 2
+  - role: OpticsEmbedded
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: ProductSolutions
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: SolutionsEngineer
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: SalesGTM
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: OperationsGA
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 0
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 5
+  q3y1: 5
+  q4y1: 6
+  q4y2: 7
+  q4y3: 8
+headcountAnnualizedPayrollK:
+  q1y1: 425.0
+  q2y1: 655.0
+  q3y1: 655.0
+  q4y1: 775.0
+  q4y2: 910.0
+  q4y3: 1000.0
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.00
+    cogsK: 0.00
+    grossProfitK: 0.00
+    salaryK: 22.92
+    salesMarketingK: 9.25
+    researchDevelopmentK: 17.25
+    generalAdministrativeK: 14.42
+    opexK: 40.92
+    ebitdaK: -40.92
+    cashEopK: 2759.08
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.00
+    cogsK: 0.00
+    grossProfitK: 0.00
+    salaryK: 35.42
+    salesMarketingK: 9.25
+    researchDevelopmentK: 29.75
+    generalAdministrativeK: 14.42
+    opexK: 53.42
+    ebitdaK: -53.42
+    cashEopK: 2705.66
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.00
+    cogsK: 0.00
+    grossProfitK: 0.00
+    salaryK: 35.42
+    salesMarketingK: 9.25
+    researchDevelopmentK: 29.75
+    generalAdministrativeK: 14.42
+    opexK: 53.42
+    ebitdaK: -53.42
+    cashEopK: 2652.24
+  - month: M4
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.00
+    cogsK: 0.00
+    grossProfitK: 0.00
+    salaryK: 45.42
+    salesMarketingK: 14.75
+    researchDevelopmentK: 34.25
+    generalAdministrativeK: 16.42
+    opexK: 65.42
+    ebitdaK: -65.42
+    cashEopK: 2586.82
+  - month: M5
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 7.50
+    cogsK: 4.13
+    grossProfitK: 3.37
+    salaryK: 45.42
+    salesMarketingK: 14.75
+    researchDevelopmentK: 34.25
+    generalAdministrativeK: 16.42
+    opexK: 65.42
+    ebitdaK: -62.05
+    cashEopK: 2524.77
+  - month: M6
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 15.00
+    cogsK: 8.25
+    grossProfitK: 6.75
+    salaryK: 54.58
+    salesMarketingK: 21.17
+    researchDevelopmentK: 37.00
+    generalAdministrativeK: 16.42
+    opexK: 74.59
+    ebitdaK: -67.84
+    cashEopK: 2456.93
+  - month: M7
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 15.00
+    cogsK: 8.25
+    grossProfitK: 6.75
+    salaryK: 54.58
+    salesMarketingK: 22.17
+    researchDevelopmentK: 37.00
+    generalAdministrativeK: 15.42
+    opexK: 74.59
+    ebitdaK: -67.84
+    cashEopK: 2389.09
+  - month: M8
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 22.50
+    cogsK: 11.25
+    grossProfitK: 11.25
+    salaryK: 54.58
+    salesMarketingK: 22.17
+    researchDevelopmentK: 37.00
+    generalAdministrativeK: 15.42
+    opexK: 74.59
+    ebitdaK: -63.34
+    cashEopK: 2325.75
+  - month: M9
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 30.00
+    cogsK: 15.00
+    grossProfitK: 15.00
+    salaryK: 54.58
+    salesMarketingK: 22.17
+    researchDevelopmentK: 37.00
+    generalAdministrativeK: 15.42
+    opexK: 74.59
+    ebitdaK: -59.59
+    cashEopK: 2266.16
+  - month: M10
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 30.00
+    cogsK: 15.00
+    grossProfitK: 15.00
+    salaryK: 64.58
+    salesMarketingK: 33.17
+    researchDevelopmentK: 38.00
+    generalAdministrativeK: 15.42
+    opexK: 86.59
+    ebitdaK: -71.59
+    cashEopK: 2194.57
+  - month: M11
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 30.00
+    cogsK: 15.00
+    grossProfitK: 15.00
+    salaryK: 64.58
+    salesMarketingK: 33.17
+    researchDevelopmentK: 38.00
+    generalAdministrativeK: 15.42
+    opexK: 86.59
+    ebitdaK: -71.59
+    cashEopK: 2122.98
+  - month: M12
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 36.00
+    cogsK: 16.20
+    grossProfitK: 19.80
+    salaryK: 64.58
+    salesMarketingK: 33.17
+    researchDevelopmentK: 38.00
+    generalAdministrativeK: 15.42
+    opexK: 86.59
+    ebitdaK: -66.79
+    cashEopK: 2056.19
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 3
+    newCustomers: 1
+    revenueK: 90.00
+    cogsK: 36.00
+    grossProfitK: 54.00
+    salaryK: 193.75
+    salesMarketingK: 102.50
+    researchDevelopmentK: 117.00
+    generalAdministrativeK: 49.25
+    opexK: 268.75
+    ebitdaK: -214.75
+    cashEopK: 1841.44
+  - quarter: Q2Y2
+    customersEop: 4
+    newCustomers: 1
+    revenueK: 126.00
+    cogsK: 47.88
+    grossProfitK: 78.12
+    salaryK: 227.50
+    salesMarketingK: 105.50
+    researchDevelopmentK: 153.75
+    generalAdministrativeK: 49.25
+    opexK: 308.50
+    ebitdaK: -230.38
+    cashEopK: 1611.06
+  - quarter: Q3Y2
+    customersEop: 5
+    newCustomers: 1
+    revenueK: 162.00
+    cogsK: 58.32
+    grossProfitK: 103.68
+    salaryK: 227.50
+    salesMarketingK: 108.50
+    researchDevelopmentK: 156.75
+    generalAdministrativeK: 49.25
+    opexK: 314.50
+    ebitdaK: -210.82
+    cashEopK: 1400.24
+  - quarter: Q4Y2
+    customersEop: 5
+    newCustomers: 0
+    revenueK: 180.00
+    cogsK: 63.00
+    grossProfitK: 117.00
+    salaryK: 227.50
+    salesMarketingK: 108.50
+    researchDevelopmentK: 156.75
+    generalAdministrativeK: 52.25
+    opexK: 317.50
+    ebitdaK: -200.50
+    cashEopK: 1199.74
+  - quarter: Q1Y3
+    customersEop: 6
+    newCustomers: 1
+    revenueK: 247.50
+    cogsK: 79.20
+    grossProfitK: 168.30
+    salaryK: 250.00
+    salesMarketingK: 108.50
+    researchDevelopmentK: 156.75
+    generalAdministrativeK: 74.75
+    opexK: 340.00
+    ebitdaK: -171.70
+    cashEopK: 1028.04
+  - quarter: Q2Y3
+    customersEop: 7
+    newCustomers: 1
+    revenueK: 292.50
+    cogsK: 90.68
+    grossProfitK: 201.82
+    salaryK: 250.00
+    salesMarketingK: 111.50
+    researchDevelopmentK: 159.75
+    generalAdministrativeK: 74.75
+    opexK: 346.00
+    ebitdaK: -144.18
+    cashEopK: 883.86
+  - quarter: Q3Y3
+    customersEop: 7
+    newCustomers: 0
+    revenueK: 315.00
+    cogsK: 94.50
+    grossProfitK: 220.50
+    salaryK: 250.00
+    salesMarketingK: 111.50
+    researchDevelopmentK: 159.75
+    generalAdministrativeK: 77.75
+    opexK: 349.00
+    ebitdaK: -128.50
+    cashEopK: 755.36
+  - quarter: Q4Y3
+    customersEop: 8
+    newCustomers: 1
+    revenueK: 337.50
+    cogsK: 101.25
+    grossProfitK: 236.25
+    salaryK: 250.00
+    salesMarketingK: 114.50
+    researchDevelopmentK: 162.75
+    generalAdministrativeK: 77.75
+    opexK: 355.00
+    ebitdaK: -118.75
+    cashEopK: 636.61
+totals:
+  y1:
+    revenueK: 186.00
+    ebitdaK: -743.81
+    cashEopK: 2056.19
+  y2:
+    revenueK: 558.00
+    ebitdaK: -856.45
+    cashEopK: 1199.74
+  y3:
+    revenueK: 1192.50
+    ebitdaK: -563.13
+    cashEopK: 636.61
+unitEconomics:
+  arpuAnnualK: 180.0
+  grossMarginPct: 70.0
+  cacK: 124.4
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 66.7
+  ltvK: 700.0
+  ltvCacRatio: 5.6
+  cacPaybackMonths: 11.9
+fundingAsk:
+  round: pre-seed
+  amountM: 2.8
+  runwayMonths: 30
+  milestone: >-
+    在持有约六个月现金储备以备下一轮融资的前提下，实现 5 个活跃量产项目、2—3 个可复用的光学或运行时集成，以及 1 个相邻工业或安全可穿戴领域的设计赢单。
+  useOfFunds:
+    - bucket: 工程
+      amountUsd: 1120000
+      percentage: 40
+    - bucket: GTM
+      amountUsd: 700000
+      percentage: 25
+    - bucket: "G&A"
+      amountUsd: 336000
+      percentage: 12
+    - bucket: "储备金（6 个月）"
+      amountUsd: 644000
+      percentage: 23
+scenarios:
+  downside:
+    description: >-
+      一个头盔发布延期，合作伙伴遥测接口接入耗时超预期，第 3 年末仅有 6 个活跃项目，毛利率停滞在 60% 中段。
+    y3RevenueK: 760.0
+    y3EbitdaK: -901.0
+    cashLowPointK: 213.4
+    keyAssumptionChanges:
+      - 第 2 年和第 3 年净新增项目合计减至第 1 年后仅 4 个，而非 7 个
+      - 第 3 年每活跃项目混合年化收入降至 $160K
+      - 毛利率停滞在 65%，因为集成仍以定制化为主
+  base:
+    description: >-
+      创始人主导的头盔先行按计划转化，2—3 个集成覆盖大部分需求，第一个相邻可穿戴项目在第 3 年末到来，最终达到 8 个活跃项目。
+    y3RevenueK: 1192.5
+    y3EbitdaK: -563.13
+    cashLowPointK: 636.61
+    keyAssumptionChanges:
+      - 第 2 年达到 5 个活跃项目，第 3 年末达到 8 个
+      - 第 3 年每活跃项目混合年化收入达到 $180K
+      - 毛利率在第 3 年 Q3—Q4 提升至 70% 目标
+  upside:
+    description: >-
+      合作伙伴转介和更快的可穿戴扩张将公司带到第 3 年末 10 个活跃项目，团队规模并未大幅增加。
+    y3RevenueK: 1536.0
+    y3EbitdaK: -293.92
+    cashLowPointK: 950.0
+    keyAssumptionChanges:
+      - 第 2 年末达到 6 个活跃项目，第 3 年末达到 10 个
+      - 第 3 年每活跃项目混合年化收入升至 $192K
+      - 随着集成更具复用性，毛利率达到 72%
+sensitivity:
+  - variable: ARPU
+    downsideCase: >-
+      每活跃项目年化 $160K
+    baseCase: >-
+      每活跃项目年化 $180K
+    upsideCase: >-
+      每活跃项目年化 $200K
+    y3RevenueImpactK: -132.5
+    cashImpactK: -92.8
+  - variable: CAC
+    downsideCase: >-
+      每项目 CAC $145K
+    baseCase: >-
+      每项目 CAC $124K
+    upsideCase: >-
+      每项目 CAC $100K
+    y3RevenueImpactK: 0.0
+    cashImpactK: -145.0
+  - variable: churn
+    downsideCase: >-
+      月流失率等效 2.5%
+    baseCase: >-
+      月流失率等效 1.5%
+    upsideCase: >-
+      月流失率等效 1.0%
+    y3RevenueImpactK: -112.5
+    cashImpactK: -84.0
+  - variable: sales cycle
+    downsideCase: >-
+      付费先行成交延迟一个季度
+    baseCase: >-
+      发布触发的先行在一个季度内成交
+    upsideCase: >-
+      合作伙伴转介的先行在两个月内成交
+    y3RevenueImpactK: -180.0
+    cashImpactK: -150.0
+  - variable: gross margin
+    downsideCase: >-
+      65% 稳态毛利率
+    baseCase: >-
+      70% 稳态毛利率
+    upsideCase: >-
+      72% 稳态毛利率
+    y3RevenueImpactK: 0.0
+    cashImpactK: -59.6
+  - variable: hiring pace
+    downsideCase: >-
+      提前两个季度招募第二位工程师和运营人员
+    baseCase: >-
+      招聘与先行转化和集成复用挂钩
+    upsideCase: >-
+      将运营招聘推迟至下一轮融资完成后
+    y3RevenueImpactK: 0.0
+    cashImpactK: -135.0
+modelDiagram:
+  title: 单位经济模型流程
+  mermaid: |
+    flowchart LR
+      Accounts[Design-freeze target accounts] --> Pilots[Paid helmet pilots]
+      Pilots --> Programs[Active production programs]
+      Programs --> Revenue[Subscription plus telemetry revenue]
+      Revenue --> GrossProfit[Gross profit after support and integration COGS]
+      GrossProfit --> Cash[Cash runway]
+modelSanity:
+  - checkName: 营收引擎
+    finding: >-
+      基准情形营收靠将 2 个付费头盔先行转化为 Q4Y3 的 8 个活跃设备项目来驱动，大部分价值来自量产定价和一个相邻可穿戴扩张，而非宽泛的漏斗顶端流量。
+  - checkName: 必须做对的事
+    finding: >-
+      遥测接口和集成复用必须足够快速提升，使毛利率从 45% 的先行模式爬升至第 3 年 70% 的目标。
+  - checkName: 模型崩溃条件
+    finding: >-
+      若先行成交延迟且定制化集成使毛利率停滞在 65% 附近，悲观情形将把第 3 年收入削减至约 $760K，现金低点仅剩约 $213K。
+  - checkName: 下一轮融资证明
+    finding: >-
+      下一轮融资逻辑成立的前提是公司在第 2 年末拥有 5 个活跃项目、可复用的合作伙伴集成，以及头盔切入点可向工业或安全可穿戴拓展的证据。
+sanityChecks:
+  ruleOf40: 第 3 年增长率 114% + EBITDA 利润率 -47% = 67%
+  burnMultiple: 从第 2 年约 2.3 倍改善至第 3 年约 0.9 倍，因为量产项目营收开始吸收固定成本。
+  revenuePerFte: >-
+    以 Q4Y3 的 8 名 FTE 计算，第 3 年人均收入 $149K（低于 $200K—$400K 的 SaaS 基准，仅在公司持续将定制先行工作转化为可复用集成的前提下可以接受）。
+  flags:
+    - >-
+      第 3 年末只有 8 个活跃项目，营收高度集中，一个 OEM 发布延迟就可能影响整个季度的业绩。
+    - >-
+      人均收入持续低于成熟 SaaS 基准，因为模型仍承担尚未完全产品化的解决方案、集成和合规开销。
+    - >-
+      毛利率要到第 3 年末才达到 70% 目标；若前 3 个先行项目中任何一个需要超过商业计划中四个工程周的定制工作，本轮 pre-seed 需要加大规模或提前进行种子轮。

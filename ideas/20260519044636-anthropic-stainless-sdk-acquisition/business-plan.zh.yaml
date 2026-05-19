@@ -1,0 +1,222 @@
+slug: sdk-mcp-migration-plane
+date: '2026-05-19'
+executiveSummary: 这家公司卖的是一层中立控制平面，服务对象是既要发布官方 SDK、又要交付 MCP server 和 agent-ready 工具接口面的 API 厂商；他们不想把这一层直接交给 Anthropic、OpenAI、Google 或 AWS。催化剂非常具体：Anthropic 收购了 Stainless，而外界报道中的托管产品关停计划，会立刻触发那些依赖中立 SDK 基础设施团队的路线图复盘。最好的首批客户，是偏后期的 API-first SaaS 或基础设施公司：至少 3 套官方 SDK、一份 OpenAPI 合同，而且本季度就有企业共创客户要求接入兼容 Claude 或 ChatGPT 的 agent。产品应该以迁移优先的平台形态落地：导入现有合同，重新生成 SDK 和 MCP 接口面，把输出和旧流水线逐项 diff，并在买方真正关心的模型生态里做行为认证。研究支持这是一个“窄但真实”的市场：公开 API 目录说明外部 API 项目很多，但同时具备多 SDK 复杂度、又承受 agent 压力的只是其中一部分，所以公司该优化高 ACV 的共创客户，而不是一开始就追广谱 self-serve。公司真正赢法，是成为可信的发布治理与兼容性层，而不是跟现有 code generator 正面打“谁更便宜”。运营上的关键取舍，是在外部 API 迁移切口跑通之前，先别碰企业内部 API、通用 API 管理工作流和泛化 observability。当前输入里最大的空白，是 2026 年到底有多少活跃 Stainless 客户必须迁移，所以前 90 天必须把三件事问清：紧迫度、预算 owner，以及首个付费模块到底是迁移还是认证。
+problem:
+- 现在的 API 公司得同时交付给开发者的 SDK 和面向 agent 的接口，但大多数发布流水线原本只为 SDK 生成而建。
+- Anthropic 接手 Stainless，把原本中立的供应商变成平台基础设施；对不想把 API 分发边缘绑死在单一模型厂商上的买方来说，连续性风险一下子浮上台面。
+- 开源生成器和现有 SDK 工具能产出 artefact，但给不了平台团队迁移安全、跨模型兼容性证明，也管不了 agent 流量的策略控制。
+solution:
+- 导入一份 API 合同，把它变成受治理的事实源，生成带版本管理的 SDK、MCP server 和工具描述符；切换前还能和旧流水线并排做 diff。
+- 在 Claude、OpenAI、Google 和 AWS 的 agent 接口面上跑兼容性、鉴权和回归测试，让买方在对企业客户承诺支持前，先把能跑的范围说清楚。
+- 补上一层运行时策略与遥测，覆盖 OAuth scope、确认门槛、rate limit，以及 agent 与人类流量的拆分观测，让产品从一次性迁移工具升级成控制平面。
+whyWeWin:
+- Stainless 被 Anthropic 收购后，中立性的重要性只会更高：买方现在有了一个非常直观的理由，不愿再让单一模型平台掌握自己的 SDK 与 MCP 路线图。
+- 真正能守住的切口是“迁移 + 认证”：现有厂商早已会生成代码，但很少有人能一边安全替换线上发布流水线，一边证明它在多个模型生态里都能正常工作。
+- 每一次生产发布，都会沉淀规范 diff、回归、鉴权失败和 agent 流量模式数据；跑过的 API 产品越多，这套数据越值钱。
+strategicChoices:
+  beachhead: 首个滩头市场是 Series B 到上市阶段的 API-first SaaS 与基础设施公司：平台工程师 5-20 人、至少 3 套官方 SDK，而且 2026 年已经被要求对企业客户上线一个外部 MCP 或 agent 工具接口面。
+  wedgeRationale: 这批客户已经切身体会到锁定和发布风险，SDK 复杂度也足以支撑六位数的基础设施预算；先在一个外部 API 产品上验证，见效最快。更宽泛的玩法，比如企业内部 API 或通用 API 管理，只会拉长销售周期，也会把产品边界和现有平台混在一起。
+  sequencingRationale: 先把迁移 diff 和 Claude/OpenAI 认证做出来，因为在 Stainless 交易之后，这两件事最容易直接触发预算。只有当少量共创客户证明迁移项目能顺利转成长期平台订阅后，再补更广的运行时策略、Google/AWS 覆盖和伙伴分发。
+  notYet:
+  - 非软件公司的企业内部 API 项目
+  - 通用 API gateway 或开发者门户替代
+  - 面向消费者和 SMB 的 self-serve 套餐
+  - 直接去做完整 agent runtime，而不是接口控制平面
+market:
+  tam: TAM 为 $0.2B：按约 2,529 个公开 API 项目、以及一套中立 SDK / MCP 控制平面年均约 $75k 支出建模。
+  sam: SAM 为 $34.1M：假设公开 API 项目里约 15% 会在未来 2-3 年内成为承压的多 SDK 买方，且可承受约 $90k ACV。
+  som: 第 3 年 SOM 为 $4.2M：按 40 个客户、约 $105k blended ACV 估算，其中包含平台订阅、迁移和认证服务。
+  segments:
+  - 核心：API-first 软件公司的平台工程与开发者基础设施负责人——他们维护多套官方 SDK，也在处理企业级 agent 接入需求
+  - 次级：负责文档、发布质量和合作伙伴集成增长的开发者体验与 API 产品负责人
+  buyingProcess: 通常由企业客户提出 agent 支持请求，或团队担心工具被厂商收走，进而触发 VP Platform、开发者体验负责人或 API GM 发起路线图 / 安全复盘。第一单大概率是 6-10 周、围绕单一 API 产品的付费迁移试点；只要团队能零重大回归上线，并拿出可信的跨模型认证，后面就会转成年费平台订阅。
+product:
+  mvp: MVP 应该先把一条基于 OpenAPI 的产品线从头跑通：导入现有合同，重生成 3-5 套 SDK，生成 1 个 MCP server，对比旧生成器输出，并为 Claude 和 OpenAI 跑鉴权与 tool-call 回归测试。同时补上最基础的 OAuth scope、确认门槛和发布回滚控制，让首个客户能过内部安全评审。
+  sixMonth: 6 个月内交付生产级迁移工具、发布 diff 报告、Claude 与 OpenAI 认证、一个自托管部署选项，以及把 agent 流量和开发者流量拆开看的 observability。
+  twelveMonth: 12 个月内补齐 Google Gemini 与 AWS Bedrock 认证、可复用的鉴权和审批策略模板，并从单一 API 产品扩张到多个外部接口面。
+  twentyFourMonth: 24 个月后，从外部 API 厂商进一步切入企业内部 API 和受监管数据服务，提供更深的治理层、行业 benchmark 与审计证据。
+  keyBets:
+  - 首个付费痛点是迁移安全；认证与策略模块在 cutover 之后负责扩张。
+  - 只要先把 Claude 和 OpenAI 支持做好，就足以拿下第一批共创客户，Google 和 AWS 不必第一天就全部对齐。
+  - 对相当一部分金融科技、基础设施和高安全买方来说，自托管或强控制部署会是刚需。
+  - 平台团队会把 agent 流量遥测视为控制要求，而不只是分析报表。
+gtm:
+  wedge: 销售动作先从“单一外部 API 产品的迁移型共创项目”切进去：3-5 套 SDK、1 个 MCP 接口面，并在买方扩大 agent 分发前，先签下 Claude 与 OpenAI 兼容性证明需求。
+  channels:
+  - 由创始人亲自 outbound，直接找偏后期 API 厂商的 VP Platform、开发者体验负责人和 API GM
+  - 切进已经在接企业 MCP 需求的金融科技、云基础设施与开发者工具公司，拿共创客户
+  - 和开发者门户、文档、API 治理厂商做转介绍与集成合作，这些厂商已经嵌在规范与发布工作流里
+  funnelTargets: 线索→合格试点 15-25%；试点→生产 50%+；首个生产账户在 12 个月内扩到第二个 API 产品的 retained 客户占比 60%。
+  pricing: 按 API 产品和生成接口面收年费；单条产品线的首单 land 定在 $75k-$100k ACV 区间，再加 $20k-$40k 的迁移与认证费用。这个价位既贴近相邻企业工具预算，也让公司能先按紧急 cutover 工作收费，而不是过早依赖 usage 扩张。
+businessModel:
+  revenueStreams:
+  - 用于受治理 SDK、MCP 与认证工作流的年度平台订阅
+  - 一次性的托管迁移与实施服务费
+  - 高级兼容性认证、可观测性和策略模块
+  unitOfValue: 纳入管理的 API 产品，以及由其生成的机器接口面
+  targetGrossMarginPct: 75
+  expansionLevers:
+  - 每个客户新增 API 产品和 SDK 语言
+  - 在 Claude / OpenAI 之后，向 Google 和 AWS 扩展跨模型认证覆盖
+  - 面向受监管账户销售策略、可观测性与审计模块
+  - 从外部 API 扩到内部接口和合作伙伴接口
+strategyMap:
+  northStarMetric: 通过跨模型认证、且按时发布的生产 API 产品数量
+  inputMetrics:
+  - 试点转生产转化率
+  - 从旧生成器迁到托管发布流水线的中位迁移时长
+  - 目标模型生态下的认证通过率
+  - cutover 后的关键发布缺陷率
+  - 从首个 API 产品扩到第二个产品的扩张率
+  moatsToBuild:
+  - 覆盖多家 API 厂商的规范 diff、生成 artefact 回归与迁移 playbook 数据集
+  - 与鉴权模式、端点类型绑定的跨模型兼容性 benchmark 数据
+  - 嵌进客户发布工作流里的 agent / human 流量遥测与策略结果
+  killCriteria:
+  - 前 20 个目标账户里，不到 5 个愿意在 9 个月内签付费迁移试点
+  - 试点无法把单产品迁移时长压到 6 周以内，或 cutover 后关键鉴权 / schema 缺陷压不进 1%
+  - 超过一半的合格买方明确表示平台打包工具已经够用，不愿为中立认证或迁移治理付费
+  mermaid: "flowchart LR\n  Wedge[Migration-first beachhead] --> MVP[MVP for one API product]\n  MVP --> Proof[Paid pilots and cross-model proof]\n  Proof --> Expansion[Multi-product expansion]\n"
+investorMemo:
+  verdict:
+    call: 观察
+    conviction: 切口有吸引力，催化剂也真实，但在看到直接客户证据证明迁移紧迫性能转成持续预算、而不是一次性服务费之前，判断仍要克制。
+    whyBelieve: Stainless 收购案让 API 厂商在最需要证明“可信 agent 接入”的时点，突然出现了中立性问题；而 incumbents 并没有天然占住“迁移 + 跨模型认证”这块。
+    whyDoubt: 短期可达市场可能比故事里讲得更窄，因为很多 API 团队可能会推迟 MCP 落地、继续用内部工具，或者等模型平台和云厂商把功能打包出来。
+    nextDiligence: 和 15-20 位平台负责人确认：第一笔预算究竟落在迁移、认证还是安全评审支持上；同时验证至少 5 家是否愿意在接下来两个季度内为试点买单。
+  firstCustomer:
+    title: 偏后期 API-first 基础设施公司的 VP Platform
+    profile: 一家 Series B 到上市阶段的 API 厂商，平台工程师 5-20 人、至少 3 套官方 SDK、已有 OpenAPI 合同，而且本季度就有企业客户要求 agent-ready 接口面。
+    trigger: 要么是 Stainless 收购后的路线图复盘，要么是高层明确要求：必须上线 MCP 支持，但不能把 API 路线图锁进单一模型平台。
+    buyer: VP Platform 或开发者体验负责人
+    initialContract: 先签一个针对单一 API 产品的 $25k-$40k 付费迁移试点；当买方把 3-5 套 SDK 和 1 个 MCP 接口面推到生产后，再转成约 $80k-$120k 的年费订阅。
+  mustBeTrue:
+  - 至少 30% 的合格偏后期 API 厂商，在未来 12 个月内确实有向外部客户上线 MCP 或 agent 工具接口面的 mandate。
+  - 从厂商绑定工具迁出来这件事足够急，至少一半共创客户会在完整替代平台出现前，先为试点付费。
+  - 仅做 Claude 和 OpenAI 认证，就足以覆盖第一批企业需求，让买方接受分阶段的平台 rollout。
+  - 一次迁移试点能在不漏掉发布周期的前提下，把单个 API 产品推到生产，并把关键 cutover 缺陷压到 1% 以下。
+  - 超过 50% 的生产客户会在 12 个月内从 1 个 API 产品扩到至少 2 个，证明这是个平台业务，而不是纯服务项目。
+  diligenceQuestions:
+  - 到 2026 年，真正需要替换托管工作流的 Stainless 或同类工具客户，到底有多少？又有多少只会把当前输出冻结不动？
+  - 第一笔预算在现实里究竟由谁拍板：VP Platform、开发者体验、安全团队，还是 API 业务 GM？
+  - 买方排第一的购买理由到底是迁移自动化、跨模型认证，还是运行时策略控制？
+  - 内部平台团队把开源生成器和零散 MCP 原型拉起来之后，外部厂商还有多大赢面？
+  - 什么 proof point 才能把共创试点转成多产品年度订阅，而不是一次性迁移项目？
+operatingAssumptions:
+- assumption: 一部分偏后期 API 厂商现在确实面临时间明确的需求：要么替换，要么至少去风险化那些跟厂商绑定的 SDK 生成工作流。
+  basis: research.yaml
+  validationTest: 访谈 15-20 位平台负责人，拿到至少 5 份将在接下来两个季度内启动的实际迁移计划。
+  decisionImpact: 如果不成立，公司就该从“迁移优先”转向“持续认证与策略控制优先”。
+- assumption: 第一个能收费的模块，是迁移加认证，而不是单卖运行时策略。
+  basis: idea.yaml
+  validationTest: 在 10 通 discovery call 里强制买方给迁移、认证和策略模块排优先级，且至少 6 家把迁移或认证排第一。
+  decisionImpact: 如果不成立，MVP 和销售动作都得更早切向信任与治理控制，产品范围和招聘节奏也会变。
+- assumption: 买方愿意为一个窄部署先签约 $75k-$100k 左右的年费合同，外加一次性迁移服务费。
+  basis: research.yaml
+  validationTest: 拿下 3 个付费试点或 LOI，且定价偏离目标 land ACV 和服务费带宽不超过 20%。
+  decisionImpact: 如果不成立，公司就需要更轻的切口，或更窄的 ICP，才能在 seed 阶段守住毛利。
+- assumption: 在强制补齐 Google 和 AWS 之前，只做 Claude 和 OpenAI 支持，就足以拿下前 5-10 个客户。
+  basis: 创始团队判断
+  validationTest: 跟踪前 10 个合格机会对平台覆盖范围的要求，确认因缺少 Google 或 AWS 认证而被主因卡住的，不超过 3 个。
+  decisionImpact: 如果不成立，就必须把更多集成提前拉进 MVP，资本需求更高，可复制销售也会更晚。
+- assumption: 生产客户会足够快地从一个 API 产品扩到多个接口面，从而长成平台业务，而不是迁移咨询公司。
+  basis: idea.yaml
+  validationTest: 首批生产部署后的 12 个月内，至少一半 retained 账户新增第二个 API 产品、语言集或策略模块。
+  decisionImpact: 如果不成立，公司就该收缩到高价值、重服务的窄细分，或者把定价改成持续认证用量型。
+experimentRoadmap:
+- horizon: 0-90 天
+  experiment: 与偏后期 API 厂商做创始人访谈冲刺
+  hypothesis: Stainless 收购和 MCP 路线图压力，正在催生真实预算讨论，而不只是抽象兴趣。
+  successMetric: 完成 15 次访谈、识别 8 个合格机会，并让 5 个潜在客户同意进入试点 scoping。
+  owner: CEO
+- horizon: 0-90 天
+  experiment: 针对单个候选 API 做 concierge 式迁移评估
+  hypothesis: 只要拿出并排 diff 报告，就足以把发布风险和节省的工程时间量化出来，进而支撑付费试点。
+  successMetric: 至少 2 个潜在客户在看过样例 diff 输出后，接受付费或带 LOI 的迁移评估。
+  owner: CEO 与创始工程师
+- horizon: 0-90 天
+  experiment: Claude 与 OpenAI 兼容性 harness 原型
+  hypothesis: 跨模型鉴权与 tool-call 测试，可以被产品化成企业买方看得懂、也愿意买单的证明物。
+  successMetric: 原型能对一个代表性 API 自动跑认证，并产出面向买方可读的双生态 pass/fail 结果。
+  owner: 创始工程师
+- horizon: 90-180 天
+  experiment: 围绕一个 API 产品做付费迁移试点
+  hypothesis: 产品能在不漏掉发布周期、且不引入关键鉴权回归的前提下，把 3-5 套 SDK 和 1 个 MCP 接口面推到生产。
+  successMetric: 1 个试点在 6 周内上线，关键缺陷低于 1%，并约定扩张复盘会议。
+  owner: 解决方案工程师
+- horizon: 90-180 天
+  experiment: 在首批 proposal 上测试定价与打包
+  hypothesis: 买方能接受“订阅 + 服务”的 land 模式，而不是只愿意买纯服务或低价 seat model。
+  successMetric: 发出 3 份 proposal、拿下 2 个付费试点，而且没有任何一单需要超过目标价格 25% 的折扣。
+  owner: CEO
+- horizon: 180-360 天
+  experiment: 和 1 家文档或 API 治理厂商做伙伴渠道试点
+  hypothesis: 当首批 proof point 出来后，嵌入式合作伙伴能比 cold outbound 更快带来合格迁移机会。
+  successMetric: 上线一个季度内，该伙伴带来 3 个合格机会和 1 个付费试点。
+  owner: 创始人/GTM
+operations:
+- 为每次客户 cutover 跑一遍发布治理清单：包括 diff 审查、回滚方案和安全签字。
+- 维护兼容性实验室；每次模型平台或 schema 出现关键变动，都重新测试已认证接口面。
+- 把安全问卷答案、鉴权模式和部署图打包成标准销售与 onboarding 资料。
+- 从第一个试点开始，就把 agent 流量和人类开发者流量分开埋点。
+- 先把实施 playbook 压窄在一个外部 API 产品，以及可复用的语言、鉴权和部署模式上，再去接大规模定制化需求。
+team:
+- role: 创始人/GTM
+  startTiming: Month 0
+  rationale: 前 12 个月必须由创始人亲自做 discovery、卖共创客户，并把迁移项目打包成可复制的产品承诺。
+- role: 创始工程师
+  startTiming: Month 0
+  rationale: 产品核心价值建立在自研合同编译器、迁移 diff 引擎和首个认证 harness 上，这些能力必须掌握在内部。
+- role: 编译器与集成工程师
+  startTiming: Month 2
+  rationale: 很快就需要第二位技术骨干，补 SDK 语言覆盖、MCP 生成和部署可靠性，否则试点会拖垮节奏。
+- role: 解决方案工程师
+  startTiming: Month 4
+  rationale: 试点能否转化，关键在部署速度、安全评审支持，以及在客户发布流程里把迁移动作做得足够干净。
+- role: 兼容性与信任工程师
+  startTiming: Month 6
+  rationale: 跨模型测试、鉴权策略模板和发布认证会变成扩张护城河，不能长期停留在 ad hoc 服务状态。
+- role: 客户经理
+  startTiming: Month 9
+  rationale: 只有当首个试点打法、定价和实施边界都开始可复制后，才值得加 quota 产能。
+milestones:
+- horizon: 0-12 个月
+  items:
+  - 在金融科技、基础设施或开发者工具领域签下 3-5 个付费共创客户
+  - 为单产品部署交付迁移 diff、SDK 重生成，以及 Claude + OpenAI 认证
+  - 至少把 2 个试点转成年费生产订阅
+  - 在文档或 API 治理方向跑通 1 条可复制的伙伴转介绍渠道
+- horizon: 12-24 个月
+  items:
+  - 做到 10-15 个生产客户，并把平均账户扩到 1 个以上 API 产品
+  - 上线 Google 与 AWS 认证，以及面向高安全账户的可复用策略模板
+  - 沉淀第一版跨客户的回归、鉴权失败与兼容性结果数据集
+  - 证明至少一半 retained 客户会扩到高级认证或策略模块
+- horizon: 24-36 个月
+  items:
+  - 在首个外部 API 细分里，成为默认的中立迁移与认证层
+  - 进一步切入企业内部 API 和受监管数据服务账户，在那里部署控制比功能宽度更重要
+  - 支持多产品平台级 rollout，并做出强扩张和可引用客户案例
+  - 证明数据和工作流嵌入，足以在对抗平台打包工具时形成可守住的胜率
+risks:
+- risk: 模型平台和现有 SDK 厂商把原生工具打包到足够好，中立性就不再显得紧迫。
+  likelihood: Medium
+  impact: High
+  mitigation: 销售上先打迁移 deadline、多平台认证和发布治理 proof——这些都是单厂商 bundle 很难轻松补齐的。
+- risk: 短期市场可能比预期更小，因为 MCP 的认知度高于真实生产部署。
+  likelihood: High
+  impact: High
+  mitigation: 先抓那些已经收到企业需求的买方，首单围绕具体迁移工作收费，而不是先卖大而全的平台愿景。
+- risk: MCP、鉴权模式和模型特有工具语义持续变化，会推高产品复杂度并拖慢发布。
+  likelihood: High
+  impact: Medium
+  mitigation: 把产品定位成托管式编译器和认证实验室，收紧 adapter 边界，并持续跑回归测试。
+- risk: 开源生成器和强势内部平台团队，会抹掉外部供应商的付费意愿。
+  likelihood: Medium
+  impact: Medium
+  mitigation: 把节省的迁移时间、更低的上线后缺陷率和更快的安全审批速度算清楚，让买方拿内部人力和风险，而不只是许可证价格来比较。
+fundingAsk:
+  round: seed
+  targetFundingRangeUsd: $3-5M
+  runwayMonths: 18
+  useOfFundsSummary: 这笔钱要支撑 18 个月：把编译器、迁移和认证栈做出来；支持 6-8 个共创客户部署；并且只有在试点转化和产品打包开始可复制后，才搭一个小型企业 GTM 团队。

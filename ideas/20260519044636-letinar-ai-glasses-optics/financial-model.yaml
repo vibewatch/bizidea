@@ -1,0 +1,619 @@
+slug: helmet-vision-calibration-os
+date: '2026-05-19'
+currency: USD
+modelStartMonth: 2026-06
+assumptions:
+  - id: A1
+    name: Model start month
+    value: "2026-06"
+    unit: YYYY-MM
+    source: >-
+      [BP date 2026-05-19] base case starts the month after the plan date so the round funds the operating ramp rather than a partial month.
+  - id: A2
+    name: Opening cash
+    value: "2800.0"
+    unit: USDK
+    source: >-
+      [BP fundingAsk targetFundingRangeUsd $2-4M] base case uses a $2.8M pre-seed near the midpoint because the wedge is real but still a watch-case market.
+  - id: A3
+    name: Customer unit in the model
+    value: "active paid device program"
+    unit: definition
+    source: >-
+      [BP businessModel.unitOfValue active helmet or wearable program] customersEop tracks paid programs, not logos or seats.
+  - id: A4
+    name: Starting active programs (M1)
+    value: "0"
+    unit: count
+    source: >-
+      [BP milestones 0-12 months] the company starts pre-revenue and signs the first paid work only after the SDK and first report workflow are ready.
+  - id: A5
+    name: Y1 net new active programs by month
+    value: "[0,0,0,0,1,0,0,1,0,0,0,0]"
+    unit: count
+    source: >-
+      [BP milestones 0-12 months] paced to sign 2 paid helmet-program pilots during the first year.
+  - id: A6
+    name: Y2 net new active programs by quarter
+    value: "[1,1,1,0]"
+    unit: count
+    source: >-
+      [BP milestones 12-24 months] reaches 5 active programs by Q4Y2, consistent with 3-5 active production programs plus one early adjacent expansion motion.
+  - id: A7
+    name: Y3 net new active programs by quarter
+    value: "[1,1,0,1]"
+    unit: count
+    source: >-
+      [BP market SOM $1.2M at 8 active programs; BP milestones 24-36 months] ends Y3 at 8 active programs, matching the research-backed SOM shape.
+  - id: A8
+    name: Blended revenue per active program by phase
+    value: "Y1 M5-M11 15.0 monthly; M12 18.0 monthly; Y2 144.0 annualized; Y3 180.0 annualized"
+    unit: USDK per active program
+    source: >-
+      [BP gtm pricing $40k-$80k pilot and $120k-$200k annual plus usage; Research bottomUpSizingDrivers $150k-$250k annually] Y3 assumes the company is selling near the middle-upper end of the range once production and telemetry usage are live.
+  - id: A9
+    name: Revenue recognition method
+    value: "average active programs in period multiplied by staged price"
+    unit: formula
+    source: >-
+      Startup-finance heuristic: new programs go live mid-period on average, so revenue uses ((BoP programs + EoP programs) / 2) x realized program price.
+  - id: A10
+    name: Gross margin ramp
+    value: "45% first pilot months; 50-55% late Y1; 60-65% in Y2; 68-70% in Y3"
+    unit: percent
+    source: >-
+      [BP businessModel targetGrossMarginPct 70; BP risks on SDK resistance and services-heavy integration] margin starts below target while the team is still doing high-touch onboarding and integration work.
+  - id: A11
+    name: Loaded salary bands
+    value: "Founder 140; engineering 135; optics 150; product-solutions 120; solutions engineer 110; sales 120; ops 90"
+    unit: annual USDK per FTE
+    source: >-
+      [BP team] plus startup-finance heuristic for a lean Europe-first technical team including payroll tax and benefits.
+  - id: A12
+    name: Hiring schedule
+    value: "FounderCEO M1; founding eng M1; optics lead M2; product-solutions lead M4; solutions engineer M6; sales lead M10; second engineer M16; ops lead M25"
+    unit: timing
+    source: >-
+      [BP team startTiming; BP strategicChoices.sequencingRationale] later hires are held back until lighthouse pilots and integration reuse are visible.
+  - id: A13
+    name: Payroll allocation policy
+    value: "Founder 45% S&M / 55% G&A; product-solutions 45% S&M / 35% R&D / 20% G&A; solutions engineer 70% S&M / 30% R&D; engineering and optics 100% R&D; sales 100% S&M; ops 100% G&A"
+    unit: policy
+    source: >-
+      [BP team rationale] reflects founder-led enterprise selling, implementation-heavy onboarding, and a product-first org.
+  - id: A14
+    name: Non-payroll operating expense ramp
+    value: "R&D other 6-13 monthly; S&M other 4-12 monthly; G&A other 7-10 monthly"
+    unit: USDK per month
+    source: >-
+      [BP operations; BP risks; Research regulatoryLandscape] covers cloud, field-test travel, dev kits, privacy counsel, and data-hosting costs.
+  - id: A15
+    name: Privacy and compliance advisor treatment
+    value: "modeled as recurring external G&A spend rather than full-time headcount"
+    unit: policy
+    source: >-
+      [BP team privacy and compliance advisor; Research regulatoryLandscape] this keeps the team lean while still funding GDPR and AI-governance work.
+  - id: A16
+    name: Steady-state monthly churn used for unit economics
+    value: "1.5"
+    unit: percent
+    source: >-
+      Startup-finance heuristic: annual program contracts and embedded release workflows should produce strong retention, but the buyer base is concentrated and hardware-program timing can still cause loss events.
+  - id: A17
+    name: Blended CAC
+    value: "124.4"
+    unit: USDK per program
+    source: >-
+      Calculated from modeled Y2-Y3 sales and marketing spend of about $871K divided by 7 net-new active programs; this is high but credible for founder-led enterprise sales into a small OEM market.
+  - id: A18
+    name: Funding sizing rule
+    value: "raise enough to reach repeatable production proof plus six months of cash buffer"
+    unit: policy
+    source: >-
+      [Developer instruction; BP fundingAsk runwayMonths 18; BP milestones 12-24 months] the round is sized to reach 5 active programs, 2-3 supported integrations, and the first adjacent wearable design win before the next financing.
+  - id: A19
+    name: Cash flow simplification
+    value: "ending cash equals opening cash plus cumulative EBITDA"
+    unit: formula
+    source: >-
+      Startup-finance heuristic: this asset-light software model assumes minimal capex, debt, and working-capital distortion.
+headcount:
+  - role: FounderCEO
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Engineering
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 2
+    q4y3: 2
+  - role: OpticsEmbedded
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: ProductSolutions
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: SolutionsEngineer
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: SalesGTM
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: OperationsGA
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 0
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 5
+  q3y1: 5
+  q4y1: 6
+  q4y2: 7
+  q4y3: 8
+headcountAnnualizedPayrollK:
+  q1y1: 425.0
+  q2y1: 655.0
+  q3y1: 655.0
+  q4y1: 775.0
+  q4y2: 910.0
+  q4y3: 1000.0
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.00
+    cogsK: 0.00
+    grossProfitK: 0.00
+    salaryK: 22.92
+    salesMarketingK: 9.25
+    researchDevelopmentK: 17.25
+    generalAdministrativeK: 14.42
+    opexK: 40.92
+    ebitdaK: -40.92
+    cashEopK: 2759.08
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.00
+    cogsK: 0.00
+    grossProfitK: 0.00
+    salaryK: 35.42
+    salesMarketingK: 9.25
+    researchDevelopmentK: 29.75
+    generalAdministrativeK: 14.42
+    opexK: 53.42
+    ebitdaK: -53.42
+    cashEopK: 2705.66
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.00
+    cogsK: 0.00
+    grossProfitK: 0.00
+    salaryK: 35.42
+    salesMarketingK: 9.25
+    researchDevelopmentK: 29.75
+    generalAdministrativeK: 14.42
+    opexK: 53.42
+    ebitdaK: -53.42
+    cashEopK: 2652.24
+  - month: M4
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.00
+    cogsK: 0.00
+    grossProfitK: 0.00
+    salaryK: 45.42
+    salesMarketingK: 14.75
+    researchDevelopmentK: 34.25
+    generalAdministrativeK: 16.42
+    opexK: 65.42
+    ebitdaK: -65.42
+    cashEopK: 2586.82
+  - month: M5
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 7.50
+    cogsK: 4.13
+    grossProfitK: 3.37
+    salaryK: 45.42
+    salesMarketingK: 14.75
+    researchDevelopmentK: 34.25
+    generalAdministrativeK: 16.42
+    opexK: 65.42
+    ebitdaK: -62.05
+    cashEopK: 2524.77
+  - month: M6
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 15.00
+    cogsK: 8.25
+    grossProfitK: 6.75
+    salaryK: 54.58
+    salesMarketingK: 21.17
+    researchDevelopmentK: 37.00
+    generalAdministrativeK: 16.42
+    opexK: 74.59
+    ebitdaK: -67.84
+    cashEopK: 2456.93
+  - month: M7
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 15.00
+    cogsK: 8.25
+    grossProfitK: 6.75
+    salaryK: 54.58
+    salesMarketingK: 22.17
+    researchDevelopmentK: 37.00
+    generalAdministrativeK: 15.42
+    opexK: 74.59
+    ebitdaK: -67.84
+    cashEopK: 2389.09
+  - month: M8
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 22.50
+    cogsK: 11.25
+    grossProfitK: 11.25
+    salaryK: 54.58
+    salesMarketingK: 22.17
+    researchDevelopmentK: 37.00
+    generalAdministrativeK: 15.42
+    opexK: 74.59
+    ebitdaK: -63.34
+    cashEopK: 2325.75
+  - month: M9
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 30.00
+    cogsK: 15.00
+    grossProfitK: 15.00
+    salaryK: 54.58
+    salesMarketingK: 22.17
+    researchDevelopmentK: 37.00
+    generalAdministrativeK: 15.42
+    opexK: 74.59
+    ebitdaK: -59.59
+    cashEopK: 2266.16
+  - month: M10
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 30.00
+    cogsK: 15.00
+    grossProfitK: 15.00
+    salaryK: 64.58
+    salesMarketingK: 33.17
+    researchDevelopmentK: 38.00
+    generalAdministrativeK: 15.42
+    opexK: 86.59
+    ebitdaK: -71.59
+    cashEopK: 2194.57
+  - month: M11
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 30.00
+    cogsK: 15.00
+    grossProfitK: 15.00
+    salaryK: 64.58
+    salesMarketingK: 33.17
+    researchDevelopmentK: 38.00
+    generalAdministrativeK: 15.42
+    opexK: 86.59
+    ebitdaK: -71.59
+    cashEopK: 2122.98
+  - month: M12
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 36.00
+    cogsK: 16.20
+    grossProfitK: 19.80
+    salaryK: 64.58
+    salesMarketingK: 33.17
+    researchDevelopmentK: 38.00
+    generalAdministrativeK: 15.42
+    opexK: 86.59
+    ebitdaK: -66.79
+    cashEopK: 2056.19
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 3
+    newCustomers: 1
+    revenueK: 90.00
+    cogsK: 36.00
+    grossProfitK: 54.00
+    salaryK: 193.75
+    salesMarketingK: 102.50
+    researchDevelopmentK: 117.00
+    generalAdministrativeK: 49.25
+    opexK: 268.75
+    ebitdaK: -214.75
+    cashEopK: 1841.44
+  - quarter: Q2Y2
+    customersEop: 4
+    newCustomers: 1
+    revenueK: 126.00
+    cogsK: 47.88
+    grossProfitK: 78.12
+    salaryK: 227.50
+    salesMarketingK: 105.50
+    researchDevelopmentK: 153.75
+    generalAdministrativeK: 49.25
+    opexK: 308.50
+    ebitdaK: -230.38
+    cashEopK: 1611.06
+  - quarter: Q3Y2
+    customersEop: 5
+    newCustomers: 1
+    revenueK: 162.00
+    cogsK: 58.32
+    grossProfitK: 103.68
+    salaryK: 227.50
+    salesMarketingK: 108.50
+    researchDevelopmentK: 156.75
+    generalAdministrativeK: 49.25
+    opexK: 314.50
+    ebitdaK: -210.82
+    cashEopK: 1400.24
+  - quarter: Q4Y2
+    customersEop: 5
+    newCustomers: 0
+    revenueK: 180.00
+    cogsK: 63.00
+    grossProfitK: 117.00
+    salaryK: 227.50
+    salesMarketingK: 108.50
+    researchDevelopmentK: 156.75
+    generalAdministrativeK: 52.25
+    opexK: 317.50
+    ebitdaK: -200.50
+    cashEopK: 1199.74
+  - quarter: Q1Y3
+    customersEop: 6
+    newCustomers: 1
+    revenueK: 247.50
+    cogsK: 79.20
+    grossProfitK: 168.30
+    salaryK: 250.00
+    salesMarketingK: 108.50
+    researchDevelopmentK: 156.75
+    generalAdministrativeK: 74.75
+    opexK: 340.00
+    ebitdaK: -171.70
+    cashEopK: 1028.04
+  - quarter: Q2Y3
+    customersEop: 7
+    newCustomers: 1
+    revenueK: 292.50
+    cogsK: 90.68
+    grossProfitK: 201.82
+    salaryK: 250.00
+    salesMarketingK: 111.50
+    researchDevelopmentK: 159.75
+    generalAdministrativeK: 74.75
+    opexK: 346.00
+    ebitdaK: -144.18
+    cashEopK: 883.86
+  - quarter: Q3Y3
+    customersEop: 7
+    newCustomers: 0
+    revenueK: 315.00
+    cogsK: 94.50
+    grossProfitK: 220.50
+    salaryK: 250.00
+    salesMarketingK: 111.50
+    researchDevelopmentK: 159.75
+    generalAdministrativeK: 77.75
+    opexK: 349.00
+    ebitdaK: -128.50
+    cashEopK: 755.36
+  - quarter: Q4Y3
+    customersEop: 8
+    newCustomers: 1
+    revenueK: 337.50
+    cogsK: 101.25
+    grossProfitK: 236.25
+    salaryK: 250.00
+    salesMarketingK: 114.50
+    researchDevelopmentK: 162.75
+    generalAdministrativeK: 77.75
+    opexK: 355.00
+    ebitdaK: -118.75
+    cashEopK: 636.61
+totals:
+  y1:
+    revenueK: 186.00
+    ebitdaK: -743.81
+    cashEopK: 2056.19
+  y2:
+    revenueK: 558.00
+    ebitdaK: -856.45
+    cashEopK: 1199.74
+  y3:
+    revenueK: 1192.50
+    ebitdaK: -563.13
+    cashEopK: 636.61
+unitEconomics:
+  arpuAnnualK: 180.0
+  grossMarginPct: 70.0
+  cacK: 124.4
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 66.7
+  ltvK: 700.0
+  ltvCacRatio: 5.6
+  cacPaybackMonths: 11.9
+fundingAsk:
+  round: pre-seed
+  amountM: 2.8
+  runwayMonths: 30
+  milestone: >-
+    Reach 5 active production programs, 2-3 reusable optics or runtime integrations, and 1 adjacent industrial or
+    safety-wearable design win while still holding roughly six months of cash buffer for the next raise process.
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 1120000
+      percentage: 40
+    - bucket: GTM
+      amountUsd: 700000
+      percentage: 25
+    - bucket: "G&A"
+      amountUsd: 336000
+      percentage: 12
+    - bucket: "Buffer (6 mo)"
+      amountUsd: 644000
+      percentage: 23
+scenarios:
+  downside:
+    description: >-
+      One helmet launch slips, partner telemetry access takes longer, and the company adds only 6 active programs by
+      Q4Y3 while gross margin stalls in the mid-60s.
+    y3RevenueK: 760.0
+    y3EbitdaK: -901.0
+    cashLowPointK: 213.4
+    keyAssumptionChanges:
+      - Y2 and Y3 net-new programs slow to 4 total after Y1 instead of 7
+      - Y3 blended annualized revenue per active program falls to $160K
+      - Gross margin stalls at 65% because integrations stay bespoke
+  base:
+    description: >-
+      Founder-led helmet pilots convert on schedule, 2-3 integrations cover most demand, and the first adjacent
+      wearable program arrives late in Y3 to reach 8 active programs.
+    y3RevenueK: 1192.5
+    y3EbitdaK: -563.13
+    cashLowPointK: 636.61
+    keyAssumptionChanges:
+      - Y2 reaches 5 active programs and Y3 ends at 8
+      - Y3 blended annualized revenue per active program reaches $180K
+      - Gross margin improves to the 70% target by Q3-Q4Y3
+  upside:
+    description: >-
+      Partner referrals and faster wearable expansion lift the company to 10 active programs by Q4Y3 without adding a
+      much larger team.
+    y3RevenueK: 1536.0
+    y3EbitdaK: -293.92
+    cashLowPointK: 950.0
+    keyAssumptionChanges:
+      - Y2 ends at 6 active programs and Y3 ends at 10
+      - Y3 blended annualized revenue per active program rises to $192K
+      - Gross margin reaches 72% as integrations become more reusable
+sensitivity:
+  - variable: ARPU
+    downsideCase: >-
+      $160K annualized per active program
+    baseCase: >-
+      $180K annualized per active program
+    upsideCase: >-
+      $200K annualized per active program
+    y3RevenueImpactK: -132.5
+    cashImpactK: -92.8
+  - variable: CAC
+    downsideCase: >-
+      $145K CAC per program
+    baseCase: >-
+      $124K CAC per program
+    upsideCase: >-
+      $100K CAC per program
+    y3RevenueImpactK: 0.0
+    cashImpactK: -145.0
+  - variable: churn
+    downsideCase: >-
+      2.5% monthly churn equivalent
+    baseCase: >-
+      1.5% monthly churn equivalent
+    upsideCase: >-
+      1.0% monthly churn equivalent
+    y3RevenueImpactK: -112.5
+    cashImpactK: -84.0
+  - variable: sales cycle
+    downsideCase: >-
+      Paid pilot closes slip by one quarter
+    baseCase: >-
+      Launch-triggered pilots close inside one quarter
+    upsideCase: >-
+      Partner-referred pilots close in under two months
+    y3RevenueImpactK: -180.0
+    cashImpactK: -150.0
+  - variable: gross margin
+    downsideCase: >-
+      65% steady-state gross margin
+    baseCase: >-
+      70% steady-state gross margin
+    upsideCase: >-
+      72% steady-state gross margin
+    y3RevenueImpactK: 0.0
+    cashImpactK: -59.6
+  - variable: hiring pace
+    downsideCase: >-
+      Hire second engineer and ops two quarters earlier
+    baseCase: >-
+      Keep hires tied to pilot conversion and integration reuse
+    upsideCase: >-
+      Delay ops hire until after the next round
+    y3RevenueImpactK: 0.0
+    cashImpactK: -135.0
+modelDiagram:
+  title: unit economics flow
+  mermaid: |
+    flowchart LR
+      Accounts[Design-freeze target accounts] --> Pilots[Paid helmet pilots]
+      Pilots --> Programs[Active production programs]
+      Programs --> Revenue[Subscription plus telemetry revenue]
+      Revenue --> GrossProfit[Gross profit after support and integration COGS]
+      GrossProfit --> Cash[Cash runway]
+modelSanity:
+  - checkName: Revenue engine
+    finding: >-
+      Base-case revenue is driven by converting 2 paid helmet pilots into 8 active device programs by Q4Y3, with most
+      value coming from production pricing and one adjacent wearable expansion rather than broad top-of-funnel volume.
+  - checkName: Must go right
+    finding: >-
+      Telemetry access and integration reuse must improve fast enough for gross margin to climb from 45% pilot mode to
+      the 70% target by Y3.
+  - checkName: Model breaks if
+    finding: >-
+      If pilot closes slip and bespoke integrations keep gross margin near 65%, the downside case cuts Y3 revenue to
+      about $760K and leaves only about $213K of cash at the low point.
+  - checkName: Next-round proof
+    finding: >-
+      The next financing story works only if the company exits Y2 with 5 active programs, reusable partner
+      integrations, and evidence that the helmet wedge can expand into industrial or safety wearables.
+sanityChecks:
+  ruleOf40: Y3 growth 114% + EBITDA margin -47% = 67%
+  burnMultiple: Improves from about 2.3x in Y2 to about 0.9x in Y3 as production-program revenue starts to absorb fixed costs.
+  revenuePerFte: >-
+    $149K Y3 using Q4Y3 headcount of 8 FTE (below the $200-400K SaaS benchmark, which is acceptable only if the
+    company keeps converting bespoke pilot work into reusable integrations).
+  flags:
+    - >-
+      Revenue is concentrated in only 8 active programs by Q4Y3, so one delayed OEM launch can move an entire quarter
+      of results.
+    - >-
+      Revenue per FTE remains below mature SaaS benchmarks because the model still carries solutions, integration, and
+      compliance overhead that has not yet fully productized.
+    - >-
+      Gross margin reaches the 70% target only late in Y3; if any of the first 3 pilots require more than the business
+      plan's four engineering weeks of custom work, this pre-seed would need to be larger or followed by an earlier
+      seed round.
