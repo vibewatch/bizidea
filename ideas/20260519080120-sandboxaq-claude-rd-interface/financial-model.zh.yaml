@@ -1,0 +1,492 @@
+slug: assay-packet-copilot
+date: '2026-05-19'
+currency: USD
+modelStartMonth: 2026-06
+assumptions:
+- id: A1
+  name: 模型起始月份
+  value: 2026-06
+  unit: month
+  source: 从 2026-05-19 business-plan 日期后的首个完整月份开始。
+- id: A2
+  name: 客户计数单位
+  value: 受控发现项目
+  unit: customer_definition
+  source: '[BP businessModel.unitOfValue] 定价和扩张都按在运行的发现项目计算，因此模型里的 customer 以受控项目为单位，而不是按企业账户数计算。'
+- id: A3
+  name: 付费试点套餐
+  value: $125.0K over 4 months
+  unit: usdK_per_pilot
+  source: '[BP investorMemo.firstCustomer.initialContract] 对应 1 条受控工作流和实验包模板配置时，取已给出 $100k-$150k 付费试点区间的中点。'
+- id: A4
+  name: 生产阶段 ACV
+  value: $300.0K per governed program per year
+  unit: usdK_per_program_year
+  source: '[BP market.som + research.market.som] 两个文件都把第 3 年可触达情形落在单个受控项目年 ACV 约 $300K。'
+- id: A5
+  name: 单项目收入确认
+  value: $31.25K per month during the 4 pilot months, then $25.0K per month in production
+  unit: usdK_per_program_month
+  source: 由 A3 和 A4 推导得出，因此收入可以和试点月份加年度订阅精确对上。
+- id: A6
+  name: 毛利率
+  value: 72%
+  unit: percent
+  source: '[BP businessModel.targetGrossMarginPct] 目标毛利率为 72%。'
+- id: A7
+  name: 项目爬坡节奏
+  value: 2 live programs by M8, 5 by Q4Y2, and 9 by Q4Y3 with 7 in production by the end of Y3
+  unit: live_programs
+  source: '[BP milestones + research.market.som] 对齐计划：Y1 跑出 2 个付费试点，Y2 完成 2+ 个生产转化并拿到 1 个第二项目扩张，Y3 再扩大多项目 rollout，同时仍低于完整的 15 个项目 SOM。'
+- id: A8
+  name: 销售周期与转化
+  value: 6-month median enterprise cycle, 25% qualified-buyer-to-paid-pilot, and 50% pilot-to-production conversion
+  unit: funnel
+  source: '[BP gtm.funnelTargets + BP risks] 基准情景保留 business-plan 的转化目标，但假设药企验证和采购仍会把周期拉到约 6 个月。'
+- id: A9
+  name: 月流失率
+  value: 1.5%
+  unit: percent
+  source: 针对黏性较强但仍处早期的企业工作流软件的创业财务经验值。
+- id: A10
+  name: 全口径 CAC
+  value: $180.0K per production program
+  unit: usdK_per_program
+  source: '[BP gtm.channels + research.reportMemo.distributionChannels] 由创始人主导的企业销售、试点交付和重验证部署，会带来较高但仍可承受的 CAC。'
+- id: A11
+  name: 全成本薪酬带宽
+  value: 创始人 $120K；工程 $180K；科学工作流 $190K；解决方案 $160K；质量/合规 $170K；销售/GTM $170K；客户成功/运营 $110K
+  unit: usdK_per_fte_year
+  source: 针对美国早期生命科学工作流软件的创业财务经验值，并锚定到 business-plan 里的团队角色和企业销售招聘需求。
+- id: A12
+  name: 人员爬坡快照
+  value: Founder 1/1/1/1/1/1; engineering 1/1/2/2/3/3; scientific workflow 1/1/1/1/1/1; solutions 0/1/1/1/1/2; quality/compliance 0/0/0/1/1/1; sales/GTM 0/0/0/1/1/1; customer success/ops 0/0/0/0/1/2 across q1y1/q2y1/q3y1/q4y1/q4y2/q4y3
+  unit: fte
+  source: '[BP team + strategicChoices.sequencingRationale] 先按 Month 0、Month 4、Month 9 的明确招聘顺序走，再在拿到生产证明后，只增加最低限度的工程和售后产能。'
+- id: A13
+  name: 非薪酬运营支出
+  value: Rises from $18K per month in Q1Y1 to $54K per month by Q4Y3
+  unit: usdK_per_month
+  source: 创业财务经验值，覆盖云算力、验证支持、客户差旅、法务/合规，以及受监管企业部署所需的软件工具。
+- id: A14
+  name: seed 交割后的起始现金
+  value: $3.0M
+  unit: usdM
+  source: '[BP fundingAsk.targetFundingRangeUsd] 取已给出 $3-5M seed 区间下沿，确保计划保持精干、并围绕里程碑推进。'
+- id: A15
+  name: 资金用途配比
+  value: 45% engineering/product, 24% GTM, 13% G&A and compliance, 18% six-month buffer
+  unit: allocation
+  source: 由模型中的 18 个月 burn 结构和在达到 seed 里程碑后仍保留 6 个月缓冲的要求推导而来。
+- id: A16
+  name: Y2-Y3 运营费用平滑
+  value: Quarterly opex rises gradually from $388.8K in Q1Y2 to $594.6K in Q4Y3 instead of stepping only at the required year-end snapshots
+  unit: method
+  source: '[Financial Modeler instructions] 薪资和非薪酬成本在各个快照列之间做平滑处理，这样季度 opex 轨迹才能和分阶段招聘保持一致。'
+- id: A17
+  name: 下行情景调整
+  value: $250K ACV, 68% gross margin, 9-month cycle, and only 8 live programs by Q4Y3
+  unit: scenario_inputs
+  source: 基于 BP 与 research 中关于现有厂商缩小功能差距、预算可选性以及药企采购拉长的风险构建。
+- id: A18
+  name: 上行情景调整
+  value: $340K ACV, 75% gross margin, 4-5 month cycle, and 10 live programs by Q4Y3
+  unit: scenario_inputs
+  source: 上行情景假设实验包 ROI 很早就被看见、1 条伙伴渠道开始可复制，而且第二项目扩张快于基准计划。
+- id: A19
+  name: 现金流简化假设
+  value: Cash movement equals EBITDA in this operating model
+  unit: method
+  source: 针对早期软件公司的创业财务经验值：规划期内不单列债务、capex 或显著营运资本波动，因此现金变动等于 EBITDA。
+headcount:
+- role: 创始人/CEO
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 工程
+  q1y1: 1
+  q2y1: 1
+  q3y1: 2
+  q4y1: 2
+  q4y2: 3
+  q4y3: 3
+- role: 科学工作流
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 解决方案架构师
+  q1y1: 0
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 2
+- role: 质量与合规
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 销售 / GTM
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 客户成功 / 运营
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 2
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 5
+  q4y1: 7
+  q4y2: 9
+  q4y3: 11
+headcountAnnualizedPayrollK:
+  q1y1: 490.0
+  q2y1: 650.0
+  q3y1: 830.0
+  q4y1: 1170.0
+  q4y2: 1460.0
+  q4y3: 1730.0
+y1Monthly:
+- month: M1
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 3.6
+  researchDevelopmentK: 38.9
+  generalAdministrativeK: 16.3
+  opexK: 58.8
+  ebitdaK: -58.8
+  cashEopK: 2941.2
+- month: M2
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 3.6
+  researchDevelopmentK: 38.9
+  generalAdministrativeK: 16.3
+  opexK: 58.8
+  ebitdaK: -58.8
+  cashEopK: 2882.4
+- month: M3
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 3.6
+  researchDevelopmentK: 38.9
+  generalAdministrativeK: 16.3
+  opexK: 58.8
+  ebitdaK: -58.8
+  cashEopK: 2823.6
+- month: M4
+  customersEop: 1
+  newCustomers: 1
+  revenueK: 31.3
+  cogsK: 8.8
+  grossProfitK: 22.5
+  salesMarketingK: 11.1
+  researchDevelopmentK: 47.4
+  generalAdministrativeK: 17.7
+  opexK: 76.2
+  ebitdaK: -53.7
+  cashEopK: 2769.9
+- month: M5
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 31.3
+  cogsK: 8.8
+  grossProfitK: 22.5
+  salesMarketingK: 11.1
+  researchDevelopmentK: 47.4
+  generalAdministrativeK: 17.7
+  opexK: 76.2
+  ebitdaK: -53.7
+  cashEopK: 2716.2
+- month: M6
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 31.3
+  cogsK: 8.8
+  grossProfitK: 22.5
+  salesMarketingK: 11.1
+  researchDevelopmentK: 47.4
+  generalAdministrativeK: 17.7
+  opexK: 76.2
+  ebitdaK: -53.7
+  cashEopK: 2662.5
+- month: M7
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 31.3
+  cogsK: 8.8
+  grossProfitK: 22.5
+  salesMarketingK: 11.9
+  researchDevelopmentK: 64.2
+  generalAdministrativeK: 19.1
+  opexK: 95.2
+  ebitdaK: -72.7
+  cashEopK: 2589.8
+- month: M8
+  customersEop: 2
+  newCustomers: 1
+  revenueK: 56.3
+  cogsK: 15.8
+  grossProfitK: 40.5
+  salesMarketingK: 11.9
+  researchDevelopmentK: 64.2
+  generalAdministrativeK: 19.1
+  opexK: 95.2
+  ebitdaK: -54.7
+  cashEopK: 2535.1
+- month: M9
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 56.3
+  cogsK: 15.8
+  grossProfitK: 40.5
+  salesMarketingK: 11.9
+  researchDevelopmentK: 64.2
+  generalAdministrativeK: 19.1
+  opexK: 95.2
+  ebitdaK: -54.7
+  cashEopK: 2480.4
+- month: M10
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 56.3
+  cogsK: 15.8
+  grossProfitK: 40.5
+  salesMarketingK: 12.7
+  researchDevelopmentK: 66.0
+  generalAdministrativeK: 20.5
+  opexK: 99.2
+  ebitdaK: -58.7
+  cashEopK: 2421.7
+- month: M11
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 56.3
+  cogsK: 15.8
+  grossProfitK: 40.5
+  salesMarketingK: 26.9
+  researchDevelopmentK: 66.0
+  generalAdministrativeK: 34.7
+  opexK: 127.6
+  ebitdaK: -87.1
+  cashEopK: 2334.6
+- month: M12
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 50.0
+  cogsK: 14.0
+  grossProfitK: 36.0
+  salesMarketingK: 26.9
+  researchDevelopmentK: 66.0
+  generalAdministrativeK: 34.7
+  opexK: 127.6
+  ebitdaK: -91.6
+  cashEopK: 2243.0
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 3
+  revenueK: 243.9
+  grossProfitK: 175.5
+  opexK: 388.8
+  ebitdaK: -213.3
+  cashEopK: 2029.7
+- quarter: Q2Y2
+  customersEop: 4
+  revenueK: 262.6
+  grossProfitK: 189.0
+  opexK: 400.8
+  ebitdaK: -211.8
+  cashEopK: 1817.9
+- quarter: Q3Y2
+  customersEop: 5
+  revenueK: 381.3
+  grossProfitK: 274.5
+  opexK: 422.0
+  ebitdaK: -147.5
+  cashEopK: 1670.4
+- quarter: Q4Y2
+  customersEop: 5
+  revenueK: 387.6
+  grossProfitK: 279.0
+  opexK: 485.4
+  ebitdaK: -206.4
+  cashEopK: 1464.0
+- quarter: Q1Y3
+  customersEop: 6
+  revenueK: 468.9
+  grossProfitK: 337.5
+  opexK: 509.4
+  ebitdaK: -171.9
+  cashEopK: 1292.1
+- quarter: Q2Y3
+  customersEop: 7
+  revenueK: 550.1
+  grossProfitK: 396.0
+  opexK: 528.6
+  ebitdaK: -132.6
+  cashEopK: 1159.5
+- quarter: Q3Y3
+  customersEop: 8
+  revenueK: 625.1
+  grossProfitK: 450.0
+  opexK: 561.0
+  ebitdaK: -111.0
+  cashEopK: 1048.5
+- quarter: Q4Y3
+  customersEop: 9
+  revenueK: 700.1
+  grossProfitK: 504.0
+  opexK: 594.6
+  ebitdaK: -90.6
+  cashEopK: 957.9
+totals:
+  y1:
+    revenueK: 400.4
+    ebitdaK: -757.0
+    cashEopK: 2243.0
+  y2:
+    revenueK: 1275.4
+    ebitdaK: -779.0
+    cashEopK: 1464.0
+  y3:
+    revenueK: 2344.2
+    ebitdaK: -506.1
+    cashEopK: 957.9
+unitEconomics:
+  arpuAnnualK: 300.0
+  grossMarginPct: 72.0
+  cacK: 180.0
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 66.7
+  ltvK: 1200.6
+  ltvCacRatio: 6.7
+  cacPaybackMonths: 10.0
+fundingAsk:
+  round: seed
+  amountM: 3.0
+  runwayMonths: 18
+  milestone: 在至少 3 家药企账户中拿下 5 个生产级受控项目，证明 1 条第二项目扩张路径，并把新部署周期稳定控制在 10 周内，同时仍保留 6 个月现金缓冲。
+  useOfFunds:
+  - bucket: 工程
+    amountUsd: 1350000
+    percentage: 45
+  - bucket: GTM
+    amountUsd: 720000
+    percentage: 24
+  - bucket: G&A
+    amountUsd: 390000
+    percentage: 13
+  - bucket: 缓冲（6 个月）
+    amountUsd: 540000
+    percentage: 18
+scenarios:
+  downside:
+    description: 现有厂商补功能更快、买方紧迫性更弱，会把销售周期拖向 9 个月，导致第 3 年末在运行项目更少。
+    y3RevenueK: 1706.0
+    y3EbitdaK: -1033.7
+    cashLowPointK: 86.5
+    keyAssumptionChanges:
+    - 生产 ACV 从每个受控项目 $300K 降到 $250K。
+    - 由于实施更偏服务化，毛利率从 72% 降到 68%。
+    - 公司在 Y3 结束时只有 8 个在运行项目而不是 9 个，且试点转生产更慢。
+  base:
+    description: 2 个早期付费试点转成一套可复制的受控项目打法，到 Y2 末达到 5 个生产项目，到 Y3 末达到 9 个在运行项目。
+    y3RevenueK: 2344.2
+    y3EbitdaK: -506.1
+    cashLowPointK: 957.9
+    keyAssumptionChanges:
+    - 生产 ACV 维持每项目 $300K，试点定价维持在 business-plan 区间中点。
+    - 毛利率维持 business plan 的 72% 目标。
+    - 试点转生产维持在接近 50%，并且有 1 个账户会在 12 个月内扩到第二个项目。
+  upside:
+    description: 在首批标杆账户里，缩短周期的价值很快变得显而易见，从而压缩销售周期，并提前拉动第二项目扩张。
+    y3RevenueK: 3033.8
+    y3EbitdaK: 81.6
+    cashLowPointK: 1950.9
+    keyAssumptionChanges:
+    - 随着买方采用高级分析和相邻工作流覆盖，生产 ACV 从 $300K 提升到 $340K。
+    - 随着实验包模板和验证资产标准化交付，毛利率从 72% 提高到 75%。
+    - 由于 1 条伙伴渠道跑通，且 4-5 个月销售周期加快扩张，公司到 Q4Y3 可达 10 个在运行项目。
+sensitivity:
+- variable: ARPU
+  downsideCase: $250K ACV：如果买方把使用量锁在 1 条很窄的工作流上，并抗拒高级分析。
+  baseCase: $300K ACV / 每个受控项目。
+  upsideCase: $340K ACV：随着相邻工作流扩张和分析增购而实现。
+  y3RevenueImpactK: -430.0
+  cashImpactK: -310.0
+- variable: CAC
+  downsideCase: $220K CAC：如果每次部署都需要创始人和解决方案团队大量定制投入。
+  baseCase: 模型基准情景下，由创始人主导的企业销售对应 $180K CAC。
+  upsideCase: $150K CAC：如果 1 条伙伴渠道可以先筛买方，并且实施更少定制化。
+  y3RevenueImpactK: 0.0
+  cashImpactK: -160.0
+- variable: 流失率
+  downsideCase: 月流失率 2.5%：如果产品长期停留在项目制，买方也迟迟不做多项目标准化。
+  baseCase: 月流失率 1.5%。
+  upsideCase: 月流失率 1.0%：当实验包模板和结果追踪真正嵌入流程后。
+  y3RevenueImpactK: -120.0
+  cashImpactK: -95.0
+- variable: 销售周期
+  downsideCase: 9 个月：因为买方选择等待现有 ELN 或模型厂商的路线图。
+  baseCase: 6 个月：由创始人主导销售，并采用验证优先部署。
+  upsideCase: 4-5 个月：当标杆实施和伙伴引荐缩短尽调后。
+  y3RevenueImpactK: -638.0
+  cashImpactK: -540.0
+- variable: 毛利率
+  downsideCase: 68%：如果试点继续偏服务化，验证工作也始终高度定制。
+  baseCase: 目标毛利率 72%。
+  upsideCase: 75%：当实验包模板和 QA 资产能够跨账户复用后。
+  y3RevenueImpactK: 0.0
+  cashImpactK: -180.0
+- variable: 招聘节奏
+  downsideCase: 在生产证明尚不充分前，就提前补齐更多售后和合规岗位。
+  baseCase: Y2 只再加 1 名工程师，并在转化完成后才扩解决方案和客户成功。
+  upsideCase: 把第 2 个客户成功岗位延后到伙伴带来的扩张开始可复制之后。
+  y3RevenueImpactK: 0.0
+  cashImpactK: -210.0
+modelDiagram:
+  title: 单位经济模型流转
+  mermaid: "flowchart LR\n  Targets[Target pharma programs] --> Pilots[Paid pilots]\n  Pilots --> Production[Production governed programs]\n  Production --> Expansion[Second-program expansion]\n  Expansion --> Revenue[Subscription and usage revenue]\n  Revenue --> GrossProfit[72% gross profit]\n  GrossProfit --> Opex[Hiring plus compliance and delivery spend]\n  Opex --> Cash[Ending cash]"
+modelSanity:
+- checkName: 收入引擎
+  finding: 基准情景收入，来自把 2 个早期试点转成生产，再在 Y2 新增 3 个项目，并以约 $300K ACV 在 Y3 末做到 9 个在运行的受控项目。
+- checkName: 必须成立的前提
+  finding: 试点转生产必须接近 business-plan 设定的 50%，而且至少有 1 个账户要在 12 个月内扩到第二个项目。
+- checkName: 模型会在哪种情况下失效
+  finding: 如果买方选择等待现有厂商，导致周期拖向 9 个月，下行情景的现金最低点会逼近 $0.1M，公司需要在 Y3 结束前桥接融资。
+- checkName: 下一轮融资证明点
+  finding: 只要公司以 5 个生产项目、1 套可复制扩张动作，以及“部署稳定低于 10 周”的证明结束 seed 阶段，下一轮融资就更站得住。
+sanityChecks:
+  ruleOf40: Y3 增长率 83.8% 加 EBITDA 利润率 -21.6% = 62.2%。
+  burnMultiple: Y2 的 burn multiple 约为 0.9x，对应约 $900.0K 的净新增 ARR；Y3 约为 0.8x，因为有 2 个后期试点尚未完全转成生产。
+  revenuePerFte: Y3 人均收入为 $213.1K：即 $2344.2K 收入 / Q4Y3 的 11 名 FTE，处在 $200K-$400K 工作流软件基准的低端。
+  flags:
+  - 模型默认药企买方现在就会为一层中立实验包治理掏钱，而不是等 Benchling、Dotmatics 或 SandboxAQ 自己延长栈能力。
+  - 到 Y3，人均收入只刚刚越过软件基准下沿，因此任何额外服务工作或过早招聘，都会明显拉差 burn 效率。
+  - 基准情景下，公司在 Y3 末仍有 2 个在运行试点处于转化中，因此下一轮融资质量取决于试点到生产节奏是否真能按模型跑出。
+  - 如果验证包、CRO 导出或数据映射继续一户一户定制，毛利率会很快下滑。
