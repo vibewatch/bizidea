@@ -1,0 +1,204 @@
+slug: workflow-privilege-firewall
+date: '2026-05-19'
+sector: dev-tools
+pitch: 模拟贡献者触发的 token 泄露，并把暴露的 CI 密钥替换成经 broker 授权访问的 GitHub Actions 防火墙。
+sourceContext:
+  topic: Grafana GitHub token 泄露事件
+  topicScope: broad
+  timeWindow: 2026-05-18 to 2026-05-18
+  timeWindowLabel: yesterday
+  sectorHint: dev-tools
+  clusterId: c3
+  headline: Grafana 的 GitHub token 泄露把 CI 工作流暴露面推到台前
+  primaryCompanies:
+  - Grafana Labs
+  topSourceUrls:
+  - https://techcrunch.com/2026/05/18/open-source-tool-maker-grafana-labs-says-hackers-stole-its-code-refuses-to-pay-ransom
+  - https://www.theregister.com/cyber-crime/2026/05/18/grafana-labs-admits-attackers-downloaded-its-codebase-from-github/5241686
+  - https://www.secure.com/news/grafana-tells-extortionists-to-get-lost-after-github-token-breach-exposes-codebase
+  eventKeys:
+  - grafana labs|incident|2026-05
+  signalStrength: 4
+  qualityScore: 4.0
+  evidenceConfidence: 4
+  incumbentGravity: 2
+  selectionScore: 3.8
+  scoreRationale: 痛点很强，但与创业机会的贴合度稍弱；三家同日报道都给出了具体证据，不过事件仍在发酵。
+  selectionRationale: 之所以入选，是因为一场正在发生的开发者安全事故切出了明显的 CI/CD 加固机会，也让题库不只围着融资新闻转。
+  dedupeRationale: 按 eventKeys、slug、月份键重合、source URLs 和高关键词重合度比对 119 条历史记录，都没有命中。
+  gaps: 现有分诊来源没有量化 Grafana 之外 pull_request_target 这类脆弱 GitHub Action 模式到底有多常见，也没说明现在哪类 buyer title 真正管这笔预算，或把工作流锁紧会对研发效率造成多大影响。
+  sources:
+  - id: 1
+    title: Open source tool maker Grafana Labs says hackers stole its code, refuses to pay ransom | TechCrunch
+    url: https://techcrunch.com/2026/05/18/open-source-tool-maker-grafana-labs-says-hackers-stole-its-code-refuses-to-pay-ransom
+    publisher: TechCrunch
+    publishedDate: '2026-05-18'
+    company: Grafana Labs
+    eventType: incident
+    fetchVerified: true
+    keyPoints:
+    - Grafana 表示，攻击者滥用了一个可访问其 GitHub 环境的被盗 token，随后提出勒索。
+    - 公司称，这个 token 无法访问客户记录或财务数据。
+    - Grafana 表示不会支付赎金，并已使受影响的 token 失效。
+  - id: 2
+    title: Grafana Labs admits all its codebase are belong to someone who popped its GitHub account
+    url: https://www.theregister.com/cyber-crime/2026/05/18/grafana-labs-admits-attackers-downloaded-its-codebase-from-github/5241686
+    publisher: The Register
+    publishedDate: '2026-05-18'
+    company: Grafana Labs
+    eventType: incident
+    fetchVerified: true
+    keyPoints:
+    - The Register 报道称，攻击者进入了 Grafana 的 GitHub 仓库并窃取了代码库。
+    - Grafana 表示没有客户信息被窃取，客户运营也未受影响。
+    - 文章还强调，攻击者试图敲诈勒索，而 Grafana 拒绝付款。
+  - id: 3
+    title: Grafana Tells Extortionists to Get Lost After GitHub Token Breach Exposes Codebase
+    url: https://www.secure.com/news/grafana-tells-extortionists-to-get-lost-after-github-token-breach-exposes-codebase
+    publisher: Secure.com
+    publishedDate: '2026-05-18'
+    company: Grafana Labs
+    eventType: incident
+    fetchVerified: true
+    keyPoints:
+    - Secure.com 称，这次入侵是在 Grafana 的一个 canary token 触发告警后被发现的。
+    - 报道把这次泄露归因于一个配置错误的 pull_request_target GitHub Action，以及通过 CI 外流 token 的路径。
+    - 文中称，Grafana 删除了错误工作流、吊销了相关凭证，并在响应期间关闭了公共仓工作流。
+  signals:
+  - title: CI token 即使不碰客户系统，也能把代码库暴露出去
+    description: Grafana 表示，被盗的 GitHub token 导致了代码被窃和勒索，虽然客户记录和客户运营都没受影响。这说明 CI 访问权本身已经是一类独立的高严重度泄露面。
+    sourceRefs:
+    - 1
+    - 2
+  - title: GitHub Action 的事件语义才是真正可被利用的弱点
+    description: Secure.com 把事故指向一个配置错误的 pull_request_target 工作流，说明攻击者完全可以利用面向贡献者的自动化，而不是先去打生产基础设施。
+    sourceRefs:
+    - 3
+  - title: Canary token 正在变成实用的 CI 绊线
+    description: 这次泄露是在 canary token 触发后被发现的，说明团队现在需要把运行时检测放进 CI 工作流，而不能只靠静态代码审查。
+    sourceRefs:
+    - 3
+  - title: 事故响应现在往往得把工作流直接关停
+    description: Grafana 删除了工作流、吊销了凭证，并关闭了公共仓工作流，说明 CI 加固一旦失手，会立刻打断正常的工程运营。
+    sourceRefs:
+    - 3
+problem: 开源软件和开发者平台公司离不开 GitHub Actions：维护者要审社区 PR、跑高权限检查、发版本，都得靠它提速。但只要一个工作流配错，面向贡献者的自动化就会变成 secret 外流通道，在任何客户侧系统受影响之前先把源码、凭证和发布流水线暴露出去。现有 AppSec 工具很少能把 GitHub 事件语义、token 可达性和爆炸半径建模到位，因此往往拦不住这种事故在维护者合并危险工作流之前发生。
+targetUser:
+  primary: 开源商业化和基础设施软件公司里负责 GitHub 管理与 CI 稳定性的 platform security、developer productivity 工程师——他们运营公共 GitHub 仓库，有外部贡献者，也有高权限 Actions 工作流。
+  secondary: 负责发布工程、GitHub 管理和事故响应的产品安全负责人。
+  buyer: 拥有公共仓和自动化发布流水线的软件公司里的平台工程总监、产品安全负责人或 VP Engineering。
+startupThesis:
+  nonObviousInsight: 新冒出来的 CI 安全问题，不只是长期 secret 泄露，更关键的是工作流权限设计。越来越多软件公司为了外部贡献者、bot 自动化和 GitHub 原生发布流程去优化时，攻击者就能利用 pull_request_target 这类事件上下文边角，借看起来正常的 PR 活动摸到高权限 token。真正的赢家会是那层控制面：在合并前把这些权限路径先跑一遍，在执行时再按需发放凭证。
+  beachhead: 拥有 10-100 个公共 GitHub 仓库、外部贡献者活跃，而且在测试、分诊和发布自动化里使用 pull_request_target、可复用工作流或 GitHub App token 的开源商业化与基础设施软件厂商。
+  wedge: 一层 GitHub Actions 权限防火墙：仿真某次工作流变更、事件触发器或第三方 action 会不会摸到敏感 token，拦下高风险合并，并在运行时把静态 CI secret 换成临时的 broker 凭证。
+  whyNowCatalyst: Grafana 的事故证明，一个配置错误的 GitHub Action 就足以把公共仓自动化变成代码窃取、勒索和工作流停摆的起点，CI 权限设计因此成了工程负责人眼前立刻要处理、而且董事会能看见的问题。
+  ventureScalePath: 先从 GitHub Actions 策略仿真和 token broker 切入，之后再扩到 GitLab、Buildkite 和云 CI 流水线、发布签名控制，以及覆盖整条软件交付栈的机器身份治理。
+solution: Workflow Privilege Firewall 接入公司的 GitHub organization，持续分析 Actions YAML、仓库设置、secret 和触发上下文。每次工作流变更落地前，它都会先模拟攻击者路径——比如不可信 PR 是否能打到 pull_request_target 任务、不安全的第三方 action 会不会继承 token、可复用工作流会不会跨仓把权限抬高。运行时，它还能把静态 secret 换成只发给获批任务的短期、限域凭证，再用 canary token 和 trace log 验证没有意外路径真的跑起来。首版产品刻意保持收窄：目标就是在不迫使团队关掉贡献者自动化、也不让发布在事故后被冻结的前提下，把公共仓 CI 守住。
+goToMarketSeed:
+  firstCustomer: 一家从 Series B 到上市区间的开源基础设施公司：20-200 名工程师、至少 10 个公共 GitHub 仓库、有社区 PR，而且当前发布流水线仍依赖 GitHub Actions secret 或 GitHub App token。
+  buyingTrigger: 在下一轮发布前，团队收到工作流安全审查、刚经历过一次由贡献者触发的事故，或被董事会要求证明公共仓 CI 不会泄露 token 或源码。
+  currentAlternative: 人工审工作流、GitHub Advanced Security 与 lint 工具、内部脚本，以及在事故或审计后直接大面积关闭工作流。
+  switchingReason: 这套切口直接建模 GitHub 真实的事件语义和 secret 可达性，再在运行时执行临时授权，比泛化的代码扫描或干脆把工作流关掉都更准，也更不打扰研发。
+  pricingHypothesis: 按受保护仓库数量和高权限工作流运行次数收年费；运行时 token broker 和事故演练模块再加价。
+whyNow:
+- point: 被盗 GitHub token 在没有客户数据失窃的情况下就引发勒索和代码被盗，说明 CI 访问权本身已经是高严重度泄露面。
+  signalRefs:
+  - CI token 即使不碰客户系统，也能把代码库暴露出去
+  sourceRefs:
+  - 1
+  - 2
+- point: 这次被报道的 pull_request_target 配置错误说明，工作流事件语义不是学术角落问题，而是真能被利用的攻击向量。
+  signalRefs:
+  - GitHub Action 的事件语义才是真正可被利用的弱点
+  sourceRefs:
+  - 3
+- point: 通过 canary token 才发现问题，说明买方需要的是 CI 内部的运行时绊线和 token 使用证明，而不只是合并前扫描。
+  signalRefs:
+  - Canary token 正在变成实用的 CI 绊线
+  sourceRefs:
+  - 3
+- point: Grafana 不得不删除问题工作流、吊销凭证并关闭公共仓工作流，这会立刻触发一笔为更安全自动化买单的运营预算。
+  signalRefs:
+  - 事故响应现在往往得把工作流直接关停
+  sourceRefs:
+  - 3
+differentiator: 大多数开发者安全产品，要么扫代码里的 secret，要么给 CI 跑通用策略 lint。这家公司盯的是更窄、也更疼的控制点：GitHub 事件上下文、token scope 和仓库拓扑叠在一起，才会变成真实的权限提升风险。它的护城河可以随着组织级工作流图、token 可达性模型，以及跨公共仓软件公司的危险 CI 模式数据集一起越滚越厚。
+conceptDiagram:
+  title: GitHub 工作流权限防火墙
+  mermaid: |
+    flowchart LR
+      Buyer[平台安全负责人] --> Pain[公共仓 CI 可能泄露高权限 token]
+      Pain --> Product[工作流权限防火墙]
+      Product --> Outcome[不停掉 CI 也能安全保住贡献者自动化]
+businessModelCanvas:
+  customerSegments:
+  - 开源商业化软件公司
+  - 基础设施与 dev-tools 厂商
+  - 拥有公共 GitHub 仓库的平台工程团队
+  valuePropositions:
+  - 拦住 GitHub Actions 里的 token 外流路径
+  - 把静态 CI secret 换成 broker 发放的临时访问
+  - 不必大面积关停工作流，也能保住贡献者自动化
+  channels:
+  - 直销给平台工程和产品安全负责人
+  - GitHub 生态伙伴与安全咨询公司
+  - 开源安全社区与维护者活动
+  customerRelationships:
+  - 深度共创
+  - 按组织推进 GitHub 落地
+  - 再扩到更多仓库和发布流水线
+  revenueStreams:
+  - 年度 SaaS 订阅
+  - 按高权限工作流运行次数计费
+  - 高级事故仿真与策略报告模块
+  keyResources:
+  - GitHub 工作流图引擎
+  - token broker 与策略基础设施
+  - CI 权限提升模式数据集
+  keyActivities:
+  - 模拟工作流攻击路径
+  - 发放临时 CI 凭证
+  - 维护 GitHub 集成与策略模板
+  keyPartners:
+  - GitHub App 与身份提供商
+  - CI 安全咨询公司
+  - 开源基金会
+  - secret 管理平台
+  costStructure:
+  - 安全工程
+  - 用于仿真与 token broker 的云计算
+  - 企业销售
+  - 客户导入与支持
+jobsToBeDone:
+- job: 当工程团队在公共仓里更新 GitHub Actions 工作流时，帮平台安全负责人证明社区 PR 和第三方 action 触不到高权限 token，这样我们就能更快合并，也不会打开代码外流通道。
+  currentAlternative: 人工审工作流，加上基础 CI lint
+  successMetric: 获批的高权限工作流变更数量，且后续没有再触发紧急回滚
+- job: 当发布流水线仍需要 secret 或更高仓库权限时，帮平台团队把静态凭证换成限域的短期访问，这样发布自动化还能继续跑，但 CI 里不会长期挂着高权限 token。
+  currentAlternative: 长期有效的 GitHub token、仓库 secret 和内部脚本
+  successMetric: GitHub Actions 使用的长期高权限 token 数量下降多少
+ideaScorecard:
+  signalStrength:
+    score: 4
+    rationale: 三家同日报道确认了这次具体的 CI 工作流泄露，也点明了清晰的 GitHub Actions 利用途径，不过整个品类的规模仍需要从这起事故往外推演。
+  painIntensity:
+    score: 5
+    rationale: 一个工作流失误就可能暴露源码、引来勒索、迫使贡献者自动化停摆，并让整个工程团队进入紧急轮换凭证状态。
+  wedgeClarity:
+    score: 5
+    rationale: 首个产品的控制点非常具体：为公共仓里的 GitHub Actions 提供权限仿真和 token broker。
+  defensibility:
+    score: 4
+    rationale: 深度 GitHub 集成、组织级工作流图，以及运行时凭证发放能力，都能带来切换成本和真实 CI 权限模式的专有数据集。
+  ventureScale:
+    score: 4
+    rationale: 滩头市场从 GitHub Actions 起步，但后续可以扩到更广的 CI/CD、发布签名，以及整条软件交付系统里的机器身份治理。
+topRisks:
+- name: 原生平台追赶
+  description: GitHub 可能补上更强的内建工作流仿真和临时凭证控制，把产品切口压窄。
+  mitigation: 把重点放在跨仓权限图、运行时 token broker 和组织级策略覆盖上——这些都不是仓库内原生检查能接住的。
+- name: 开发者摩擦反弹
+  description: 如果产品拦下太多工作流或拖慢 PR 审核，即使安全价值存在，工程团队也可能把它关掉。
+  mitigation: 先从 monitor mode 落地，给公共仓工作流提供精确的高风险策略模板，再把拦截和一键安全修复建议绑在一起。
+- name: 滩头市场过于集中
+  description: 公共仓基础设施公司是很锋利的首批客户，但如果预算始终锁在更大的 AppSec 计划里，这个群体可能比预期更小。
+  mitigation: 先在公共仓公司里站稳，再沿着 GitHub Actions 的发布自动化和可复用工作流，扩到企业内部平台团队。

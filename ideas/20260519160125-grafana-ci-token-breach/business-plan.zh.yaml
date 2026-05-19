@@ -1,0 +1,206 @@
+slug: workflow-privilege-firewall
+date: '2026-05-19'
+executiveSummary: Workflow Privilege Firewall 面向那些运营公共 GitHub 仓库、既有外部贡献者、又跑高权限 GitHub Actions 工作流的软件厂商。真正疼的点不是泛化的 secret 泄露，而是 pull_request_target、可复用工作流、第三方 action 这类事件语义，会拼出 token 可达路径，在任何客户系统受影响之前就先把源码和发布基础设施暴露出去。首个产品把合并前权限仿真和运行时短期凭证 broker 绑在一起，让团队不用因为事故直接关掉贡献者自动化。首批客户应是一家 Series B 到上市区间的开源基础设施公司：20-200 名工程师、至少 10 个公共仓，而且发布流水线仍依赖 GitHub Actions secret 或 GitHub App token。GTM 应先从事故驱动的 GitHub Actions 审计切入，转成付费试点，再扩到生产拦截、OIDC 迁移和发布治理。最强的证据是真实痛点、相邻预算已经存在、切口也足够清晰；最弱的证据是滩头市场里可被利用的工作流模式到底多普遍，以及预算到底归谁，现在都还没被证实。也正因为这个不确定性，只有当早期 design partner 审计证明高风险模式很常见、拦截策略又能在不打扰开发者的前提下上线，这家公司才适合作为一个聚焦型 pre-seed 来投。公司应该刻意先守窄 GitHub Actions 权限设计，再往更广的 CI/CD 和机器身份治理扩。
+problem:
+- 公共仓软件厂商需要靠贡献者自动化来做测试、分诊和发布，但只要一个工作流配错，就可能把写权限 token、源码和发布路径暴露出去。
+- 现有替代方案——人工审查、通用代码扫描、secret manager，或者直接把工作流关掉——都没有把 GitHub 事件语义建模进去，事故之后还会带来额外运营拖累。
+solution:
+- 接入 GitHub organization，梳理工作流、触发器、权限、secret 和第三方 action，并在合并前模拟不可信 PR 活动能否摸到高权限操作。
+- 把静态 CI 凭证换成只给获批任务发放的限域短期凭证，再叠一层金丝雀式运行时遥测，让团队能证明高权限工作流确实安全跑完。
+whyWeWin:
+- 这个切口比大而全的 ASPM 更窄，也比 GitHub 原生加固更具体，因为它盯的是买方在工作流事故后必须回答的那个权限路径问题。
+- 公司的防御力可以随着组织级工作流图、token 可达性模型，以及那些能在多仓环境里保住开发者流畅度的修复数据一起累起来。
+strategicChoices:
+  beachhead: 拥有 10-100 个公共 GitHub 仓库、外部贡献者活跃，且测试、分诊或发布流程都绑着高权限 GitHub Actions 工作流的开源商业化与基础设施软件厂商。
+  wedgeRationale: 这批客户最先感到痛，因为他们没法简单粗暴地关掉贡献者自动化，公共仓事故又已经能一路传到董事会，同时他们也能在不做多年平台改造的前提下，拍板买一个聚焦的 CI 安全产品。
+  sequencingRationale: 先用审计和 monitor mode 证明风险、把摩擦降到最低；再对最高风险的工作流模式打开选择性拦截；等客户信任了这套策略引擎，再加 broker 凭证和 OIDC 迁移；最后才扩到可复用工作流治理和相邻 CI 平台。
+  notYet:
+  - 只跑私有仓、没有外部贡献者工作流的企业
+  - 完整软件工厂 ASPM 覆盖
+  - 在 GitHub 滩头市场没跑通前就扩到 GitLab、Buildkite 和发布签名
+market:
+  tam: 按 15,000 家在公共仓 contributor CI 上有明显需求的全球软件组织、每家约 $24k ACV 估算，TAM 约为 $360M。
+  sam: 把范围收窄到约 3,000 家符合首批客户画像的开源商业化、基础设施和开发工具厂商，SAM 约为 $72M。
+  som: 按第 3 年拿下 200 家客户、每家约 $24k ACV 估算，依靠事故驱动和生态驱动销售可触达的 SOM 约为 $4.8M。
+  segments:
+  - 公共仓的开源商业化与基础设施软件厂商
+  - 使用 GitHub Actions 做发布自动化的企业平台团队
+  buyingProcess: 买方大概率是平台工程负责人、产品安全总监或 VP Engineering，但预算归属仍是一个待尽调问题。短期内，采购流程往往会从一次事故复盘、审计或合规要求开始，先做 GitHub organization 评估，再转成和下个发布周期绑定的限范围试点。
+product:
+  mvp: MVP 应覆盖 GitHub App 导入、工作流建图、pull_request_target 与可复用工作流的高风险触发仿真、仓库级策略建议，以及 monitor mode 告警。同时，它还应为一小批高权限任务 broker 短期凭证，让首批客户能真正拿掉一类肉眼可见的长期 CI token。
+  sixMonth: 面向拥有 10-25 个仓库的组织上线付费试点，提供 monitor mode、高风险策略模板、修复指引，以及选定发布或分诊任务的 broker 凭证。
+  twelveMonth: 把试点转成生产部署，补上选择性拦截、跨仓策略视图、OIDC 迁移工作流，以及给安全评审和采购使用的证明材料。
+  twentyFourMonth: 只有在 GitHub Actions 部署已经证明能稳定跨多仓扩张、并且策略执行摩擦很低之后，才扩到可复用工作流治理、自托管 runner 控制和相邻 CI 平台。
+  keyBets:
+  - 滩头市场里可被利用的权限路径足够常见，能支撑起以审计带销售的动作。
+  - 买方会愿意为“合并前仿真 + 运行时凭证 broker”这个组合控制面付钱，而不是只买监控。
+  - 选择性拦截能做到足够精准，不至于让工程团队把产品关掉。
+gtm:
+  wedge: 面向公共仓软件厂商的事故驱动 GitHub Actions 权限审计，再转成一笔付费试点，在不关闭贡献者自动化的前提下把下一次发布守住。
+  channels:
+  - 围绕 GitHub Actions 审计、红队发现和事故后加固项目做定向外呼
+  - 给公共仓提供 freemium 或开源版，先沉淀工作流数据和 design partner 线索
+  - 已经参与 SSDF 与 secure-by-design 整改的合规、事故响应和软件供应链咨询伙伴
+  funnelTargets: 审计线索→合格试点 25-35%，试点→生产 50%+，生产账户→9 个月内多仓扩张 60%+。
+  pricing: 按受保护仓库数量收年费，再叠一个高权限工作流运行次数的用量项，因为买方已经习惯以开发者数或 committer 数来锚定 CI 安全支出，而产品价值也确实跟它保护了多少高风险工作流挂钩。入门合同要能塞进现有 CI 加固预算里；运行时凭证 broker 和事故仿真模块则作为高阶加价项。
+businessModel:
+  revenueStreams:
+  - 受保护 GitHub 仓库的年度 SaaS 订阅
+  - 使用 broker 凭证的高权限工作流运行按量收费
+  - 高级事故演练、审计报告和合规证据模块
+  unitOfValue: 受保护仓库，以及其覆盖到的高权限工作流运行
+  targetGrossMarginPct: 80
+  expansionLevers:
+  - 在同一组织内，从 monitor mode 继续扩到拦截和凭证 broker
+  - 初始公共仓部署后，再加私有仓、可复用工作流和自托管 runner 环境
+  - GitHub 跑通后，再卖相邻 CI 平台覆盖和发布治理模块
+strategyMap:
+  northStarMetric: 生产环境里受保护、且不需要紧急关停的高权限 GitHub Actions 工作流数量
+  inputMetrics:
+  - 已完成审计且确认存在可利用权限路径的组织数
+  - 开启 broker 凭证的试点账户数
+  - 高权限工作流变更的误拦截率
+  - 修复高风险工作流问题所需时间
+  - 现有客户内部的多仓扩张率
+  moatsToBuild:
+  - 跨仓工作流权限图与 token 可达性数据集
+  - CI 任务内部关于 token 使用、外连和策略例外的运行时遥测
+  - 能在公共仓工程团队里降低策略摩擦的修复 playbook
+  killCriteria:
+  - 前 50 个审计目标组织里，少于 10 个暴露出值得修的公共仓权限路径。
+  - 前 8 个付费试点里，少于 3 个能转成年付生产部署。
+  - 修复指引上线后，高权限工作流 PR 的 blocking mode 仍带来超过 10% 的人工 override 量。
+  mermaid: |
+    flowchart LR
+      Wedge[事故驱动的 GitHub Actions 审计] --> MVP[权限仿真与 broker 凭证 MVP]
+      MVP --> Proof[低摩擦拦截与减少 token 的付费试点转化]
+      Proof --> Expansion[组织级策略、可复用工作流与相邻 CI 覆盖]
+investorMemo:
+  verdict:
+    call: 观察
+    conviction: 痛点强、切口也利落，但预算归属、滩头市场渗透率和原生平台压缩效应都还需要进一步验证。
+    whyBelieve: Grafana 级别的事故、相邻品类已有的价格锚，以及清晰的工作流权限 job-to-be-done，都说明这里确实有一个真实滩头市场。
+    whyDoubt: 估算的 SAM 偏窄，GitHub 可能把基础加固能力直接吸收掉，而且公司还没证明 blocking policy 能长期保持低摩擦。
+    nextDiligence: 先通过 20-50 次 design partner 审计确认高风险模式足够常见，并证明至少有几位买方愿意先为 monitor mode + broker 凭证付钱，再谈更大的平台扩张。
+  firstCustomer:
+    title: 公共仓基础设施软件厂商的平台安全负责人
+    profile: 一家从 Series B 到上市区间的软件公司：20-200 名工程师、至少 10 个公共仓、有外部 PR，而且发布自动化跑在 GitHub Actions 上。
+    trigger: 在下一个发布周期前，刚发生过一次 CI 工作流事故、被红队指出问题，或收到董事会要求。
+    buyer: 平台工程负责人或产品安全总监
+    initialContract: 一笔为期 90 天、金额在 $15k-$25k 的付费试点，覆盖 10-25 个仓库；等选择性拦截和 broker 凭证打开后，再转成 $30k-$60k 的年付部署。
+  mustBeTrue:
+  - 至少 20% 的已审计滩头市场组织，在公共仓工作流里跑着可被利用的触发器与权限组合。
+  - 经济买方能从现有的平台安全或产品安全预算里，单独拨一笔钱买聚焦型 CI 权限控制，而不必连带买整套 ASPM。
+  - 一笔付费试点能在一个发布周期内拿掉或显著减少长期有效的高权限 CI 凭证。
+  - 选择性拦截加修复指引后，误报足够低，工程团队愿意把执行开关一直保持开启。
+  - GitHub 和相邻现有厂商没法足够快地上线等价的跨仓权限仿真与运行时凭证 broker，把切口彻底抹平。
+  diligenceQuestions:
+  - 前 20 个目标账户里，谁会签预算，这笔钱今天挂在哪个预算科目下？
+  - 目标买方到底多常使用 pull_request_target、可复用工作流，或带高权限的第三方 action？
+  - 什么证据能让平台团队从 audit mode 走到 blocking mode？
+  - broker 凭证能否顺畅接进买方已经在用的云 IAM 与 secret 管理栈？
+  - 如果赢下一单，最先被替掉的是 StepSecurity、GHAS 还是内部脚本？
+operatingAssumptions:
+- assumption: 滩头市场客户里的高风险公共仓工作流模式足够多，能支撑起以审计带销售的动作。
+  basis: research.yaml
+  validationTest: 审计 50 个目标 GitHub organization，按仓库统计高风险触发器、权限和第三方 action 模式。
+  decisionImpact: 如果渗透率偏低，就把产品收窄到事故后响应工具，或者放弃这个滩头市场。
+- assumption: 第一笔预算更可能来自平台工程或产品安全，而不是更广泛、周期更长的 AppSec 平台采购。
+  basis: research.yaml
+  validationTest: 访谈 20 位目标买方，梳理今天 GHAS、CI 加固、secret manager 和工作流审计分别归谁出钱。
+  decisionImpact: 如果预算归属太分散，就把包装调整给合规伙伴，或并入更大的软件工厂平台。
+- assumption: 当产品配上精确模板和修复指引后，选择性拦截可以在开发者可接受的摩擦范围内运行。
+  basis: operator judgment
+  validationTest: 在 10 家组织里试点 monitor mode 和选择性拦截，跟踪误报、合并延迟、override 和修复时长。
+  decisionImpact: 如果摩擦过高，就让产品更久停留在 advisory mode，并弱化依靠 enforcement 收费的方式。
+- assumption: 运行时凭证 broker 是把产品从“有意思的 scanner”推成“值得单独立项的控制面”的关键功能。
+  basis: idea.yaml
+  validationTest: 在前 5 个试点里，观察客户在开启 broker 凭证后是否真的移除了长期高权限 token，以及这是否拉动转化。
+  decisionImpact: 如果 broker 不能提高转化，就把产品简化成仿真和策略分析，而不是 inline 运行。
+experimentRoadmap:
+- horizon: 0-90 天
+  experiment: 在滩头市场里做 20 次由创始人主导的 GitHub Actions 审计，并给触发器、权限和 token 可达性风险打分。
+  hypothesis: 高风险公共仓权限路径足够常见，能形成可复制的事故驱动销售动作。
+  successMetric: 至少 8 次审计找出高严重度路径，且有 5 家组织同意继续进入试点范围界定。
+  owner: 创始人/CEO
+- horizon: 0-90 天
+  experiment: 上线针对 pull_request_target、可复用工作流和高风险第三方 action 的 monitor mode 权限仿真。
+  hypothesis: 如果工具能把具体事件和 token 路径画清楚，而不是只给泛化 lint 告警，买方就会信。
+  successMetric: 至少 70% 的试点发现能被客户平台团队直接接受，不需要人工争辩。
+  owner: 创始工程师
+- horizon: 0-90 天
+  experiment: 围绕一个发布工作流凭证 broker 场景测试付费试点包装。
+  hypothesis: 相比单做仿真，一个范围很窄的运行时 token 替换更能迅速拉起预算紧迫感。
+  successMetric: 签下 2 个 $15k+ 的付费试点，并附带一份移除至少一个长期高权限 token 的计划。
+  owner: 创始人/CEO
+- horizon: 3-6 个月
+  experiment: 把审计中最常见的 5 类高风险工作流模式做成修复建议和选择性拦截。
+  hypothesis: 如果每次被拦的变更都附带安全替代路径，blocking 的采用率就会更高。
+  successMetric: 客户导入完成后，需要人工 override 的被拦变更少于 5%。
+  owner: 产品工程师
+- horizon: 6-12 个月
+  experiment: 接入云 IAM 和 secret 管理伙伴，支持 OIDC 与短期凭证发放。
+  hypothesis: 伙伴集成能提高试点转生产的转化，因为它们拿掉了运行时落地里最难的一步。
+  successMetric: 有 3 个生产客户在不止一个高权限工作流里开启 broker 凭证。
+  owner: 安全工程师
+- horizon: 6-12 个月
+  experiment: 推出免费的公共仓审计层，为漏斗顶部引流并沉淀工作流风险基准。
+  hypothesis: 免费审计会带来更低成本的线索，也会强化专有工作流策略数据集。
+  successMetric: 100 个自助组织完成导入，且至少 10 个转成销售认可的对话。
+  owner: 增长工程师
+operations:
+- 每个 design partner 都走一遍由创始人主导的 GitHub App 导入与工作流审计 playbook
+- 覆盖公共仓工作流、可复用工作流和高权限发布任务的策略模板库
+- 与云 IAM 和 secret 管理系统集成，broker 短期凭证
+- 面向自托管 runner 和网络边界特殊场景的安全评审与支持流程
+team:
+- role: 创始工程师
+  startTiming: Month 0
+  rationale: 尽快把工作流图引擎、策略仿真器和第一版 GitHub 集成做出来，支撑 design partner 审计。
+- role: 安全产品创始人
+  startTiming: Month 0
+  rationale: 负责买方发现、事故驱动销售和产品边界，让公司死盯一个足够痛的工作流权限问题。
+- role: 解决方案工程师
+  startTiming: Month 3
+  rationale: 把审计转成试点，负责 GitHub organization 导入，并在前 10 个客户里把部署摩擦压下来。
+- role: 安全工程师
+  startTiming: Month 6
+  rationale: 当试点开始走向生产 enforcement 后，负责运行时凭证 broker、IAM 集成和策略加固。
+milestones:
+- horizon: 0-12 个月
+  items:
+  - 在公共仓软件厂商滩头市场里签下 5-8 个付费试点。
+  - 在最常见的高风险工作流模式上证明 monitor mode 和选择性拦截都能低 override 率运行。
+  - 至少把 3 个试点转成年付部署，并移除长期高权限 CI 凭证。
+- horizon: 12-24 个月
+  items:
+  - 把成功客户从首批仓库扩到更广的 GitHub organization 覆盖和可复用工作流。
+  - 为高 ACV 客户推出自托管 runner 和发布治理模块。
+  - 通过合规和事故响应公司建立 partner-led pipeline。
+- horizon: 24-36 个月
+  items:
+  - 只有在 GitHub 滩头市场的留存和扩张已经可复制后，才进入一个相邻 CI 平台。
+  - 在 CI、发布签名和软件交付控制之上叠出机器身份治理层。
+  - 把证据积累到足以支撑更大平台叙事或战略合作的程度。
+risks:
+- risk: 如果 GitHub 补上足够多的原生工作流仿真和临时凭证能力，创业公司的功能差距会被迅速压缩。
+  likelihood: Medium
+  impact: High
+  mitigation: 把重点放在跨仓权限建图、改造存量工作流的修复、运行时 broker，以及原生仓库级控制拿不到的工作流数据上。
+- risk: 开发团队可能因为拦截控制拖慢 PR 审核或破坏贡献者工作流，而拒绝接受这套产品。
+  likelihood: Medium
+  impact: High
+  mitigation: 先以 monitor mode 落地，只对高严重度模式开启拦截，并给每条 enforcement policy 配上可一键执行的修复路径。
+- risk: 如果预算仍被打包在更广的 AppSec 项目里，这个滩头市场可能比预期更小、购买节奏也更慢。
+  likelihood: Medium
+  impact: Medium
+  mitigation: 先证明一条低摩擦的审计→试点路径，再扩到企业平台团队和 partner-led 合规整改。
+- risk: 自托管 runner 和网络边界的复杂性，可能让运行时控制的部署比计划中更难。
+  likelihood: Medium
+  impact: Medium
+  mitigation: 首个产品先聚焦 GitHub-hosted 和更简单的 runner 环境，之后再去啃更深的企业基础设施差异。
+fundingAsk:
+  round: pre-seed
+  targetFundingRangeUsd: $2-4M
+  runwayMonths: 18
+  useOfFundsSummary: 融资 18 个月，用来通过 design partner 审计证明 GitHub 滩头市场成立，交付 monitor mode 和选择性拦截，上线运行时凭证 broker，并把足够多的付费试点转成可复制的事故驱动销售动作。

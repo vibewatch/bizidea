@@ -1,0 +1,213 @@
+slug: workflow-privilege-firewall
+date: '2026-05-19'
+executiveSummary: >-
+  Workflow Privilege Firewall targets software vendors that run public GitHub repositories with outside contributors and privileged GitHub Actions workflows. The acute pain is not generic secrets leakage; it is that event semantics such as pull_request_target, reusable workflows, and third-party actions can create token-reachability paths that expose source code and release infrastructure before any customer system is touched. The initial product combines pre-merge privilege simulation with runtime brokering of short-lived credentials so teams can keep contributor automation on instead of disabling workflows after incidents. The first customer is a Series B to public open-source infrastructure company with 20-200 engineers, 10 or more public repos, and a release pipeline that still relies on GitHub Actions secrets or GitHub App tokens. Go-to-market should start with incident-driven GitHub Actions audits that convert into paid pilots, then expand into production blocking, OIDC migration, and release-governance coverage. The strongest evidence is real pain, existing adjacent budget, and a clear wedge; the weakest evidence is that prevalence of exploitable workflow patterns and true budget ownership are still unproven in the beachhead. That uncertainty makes the company fundable as a focused pre-seed only if early design-partner audits show risky patterns are common and blocking policies can ship with low developer friction. The company should deliberately stay narrow on GitHub Actions privilege design before expanding into broader CI/CD and machine-identity governance.
+problem:
+  - Public-repo software vendors need contributor automation for testing, triage, and releases, but one misconfigured workflow can expose write-scoped tokens, source code, and release paths.
+  - Current alternatives such as manual reviews, generic code scanning, secret managers, or shutting workflows off do not model GitHub event semantics and create operational drag after incidents.
+solution:
+  - Connect to a GitHub organization, map workflows, triggers, permissions, secrets, and third-party actions, and simulate whether untrusted PR activity can reach privileged operations before merge.
+  - Replace static CI credentials with scoped short-lived credentials for approved jobs, then add canary-style runtime telemetry so teams can prove privileged workflows ran safely.
+whyWeWin:
+  - The wedge is narrower than broad ASPM and more specific than native GitHub hardening because it focuses on the exact privilege-path question buyers must answer after a workflow incident.
+  - Defensibility can compound through organization-specific workflow graphs, token-reachability models, and remediation data showing which policies preserve developer flow across many repositories.
+strategicChoices:
+  beachhead: Open-core and infrastructure software vendors with 10-100 public GitHub repositories, active external contributors, and privileged GitHub Actions workflows tied to tests, triage, or releases.
+  wedgeRationale: >-
+    This segment feels the pain first because it cannot simply disable contributor automation, already has board-visible exposure from public-repo incidents, and can approve a focused CI security purchase without a multi-year platform transformation.
+  sequencingRationale: >-
+    Start with audit and monitor mode to prove risk and minimize friction, then turn on selective blocking for the highest-risk workflow patterns, then add brokered credentials and OIDC migration once the customer trusts the policy engine, and only after that expand into reusable workflow governance and adjacent CI platforms.
+  notYet:
+    - Private-repo-only enterprises with no external contributor workflows
+    - Full software-factory ASPM coverage
+    - GitLab, Buildkite, and release-signing expansion before GitHub beachhead proof
+market:
+  tam: $360M estimated TAM based on 15,000 global software organizations with meaningful public-repo contributor CI at roughly $24k ACV.
+  sam: $72M estimated SAM based on roughly 3,000 open-core, infrastructure, and developer-tool vendors that match the first-customer profile.
+  som: $4.8M estimated year-3 SOM based on 200 customers at roughly $24k ACV through incident-led and ecosystem-led sales.
+  segments:
+    - Public-repo open-core and infrastructure software vendors
+    - Enterprise platform teams with GitHub Actions-based release automation
+  buyingProcess: >-
+    The buyer is likely the head of platform engineering, director of product security, or VP engineering, but ownership is still a diligence gap. The near-term process is an incident review, audit, or compliance request that starts as a GitHub org assessment and converts into a limited pilot tied to the next release cycle.
+product:
+  mvp: >-
+    The MVP should cover GitHub App onboarding, workflow graphing, risky-trigger simulation for pull_request_target and reusable workflows, repo-level policy recommendations, and monitor-mode alerts. It should also broker short-lived credentials for a narrow set of privileged jobs so the first customer can remove a visible class of long-lived CI tokens.
+  sixMonth: Launch paid pilots for 10-25 repo organizations with monitor mode, high-risk policy templates, remediation guidance, and brokered credentials for selected release or triage jobs.
+  twelveMonth: Convert pilots into production deployments with selective blocking, cross-repo policy views, OIDC migration workflows, and proof artifacts for security reviews and procurement.
+  twentyFourMonth: Expand into reusable workflow governance, self-hosted runner controls, and adjacent CI platforms only after GitHub Actions deployments show repeatable multi-repo expansion and low-friction policy enforcement.
+  keyBets:
+    - Exploitable privilege paths are common enough in the beachhead to support an audit-led sales motion.
+    - Buyers will pay for pre-merge simulation plus runtime credential brokering as a combined control plane rather than buying only monitoring.
+    - Selective blocking can stay precise enough that engineering teams do not disable the product.
+gtm:
+  wedge: Incident-driven GitHub Actions privilege audit for public-repo software vendors, converting into a paid pilot that secures the next release cycle without disabling contributor automation.
+  channels:
+    - Direct outbound tied to GitHub Actions audits, red-team findings, and post-incident hardening projects
+    - Freemium or open-source tier for public repositories that seeds workflow data and design-partner leads
+    - Compliance, incident-response, and software-supply-chain consulting partners already engaged in SSDF and secure-by-design remediation
+  funnelTargets: Audit lead→qualified pilot 25-35%, pilot→production 50%+, production account→multi-repo expansion 60%+ within 9 months.
+  pricing: >-
+    Annual subscription priced by protected repositories with a usage component for privileged workflow runs, because buyers already anchor to developer- or committer-based CI security spend and the product's value tracks how many high-risk workflows it protects. Entry deals should fit inside existing CI hardening budgets, with premium modules for runtime credential brokering and incident simulation.
+businessModel:
+  revenueStreams:
+    - Annual SaaS subscription for protected GitHub repositories
+    - Usage-based charges for privileged workflow runs that use brokered credentials
+    - Premium incident drills, audit reports, and compliance evidence modules
+  unitOfValue: Protected repository with covered privileged workflow runs
+  targetGrossMarginPct: 80
+  expansionLevers:
+    - Expand from monitor mode to blocking and credential brokering inside the same organization
+    - Add private repos, reusable workflows, and self-hosted runner environments after initial public-repo deployment
+    - Sell adjacent CI platform coverage and release-governance modules once GitHub proof is established
+strategyMap:
+  northStarMetric: Number of privileged GitHub Actions workflows protected in production without emergency shutdowns
+  inputMetrics:
+    - Audited organizations with confirmed exploitable privilege paths
+    - Pilot accounts enabling brokered credentials
+    - False-positive block rate on privileged workflow changes
+    - Time to remediate risky workflow findings
+    - Multi-repo expansion rate within existing customers
+  moatsToBuild:
+    - Cross-repo workflow privilege graph and token-reachability dataset
+    - Runtime telemetry on token use, egress, and policy exceptions inside CI jobs
+    - Remediation playbooks that reduce policy friction across public-repo engineering teams
+  killCriteria:
+    - Fewer than 10 of the first 50 audited target organizations show exploitable public-repo privilege paths worth fixing.
+    - Fewer than 3 of the first 8 paid pilots convert to annual production deployments.
+    - Blocking mode drives more than 10% manual override volume on privileged workflow PRs after remediation guidance is shipped.
+  mermaid: |
+    flowchart LR
+      Wedge[Incident-led GitHub Actions audit] --> MVP[Privilege simulation and brokered credentials MVP]
+      MVP --> Proof[Paid pilots convert with low-friction blocking and token reduction]
+      Proof --> Expansion[Org-wide policy, reusable workflows, and adjacent CI coverage]
+investorMemo:
+  verdict:
+    call: Watch
+    conviction: Strong pain and a crisp wedge, but budget ownership, beachhead prevalence, and native-platform compression still need proof.
+    whyBelieve: Grafana-level incidents, adjacent pricing anchors, and a clear workflow-privilege job-to-be-done support a real beachhead.
+    whyDoubt: The estimated SAM is narrow, GitHub can absorb baseline hardening, and the company has not yet proven that blocking policies can stay low-friction.
+    nextDiligence: Confirm via 20-50 design-partner audits that risky patterns are common and that at least a few buyers will pay for monitor mode plus brokered credentials before broader platform expansion.
+  firstCustomer:
+    title: Platform security lead at a public-repo infrastructure software vendor
+    profile: Series B to public software company with 20-200 engineers, 10 or more public repos, external PRs, and GitHub Actions-based release automation.
+    trigger: A recent CI workflow incident, red-team finding, or board request before the next release cycle.
+    buyer: Head of platform engineering or director of product security
+    initialContract: 90-day paid pilot in the $15k-$25k range for 10-25 repositories, converting to a $30k-$60k annual deployment once selective blocking and brokered credentials are enabled.
+  mustBeTrue:
+    - At least 20% of audited beachhead organizations run public-repo workflows with exploitable trigger and permission combinations.
+    - The economic buyer can fund a focused CI privilege control from an existing platform security or product security budget without a full ASPM purchase.
+    - A paid pilot can remove or materially reduce long-lived privileged CI credentials within one release cycle.
+    - Selective blocking plus remediation guidance keeps false positives low enough that engineering teams leave enforcement on.
+    - GitHub and adjacent incumbents do not ship equivalent cross-repo privilege simulation and runtime credential brokering fast enough to erase the wedge.
+  diligenceQuestions:
+    - Who signs the budget in the first 20 target accounts, and which budget line does it come from?
+    - How often do target buyers actually run pull_request_target, reusable workflows, or third-party actions with elevated permissions?
+    - What evidence convinces a platform team to move from audit mode to blocking mode?
+    - Can brokered credentials integrate cleanly with the cloud IAM and secret-management stack buyers already use?
+    - Which incumbent loses first in a win against StepSecurity, GHAS, or internal scripts?
+operatingAssumptions:
+  - assumption: Beachhead customers have enough risky public-repo workflow patterns to justify an audit-led sales motion.
+    basis: research.yaml
+    validationTest: Audit 50 target GitHub organizations and measure risky trigger, permission, and third-party action patterns per repo.
+    decisionImpact: If prevalence is low, narrow the product to post-incident response tooling or abandon the beachhead.
+  - assumption: The first budget owner sits in platform engineering or product security rather than a broader multi-year AppSec platform cycle.
+    basis: research.yaml
+    validationTest: Interview 20 target buyers and map who owns spend today for GHAS, CI hardening, secret managers, and workflow audits.
+    decisionImpact: If ownership is diffuse, shift packaging toward compliance partners or bundle into a broader software-factory platform.
+  - assumption: Selective blocking can operate with acceptable developer friction when paired with precise templates and remediation guidance.
+    basis: operator judgment
+    validationTest: Pilot monitor mode and selective blocking in 10 organizations and track false positives, merge delays, overrides, and time to remediate.
+    decisionImpact: If friction is high, keep the product in advisory mode longer and de-emphasize enforcement-led pricing.
+  - assumption: Runtime credential brokering is the feature that moves the product from interesting scanner to budget-worthy control plane.
+    basis: idea.yaml
+    validationTest: In the first 5 pilots, measure whether customers remove long-lived privileged tokens after enabling brokered credentials and whether that drives conversion.
+    decisionImpact: If brokering does not improve conversion, simplify the product around simulation and policy analytics instead of operating inline.
+experimentRoadmap:
+  - horizon: 0-90 days
+    experiment: Run 20 founder-led GitHub Actions audits in the beachhead and score trigger, permission, and token-reachability risk.
+    hypothesis: Risky public-repo privilege paths are common enough to create a repeatable incident-led sales motion.
+    successMetric: At least 8 audits uncover a high-severity path and 5 organizations agree to follow-up pilot scoping.
+    owner: Founder CEO
+  - horizon: 0-90 days
+    experiment: Ship monitor-mode privilege simulation for pull_request_target, reusable workflows, and high-risk third-party actions.
+    hypothesis: Buyers will trust findings if the tool maps the exact event and token path rather than emitting generic lint alerts.
+    successMetric: At least 70% of pilot findings are accepted by customer platform teams without manual dispute.
+    owner: Founding eng
+  - horizon: 0-90 days
+    experiment: Test paid pilot packaging with one release-workflow credential-brokering use case.
+    hypothesis: A narrowly scoped runtime token replacement creates budget urgency faster than simulation alone.
+    successMetric: Close 2 paid pilots at $15k+ with a signed plan to remove at least one long-lived privileged token.
+    owner: Founder CEO
+  - horizon: 3-6 months
+    experiment: Add remediation suggestions and selective blocking for the top 5 risky workflow patterns seen in audits.
+    hypothesis: Blocking adoption will rise if every blocked change includes a safe replacement path.
+    successMetric: Fewer than 5% of blocked changes require manual override after customer onboarding.
+    owner: Product engineer
+  - horizon: 6-12 months
+    experiment: Integrate with cloud IAM and secret-management partners for OIDC and short-lived credential issuance.
+    hypothesis: Partner integrations increase pilot-to-production conversion because they remove the hardest runtime adoption step.
+    successMetric: 3 production customers enable brokered credentials across more than one privileged workflow.
+    owner: Security engineer
+  - horizon: 6-12 months
+    experiment: Launch a free public-repo audit tier to seed top-of-funnel and benchmark workflow risk patterns.
+    hypothesis: Free audits will produce lower-cost leads and strengthen the proprietary workflow-policy dataset.
+    successMetric: 100 self-serve orgs onboard and at least 10 convert into sales-qualified conversations.
+    owner: Growth engineer
+operations:
+  - Founder-led GitHub App onboarding and workflow audit playbook for every design partner
+  - Policy template library for public-repo workflows, reusable workflows, and privileged release jobs
+  - Cloud IAM and secret-management integrations to broker short-lived credentials
+  - Security review and support process for self-hosted runner and network-boundary edge cases
+team:
+  - role: Founding eng
+    startTiming: Month 0
+    rationale: Build the workflow graph engine, policy simulator, and first GitHub integration fast enough to support design-partner audits.
+  - role: Security product founder
+    startTiming: Month 0
+    rationale: Own buyer discovery, incident-led sales, and product scope so the company stays focused on one painful workflow privilege problem.
+  - role: Solutions engineer
+    startTiming: Month 3
+    rationale: Turn audits into pilots, handle GitHub org onboarding, and reduce deployment friction during the first 10 customers.
+  - role: Security engineer
+    startTiming: Month 6
+    rationale: Own runtime credential brokering, IAM integrations, and policy hardening once pilots move toward production enforcement.
+milestones:
+  - horizon: 0-12 months
+    items:
+      - Close 5-8 paid pilots in the public-repo software vendor beachhead.
+      - Prove monitor mode and selective blocking on the top risky workflow patterns with low override rates.
+      - Convert at least 3 pilots into annual deployments that remove long-lived privileged CI credentials.
+  - horizon: 12-24 months
+    items:
+      - Expand successful customers from initial repos into broader GitHub org coverage and reusable workflows.
+      - Launch self-hosted runner and release-governance modules for higher-ACV customers.
+      - Establish partner-led pipeline through compliance and incident-response firms.
+  - horizon: 24-36 months
+    items:
+      - Enter one adjacent CI platform only after GitHub beachhead retention and expansion are repeatable.
+      - Build machine-identity governance layer across CI, release signing, and software delivery controls.
+      - Reach evidence-based readiness for a broader platform pitch or strategic partnership.
+risks:
+  - risk: GitHub adds enough native workflow simulation and ephemeral credential support to compress the startup's feature gap.
+    likelihood: Medium
+    impact: High
+    mitigation: Focus on cross-repo privilege graphing, retrofit remediation, runtime brokering, and workflow data that native repo-local controls do not own.
+  - risk: Developer teams reject blocking controls because they slow pull-request review or break contributor workflows.
+    likelihood: Medium
+    impact: High
+    mitigation: Land in monitor mode first, restrict blocking to high-severity patterns, and attach one-click remediation to every enforced policy.
+  - risk: The beachhead is smaller or slower-buying than expected because budget remains bundled inside broader AppSec programs.
+    likelihood: Medium
+    impact: Medium
+    mitigation: Prove a low-friction audit-to-pilot motion, then expand into enterprise platform teams and partner-led compliance remediation.
+  - risk: Self-hosted runner and network-boundary complexity make runtime controls harder to deploy than planned.
+    likelihood: Medium
+    impact: Medium
+    mitigation: Keep the first product focused on GitHub-hosted and simpler runner environments before taking on deeper enterprise infrastructure variance.
+fundingAsk:
+  round: pre-seed
+  targetFundingRangeUsd: $2-4M
+  runwayMonths: 18
+  useOfFundsSummary: >-
+    Fund 18 months to prove the GitHub beachhead through design-partner audits, ship monitor mode and selective blocking, launch runtime credential brokering, and convert enough paid pilots to validate a repeatable incident-led sales motion.

@@ -1,0 +1,526 @@
+slug: memory-pathway-orchestrator
+date: '2026-05-19'
+currency: USD
+modelStartMonth: 2026-06
+assumptions:
+- id: A1
+  name: 模型起始月份
+  value: 2026-06
+  unit: YYYY-MM
+  source: '[BP date] 模型从计划日期后的下一个月启动，这样 pre-seed 资金会在经营支出开始前到账。'
+- id: A2
+  name: 期初现金
+  value: '2500.0'
+  unit: USDK
+  source: '[BP fundingAsk targetFundingRangeUsd $2-4M] 基准情形采用 $2.5M pre-seed，落在目标区间偏下中部，足够跑到 Y2 末的验证节点，并留出缓冲。'
+- id: A3
+  name: 起始客户数（M1）
+  value: '0'
+  unit: count
+  source: '[BP product MVP + milestones] 公司从零收入起步，只有在聚焦切口的工作流 MVP 可以部署后，才会拿到首个付费试点。'
+- id: A4
+  name: Y1 客户爬坡
+  value: 到 M9 拿下 3 个付费试点，到 M12 有 1 个转成正式商用；Y1 结束时活跃客户为 3 个。
+  unit: count/timing
+  source: '[BP milestones 0-12 months + BP investorMemo.initialContract] 以“12 个月内签下 3 个付费试点，并至少把 1 个试点客户转成多诊所年度正式商用合同”为锚。'
+- id: A5
+  name: Y2 客户爬坡
+  value: 季度末客户数：Q1Y2 为 4，Q2Y2 为 5，Q3Y2 为 7，Q4Y2 为 9。
+  unit: count
+  source: '[BP milestones 12-24 months] 采用“到第 24 个月已有 8-12 个在线诊所集团”的目标，并把新增客户平滑分布到全年。'
+- id: A6
+  name: Y3 客户爬坡
+  value: 季度末客户数：Q1Y3 为 9，Q2Y3 为 10，Q3Y3 为 11，Q4Y3 为 12。
+  unit: count
+  source: '[Research market.som + BP sequencingRationale] 增长保持先落地再扩张节奏，而不是超高速扩张，因为实施和临床信任仍会限制部署速度。'
+- id: A7
+  name: 定价阶梯
+  value: 付费试点年化 MRR 约等于 $60K；Y2 混合已实现 ARPU 约为 $128K；Y3 退出时 ARPU 约为 $146K。
+  unit: annualK per customer
+  source: '[BP gtm.pricing + BP investorMemo.initialContract] 保持在计划里 15-30 家诊所客户 $120K-$220K 生产态 ARR 区间内，试点收入按低位确认。'
+- id: A8
+  name: 收入确认方法
+  value: 每月或每季度的活跃客户数，乘以混合已实现月度 ARPU。
+  unit: formula
+  source: '[BP gtm.pricing] 这样收入就能直接锚定客户数，同时反映试点向正式商用转化带来的客单价变化。'
+- id: A9
+  name: 毛利率爬坡
+  value: Y1 为 55%，Y2 为 64%，Y3 为 70%。
+  unit: percent
+  source: '[BP businessModel.targetGrossMarginPct 70] 早期试点要承担更多人工实施和支持成本；只有到 Y3 部署标准化后，模型才跑到计划里的目标毛利率。'
+- id: A10
+  name: 稳定态 CAC
+  value: '70.0'
+  unit: USDK per customer
+  source: '[BP gtm.funnelTargets + Research fiveForces.buyerPower] 医疗企业销售和试点转化的 CAC 会高于 SMB SaaS；模型采用仍然偏精简的创始人主导企业销售假设。'
+- id: A11
+  name: 单位经济模型里的月度客户流失率
+  value: '1.5'
+  unit: percent
+  source: '[Startup-finance heuristic] 多院点医疗工作流软件如果真正嵌进运营和年度合同里，可以支撑较低的客户流失率，但这个切口本身还年轻。'
+- id: A12
+  name: 含全成本的薪资带宽
+  value: 创始人 150；工程 180；临床工作流 150；实施/解决方案 140；销售/GTM 170；G&A/运营 120。
+  unit: annualK per FTE
+  source: '[BP team + startup-finance heuristic] 采用精简版美国 health-tech 现金薪酬假设，工资税和福利已全部计入。'
+- id: A13
+  name: 招聘节奏
+  value: 临床工作流负责人在 M1 到岗；实施岗位在 M4；GTM 负责人在 M9；第 2 名工程师在 M15；第 2 名 GTM 在 M18；第 2 名实施岗位在 M27；G&A 岗位在 M33。
+  unit: timing
+  source: '[BP team + BP strategicChoices.sequencingRationale] 先补产品和部署能力，再扩销售；只有在诊所集群打法能重复后才往后加人。'
+- id: A14
+  name: 人数终点
+  value: Q4Y1 为 5 名 FTE，Q4Y2 为 7 名 FTE，Q4Y3 为 9 名 FTE。
+  unit: FTE
+  source: '[BP team + BP milestones] 团队规模压在 pre-seed 预算能承受的范围里，同时还能支撑试点、实施模板和节制扩张。'
+- id: A15
+  name: 经营费用方法
+  value: 各部门费用包含薪资，以及云资源、差旅、实施支持、法务和合规开销。
+  unit: policy
+  source: '[BP operations + Research adoptionFrictionMatrix] 这反映的是一家工作流软件公司：仍然要承担客户定制化实施和建立信任的成本。'
+- id: A16
+  name: 现金流简化
+  value: 期末现金等于期初现金加累计 EBITDA。
+  unit: formula
+  source: '[Startup-finance heuristic] 假设 capex、债务、税和营运资金扭曲都可以忽略，符合轻资产 SaaS 工作流公司的情况。'
+- id: A17
+  name: 融资规模规则
+  value: 融资要足够跑到 Y2 末标准化里程碑，并在进入 Y3 时保留约 6 个月缓冲。
+  unit: policy
+  source: '[BP fundingAsk runwayMonths 18 + model requirement] 模型把计划里 18 个月的融资框架，延展成“里程碑 + 缓冲”的 pre-seed 融资。'
+headcount:
+- role: 创始人/高管
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 工程
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 2
+  q4y3: 2
+- role: 临床工作流
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 实施/解决方案
+  q1y1: 0
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 2
+- role: 销售/GTM
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 1
+  q4y2: 2
+  q4y3: 2
+- role: G&A/运营
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 0
+  q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 4
+  q4y1: 5
+  q4y2: 7
+  q4y3: 9
+headcountAnnualizedPayrollK:
+  q1y1: 480.0
+  q2y1: 620.0
+  q3y1: 620.0
+  q4y1: 790.0
+  q4y2: 1140.0
+  q4y3: 1260.0
+y1Monthly:
+- month: M1
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 40.0
+  salesMarketingK: 8.0
+  researchDevelopmentK: 29.0
+  generalAdministrativeK: 19.0
+  opexK: 56.0
+  ebitdaK: -56.0
+  cashEopK: 2444.0
+- month: M2
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 40.0
+  salesMarketingK: 8.0
+  researchDevelopmentK: 29.0
+  generalAdministrativeK: 19.0
+  opexK: 56.0
+  ebitdaK: -56.0
+  cashEopK: 2388.0
+- month: M3
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 40.0
+  salesMarketingK: 8.0
+  researchDevelopmentK: 29.0
+  generalAdministrativeK: 19.0
+  opexK: 56.0
+  ebitdaK: -56.0
+  cashEopK: 2332.0
+- month: M4
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 51.7
+  salesMarketingK: 9.0
+  researchDevelopmentK: 33.0
+  generalAdministrativeK: 22.0
+  opexK: 64.0
+  ebitdaK: -64.0
+  cashEopK: 2268.0
+- month: M5
+  customersEop: 1
+  newCustomers: 1
+  revenueK: 5.0
+  cogsK: 2.3
+  grossProfitK: 2.7
+  salaryK: 51.7
+  salesMarketingK: 9.0
+  researchDevelopmentK: 33.0
+  generalAdministrativeK: 22.0
+  opexK: 64.0
+  ebitdaK: -61.3
+  cashEopK: 2206.7
+- month: M6
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 5.0
+  cogsK: 2.3
+  grossProfitK: 2.7
+  salaryK: 51.7
+  salesMarketingK: 9.0
+  researchDevelopmentK: 33.0
+  generalAdministrativeK: 22.0
+  opexK: 64.0
+  ebitdaK: -61.3
+  cashEopK: 2145.4
+- month: M7
+  customersEop: 2
+  newCustomers: 1
+  revenueK: 10.0
+  cogsK: 4.5
+  grossProfitK: 5.5
+  salaryK: 51.7
+  salesMarketingK: 10.0
+  researchDevelopmentK: 34.0
+  generalAdministrativeK: 22.0
+  opexK: 66.0
+  ebitdaK: -60.5
+  cashEopK: 2084.9
+- month: M8
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 10.0
+  cogsK: 4.5
+  grossProfitK: 5.5
+  salaryK: 51.7
+  salesMarketingK: 10.0
+  researchDevelopmentK: 34.0
+  generalAdministrativeK: 22.0
+  opexK: 66.0
+  ebitdaK: -60.5
+  cashEopK: 2024.4
+- month: M9
+  customersEop: 3
+  newCustomers: 1
+  revenueK: 16.5
+  cogsK: 7.4
+  grossProfitK: 9.1
+  salaryK: 65.8
+  salesMarketingK: 19.0
+  researchDevelopmentK: 36.0
+  generalAdministrativeK: 24.0
+  opexK: 79.0
+  ebitdaK: -69.9
+  cashEopK: 1954.5
+- month: M10
+  customersEop: 3
+  newCustomers: 0
+  revenueK: 18.0
+  cogsK: 8.1
+  grossProfitK: 9.9
+  salaryK: 65.8
+  salesMarketingK: 19.0
+  researchDevelopmentK: 36.0
+  generalAdministrativeK: 24.0
+  opexK: 79.0
+  ebitdaK: -69.1
+  cashEopK: 1885.4
+- month: M11
+  customersEop: 3
+  newCustomers: 0
+  revenueK: 24.0
+  cogsK: 10.8
+  grossProfitK: 13.2
+  salaryK: 65.8
+  salesMarketingK: 20.0
+  researchDevelopmentK: 37.0
+  generalAdministrativeK: 25.0
+  opexK: 82.0
+  ebitdaK: -68.8
+  cashEopK: 1816.6
+- month: M12
+  customersEop: 3
+  newCustomers: 0
+  revenueK: 30.0
+  cogsK: 13.5
+  grossProfitK: 16.5
+  salaryK: 65.8
+  salesMarketingK: 21.0
+  researchDevelopmentK: 37.0
+  generalAdministrativeK: 25.0
+  opexK: 83.0
+  ebitdaK: -66.5
+  cashEopK: 1750.1
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 4
+  revenueK: 112.0
+  grossProfitK: 71.7
+  salaryK: 212.4
+  salesMarketingK: 72.0
+  researchDevelopmentK: 120.0
+  generalAdministrativeK: 84.0
+  opexK: 276.0
+  ebitdaK: -204.3
+  cashEopK: 1545.8
+- quarter: Q2Y2
+  customersEop: 5
+  revenueK: 157.5
+  grossProfitK: 100.8
+  salaryK: 256.6
+  salesMarketingK: 93.0
+  researchDevelopmentK: 139.0
+  generalAdministrativeK: 95.0
+  opexK: 327.0
+  ebitdaK: -226.2
+  cashEopK: 1319.6
+- quarter: Q3Y2
+  customersEop: 7
+  revenueK: 212.5
+  grossProfitK: 136.0
+  salaryK: 285.0
+  salesMarketingK: 102.0
+  researchDevelopmentK: 148.0
+  generalAdministrativeK: 101.0
+  opexK: 351.0
+  ebitdaK: -215.0
+  cashEopK: 1104.6
+- quarter: Q4Y2
+  customersEop: 9
+  revenueK: 284.0
+  grossProfitK: 181.8
+  salaryK: 285.0
+  salesMarketingK: 111.0
+  researchDevelopmentK: 154.0
+  generalAdministrativeK: 104.0
+  opexK: 369.0
+  ebitdaK: -187.2
+  cashEopK: 917.4
+- quarter: Q1Y3
+  customersEop: 9
+  revenueK: 298.8
+  grossProfitK: 209.2
+  salaryK: 285.0
+  salesMarketingK: 120.0
+  researchDevelopmentK: 155.0
+  generalAdministrativeK: 106.0
+  opexK: 381.0
+  ebitdaK: -171.8
+  cashEopK: 745.6
+- quarter: Q2Y3
+  customersEop: 10
+  revenueK: 342.0
+  grossProfitK: 239.4
+  salaryK: 320.1
+  salesMarketingK: 128.0
+  researchDevelopmentK: 168.0
+  generalAdministrativeK: 110.0
+  opexK: 406.0
+  ebitdaK: -166.6
+  cashEopK: 579.0
+- quarter: Q3Y3
+  customersEop: 11
+  revenueK: 391.6
+  grossProfitK: 274.1
+  salaryK: 330.1
+  salesMarketingK: 134.0
+  researchDevelopmentK: 176.0
+  generalAdministrativeK: 114.0
+  opexK: 424.0
+  ebitdaK: -149.9
+  cashEopK: 429.1
+- quarter: Q4Y3
+  customersEop: 12
+  revenueK: 436.8
+  grossProfitK: 305.8
+  salaryK: 350.1
+  salesMarketingK: 140.0
+  researchDevelopmentK: 186.0
+  generalAdministrativeK: 118.0
+  opexK: 444.0
+  ebitdaK: -138.2
+  cashEopK: 290.9
+totals:
+  y1:
+    revenueK: 118.5
+    ebitdaK: -749.9
+    cashEopK: 1750.1
+  y2:
+    revenueK: 766.0
+    ebitdaK: -832.7
+    cashEopK: 917.4
+  y3:
+    revenueK: 1469.2
+    ebitdaK: -626.5
+    cashEopK: 290.9
+unitEconomics:
+  arpuAnnualK: 146.4
+  grossMarginPct: 70.0
+  cacK: 70.0
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 66.7
+  ltvK: 569.6
+  ltvCacRatio: 8.1
+  cacPaybackMonths: 8.2
+fundingAsk:
+  round: pre-seed
+  amountM: 2.5
+  runwayMonths: 24
+  milestone: 做到 9 个在线诊所集团，证明 1 套可复制的“筛查到导出”实施模式，并在发起 seed 融资前带着约 6 个月缓冲进入 Y3。
+  useOfFunds:
+  - bucket: 工程
+    amountUsd: 1050000
+    percentage: 42
+  - bucket: GTM
+    amountUsd: 625000
+    percentage: 25
+  - bucket: G&A / 行政
+    amountUsd: 275000
+    percentage: 11
+  - bucket: 缓冲（6 个月）
+    amountUsd: 550000
+    percentage: 22
+scenarios:
+  downside:
+    description: 试点晚 1 个季度签下，试点转正式商用持续低于计划里的 50% 目标，而且由于实施仍偏服务化，毛利率最高只能到 66%。
+    y3RevenueK: 1117.0
+    y3EbitdaK: -910.0
+    cashLowPointK: -120.0
+    keyAssumptionChanges:
+    - 首个付费试点从 M5 推迟到 M8。
+    - Q4Y2 客户数落在 7 个，而不是 9 个。
+    - Y3 毛利率只能到 66%，而不是 70%。
+  base:
+    description: 创始人主导销售在 Y1 拿下 3 个付费试点，其中 1 个在 M12 转成正式商用；依靠 先落地再扩张，到 Q4Y3 客户基数增长到 12 个在线诊所集团。
+    y3RevenueK: 1469.2
+    y3EbitdaK: -626.5
+    cashLowPointK: 290.9
+    keyAssumptionChanges:
+    - 到 M9 拿下 3 个付费试点，到 M12 有 1 个转成正式商用。
+    - 季度末客户数在 Q4Y2 达到 9 个，在 Q4Y3 达到 12 个。
+    - 随着实施模板标准化，毛利率从 Y1 的 55% 提升到 Y3 的 70%。
+  upside:
+    description: H2Y2 开始有 1 个渠道伙伴持续输送合格商机，试点转正式商用好于计划，而且公司在不明显增加人数的前提下，于 Y3 多拿下 2 个诊所集团。
+    y3RevenueK: 1763.0
+    y3EbitdaK: -430.0
+    cashLowPointK: 430.0
+    keyAssumptionChanges:
+    - 从 H2Y2 开始，1 个伙伴渠道贡献合格试点。
+    - Q4Y3 客户数达到 14 个，而不是 12 个。
+    - 因为实施拖累更低，Y3 毛利率提升到 72%。
+sensitivity:
+- variable: ARPU
+  downsideCase: 由于买方把价格压在试点水平附近，Y3 混合退出 ARPU 下滑到 $132K。
+  baseCase: Y3 混合退出 ARPU 达到每客户 $146K。
+  upsideCase: 通过更多多诊所扩张和使用量计费，Y3 混合退出 ARPU 提升到 $160K。
+  y3RevenueImpactK: -147.0
+  cashImpactK: -103.0
+- variable: CAC
+  downsideCase: 随着采购和临床验证要求拉长，CAC 升到 $85K。
+  baseCase: 在创始人主导销售和窄 ICP 的前提下，CAC 维持在 $70K。
+  upsideCase: 一旦转介绍和伙伴来源线索出现，CAC 降到 $55K。
+  y3RevenueImpactK: 0.0
+  cashImpactK: -180.0
+- variable: 流失率
+  downsideCase: 由于试点很难稳定扩张，月度流失率升到 2.5%。
+  baseCase: 工作流嵌入诊所运营后，月度流失率维持在 1.5%。
+  upsideCase: 随着扩张模块提升粘性，月度流失率降到 1.0%。
+  y3RevenueImpactK: -90.0
+  cashImpactK: -130.0
+- variable: 销售周期
+  downsideCase: Y1-Y2 各阶段的试点签约时间都整体晚 1 个季度。
+  baseCase: 创始人主导的 4-6 个月销售周期按模型节奏转成付费试点。
+  upsideCase: 伙伴介绍把成交时间大约缩短 2 个月。
+  y3RevenueImpactK: -220.0
+  cashImpactK: -210.0
+- variable: 毛利率
+  downsideCase: 因为实施工作仍然高度定制，Y3 毛利率最高只能到 66%。
+  baseCase: Y3 毛利率达到 business plan 里的 70% 目标。
+  upsideCase: 随着支持和部署成本呈次线性扩张，Y3 毛利率提升到 73%。
+  y3RevenueImpactK: 0.0
+  cashImpactK: -58.8
+- variable: 招聘节奏
+  downsideCase: 为了覆盖定制化工作，Y2 提前补招 2 名实施/支持人员。
+  baseCase: 招聘按 A13 的精简顺序推进，Y3 末达到 9 名 FTE。
+  upsideCase: 由于模板降低了人工负担，1 个非关键运营岗位延后 2 个季度再招。
+  y3RevenueImpactK: -60.0
+  cashImpactK: -220.0
+modelDiagram:
+  title: 单位经济模型流转
+  mermaid: |
+    flowchart LR
+      AbnormalScreens[Abnormal screens] --> ManagedPathways[Managed pathways]
+      ClinicSubscriptions[Clinic subscriptions] --> Revenue
+      ManagedPathways --> UsageFees[Usage fees]
+      ManagedPathways --> ClinicSubscriptions
+      UsageFees --> Revenue
+      Revenue --> GrossProfit
+      GrossProfit --> Cash
+modelSanity:
+- checkName: 收入引擎
+  finding: 基准情形下的 Y3 收入，来自 12 个在线诊所集团；在试点转成多诊所正式合同后，每家每月大约支付 $11K-$12.2K。
+- checkName: 必须做对的事
+  finding: 到 M12-M18，试点转正式商用必须守住计划里的 50%+ 目标，否则收入爬坡会落后于固定且偏实施导向的成本底盘。
+- checkName: 模型失效条件
+  finding: 如果销售周期晚 1 个季度，或毛利率卡在 66% 以下，悲观情形下公司会在拿到 可发起 seed 融资的验证节点 之前先把现金打穿。
+- checkName: 下一轮验证
+  finding: 只要公司在 Y2 末证明：已有 9 个在线诊所集团、1 套可复用集成模式，以及可供渠道复制的 ROI 故事，就足以支撑 seed 融资。
+sanityChecks:
+  ruleOf40: Y3 增长率 91.8% + EBITDA 利润率 -42.6% = 49.2%。
+  burnMultiple: Y2 烧钱倍数 为 1.3x（-EBITDA $832.7K / 净新增收入 $647.5K）；Y3 烧钱倍数 为 0.9x（-EBITDA $626.5K / 净新增收入 $703.2K）。
+  revenuePerFte: 按 Q4Y3 的 9 名 FTE 计算，Y3 每名 FTE 对应收入为 $163.2K（成熟 SaaS 基准大约为 $200-$400K）。
+  flags:
+  - 模型假设 3 个付费试点都能在 M9 前落地，而且至少有 1 个在 M12 转成正式商用；只要晚 1 个季度，现金压力就会明显放大。
+  - 由于医疗实施、照护者工作流设计和客户 验证 仍然带着明显服务属性，每名 FTE 的收入低于典型 SaaS 基准。
+  - 毛利率要到 Y3 才达到 business plan 目标；如果 EHR 定制或支持强度比模型更深，下一轮融资大概率会继续后延。
