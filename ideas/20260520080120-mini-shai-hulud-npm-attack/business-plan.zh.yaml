@@ -1,0 +1,216 @@
+slug: npm-ai-session-guard
+date: '2026-05-20'
+executiveSummary: npm AI Session Guard 应该先做成一条面向 AI 触发 npm 安装的工作站控制线，而不是一开始就铺成完整的软件供应链套件。第一批客户应是 Series B-D 的软件、基础设施或开发工具公司：工程师 100–500 人，已经正式 rollout Claude Code 或 Cursor，并且有平台安全团队统一管理开发者笔记本策略。买单触发点通常是刚发生的 npm 攻陷、内部红队发现，或 AI rollout 审查——这些事件会把 .claude 和 .vscode 持久化这块缺口直接暴露出来，而现有的 Snyk、Semgrep、Socket 预算填不上。研究支持这是一个大市场：估算 TAM 为 $6.4B，滩头 SAM 为 $960M，第 3 年 SOM 模型值为 $9.6M；但公司该死守的，只是“先审计再拦截”的 npm 安装拦截 + hook 文件完整性这一窄切口，别急着扩到更宽的 agent 治理或多仓库策略。产品节奏上，应先把 Claude Code 和 VS Code 表面做透，默认审计模式；只有 pilot 证明误报低、部署快，才有资格加 blocking 和凭证范围控制。最强的战略资产，是围绕发布突发、Bun 载荷和未授权 hook 文件写入形成的差异化工作站遥测——这些都是传统 SCA 工具采不到的数据。最有可能推翻故事的风险，一是 Endor 或 Socket 很快打包跟进，二是本地 blocking 带来的摩擦大到工程师直接关掉产品。至于企业里 AI 编码工具的准确席位数，以及 managed hooks 相比文件系统级控制到底能管到什么程度，这两块输入还不够清楚，所以第 1 年必须先把这些不确定性打穿。
+problem:
+- 如今瞄准 AI 会话的 npm 攻击，会直接把持久化写进开发者机器上的 .claude 和 .vscode 文件；一次安装，就可能把之后的每次编码会话一起拖下水。
+- 现有 SCA、代理和代码仓库安全工具，大多盯依赖、CI 或 registry，很难稳稳拦住 agent 发起的本地安装，或者发现 hook 文件被未授权改写。
+- 安全团队需要的是一条能快速铺到托管笔记本上的控制，而且不能频繁误伤正常安装，否则开发者很快就会绕开它。
+solution:
+- 先发一套本地优先的 npm shim，专门拦 agent 发起的安装；它会给发布速度突发、provenance 缺口和已知攻击指纹打分，默认先审计，之后再逐步 selective blocking。
+- 盯住 .claude 和 .vscode 这些持久化表面；每次改写都追溯到触发它的软件包或进程，并把回滚动作和可进 SIEM 的证据一起产出。
+- 等 pilot 先把信任跑出来，再加凭证范围守护进程，让 AI 代理进程拿到的是短期、受限的云凭证和 Git 凭证，而不是开发者的整套 secret。
+whyWeWin:
+- 产品直击 TanStack、AntV 事故已经验证过的工作站盲区——买方现在已经把 .claude 和 .vscode 认成真正的安全表面。
+- 轻量本地 shim + 可托管的部署路径，比那些偏代理或更宽泛的 agent 治理平台更快跑出证明。
+- 被拦的安装突发、Bun bootstrap 模式、hook 文件写入以及 override 决策，会逐步沉淀成自有的检测和策略数据集。
+strategicChoices:
+  beachhead: 滩头市场是工程师规模 100–500 人的软件、基础设施和开发工具公司里的平台安全、DevSecOps 团队：它们已经正式 rollout Claude Code 或 Cursor，JavaScript/TypeScript 工作流里 npm 使用很重，而且能通过 managed hooks 或端点工具去执行笔记本策略。
+  wedgeRationale: 这条切口比“做一个宽泛的 AI 安全平台”更快拿到证明：一个付费 pilot 就能护住单个工程组织真实运行的 npm 安装链路和会话文件，几周内就能给出“拦住了什么/标记了什么”，也能和现有 SCA 预算共存，而不是要求客户替换整套平台。
+  sequencingRationale: 先从 Claude Code 和 VS Code 上的“只审计 npm 拦截 + hook 文件完整性”做起，因为这两块表面已被事故直接验证，而且产品面最窄、最好落地。等误报调到可信，再加 selective blocking；再往后，等买方对这条工作站控制平面真正信了，再把凭证范围控制和更多包管理器覆盖叠上去。
+  notYet:
+  - 第一年不要一口气覆盖 PyPI、Cargo、Go modules 以及所有 CI 环境的多仓库能力
+  - 先不要做包安装和持久化控制之外、面向所有 AI 工作流的宽泛 agent 治理策略
+  - 不要把面向消费者或独立开发者的商业化当成核心业务
+  - 在 Claude Code + VS Code 的托管部署模式还没跑顺前，先不要深挖 Windows-first 端点覆盖
+market:
+  tam: $6.4B：基于全球在职、使用 AI 工具的开发者人数，以及每席位每月 $15 的保守价格锚估出来的 TAM。
+  sam: $960M：聚焦那些有正式平台安全 owner、正主动 rollout AI 代理、且符合“工作站控制”滩头特征的组织。
+  som: $9.6M：假设在现有厂商把这项能力完全打包前，公司靠共创客户打法拿下约 1% 的 SAM。
+  segments:
+  - 核心细分：工程师 100–500 人、正式 rollout Claude Code 或 Cursor、且开发者笔记本可托管的软件公司里的平台安全团队
+  - 次级细分：想在现有 SCA 和代理工具之外，再补一层工作站控制的大型企业安全团队
+  buyingProcess: 日常 champion 往往是负责 AI 工具加固的安全工程师或 staff platform engineer，真正拍预算的是平台安全负责人或工程 VP。销售应该从事故、告警或 rollout 审查后的付费 pilot 开始；一旦买方看到足够有价值的检测或阻断，而且安装摩擦没越线，再转成正式部署。
+product:
+  mvp: MVP 要覆盖：针对 Claude Code、VS Code 驱动会话的 npm 拦截、发布突发与软件包指纹打分、审计优先的策略判定、.claude/.vscode 完整性监控，以及 Slack/SIEM 告警。先别碰全量多仓库，也别急着做全端点治理；目标就是把最近攻击里那种持久化路径拦住，至少要先把它亮出来。
+  sixMonth: 前 6 个月要拿下 3–5 个付费 pilot：提供只审计的 npm 拦截、软件包和 hook 文件证据链、针对 TanStack/AntV 风格载荷做过红队验证的检测，以及安全团队无需工程支持就能调的例外流程。
+  twelveMonth: 12 个月内，把最好的 pilot 转成生产：加上 selective blocking、托管策略 rollout、SIEM 集成，以及在支持环境里接上首版面向 GitHub 和主流云凭证链的凭证范围守护进程。
+  twentyFourMonth: 只有当 npm 留存和部署速度都被验证后，才扩到更多 AI 编码表面和相邻包管理器；再把工作站策略、持久化监控和凭证范围控制并成更宽的开发者机器信任边界产品。
+  keyBets:
+  - 只审计模式能保住足够的开发者信任，让团队先收集到打开 blocking 前必须要的调优数据。
+  - 只靠 Claude Code + VS Code 覆盖，就足够拿下第一批账户，在更广的 agent 碎片化真正成为问题前先跑出重复销售。
+  - 复现出的基于 Bun 的攻击链，能在本地安装链路上足够早地被拦下，避免在支持环境里形成持久化。
+  - 买方愿意为一条新的工作站控制单独买单，而不是等现有 AppSec 厂商把功能补齐。
+gtm:
+  wedge: 卖一个 45–60 天的付费 pilot：保护单个工程组织托管下的 Claude Code 和 VS Code 安装链路；在 npm 事故或 rollout 审查后以审计模式上线，等团队对证据、例外处理和 blocking 准确度有信心后再转正。
+  channels:
+  - 在公开 AI 工具 rollout、供应链事故或内部加固审查之后，由创始人直接外呼平台安全和 DevSecOps 负责人
+  - 免费个人 CLI 档，先做自下而上的种子用户，也顺带积累早期真实安装工作流遥测
+  - 和 managed-hook 厂商、工作站管理工具、制品管理生态合作——它们本来就触达企业开发者设备
+  funnelTargets: 目标漏斗：目标账户对话→合格付费 pilot 为 20–30%；pilot→生产转化 50%+；生产→第二团队或更大范围 rollout 在 9 个月内达到 60%+。
+  pricing: 核心产品应该按“受保护的 AI 编码席位”定价，因为相邻买方已经接受按 contributor 计费的 AppSec 逻辑，而且价值也确实对应托管开发者 rollout。一个可信的起步结构是：shim + hook 监控每席位每月 $20–30；企业策略、SIEM 集成和凭证范围控制每席位每月 $40–60；pilot 总预算控制在 $15k–$30k，让团队无需等到年度安全规划也能拍板。
+businessModel:
+  revenueStreams:
+  - 面向受保护 AI 编码席位的年订阅，含托管安装策略执行
+  - 包含凭证范围控制、SIEM 集成和集中式策略管理的企业增购包
+  - 沿更多包管理器、业务单元和相邻工作站信任控制扩出来的增购收入
+  unitOfValue: 受保护的 AI 编码席位，包含被纳入策略的安装事件和持久化策略执行。
+  targetGrossMarginPct: 80
+  expansionLevers:
+  - 在已有账户里，从审计模式扩到 blocking 和凭证范围控制
+  - 等 npm 证明跑顺后，再加 pnpm、Yarn，之后再扩到非 JavaScript 生态
+  - 从单个工程组织扩到公司级开发者笔记本策略和事故证据工作流
+strategyMap:
+  northStarMetric: 在生产环境里运行、并开启 blocking 或审计策略、且零次未授权 hook 文件持久化事件的受保护 AI 编码席位数。
+  inputMetrics:
+  - 付费 pilot 到生产环境的转化率
+  - 被标记安装中，后续被确认恶意或违反策略的占比
+  - 受保护席位上的开发者 override/disable 比例
+  - 首批 100 个托管席位的部署中位耗时
+  - 模拟 TanStack/AntV 风格载荷在持久化前被拦住的比例
+  - 来自席位扩张和增购模块的净收入留存
+  moatsToBuild:
+  - 把发布突发、Bun bootstrap 行为、hook 文件改写和最终分析师判定串起来的工作站遥测语料库
+  - 由真实企业开发者设备上的 override 和例外数据塑形出来的策略调优引擎
+  - 跨 managed hooks、MDM 和制品管理生态的部署 playbook，把价值兑现速度拉开到宽平台前面
+  killCriteria:
+  - 在滩头市场里，40 次目标账户对话之后仍拿不到 5 个付费 pilot
+  - 前 6 个付费 pilot 跑完后，pilot→生产转化率仍低于 50%
+  - rollout 后 30 天内，超过 15% 的受保护席位选择关闭、绕过，或必须长期挂例外
+  - 产品做满 6 个月后，受控复现的 TanStack/AntV 风格载荷在支持环境里仍有超过 20% 能完成持久化
+  mermaid: "flowchart LR\n  Wedge[AI session npm wedge] --> MVP[Audit-first shim and hook monitor MVP]\n  MVP --> Proof[Blocked payloads and trusted pilots]\n  Proof --> Expansion[Credential scope and wider workstation policy]\n"
+investorMemo:
+  verdict:
+    call: Watch
+    conviction: 痛点足够重，切口也够克制，这个机会值得持续跟；但在公司证明自己能低摩擦部署、并且在 Endor 或 Socket 打包前确实有时间窗之前，判断不该拉得太满。
+    whyBelieve: 公司抓住了一块刚刚显形的工作站控制缺口，而且第一批客户、购买触发、部署路径和证明点都能讲圆。
+    whyDoubt: 时间窗口可能很短，因为现有厂商本来就在卖给同一批买方；而误报带来的日常打扰，也可能把一个真实问题迅速变成大家不能忍的负担。
+    nextDiligence: 重点尽调 3–5 个付费 pilot：能否复现近期攻击、在 30 天内铺到托管 AI 工具设备上，并把 disablement 控在既定阈值以下。
+  firstCustomer:
+    title: 一家 150–400 人、已启用 AI 编码的软硬件公司的平台安全负责人
+    profile: 一家 Series B-D 的软件、基础设施或开发工具公司，开发者笔记本以托管的 macOS 或 Linux 为主，已经正式 rollout Claude Code 或 Cursor，内部 npm 工作流很重。
+    trigger: 最近一次 npm 攻陷、内部红队发现，或 AI rollout 安全审查，让团队意识到 .claude 和 .vscode 的持久化已经落在现有控制之外。
+    buyer: 平台安全负责人或工程副总裁
+    initialContract: 先卖一个 $15k–$30k、覆盖 100–250 名受保护工程师、周期 45–60 天的付费 pilot；等托管策略、blocking 和 SIEM 流程扩到整个组织后，再转成约 $50k–$120k 年度 ACV。
+  mustBeTrue:
+  - 至少三分之一的合格滩头账户，必须把“工作站级 AI 会话持久化”视为当下就有预算要补的控制缺口，而不是未来路线图需求。
+  - 只审计 pilot 必须在 30 天内产出有行动价值的检测或拦住红队载荷，而且禁用/绕过比例不能超过 15%。
+  - shim 和 hook monitor 必须在支持环境里，于持久化发生前拦住复现的 TanStack/AntV 风格载荷。
+  - 客户必须愿意为有意义规模的生产部署支付每席位每月高于 $20，或年 ACV 高于 $50k 的有效价格。
+  - 在公司拿下至少 10 个生产客户并沉淀出差异化遥测之前，Endor、Socket、Snyk、Semgrep 都不能把这条切口彻底中和。
+  diligenceQuestions:
+  - 在 100–500 人的目标账户里，已经有多少集中托管的 Claude Code、Cursor、Codex 席位？
+  - 要在 lifecycle script 运行前执行产品，managed-hook 或 MDM rollout 到底够不够，还是必须更深的端点控制？
+  - 什么样的误报率和额外延迟，会逼工程团队关闭或绕过工作站控制？
+  - 在真实对比测试里，哪些检测结果能明显优于 Endor、Socket、Snyk 或内部脚本？
+  - 公司能不能在不破坏买方期待的本地优先隐私姿态下，收集到足够的安装和 hook 遥测来持续优化检测？
+operatingAssumptions:
+- assumption: 只审计的上线模式能把开发者信任保到足够久，让团队收集到 selective blocking 所需的调优数据。
+  basis: research.yaml
+  validationTest: 跑 5 个共创客户 pilot，在前 30 天量化席位禁用率、例外量和每周 override 率。
+  decisionImpact: 如果不成立，公司就得继续收窄策略范围，或者更长时间停留在“只给证据、不做阻断”的监控产品形态。
+- assumption: 只靠 Claude Code 和 VS Code 覆盖，就足以在扩更多 agent 表面前拿下前 5 个生产客户。
+  basis: idea.yaml
+  validationTest: 跟踪前 20 个合格机会里的 agent/编辑器组合，并确认至少 70% 无需新增表面开发就能得到有意义覆盖。
+  decisionImpact: 如果不成立，路线图和招聘就得更早转向更广的 agent 适配层，切口也会失焦。
+- assumption: 只要价格能嵌进现有按 contributor 计费的 AppSec 预算，平台安全团队就愿意为一个独立的工作站控制买单。
+  basis: research.yaml
+  validationTest: 在 15 场预算 owner 访谈里测试 3 套 pilot/年包结构，并在目标区间内拿下至少 2 个付费 pilot。
+  decisionImpact: 如果不成立，公司就得把产品改打成合作伙伴增购包，或者扩成更大的控制平面。
+- assumption: managed hooks、端点工具或 MDM 能给第一批设备提供可行的部署路径，不需要每单都做定制服务。
+  basis: research.yaml
+  validationTest: 用一套标准 rollout playbook 跑完前 3 个 pilot，把每个客户的安全工程部署时间控制在 2 周内。
+  decisionImpact: 如果不成立，实施成本会迅速抬升，公司要么补服务能力，要么重想产品架构。
+- assumption: 在现有厂商补上等价 hook 文件监控前，早期工作站遥测能先沉淀出有意义的检测护城河。
+  basis: operator judgment
+  validationTest: 在前 6 个 pilot 里，把误报精度和独有检测信号拿去和现有厂商评测及公开功能发布做对比。
+  decisionImpact: 如果不成立，长期差异化会变弱，融资时也该按更窄的结果窗口来讲。
+experimentRoadmap:
+- horizon: 0-90 天
+  experiment: ICP 和买方触发访谈
+  hypothesis: 刚启动的 AI 工具 rollout 加上新近 npm 事故，足以制造付费工作站控制 pilot 的紧迫性。
+  successMetric: 完成 20 次目标账户访谈，其中至少 8 个合格潜在客户确认存在明确触发点，且 5 个要求继续跟 pilot。
+  owner: 安全产品创始人
+- horizon: 0-90 天
+  experiment: 在受控实验室里复现 TanStack 和 AntV 风格载荷
+  hypothesis: 本地 shim + hook 文件监控能在未授权写入落地前拦下持久化。
+  successMetric: 在支持环境里，至少 80% 的测试样例能在持久化前被阻断或完全暴露出来，同时判定延迟中位数低于 200 ms。
+  owner: 创始工程师
+- horizon: 90-180 天
+  experiment: 只审计的托管设备 pilot
+  hypothesis: 只要告警说得清、例外处理贴近平台安全工作流，买方就能接受审计优先的部署方式。
+  successMetric: 上线 3 个付费 pilot，中位 rollout 时间低于 30 天，首月被禁用或被绕过的席位占比低于 15%。
+  owner: 解决方案工程师
+- horizon: 90-180 天
+  experiment: 定价与打包测试
+  hypothesis: 围绕托管开发者席位定价，再叠企业增购包，会比单纯按量或 proxy 风格定价更容易转化。
+  successMetric: 同一套首选定价在 10 场定价访谈中至少赢下 6 场，并进入 2 份已签 pilot scope。
+  owner: 安全产品创始人
+- horizon: 6-12 个月
+  experiment: Selective blocking 和 SIEM 工作流 rollout
+  hypothesis: 只要例外处理足够准，告警又能直接接进现有 incident pipeline，客户就愿意从审计模式切到 blocking。
+  successMetric: 至少 2 个 pilot 在生产环境开启 blocking，并出现已确认的恶意或违规事件，同时手工 override 占比低于 10%。
+  owner: 检测工程师
+- horizon: 12-18 个月
+  experiment: 凭证范围守护进程增购测试
+  hypothesis: 给 GitHub 和云凭证换成短期、受限版本，会明显拉高 pilot→生产转化和账户扩张。
+  successMetric: 3 个生产客户启用守护进程，并在转化率、席位扩张或 secret 暴露发现上，至少有一项优于只上 shim 的部署。
+  owner: 检测工程师
+operations:
+- 把近期 npm 攻击做成红队回归语料库，并在每次策略发布前全量跑一遍。
+- 坚持本地优先的决策管线，只存策略调优、告警和审计证据所必需的最小遥测。
+- 每周和 pilot 客户一起复盘误报、override 和禁用情况，再决定是否扩大执法范围。
+- 尽量通过 managed hooks、端点工具、SIEM 连接器和制品管理伙伴做标准化部署，而不是每单都做一次性定制服务。
+team:
+- role: 安全产品创始人
+  startTiming: 第 0 个月
+  rationale: 负责共创客户销售、买方洞察、定价和产品边界，让公司始终聚焦在一块最紧迫的工作站控制缺口上。
+- role: 创始工程师
+  startTiming: 第 0 个月
+  rationale: 尽快把 npm shim、hook monitor、实验室 harness 和第一版策略引擎做出来，撑起付费 pilot。
+- role: 检测工程师
+  startTiming: 第 2 个月
+  rationale: pilot 一旦开始产生遥测，就由他负责攻击信号调优、误报压降，以及后续的凭证范围守护进程。
+- role: 解决方案工程师
+  startTiming: 第 4 个月
+  rationale: 把共创客户打磨成可复制部署，扛托管设备 rollout，并沉淀例外处理 playbook。
+- role: GTM 负责人
+  startTiming: 第 9 个月
+  rationale: 等第一批 pilot 真正转化、事件驱动的销售动作跑出重复性后，再补 pipeline 产能。
+milestones:
+- horizon: 0-12 个月
+  items:
+  - 在首批 AI 工具 rollout 滩头市场里拿下 3–5 个付费 pilot。
+  - 至少把 2 个 pilot 转成年框生产部署。
+  - 在支持环境里证明能拦住受控复现的 TanStack/AntV 风格载荷，同时把首月席位禁用率压到 15% 以下。
+- horizon: 12-24 个月
+  items:
+  - 做到 8–10 个生产客户，且托管设备部署能稳定压在 30 天以内。
+  - 把凭证范围控制和 selective blocking 做成可增购的生产模块。
+  - 在现有客户里，从单个工程组织顺利扩到更多席位或第二团队部署。
+- horizon: 24-36 个月
+  items:
+  - 只有在 npm 留存和扩张得到证明后，再扩到相邻包管理器或更多 agent 表面。
+  - 沉淀出一套明显优于现有替代品的工作站威胁情报和策略数据集。
+  - 用证据证明自己已具备往更大平台扩张、或推进 seed-to-series A 融资的 readiness。
+risks:
+- risk: Endor、Socket 或其他现有厂商，会在公司建立市场可信度前就把 hook 文件监控和本地软件包控制打包进去。
+  likelihood: High
+  impact: High
+  mitigation: 尽快拿下前 10 个生产客户，优先走最快的部署路径，沉淀差异化工作站遥测，而不是做通用扫描功能。
+- risk: 误报或安装延迟会制造足够强的工程摩擦，逼客户关闭执法。
+  likelihood: High
+  impact: High
+  mitigation: 先从审计模式起步，用红队语料库和 pilot 数据调优，并把 blocking 绑定在清晰的精度阈值和客户复核流程之后。
+- risk: managed hooks 或 wrapper 层控制，可能来不及在持久化或外传发生前拦住部分攻击链。
+  likelihood: Medium
+  impact: High
+  mitigation: 先把支持环境收窄，在复现的 Bun 载荷上把第一条路径跑通，再考虑更深的端点措施。
+- risk: 目标 100–500 人市场里，真实的 AI 编码席位数或集中策略控制能力，可能低于模型假设。
+  likelihood: Medium
+  impact: Medium
+  mitigation: 尽早核实席位规模和部署权；如果中端市场 rollout 太不成熟，就把滩头往更大、集中管理更强的团队上移。
+fundingAsk:
+  round: pre-seed
+  targetFundingRangeUsd: $2-4M
+  runwayMonths: 18
+  useOfFundsSummary: 这笔钱用来跑 18 个月：拿下 3–5 个付费 pilot，把“审计优先 shim + hook 监控”整套栈做出来，在生产环境里验证 selective blocking 和凭证范围控制，并沉淀足够多的差异化遥测和部署证据，为下一轮融资站住脚。

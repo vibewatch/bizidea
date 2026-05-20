@@ -1,0 +1,276 @@
+slug: npm-ai-session-guard
+date: '2026-05-20'
+sector: dev-tools
+pitch: "Real-time npm install firewall for AI coding sessions that blocks supply-chain attacks before they hijack Claude Code, Codex, or VS Code."
+sourceContext:
+  topic: npm supply chain attack with AI-agent hijacking payload
+  topicScope: broad
+  timeWindow: 2026-05-19 to 2026-05-19
+  timeWindowLabel: yesterday
+  sectorHint: dev-tools
+  clusterId: c1
+  headline: "637 malicious npm versions published in 22 minutes harvest cloud credentials and hijack Claude Code and Codex on millions of developer machines"
+  primaryCompanies:
+    - SafeDep
+    - atool
+  topSourceUrls:
+    - https://safedep.io/mini-shai-hulud-strikes-again-314-npm-packages-compromised
+  eventKeys:
+    - safedep|incident|2026-05
+  signalStrength: 5
+  qualityScore: 4.7
+  evidenceConfidence: 4
+  incumbentGravity: 2
+  selectionScore: 4.5
+  scoreRationale: >-
+    Strongest scores on opportunity clarity and pain intensity from a novel supply-chain attack with AI-agent hijacking;
+    weakest on startup relevance because the central actor is a security-research firm rather than an emerging startup;
+    single source but a primary investigation with full IoC list.
+  selectionRationale: >-
+    Clear wedge for AI-session-aware package provenance verification, npm token rotation automation, and CI/CD credential
+    isolation; only one source fetched because this is same-day breaking news from the incident itself, but the source is
+    a comprehensive primary investigation.
+  dedupeRationale: >-
+    No prior run covered npm supply chain security or the Mini Shai-Hulud threat actor; history has no matching
+    eventKeys, topSourceUrls, or keyword overlap with any of the 125 history entries.
+  gaps: null
+  sources:
+    - id: 1
+      title: "Mini Shai-Hulud Strikes Again: 314 npm Packages Compromised"
+      url: https://safedep.io/mini-shai-hulud-strikes-again-314-npm-packages-compromised
+      publisher: SafeDep
+      publishedDate: '2026-05-19'
+      company: SafeDep
+      eventType: incident
+      fetchVerified: true
+      keyPoints:
+        - "The npm account 'atool' was compromised and published 637 malicious versions across 317 packages in a 22-minute automated burst on May 19 2026"
+        - "Affected packages include size-sensor (4.2M downloads/month), echarts-for-react (3.8M), and hundreds of @antv scoped packages totalling millions of monthly downloads"
+        - "Credential harvesting targets the full AWS chain, GCP service accounts, Azure credentials, GitHub PATs, Kubernetes service-account tokens, HashiCorp Vault, and local password managers including 1Password and Bitwarden"
+        - "AI agent hijacking via Claude Code and Codex SessionStart hooks re-executes the malware on every AI coding session; VS Code gets a tasks.json runOn folderOpen trigger for the same effect"
+        - "Persistent systemd user service and macOS LaunchAgent poll GitHub commit search hourly for RSA-signed commands; same Mini Shai-Hulud toolkit was used in the SAP compromise three weeks prior"
+  signals:
+    - title: AI-agent hook injection
+      description: >-
+        Attackers inject malware into Claude Code and Codex SessionStart hooks so that every subsequent AI coding
+        session re-executes the payload — a persistence vector no existing SCA tool monitors.
+      sourceRefs: [1]
+    - title: Automated batch compromise at scale
+      description: >-
+        637 malicious package versions were published across 317 packages in 22 minutes, proving that automated npm
+        account takeovers can achieve ecosystem-wide reach faster than any manual detection workflow.
+      sourceRefs: [1]
+    - title: Full cloud credential sweep
+      description: >-
+        The malware harvests AWS, GCP, Azure, GitHub PATs, Kubernetes tokens, HashiCorp Vault secrets, and local
+        password manager vaults — every credential a developer or AI agent needs to operate.
+      sourceRefs: [1]
+    - title: Millions of downstream developers exposed
+      description: >-
+        High-popularity packages (size-sensor 4.2M downloads/month, echarts-for-react 3.8M) were among the compromised
+        set, meaning millions of developers may have installed malicious code before detection.
+      sourceRefs: [1]
+    - title: Repeat threat actor pattern
+      description: >-
+        The same Mini Shai-Hulud toolkit was confirmed in a prior SAP compromise three weeks earlier, indicating a
+        persistent adversary group systematically targeting the npm ecosystem and AI developer toolchains.
+      sourceRefs: [1]
+problem: >-
+  AI coding tools like Claude Code, Codex, and VS Code are now primary attack targets in npm supply-chain campaigns:
+  malicious packages inject hooks into AI session startup files so the payload re-executes on every new coding session.
+  Existing software composition analysis tools check dependency graphs and known CVEs but have no visibility into AI
+  session configuration files, SessionStart hooks, or the timing anomaly of 637 versions published in 22 minutes.
+  Meanwhile, compromised packages on developer machines have access to every cloud credential in the environment, and
+  the AI coding agent itself becomes the persistence mechanism.
+targetUser:
+  primary: Platform security engineer or DevSecOps lead at a mid-to-large software company that has adopted Claude Code, GitHub Copilot, or OpenAI Codex for its engineering team
+  secondary: Senior software engineer on a security-conscious team who manages their own AI coding environment
+  buyer: Head of Platform Security or VP Engineering at a company with 50+ engineers using AI coding assistants
+startupThesis:
+  nonObviousInsight: >-
+    AI coding agents are the new browser extension — they run with developer-level privileges, consume untrusted npm
+    packages on demand, and write to config files that persist across sessions — but no security tooling was built with
+    this threat model in mind, leaving a blind spot that attackers have already weaponised.
+  beachhead: >-
+    DevSecOps teams at Series B–D software companies with 100–500 engineers that have formally rolled out Claude Code
+    or Codex and own the developer-laptop security policy
+  wedge: >-
+    A lightweight CLI shim that intercepts every npm install triggered by an AI coding agent, validates package
+    provenance and publish-velocity anomalies in real time, and blocks or quarantines any package that attempts to
+    modify AI session hook files such as Claude Code hooks or VS Code tasks.json.
+  whyNowCatalyst: >-
+    The May 2026 Mini Shai-Hulud attack proved that AI coding sessions can be backdoored via npm and that the attack
+    re-executes on every subsequent AI session — creating a new category of persistent developer-machine compromise that
+    existing SCA tools cannot detect.
+  ventureScalePath: >-
+    Start with an npm shim for AI agent sessions, expand to all package managers (PyPI, Cargo, Go modules) when AI
+    agents use them, add credential-scope enforcement (ephemeral scoped tokens for AI agent processes), and ultimately
+    build a developer-machine trust-boundary platform sold enterprise-wide.
+solution: >-
+  An AI-agent-aware package security platform with three layers: (1) a drop-in CLI shim that wraps npm and intercepts
+  installs initiated by AI coding agents, checking publish velocity, account-takeover signals, and hook-file mutations
+  before allowing installation; (2) a session-config monitor that watches AI session startup files for unauthorized
+  modifications and alerts or rolls back changes; (3) a credential-scope daemon that issues short-lived, process-scoped
+  cloud tokens to AI agent processes so even a fully compromised package cannot harvest long-lived AWS, GCP, or GitHub
+  credentials. The platform returns verdicts in under 200 ms to avoid disrupting the AI coding workflow and integrates
+  with existing SIEM and Slack alerting pipelines.
+goToMarketSeed:
+  firstCustomer: >-
+    A Series C fintech or dev-tools company with 150–400 engineers that has mandated Claude Code company-wide and has a
+    dedicated platform-security team of 2–5 engineers responsible for developer-laptop policy
+  buyingTrigger: >-
+    The platform security team reads the Mini Shai-Hulud incident report and recognises that their Claude Code rollout
+    created a credential-harvesting attack surface invisible to their existing Snyk or Socket.dev licenses
+  currentAlternative: >-
+    Snyk or Socket.dev for SCA plus manual policy documents telling engineers not to install untrusted packages — no
+    tool specifically monitors AI session hook files or AI-agent-initiated installs
+  switchingReason: >-
+    Neither Snyk nor Socket.dev monitors AI session configuration files or publish-velocity anomalies at install time;
+    this product fills the gap with a 10-minute CLI shim install and zero changes to the existing npm workflow
+  pricingHypothesis: >-
+    Per-seat SaaS at $15–25 per engineer per month with a free tier for individual developers capped at one seat;
+    enterprise contracts with SSO, SIEM integration, and the credential-scope daemon add-on at $40–60 per seat per month
+whyNow:
+  - point: >-
+      The Mini Shai-Hulud attack (May 2026) demonstrated for the first time that AI coding session hooks are a viable
+      persistence vector — 637 malicious package versions published in 22 minutes, each injecting hooks into Claude Code
+      and Codex sessions on developer machines.
+    signalRefs: ["AI-agent hook injection", "Automated batch compromise at scale"]
+    sourceRefs: [1]
+  - point: >-
+      Millions of monthly downloads on compromised packages (size-sensor 4.2M, echarts-for-react 3.8M) mean the blast
+      radius of a single npm account takeover now reaches a significant fraction of the global developer population.
+    signalRefs: ["Millions of downstream developers exposed"]
+    sourceRefs: [1]
+  - point: >-
+      The same Mini Shai-Hulud toolkit appeared in a prior SAP compromise three weeks earlier, confirming a persistent
+      adversary group systematically targeting AI developer toolchains and likely to strike again.
+    signalRefs: ["Repeat threat actor pattern"]
+    sourceRefs: [1]
+  - point: >-
+      A full cloud credential sweep (AWS, GCP, Azure, GitHub, Kubernetes, Vault, 1Password, Bitwarden) means a single
+      infected npm install on a developer laptop is now equivalent to a full infrastructure compromise — a board-level
+      incident that DevSecOps teams will budget to prevent.
+    signalRefs: ["Full cloud credential sweep"]
+    sourceRefs: [1]
+differentiator: >-
+  Existing SCA tools analyse dependency graphs and known vulnerability databases; none model the AI coding agent as an
+  actor or monitor the session hook files those agents use as their configuration surface. This product's core IP is a
+  real-time publish-velocity anomaly detector (catching the 22-minute 637-version burst pattern) combined with a
+  hook-file integrity watcher tuned specifically to Claude Code, Codex, and VS Code AI extension configs. The
+  credential-scope daemon layer is defensible because it requires deep integration with the developer's local keychain
+  and cloud SDK credential chains — a moat built through onboarding friction that becomes stickiness over time.
+conceptDiagram:
+  title: "npm AI Session Guard — value flow"
+  mermaid: |
+    flowchart LR
+      DevLaptop["Developer Laptop\n(AI coding session)"]
+      NPMShim["npm Shim\n(intercepts install)"]
+      ProvenanceEngine["Provenance &\nVelocity Engine"]
+      HookMonitor["Session Hook\nMonitor"]
+      CredDaemon["Credential\nScope Daemon"]
+      SIEM["SIEM / Slack Alert"]
+      DevLaptop --> NPMShim
+      NPMShim --> ProvenanceEngine
+      ProvenanceEngine -->|clean| DevLaptop
+      ProvenanceEngine -->|flagged| SIEM
+      DevLaptop --> HookMonitor
+      HookMonitor -->|unauthorized change| SIEM
+      DevLaptop --> CredDaemon
+      CredDaemon -->|scoped ephemeral token| DevLaptop
+businessModelCanvas:
+  customerSegments:
+    - Series B–D software companies with 100–500 engineers that have adopted AI coding assistants company-wide
+    - Individual security-conscious developers and open-source maintainers on the free tier
+    - Enterprise platform-security teams with formal developer-laptop security programs
+  valuePropositions:
+    - Block AI-session-targeted npm supply-chain attacks before installation
+    - Detect account-takeover-style publish-velocity anomalies in real time
+    - Monitor and protect AI session hook files from unauthorized modification
+    - Issue scoped ephemeral cloud credentials to AI agent processes to limit blast radius
+  channels:
+    - Developer-led bottom-up adoption via free CLI tier on GitHub and npmjs.org
+    - Security-conference talks and incident post-mortems at RSA and AppSec conferences
+    - Direct outbound to DevSecOps leads at companies that have announced AI coding tool mandates
+    - Co-marketing partnerships with Claude and Codex ecosystem teams
+  customerRelationships:
+    - Self-serve onboarding for individual and small-team tiers
+    - Dedicated security-engineer onboarding for enterprise contracts
+    - Community Slack and responsible-disclosure program
+  revenueStreams:
+    - Per-seat SaaS subscription across individual, team, and enterprise tiers
+    - Enterprise add-on for credential-scope daemon and SIEM integration
+    - Professional services for custom hook-policy configuration
+  keyResources:
+    - Publish-velocity anomaly detection engine and live IoC feed
+    - AI session hook-file schema library covering Claude Code, Codex, VS Code, and Cursor
+    - Credential-scope integration layer for AWS, GCP, Azure, and GitHub
+    - Engineering team with npm registry and AI coding-tool internals expertise
+  keyActivities:
+    - Maintain real-time npm registry monitoring and IoC feed
+    - Update hook-file schema library as new AI coding tools launch
+    - Build and tune publish-velocity anomaly detection models
+    - Enterprise sales and DevSecOps community engagement
+  keyPartners:
+    - npm and GitHub for registry API access and incident-disclosure coordination
+    - Anthropic and OpenAI for Claude Code and Codex hook-schema documentation
+    - SIEM vendors (Splunk, Datadog, PagerDuty) for alert integrations
+    - Cloud providers for credential-scope API access
+  costStructure:
+    - npm registry monitoring infrastructure and API costs
+    - Engineering salaries for core detection engine and integrations
+    - Cloud infrastructure for provenance and velocity analysis service
+    - Sales and developer-relations overhead
+jobsToBeDone:
+  - job: >-
+      When rolling out AI coding tools company-wide, help the platform security team enforce package safety policies,
+      so they can prevent a supply-chain compromise from becoming a full cloud credential breach.
+    currentAlternative: Snyk or Socket.dev policy gates in CI plus honor-system developer guidelines for local installs
+    successMetric: >-
+      Zero unauthorized modifications to AI session hook files and zero long-lived cloud credentials accessible to AI
+      agent processes within 30 days of deployment
+  - job: >-
+      When a new npm batch-publish anomaly occurs, help the DevSecOps engineer detect and contain it before infected
+      packages are installed on developer machines, so they can avoid a credential-harvesting incident.
+    currentAlternative: Manual monitoring of npm security advisories and Slack alerts from community disclosures often 24–48 hours after the event
+    successMetric: >-
+      Alert to DevSecOps within 5 minutes of anomalous publish event with automatic block on affected package versions
+      at install time
+ideaScorecard:
+  signalStrength:
+    score: 5
+    rationale: >-
+      The Mini Shai-Hulud incident is a breaking, high-severity, well-documented event with a primary-source
+      investigation confirming a novel attack vector against AI coding tools with millions of exposed developer machines.
+  painIntensity:
+    score: 5
+    rationale: >-
+      A single infected npm install on a developer laptop sweeps every cloud credential in the environment and
+      backdoors every subsequent AI coding session — an existential risk for a startup and a career-ending event for
+      the security lead who missed it.
+  wedgeClarity:
+    score: 4
+    rationale: >-
+      The CLI shim approach is a clear, deployable 10-minute integration with a specific technical wedge of AI session
+      hook monitoring plus publish-velocity detection; the main risk is that Socket.dev or Snyk adds this as a feature.
+  defensibility:
+    score: 3
+    rationale: >-
+      The core detection logic is replicable by well-resourced incumbents, but the AI session hook-schema library and
+      credential-scope daemon create integration moats; first-mover advantage in a new attack category provides
+      additional time before incumbents react.
+  ventureScale:
+    score: 4
+    rationale: >-
+      Developer security tooling is a proven billion-dollar market; AI coding assistant adoption is rapidly expanding
+      the addressable TAM as every engineering team becomes a potential supply-chain attack target.
+topRisks:
+  - name: Incumbent feature addition
+    description: Socket.dev or Snyk could add AI-session hook monitoring and publish-velocity detection as a feature within 6–12 months of this idea becoming public.
+    mitigation: Move fast to sign 10+ paying enterprise customers and build the credential-scope daemon before incumbents react; pursue exclusive data-sharing agreements with npm and AI tool vendors.
+  - name: False positive friction
+    description: Overly aggressive blocking of legitimate npm packages would destroy developer trust and cause platform security teams to disable the tool after a single false positive disrupts a production deploy.
+    mitigation: Launch in audit-only mode by default with a 30-day calibration period and invest heavily in false-positive rate as a key product metric published on a public accuracy dashboard.
+  - name: AI tool API fragmentation
+    description: Claude Code, Codex, Cursor, and future AI coding tools each have different session hook schemas and config file locations, creating ongoing maintenance burden as the market fragments.
+    mitigation: Open-source the hook-schema library to invite vendor contributions and prioritise Claude Code and VS Code for the first 12 months before expanding methodically to other tools.

@@ -1,0 +1,184 @@
+slug: npm-ai-session-guard
+date: '2026-05-20'
+sector: dev-tools
+pitch: 给 AI 编码会话用的实时 npm 安装防火墙，在供应链攻击劫持 Claude Code、Codex 或 VS Code 之前先拦住。
+sourceContext:
+  topic: 带 AI 代理劫持载荷的 npm 供应链攻击
+  topicScope: broad
+  timeWindow: 2026-05-19 to 2026-05-19
+  timeWindowLabel: yesterday
+  sectorHint: dev-tools
+  clusterId: c1
+  headline: 637 个恶意 npm 版本在 22 分钟内被发布，窃取云凭证并劫持数百万开发者机器上的 Claude Code 和 Codex
+  primaryCompanies:
+  - SafeDep
+  - atool
+  topSourceUrls:
+  - https://safedep.io/mini-shai-hulud-strikes-again-314-npm-packages-compromised
+  eventKeys:
+  - safedep|incident|2026-05
+  signalStrength: 5
+  qualityScore: 4.7
+  evidenceConfidence: 4
+  incumbentGravity: 2
+  selectionScore: 4.5
+  scoreRationale: 机会清晰度和痛感强度得分最高——这次新型供应链攻击会劫持 AI 代理；创业相关性最弱，因为事件核心参与方是安全研究公司，不是新创公司；虽然只有单一来源，但它是一手调查，而且附了完整 IoC 清单。
+  selectionRationale: 切口很清楚：做 AI 会话感知的软件包溯源校验、npm token 轮换自动化，以及 CI/CD 凭证隔离。之所以只抓 1 个来源，是因为这是事件当天的一手突发报道，而且调查已经足够完整。
+  dedupeRationale: 历史里没有覆盖过 npm 供应链安全或 Mini Shai-Hulud 这个威胁行为者；125 条历史记录里，无论 eventKeys、topSourceUrls 还是关键词重合都找不到匹配项。
+  gaps: null
+  sources:
+  - id: 1
+    title: 'Mini Shai-Hulud Strikes Again: 314 npm Packages Compromised'
+    url: https://safedep.io/mini-shai-hulud-strikes-again-314-npm-packages-compromised
+    publisher: SafeDep
+    publishedDate: '2026-05-19'
+    company: SafeDep
+    eventType: incident
+    fetchVerified: true
+    keyPoints:
+    - npm 账号 'atool' 被攻陷后，攻击者在 2026-05-19 的 22 分钟自动化窗口里，向 317 个包推送了 637 个恶意版本。
+    - 受影响的包包括 size-sensor（每月下载 4.2M）、echarts-for-react（3.8M）以及数百个 @antv 作用域包，总下载量达到数百万次每月。
+    - 凭证窃取覆盖整条 AWS 链路、GCP 服务账号、Azure 凭证、GitHub PAT、Kubernetes service-account token、HashiCorp Vault，以及 1Password、Bitwarden 等本地密码管理器。
+    - 攻击者会把恶意代码注入 Claude Code 和 Codex 的 SessionStart hook；这样一来，每次新的 AI 编码会话都会再次执行载荷。VS Code 也会通过 tasks.json 的 runOn folderOpen 触发同样效果。
+    - 持久化层会通过 systemd 用户服务和 macOS LaunchAgent 每小时轮询 GitHub commit 搜索，获取 RSA 签名指令；三周前 SAP 遭攻陷时，用的也是同一套 Mini Shai-Hulud 工具链。
+  signals:
+  - title: AI 代理 hook 注入
+    description: 攻击者把恶意代码注入 Claude Code 和 Codex 的 SessionStart hook，之后每次 AI 编码会话都会重跑载荷——而现有 SCA 工具没有一个会盯这类持久化向量。
+    sourceRefs:
+    - 1
+  - title: 大规模自动化批量攻陷
+    description: 22 分钟内，317 个包被推上 637 个恶意版本，说明自动化 npm 账号接管的扩散速度已经快过任何人工检测流程。
+    sourceRefs:
+    - 1
+  - title: 全量云凭证搜刮
+    description: 恶意代码会搜刮 AWS、GCP、Azure、GitHub PAT、Kubernetes token、HashiCorp Vault secret，以及本地密码管理器金库——也就是开发者和 AI 代理开展工作的整套凭证。
+    sourceRefs:
+    - 1
+  - title: 数百万下游开发者暴露
+    description: 被攻陷的软件包里包含高流量项目，如 size-sensor（每月下载 4.2M）和 echarts-for-react（3.8M）；在被发现之前，数百万开发者都可能已经装上了恶意代码。
+    sourceRefs:
+    - 1
+  - title: 同一威胁行为者反复出手
+    description: 三周前的 SAP 攻陷中已经确认出现同一套 Mini Shai-Hulud 工具链，说明这是一个持续运作、系统性瞄准 npm 生态和 AI 开发工具链的对手组织。
+    sourceRefs:
+    - 1
+problem: Claude Code、Codex、VS Code 这类 AI 编码工具，已经成了 npm 供应链攻击的头号目标：恶意包会把 hook 写进 AI 会话启动文件，之后每次新会话都会重新执行载荷。现有软件成分分析工具只看依赖图和已知 CVE，对 AI 会话配置文件、SessionStart hook，或“22 分钟内发布 637 个版本”这种发布时间异常几乎没有可见性。更麻烦的是，一旦开发者机器上的包被攻陷，环境里的整套云凭证都能被拿走，AI 编码代理本身还会反过来变成持久化机制。
+targetUser:
+  primary: 已在工程团队里落地 Claude Code、GitHub Copilot 或 OpenAI Codex 的中大型软件公司里的平台安全工程师或 DevSecOps 负责人
+  secondary: 在重视安全的团队里，自行管理 AI 编码环境的高级软件工程师
+  buyer: 拥有 50+ 名使用 AI 编码助手工程师公司的平台安全负责人或工程副总裁
+startupThesis:
+  nonObviousInsight: AI 编码代理正变成新的浏览器扩展——它们拿着开发者级权限按需吃进不可信的 npm 包，还会改写能跨会话持久化的配置文件；但现有安全工具从来没按这个威胁模型设计，这个盲区已经被攻击者武器化。
+  beachhead: 滩头市场是 Series B–D、工程师规模 100–500 人、已经正式推行 Claude Code 或 Codex，并且由团队统一制定开发者笔记本安全策略的 DevSecOps 团队。
+  wedge: 先上一个轻量 CLI shim：凡是 AI 编码代理触发的 npm install，都先拦截，再实时校验软件包溯源和发布速度异常；只要它想改写 Claude Code hook 或 VS Code tasks.json 这类 AI 会话 hook 文件，就直接阻断或隔离。
+  whyNowCatalyst: 2026 年 5 月的 Mini Shai-Hulud 攻击已经证明：AI 编码会话完全可以通过 npm 被植入后门，而且载荷会在此后的每次 AI 会话里反复执行——这等于出现了一类全新的开发者机器持久化攻陷，而现有 SCA 工具根本抓不到。
+  ventureScalePath: 先从面向 AI 代理会话的 npm shim 切入；等 AI 代理开始大量使用 PyPI、Cargo、Go modules 等其他包管理器后，再扩到多生态；接着把凭证范围控制补上，给 AI 代理进程发临时、最小权限的 token；最后做成面向全公司的开发者机器信任边界平台。
+solution: 产品分三层：（1）一个可直接替换的 CLI shim，包住 npm，专门拦 AI 编码代理发起的安装，在放行前先检查发布速度、账号接管信号和 hook 文件改动；（2）一个会话配置监控器，盯住 AI 会话启动文件，一旦出现未授权改写就告警或回滚；（3）一个凭证范围守护进程，只给 AI 代理进程发短期、进程级的云 token，这样即便软件包彻底失守，也拿不到长期 AWS、GCP 或 GitHub 凭证。整个平台要求在 200 ms 内给出判定，不打断 AI 编码工作流，并能接入现有 SIEM 和 Slack 告警链路。
+goToMarketSeed:
+  firstCustomer: 第一批客户应该是 Series C 的金融科技或 dev-tools 公司：工程师 150–400 人，已经把 Claude Code 作为公司标准，并且有 2–5 人的平台安全团队专门负责开发者笔记本策略。
+  buyingTrigger: 平台安全团队读到 Mini Shai-Hulud 事故报告后，会意识到：自己推动的 Claude Code rollout，已经打开了一块现有 Snyk 或 Socket.dev 许可证根本看不见的凭证窃取攻击面。
+  currentAlternative: 今天的替代方案通常是用 Snyk 或 Socket.dev 做 SCA，再靠手工政策文件提醒工程师别装不可信的软件包——没有工具会专门盯 AI 会话 hook 文件，或盯 AI 代理发起的安装。
+  switchingReason: Snyk 和 Socket.dev 都不会在安装时监控 AI 会话配置文件，也抓不到发布速度异常；这个产品正好补上这块空白，而且 10 分钟装好 CLI shim 就能用，现有 npm 工作流不用改。
+  pricingHypothesis: 按席位收 SaaS 费：每位工程师每月 $15–25；个人开发者有免费档，但限 1 个席位。企业合同如果加上 SSO、SIEM 集成和凭证范围守护进程，价格可到每位每月 $40–60。
+whyNow:
+- point: Mini Shai-Hulud 攻击（2026 年 5 月）第一次把 AI 编码会话 hook 证明成可用的持久化向量——22 分钟里推上 637 个恶意 npm 版本，并把 hook 注进开发者机器上的 Claude Code 和 Codex 会话。
+  signalRefs:
+  - AI 代理 hook 注入
+  - 大规模自动化批量攻陷
+  sourceRefs:
+  - 1
+- point: 被攻陷包的月下载量高达数百万（size-sensor 4.2M、echarts-for-react 3.8M），这意味着一次 npm 账号接管的爆炸半径，已经能覆盖全球开发者中的相当大一部分。
+  signalRefs:
+  - 数百万下游开发者暴露
+  sourceRefs:
+  - 1
+- point: 同一套 Mini Shai-Hulud 工具链三周前已经出现在 SAP 攻陷里，说明这是一个持续瞄准 AI 开发工具链、而且大概率还会再来的对手组织。
+  signalRefs:
+  - 同一威胁行为者反复出手
+  sourceRefs:
+  - 1
+- point: 攻击链会把 AWS、GCP、Azure、GitHub、Kubernetes、Vault、1Password、Bitwarden 一整套云凭证全都扫走；这意味着开发者笔记本上一次受感染的 npm install，现在就等同于一次完整的基础设施失守——这是 DevSecOps 团队会愿意掏预算去防的董事会级事故。
+  signalRefs:
+  - 全量云凭证搜刮
+  sourceRefs:
+  - 1
+differentiator: 现有 SCA 工具看的还是依赖图和已知漏洞库；没有产品把 AI 编码代理当成“行为主体”，也没有工具去盯这些代理真正使用的会话 hook 文件。这个产品的核心 IP，是把实时发布速度异常检测（抓住 22 分钟 637 个版本这种爆发模式）和专门为 Claude Code、Codex、VS Code AI 扩展配置打造的 hook 文件完整性监控绑在一起。凭证范围守护进程也有防守性，因为它要求深度接入开发者本地 keychain 和云 SDK 的凭证链；部署越深，切换成本越高，时间越久越黏。
+conceptDiagram:
+  title: npm AI Session Guard——价值流
+  mermaid: "flowchart LR\n  DevLaptop[\"Developer Laptop\\n(AI coding session)\"]\n  NPMShim[\"npm Shim\\n(intercepts install)\"]\n  ProvenanceEngine[\"Provenance &\\nVelocity Engine\"]\n  HookMonitor[\"Session Hook\\nMonitor\"]\n  CredDaemon[\"Credential\\nScope Daemon\"]\n  SIEM[\"SIEM / Slack Alert\"]\n  DevLaptop --> NPMShim\n  NPMShim --> ProvenanceEngine\n  ProvenanceEngine -->|clean| DevLaptop\n  ProvenanceEngine -->|flagged| SIEM\n  DevLaptop --> HookMonitor\n  HookMonitor -->|unauthorized change| SIEM\n  DevLaptop --> CredDaemon\n  CredDaemon -->|scoped ephemeral token| DevLaptop\n"
+businessModelCanvas:
+  customerSegments:
+  - 工程师规模 100–500 人、已在全公司铺开 AI 编码助手的 Series B–D 软件公司
+  - 使用免费档的个人安全敏感型开发者和开源维护者
+  - 已经建立正式开发者笔记本安全计划的企业平台安全团队
+  valuePropositions:
+  - 在安装前拦住瞄准 AI 会话的 npm 供应链攻击
+  - 实时发现账号接管式的发布速度异常
+  - 监控并保护 AI 会话 hook 文件，防止未授权改写
+  - 给 AI 代理进程发范围受限的临时云凭证，压缩爆炸半径
+  channels:
+  - 通过 GitHub 和 npmjs.org 的免费 CLI 档，走开发者自发的自下而上渗透
+  - 在 RSA、AppSec 等安全大会上做分享和事故复盘
+  - 直接外呼那些已经公开要求工程团队使用 AI 编码工具的公司里的 DevSecOps 负责人
+  - 和 Claude、Codex 生态团队做联合市场合作
+  customerRelationships:
+  - 面向个人和小团队档位的自助式上手
+  - 面向企业合同的专属安全工程师导入
+  - 社区 Slack 和负责任披露计划
+  revenueStreams:
+  - 覆盖个人、团队、企业档位的按席位 SaaS 订阅
+  - 凭证范围守护进程和 SIEM 集成的企业增购包
+  - 定制 hook 策略配置的专业服务收入
+  keyResources:
+  - 发布速度异常检测引擎和实时 IoC 数据流
+  - 覆盖 Claude Code、Codex、VS Code、Cursor 的 AI 会话 hook 文件 schema 库
+  - 面向 AWS、GCP、Azure、GitHub 的凭证范围集成层
+  - 懂 npm 仓库和 AI 编码工具内部机制的工程团队
+  keyActivities:
+  - 维护实时 npm 仓库监控和 IoC 数据流
+  - 随着新 AI 编码工具上线，持续更新 hook 文件 schema 库
+  - 构建并调优发布速度异常检测模型
+  - 企业销售和 DevSecOps 社区运营
+  keyPartners:
+  - npm 和 GitHub：拿仓库 API 访问和事故披露协同
+  - Anthropic 和 OpenAI：获取 Claude Code、Codex 的 hook schema 文档
+  - SIEM 厂商（Splunk、Datadog、PagerDuty）：做告警集成
+  - 云服务商：获取凭证范围控制所需的 API 能力
+  costStructure:
+  - npm 仓库监控基础设施和 API 成本
+  - 核心检测引擎与集成团队的工程薪酬
+  - 溯源和发布速度分析服务所需的云基础设施
+  - 销售和开发者关系投入
+jobsToBeDone:
+- job: 当公司把 AI 编码工具全员铺开时，帮平台安全团队把软件包安全策略管起来，避免一次供应链攻陷直接变成整套云凭证外泄。
+  currentAlternative: 在 CI 里用 Snyk 或 Socket.dev 设策略闸门，再靠开发者自觉遵守本地安装规范。
+  successMetric: 部署后 30 天内，AI 会话 hook 文件零次未授权改写，AI 代理进程零次能拿到长期云凭证。
+- job: 当 npm 出现新的批量发布异常时，帮 DevSecOps 工程师在受感染包装进开发者机器前先发现并控住，避免演变成凭证窃取事故。
+  currentAlternative: 手工盯 npm 安全公告和社区披露后的 Slack 告警，通常要晚 24–48 小时。
+  successMetric: 发布异常发生后 5 分钟内通知 DevSecOps，并在安装时自动拦住受影响的软件包版本。
+ideaScorecard:
+  signalStrength:
+    score: 5
+    rationale: Mini Shai-Hulud 是一个正在发酵、严重级别高、文档充分的一手事件；它明确证明了 AI 编码工具存在全新的攻击向量，而且波及数百万开发者机器。
+  painIntensity:
+    score: 5
+    rationale: 开发者笔记本上一条受感染的 npm install，就能把环境里的整套云凭证扫走，还会给之后每次 AI 编码会话埋后门——对创业公司是生死级风险，对错过它的安全负责人则是职业事故。
+  wedgeClarity:
+    score: 4
+    rationale: CLI shim 是一条清楚、10 分钟可部署的技术切口：AI 会话 hook 监控 + 发布速度检测；最大风险在于 Socket.dev 或 Snyk 很快把它补成一个功能。
+  defensibility:
+    score: 3
+    rationale: 核心检测逻辑本身，大厂照着做并不难；但 AI 会话 hook schema 库和凭证范围守护进程会形成集成护城河。更重要的是，在一个新攻击类别里先跑出来，能先抢到一段时间窗口。
+  ventureScale:
+    score: 4
+    rationale: 开发者安全工具已经是验证过的十亿美元市场；而 AI 编码助手的快速普及，又把可覆盖 TAM 继续往外推——每个工程团队都可能成为新的供应链攻击目标。
+topRisks:
+- name: 现有厂商快速补功能
+  description: 一旦这个方向公开，Socket.dev 或 Snyk 可能在 6–12 个月内就把 AI 会话 hook 监控和发布速度检测补成现有产品的一项功能。
+  mitigation: 尽快签下 10+ 家付费企业客户，在现有厂商反应过来前先把凭证范围守护进程做出来；同时争取和 npm、AI 工具厂商签排他性数据共享协议。
+- name: 误报摩擦
+  description: 如果把正常 npm 包也拦得太狠，开发者信任会立刻崩；只要一次误报拖慢生产部署，平台安全团队就可能把工具直接关掉。
+  mitigation: 默认以只审计模式上线，先跑 30 天校准期；把误报率作为核心产品指标重点投入，并公开放到准确率仪表盘上。
+- name: AI 工具 API 碎片化
+  description: Claude Code、Codex、Cursor 以及未来更多 AI 编码工具，各自的会话 hook schema 和配置文件路径都不同；市场一旦碎片化，维护负担会持续抬升。
+  mitigation: 把 hook schema 库开源，吸引厂商共同维护；前 12 个月优先把 Claude Code 和 VS Code 做透，再有节奏地扩到其他工具。
