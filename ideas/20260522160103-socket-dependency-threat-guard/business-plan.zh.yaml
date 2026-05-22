@@ -1,0 +1,220 @@
+slug: ai-dependency-intake-gate
+date: '2026-05-22'
+executiveSummary: 这家公司应该从一个 GitHub 原生的依赖引入闸门切进去，服务 AI 辅助开发团队，而不是一上来就做宽口径的软件成分分析或运行时供应链平台。首个客户应是一家 Series B-D 的 AI 原生 B2B SaaS 公司：工程师规模 150-600 人，共用 monorepo，已经正式 rollout Cursor 或 Copilot，但平台安全工程师只有 1-3 人，现在还在 Slack 或 PR 评论里人工审批陌生包。购买触发点通常是 AI 编码 rollout 后的一次安全复盘、一次和陌生包有关的险情，或者高层要求在下一次采购或合规审查前拿出可审计的 OSS 控制。研究显示，这是个聚焦且可做的市场：TAM 约 $168.0M，SAM 约 $38.4M；如果公司能按模型把约 100 个滩头客户转化到按开发者计费的支出水平，第 3 年可触达的 SOM 约为 $4.8M。产品应先从 GitHub 上的 advisory mode 做起，先覆盖 npm 和 PyPI 依赖，证明它既能缩短第一次审查新包的时间，也能把开发者往已批准替代项上引；只有做到这一步，才该往 blocking 策略、更多生态和更宽的 OSS 采购控制扩。这个取舍很刻意：公司要抢的是 PR 里的第一次包审批决策，而不是正面去和 GitHub、Snyk、Socket、Endor 拼全谱系扫描广度。最可能推翻判断的风险有两个：一是目标团队每月新增包量不够，撑不起一个独立工作流产品；二是 GitHub 和供应链专精厂商在创业公司真正积累起策略数据前，就先补上了“够用”的审批记忆。现有输入没有量化目标工程团队真实的包引入量，因此在扩招或加大投入前，pilot 设计必须先把这个痛点直接测出来。
+problem:
+- AI 编码工具提出的陌生开源包，进入 pull request 的速度，已经快过小平台安全团队能审完的速度。
+- 现有扫描器和 Slack 人工审批往往要等包已经进了仓库才开始动作，因此在第一次采用的那个关口，既没有可复用的决定，也没有可审计的审批记忆。
+solution:
+- 在 GitHub pull request 里识别每一个第一次出现的 npm 与 PyPI 依赖，自动生成 provenance 与行为简报，并在 merge 之前把决策路由给正确的策略负责人。
+- 建立一套内部目录，记录哪些包已批准、哪些被拒绝、哪些有更安全的替代项，让后续 PR 处理得更快，也把开发者往已知安全选项上引。
+whyWeWin:
+- 这个切口比宽口径 SCA 平台更窄，却正好卡在第一次采用包的决策点上——这里最有紧迫感、买家归属最清晰，也最容易量化工作流 ROI。
+- 审批历史会持续复利，长成组织专属的策略记忆和替代推荐，而现有厂商看起来还没有把这套工作流放在最核心的位置。
+- 从 GitHub PR 切入，正好贴住滩头客户今天审 AI 生成代码的方式，相比单独再开一个安全控制台，组织变更成本更低。
+strategicChoices:
+  beachhead: Series B-D 的 AI 原生 B2B SaaS 公司，工程师规模 150-600 人，使用 GitHub monorepo，已经正式 rollout Cursor 或 Copilot，并且有一支本来就在手工审高风险包的小平台安全团队。
+  wedgeRationale: 第一次包引入比宽口径依赖扫描更窄，也更容易验证，因为买家能在一个 pilot 里直接量化审查耗时、pre-merge 策略覆盖率，以及高风险批准下降了多少，而不用替换现有 AppSec 栈。
+  sequencingRationale: pre-seed 阶段先做 GitHub + npm/PyPI 的 advisory mode，因为部署速度和低审查摩擦，比生态广度更重要。等公司证明自己能快速生成审查结果、拉起策略采用并把 pilot 转成年费，再补 blocking mode、替代推荐、审计导出，以及更广的 SCM 与 registry 覆盖。
+  notYet:
+  - 先不做完整漏洞管理、可达性分析，或采用后的 SCA 修复
+  - 在 GitHub + npm/PyPI 跑通之前，先不做 GitLab、Bitbucket 和长尾包生态
+  - 在 PR 闸门证明买家拉力之前，先不把推荐面板塞进 Cursor 或 Copilot 的 IDE 时刻
+  - 先不碰需要重部署和重采购的大型强监管企业打包需求
+market:
+  tam: TAM 估计约 $168.0M：全球约 3,500 家目标画像相符、已 rollout AI 编码的软件公司 × 每家公司约 250 名受保护开发者 × 每名开发者约 $192 年度支出。
+  sam: SAM 估计约 $38.4M：北美和欧洲约 800 家滩头市场公司，工程师规模 150-600 人，并且已正式 rollout AI 编码。
+  som: 按模型推算，第 3 年 SOM 约 $4.8M：约 100 个客户 × 每家约 250 名受保护开发者 × 每名开发者约 $192 年度支出。
+  segments:
+  - 核心细分：150-600 人规模、GitHub 工作流为中心，且经常新增 JavaScript 或 Python 包的 AI 原生 B2B SaaS 公司
+  - 次级细分：在 GitHub-first 切口跑通后，需要可审计 OSS 采购控制的更大软件公司
+  buyingProcess: 实际推进这笔单子的，通常是平台安全负责人或资深平台工程师；真正拍板的，多半是 VP Engineering 或产品安全负责人。交易应该从一次窄范围 GitHub pilot 开始——通常发生在 AI rollout 复盘或一次险情之后；一旦客户看到包决策更快、人工审批变少、还能沉淀一套可复用的获批包目录，才会转成正式合同。
+product:
+  mvp: MVP 应该是一款面向 npm 和 PyPI 的 GitHub App：专门标出第一次出现的依赖新增，生成审查简报，支持一键批准或拒绝，并把结果写进组织级已批准包目录。第一版先上 advisory mode，用清晰的 PR 评论、决策日志，以及在公司内已有获批选项时自动给出的替代建议。
+  sixMonth: 6 个月内，要做到 GitHub 仓库上 npm/PyPI 的 advisory mode 部署时间不超过两周，交付 approve / reject 工作流模板，并证明第一次审查新包的中位时间能压到 1 个工作日以内。
+  twelveMonth: 12 个月内，加上对未知包的 blocking 策略、更好的替代推荐、Slack 或工单系统交接、可审计导出，以及在同一客户内部更多仓库上的策略覆盖。
+  twentyFourMonth: 24 个月内，再往 GitLab 或 Bitbucket、私有 registry 与制品镜像控制、更广的包生态扩，并在公司积累出足够多的策略记忆后，把推荐前移给编码 Agent，在 PR 创建前就影响包选择。
+  keyBets:
+  - 只做 GitHub + npm/PyPI，就足以拿下最初 3-5 个付费 pilot。
+  - advisory mode 可以先赢得信任和使用，再等客户主动要求默认 blocking。
+  - 当组织积累了前几十次包决策后，组织专属的获批替代记忆会明显缩短审查时间。
+  - 买家会愿意为包引入工作流单独列预算，而不是只把它当成现有 AppSec 厂商的一条 feature request。
+gtm:
+  wedge: 先卖一个付费 GitHub pilot，治理某个工程组织里第一次出现的 npm 与 PyPI 包；等客户开始依赖策略目录，并在受保护分支上对未知包启动 blocking，再转成年度订阅。
+  channels:
+  - 由创始人直接外呼已经正式 rollout AI 编码的 AI 原生 SaaS 公司里的平台安全负责人、资深平台工程师和 VP Engineering
+  - 通过以 advisory mode 启动的共创客户 GitHub App pilot，再扩成组织级策略覆盖
+  - 安全 SDLC 顾问和贴近网络保险的顾问，在事故后或控制审查后往往能看见 OSS 审批控制薄弱的问题
+  funnelTargets: 从线索到合格 pilot 的转化率 20-30%，pilot 到生产转化率 50%+，从 pilot kickoff 到签下年约的中位周期控制在 90 天内。
+  pricing: 按受保护工程师席位收年费，叠加基础平台费，以及更高审查量、自动化和目录集成的高级档。当前工作假设是每名受保护工程师每月约 $15-$25，这和相邻开发者安全工具的预算基准一致；如果客户转正式合同，已付 pilot 费用可抵年约。
+businessModel:
+  revenueStreams:
+  - 依赖引入工作流覆盖的年度订阅费
+  - 高包引入量团队对应的高级自动化与审查量收费档
+  - 审计导出、包目录同步和制品镜像等企业增购包
+  unitOfValue: 受保护工程师席位，再叠加净新增包审查的策略自动化档。
+  targetGrossMarginPct: 70
+  expansionLevers:
+  - 当第一套包目录被信任后，在同一客户内部扩大仓库和团队覆盖
+  - 增加更多生态、私有 registry 集成和策略模块
+  - 从 PR 审批工作流往更宽的 OSS 采购与受认可仓库控制扩
+strategyMap:
+  northStarMetric: 在中位审查时间低于 1 个工作日的前提下，第一次引入的包里，有多少能在 merge 前拿到一份可追溯决定。
+  inputMetrics:
+  - 每个活跃客户每月被审查的首次引入包数量
+  - 从 PR 打开到包被批准或拒绝的中位耗时
+  - 最终通过已批准替代项解决、而不是引入新包的决策占比
+  - pilot 到生产的转化率
+  - 在 advisory rollout 之后，覆盖仓库里启用 blocking mode 的占比
+  moatsToBuild:
+  - 和真实 merge 决策绑定的组织专属包审批记忆
+  - 由客户历史与公开信任信号共同长出来的获批替代图谱
+  - 贴合 GitHub 分支保护与状态检查工作流的轻量部署和策略模板
+  - 把包引入决策映射到安全与采购证据上的审计轨迹
+  killCriteria:
+  - 完成 30 次合格滩头客户对话后，付费 pilot 仍少于 3 个
+  - pilot 客户里，第一次包引入的中位月度量低于 10 次有意义审查
+  - 前 6 个 pilot 做完后，pilot 到生产的转化率仍低于 50%
+  - 超过 70% 的合格线索选择 GitHub 原生或现有供应商工作流，并且不需要替代记忆或可复用审批
+  mermaid: "flowchart LR\n  Wedge[GitHub first-time package intake wedge] --> MVP[GitHub npm and PyPI advisory gate]\n  MVP --> Proof[Faster documented package decisions and approved catalog]\n  Proof --> Expansion[Blocking policies, more ecosystems, and OSS procurement controls]\n"
+investorMemo:
+  verdict:
+    call: 见面 / 继续尽调
+    conviction: 切口清晰、买家时机也对，但最终判断要建立在两件事上：真实的包引入量足够大，以及相对 GitHub 和专精厂商能做出可持续的差异化。
+    whyBelieve: 这份计划瞄准的是一个非常具体的 pre-merge 工作流缺口，而预算、技术入口和买家痛点都已经验证了它的存在。
+    whyDoubt: 同一个让分发很诱人的 PR 入口，也让 GitHub 和相邻安全厂商有机会很快复制浅层审批工作流。
+    nextDiligence: 在扩团队前，先确认 3 个付费 pilot：它们要证明第一次包引入量足够大、审查周期能压到 1 天以内，而且至少有 50% 的 pilot 有转生产意愿。
+  firstCustomer:
+    title: AI 原生 SaaS 公司的平台安全负责人
+    profile: 一家 Series B-D 的 B2B SaaS 公司，工程师规模 200-400 人，使用 GitHub monorepo，已正式 rollout Cursor 或 Copilot，平台安全工程师只有 1-3 人，负责 JavaScript 或 Python 包审批。
+    trigger: 一次 AI rollout 复盘、最近一场依赖险情，或董事会 / 采购方提出的可审计 OSS 控制要求，会暴露出包审批仍然靠临时拍板。
+    buyer: VP Engineering 或产品安全负责人
+    initialContract: 首单合同应是一个为期 60-90 天、面向单个组织或仓库组的 $15k-$25k 付费 pilot；之后按受保护工程师数量和自动化档，转成约 $40k-$75k 的年费订阅。
+  mustBeTrue:
+  - 目标客户每月必须真的会遇到足够多的首次 npm 或 PyPI 包引入，否则撑不起一条独立审批工作流。
+  - advisory mode 部署必须在不引发开发者反弹的情况下，把包审查中位时间压到 1 个工作日以内。
+  - 至少一半 pilot 必须转正，因为可复用的包记忆和替代指引，确实比 GitHub 或现有扫描器多出独立价值。
+  - 围绕研究基准的受保护工程师定价模型，必须能装进现有 AppSec 或工程预算，而不需要重服务投入。
+  - GitHub-first 的共创客户必须提供足够多的策略数据，让公司在现有厂商补齐功能前，先攒出有防守力的替代与审批记忆。
+  diligenceQuestions:
+  - 目标客户在 rollout AI 编码后，每月到底会处理多少次净新增 npm / PyPI 包审批？
+  - 有多少目标买家愿意从 advisory mode 开始，又有多少会一开始就要求对未知包立即 blocking？
+  - 在真实评估里，GitHub dependency review、Socket、Snyk 或 Endor Labs 还解决不了哪些包审查环节？
+  - 产品有多大概率能推荐一个已经获批的替代项，而不是再批准一个新的外部包？
+  - 误报率或审查延迟高到什么程度时，工程团队会开始绕过这条工作流？
+operatingAssumptions:
+- assumption: GitHub + npm/PyPI 足以覆盖早期需求，拿下最初 3-5 个付费 pilot。
+  basis: idea.yaml
+  validationTest: 跟踪前 15 个合格机会的生态与 SCM 需求，确认在不做 GitLab、Bitbucket 或非 JS / Python 深度支持的前提下，至少能启动 3 个付费 pilot。
+  decisionImpact: 如果不成立，路线图就得更早转向更多集成，实施成本也大概率会上升。
+- assumption: 买家会先接受 advisory rollout，只有在审查简报足够准、足够快后，才会打开 blocking。
+  basis: research.yaml
+  validationTest: 做 10 次买家设计评审，至少要有 7 家接受先上 advisory，并明确给出切到 blocking 的成功标准。
+  decisionImpact: 如果不成立，MVP 就得更早补上更强的策略控制、支持和信任能力，开发范围和销售摩擦都会变大。
+- assumption: 如果这条工作流能明确减少人工审查时间，那么每名受保护工程师每月约 $15-$25 的定价是能被接受的。
+  basis: research.yaml
+  validationTest: 在至少 8 次预算负责人访谈里测试 3 套打包方式，并拿下 2 个带书面转化预期的付费 pilot，价格落在目标区间内。
+  decisionImpact: 如果不成立，公司就得下调 ACV 预期、继续缩窄范围，或者更多依赖企业增购，而不是席位经济。
+- assumption: 组织专属的审批记忆和替代建议，会实质提升 pilot 转化和留存。
+  basis: idea.yaml
+  validationTest: 衡量积累了至少 25 条决策记录的团队，是否能比只看一次性包简报的团队，更快处理重复请求且有更高转化率。
+  decisionImpact: 如果不成立，差异化会被削弱，公司很容易退化成又一个扫描器功能，而不是一套有持久性的工作流系统。
+- assumption: 在正式招聘企业销售前，创始人亲自打单就能拿下第一批滩头客户。
+  basis: 运营判断
+  validationTest: 建一份 30 家目标账户名单，并要求在第 9 个月前，仅靠创始人亲自推进就拿下至少 3 个付费 pilot 或签署 pilot LOI。
+  decisionImpact: 如果不成立，公司就该在增加 GTM 招聘烧钱前，重新审视切口是否足够清楚、渠道是否真的匹配。
+experimentRoadmap:
+- horizon: 0–90 天
+  experiment: ICP 与包量发现
+  hypothesis: 滩头客户在 AI rollout 后，会遇到足够多的首次新包引入，以至于必须把包引入当成一个持续性运营问题。
+  successMetric: 完成 12 次目标访谈，其中至少 8 家符合 ICP，且有 6 家能拿出首次包审批反复发生的证据。
+  owner: 创始人/CEO
+- horizon: 0–90 天
+  experiment: 礼宾式依赖简报试验
+  hypothesis: 手工生成的 provenance 简报加替代推荐，能比客户当前的 Slack / PR 工作流更快处理第一次包决策。
+  successMetric: 2 个共创客户各自回测至少 20 个历史包请求，并把中位决策时间压到 1 个工作日以内。
+  owner: 创始工程师
+- horizon: 90–180 天
+  experiment: Advisory mode GitHub pilot
+  hypothesis: 一款面向 npm 和 PyPI 的 GitHub App，可以在两周内上线，并生成足够可信的推荐，支撑付费 pilot。
+  successMetric: 启动 3 个付费 pilot，且从开始到给出首个可用推荐的中位时间低于 14 天。
+  owner: 创始工程师
+- horizon: 90–180 天
+  experiment: 定价与转化测试
+  hypothesis: 给 pilot 费用抵扣的受保护工程师定价，比纯按用量计费更容易转化。
+  successMetric: 在 8 次定价沟通里，目标打包方案至少赢下 5 次，并出现在 2 份已签 pilot 协议中。
+  owner: 创始人/CEO
+- horizon: 6–12 个月
+  experiment: 从 advisory 到 blocking 的转化
+  hypothesis: 只要 advisory mode 证明了准确率和 SLA，客户就会在覆盖仓库上启用 blocking mode。
+  successMetric: pilot 成功后 90 天内，至少有 2 个生产客户在受保护分支上启用 blocking。
+  owner: 产品负责人
+- horizon: 12–18 个月
+  experiment: 伙伴带来的 pipeline
+  hypothesis: secure-SDLC 顾问和贴近网络保险的顾问，能带来与创始人外呼转化率相近的合格 pilot。
+  successMetric: 合格 pipeline 的 25% 来自 2 个活跃伙伴，而且 pilot 转化不差于创始人亲自销售。
+  owner: GTM 负责人
+operations:
+- 把包元数据摄取、provenance 解析和策略决策日志，做成每天都在跑的核心操作系统，而不是旁路流程。
+- 持续盯 reviewer SLA，确保 advisory mode 快到工程团队没有动力绕过这道闸门。
+- 维持最小权限的 GitHub 部署，并为每一次批准或拒绝输出清晰的审计导出。
+- 在扩大生态或做合规包装前，先用共创客户把替代推荐和策略模板打磨顺。
+team:
+- role: 创始人/CEO
+  startTiming: Month 0
+  rationale: 在切口还没完全被证明前，亲自负责共创客户销售、买家发现、定价和早期伙伴拓展。
+- role: 创始工程师
+  startTiming: Month 0
+  rationale: 搭 GitHub App、依赖 diff 引擎、审查简报生成和决策记忆系统，这些都是 MVP 的核心。
+- role: 安全研究工程师
+  startTiming: Month 2
+  rationale: 在不往全量 SCA 广度扩的前提下，把 provenance 分析、替代启发式和包风险信号质量做深。
+- role: 产品负责人
+  startTiming: Month 6
+  rationale: 等首批 pilot 暴露出可复用的工作流需求后，把 onboarding、策略模板和从 advisory 到 blocking 的 rollout 标准化。
+- role: GTM 负责人
+  startTiming: Month 9
+  rationale: 只有在公司证明了 pilot 能转、定价能被接受、GitHub-first 部署动作可复用之后，才补销售产能。
+milestones:
+- horizon: 0–12 个月
+  items:
+  - 启动 3 个围绕 npm / PyPI 首次依赖引入的付费 GitHub pilot。
+  - 至少在 2 个共创客户上证明：第一次审查新包的中位时间低于 1 个工作日。
+  - 至少把 2 个 pilot 转成年度订阅，并让客户真正用上可复用的包目录。
+  - 为滩头 ICP 把 advisory mode 部署和策略模板标准化。
+- horizon: 12–24 个月
+  items:
+  - 拿下 10-15 个生产客户，并让它们在覆盖仓库上对一部分有代表性的包决策启用 blocking mode。
+  - 在现有客户里补上替代推荐、审计导出和更广的仓库覆盖。
+  - 建立 2 条不改变核心 ICP、却能持续带来合格 pipeline 的伙伴渠道。
+  - 只有在 GitHub + npm/PyPI 的 onboarding 足够可复用后，才有选择地扩到更多 SCM 或 registry 支持。
+- horizon: 24–36 个月
+  items:
+  - 在与模型 SOM 一致的混合定价下，拿到约 100 个客户。
+  - 在继续以 PR 引入为验证锚点的同时，补上内部目录同步、制品镜像等邻近 OSS 采购控制。
+  - 证明审批记忆和替代数据，确实能在面对现有厂商替代方案时提升赢单率和留存。
+risks:
+- risk: GitHub 或供应链现有厂商补上“够用”的审批记忆，把独立切口迅速压窄。
+  likelihood: High
+  impact: High
+  mitigation: 在现有厂商真正把这个细分放进优先级前，更快把组织专属替代指引、可复用审批和工作流深度做成客户离不开的能力。
+- risk: 审查摩擦太高，导致工程团队绕过甚至关闭这条工作流。
+  likelihood: Medium
+  impact: High
+  mitigation: 先用 advisory mode 上线，把响应 SLA 压紧，对已知安全包自动放行，并在扩 blocking 规则前持续监测绕行行为。
+- risk: 滩头市场真实的包引入量太低，撑不起独立供应商。
+  likelihood: Medium
+  impact: High
+  mitigation: 在 discovery 阶段先验证包量阈值，扩 GTM 前只卖给那些明显被 AI rollout 推高 churn 的团队。
+- risk: 私有 registry、传递依赖和生态边角情况太复杂，最后把实施拉成重服务。
+  likelihood: Medium
+  impact: Medium
+  mitigation: 首期范围只守 GitHub + npm/PyPI，把更复杂的私有 registry 问题延后到 onboarding 指标可复用之后。
+- risk: 如果产品不能清楚地缩短审批时间、减少高风险包采用，买家就会把它当成合规表演。
+  likelihood: Medium
+  impact: Medium
+  mitigation: 销售上主打工作流指标和 pre-merge 决策覆盖，而不是泛化的供应链恐惧或监管口径。
+fundingAsk:
+  round: pre-seed
+  targetFundingRangeUsd: $2–4M
+  runwayMonths: 18
+  useOfFundsSummary: 筹集 18 个月资金，用来做出 GitHub-first MVP、拿下 3-5 个付费 pilot、证明 npm 与 PyPI 包引入从 advisory 到生产转化跑得通，并在扩更多集成或补销售 headcount 前，把滩头市场动作做成可复用。
