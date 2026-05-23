@@ -1,0 +1,218 @@
+slug: agent-runtime-burst-broker
+date: '2026-05-23'
+executiveSummary: Agent Runtime Burst Broker 的第一站，不该是替代 GitHub Actions、云构建服务或某家 sandbox 厂商，而应当先做一层受策略约束的溢出执行层，卖给那些已经把内部编码 agent 推开、现在又被 agent 生成 PR 挤爆 CI 队列的 500-2,000 人 B2B 软件团队。第一款产品的边界要很清楚：只拦截 agent 触发的 build、集成测试、浏览器检查和部分生成代码任务，把它们封进带签名的临时 sandbox，再在已批准的 provider 之间路由，并留下可回放的审计轨迹。这个滩头故意做窄，因为一旦同一个平台团队已经在发布周扛排队高峰、安全审查摩擦和突发容量超支，买方、触发点和 ROI 就最清楚。按研究测算，只要公司先守在中大型软件团队，就有约 $1.1B TAM、$264.6M 初始 SAM 和 $7.9M 的第 3 年 SOM，之后还能往更广的 agent runtime 工作负载扩。GTM 也别卖“更便宜的算力”，而要卖安全吞吐和爆发可靠性：用付费 BYOC pilot 证明排队时间下降、执行轨迹完整、采购更容易过。只有当公司能成为在位厂商天然不给的那层“中立治理与路由层”，跨既有 CI 体系和多朵云同时成立，才有机会赢。最关键的反证风险也很明确：只做 overflow 也许撑不起预算；在位厂商也可能把相近的策略能力打包进去；早期买方还可能一上来就要求 GPU、浏览器或 VPC 能力，超出初始工作负载范围。因此，前 12 个月必须证明三件事：买方愿不愿为 agent 专用执行池付费，BYOC 能否明显缩短安全审查，以及跨 provider 路由在延迟、成本或审批时间上，能否真胜过单一供应商基线。
+problem:
+- 随着内部编码 agent 从给建议走到直接创建 PR，agent 生成的 build、集成测试和浏览器检查开始与人工 CI 抢同一批 runner，而现有 runner 池根本不是按这种高峰设计的。
+- 只要不受信任的 agent 代码需要接触高权限系统，安全与合规团队就不会轻易放行；他们要的是隔离、可审计，以及明确绑定网络、secret 和溯源控制的执行环境。
+solution:
+- 在编码 agent 与执行基础设施之间插入一个具备策略感知的控制平面，让每个 agent 任务都运行在带签名的临时 sandbox 里，并强制使用批准过的基础镜像、短时凭证、明确的出网规则和可回放的执行轨迹。
+- 把 CPU、浏览器、以及后续 GPU 工作负载路由到多家已批准的 provider，上线第一步只做 agent 专用 overflow 池，和客户现有 CI 工作流并存，而不是一上来就推翻重建。
+whyWeWin:
+- GitHub Actions、云构建服务和 sandbox 厂商各自都只覆盖工作流的一部分，但没有谁天然拥有跨多 provider、跨客户既有 CI 体系的中立治理、溯源和路由层。
+- 每一次线上运行，都会继续沉淀工作负载形态、冷启动、失败模式、缓存行为和策略结果的数据；这会让路由质量和审计能力比单一 provider runtime 更快迭代。
+strategicChoices:
+  beachhead: 先打北美和欧洲的 B2B 软件公司：团队规模 500-2,000 人，CI 以 GitHub 为中心，后端团队已经正式启用内部编码 agent，而且 PR 与测试量已经足以把 runner 容量打满。
+  wedgeRationale: agent 专用 overflow 执行池，比整套 CI 替换更容易更快证明价值：买方已经在感受新的爆发问题，部署也能挂在现有流程旁边，安全故事在“明确不受信任的 agent 代码”这个场景下也最站得住。
+  sequencingRationale: 先做 BYOC、带签名的 sandbox、审计轨迹和面向 CPU 型 build/集成测试 overflow 的策略执行，因为采购最先卡的就是这些控制点，而这条路线的供应链复杂度也低于一开始就铺开多 runtime 平台。等付费 pilot 证明“路由 + 治理”能过安全审查并转成年约后，再补浏览器自动化、有限 GPU 路由，以及更深的 provider 优化。
+  notYet:
+  - 在 agent 专用切口还没反复转化之前，不做全量 CI/CD 替换
+  - 在编码 agent 执行还没形成标杆前，不做通用支持 agent、数据 agent 或后台自动化工作负载
+  - 在没有明确人工与策略审批闸门前，不做直接对生产系统的自主执行
+  - 在 pilot 轨迹还没证明 GPU 占比足够高前，不走 GPU-first 产品路线
+market:
+  tam: 估算 TAM 为 $1.1B：全球大约 10,000 个中大型软件团队 × 70% 的 AI 编码渗透率 × 每名活跃工程师每年约 $210 的受治理 runtime 支出。
+  sam: 估算初始 SAM 为 $264.6M：北美与欧洲大约 2,000 家 500-2,000 人规模的 B2B 软件公司，且 agent 落地条件与该滩头市场相近。
+  som: 估算第 3 年 SOM 为 $7.9M：大约 45 家可触达生产客户 × 每家约 $176k 的年均支出；路径是先拿下一条 agent overflow 工作流，再把使用量扩进去。
+  segments:
+  - 500-2,000 人规模、正在推内部编码 agent 的平台工程与开发者效率团队
+  - 需要 BYOC、私有网络和溯源能力来执行 agent 生成代码的高安全要求 AI-native 软件公司
+  buyingProcess: 日常 champion 通常是负责 CI 可靠性的开发者效率负责人或 AI 平台负责人；经济买方则是平台主管工程副总裁或内部 AI 平台 owner。因为产品会执行不受信任代码，并碰到凭证、网络和审计控制，所以交易往往会被一个明显的排队或安全瓶颈触发，然后依次过安全、云基础设施和采购审查。
+product:
+  mvp: MVP 应支持 agent 触发的 build、集成测试和部分浏览器检查，作为一层 overflow 执行池接入既有 GitHub 为中心的工作流。首版必须包含带签名的 sandbox 模板、策略配置、短时凭证、可回放的执行轨迹，以及至少两家以 CPU 为主的已批准 provider 路由；人工编写的 CI 和大多数生产发布逻辑先不动。
+  sixMonth: 在 6 个月内交付 2-3 个付费 BYOC pilot：支持 GitHub 触发的 agent 任务拦截、带签名的 sandbox 模板、审计日志、CPU 工作负载路由，以及能证明排队时间和采购价值的缓存复用指标。
+  twelveMonth: 补上浏览器自动化、VPC 和静态出网选项、常见企业控制的策略模板，以及只面向确有需求 pilot 账户的有限 GPU 路由；同时至少把 2 个 pilot 转成年约生产合同。
+  twentyFourMonth: 把产品从 agent overflow 执行层，扩成更广的受治理 runtime 层，覆盖编码、评测和相邻内部 agent 工作负载，并继续增强路由智能、跨 provider 基准能力，以及面向受监管环境的策略包。
+  keyBets:
+  - 只做 overflow 的部署，会比一上来迁整套 CI 更容易成交。
+  - BYOC 加短时凭证，足以让早期企业客户过安全审查，而不用一开始就做完全 customer-hosted 的控制平面。
+  - 早期需求主要集中在 CPU 与浏览器工作负载，因此 GPU 支持可以等到验证后再补，而不是一开始就决定产品。
+  - 跨 provider 路由和缓存复用，能在排队时间或成本上，对比单一 provider 基线做出可量化改进。
+gtm:
+  wedge: 卖一层只服务 agent 的、受策略治理的 overflow 池，让平台团队可以放大编码 agent 的使用，而不用重造 CI，也不用让安全团队去盲信黑盒 sandbox 厂商。
+  channels:
+  - 由创始人直接销售给平台主管工程 VP、AI 平台负责人和开发者效率负责人
+  - 通过已采用编码 agent 的团队、平台工程圈子，以及围绕 CI 饱和事件的高参考价值 outbound，拿下共创客户 pilot
+  - 在拿到 pilot 证明后，再做和编码 agent 厂商、云市场，以及精选安全或 DevOps 咨询公司的集成与联合销售
+  funnelTargets: 目标账户→有效需求沟通 15-25%，有效需求沟通→付费 pilot 20-30%，付费 pilot→年度生产合同 50%+，生产客户→12 个月内扩到第二条工作流或第二支团队 40%+。
+  pricing: 先卖 8-12 周、价格约 $25k-$50k 的付费 pilot；转生产后，收年度平台承诺费，再叠加按 sandbox 分钟和缓存/存储计量的用量费。对滩头市场来说，目标 ARR 通常是 $80k-$180k，因为买方买的是受治理的吞吐、可审计性，以及避免闲置峰值容量，而不是按席位付费。
+businessModel:
+  revenueStreams:
+  - 年度平台订阅费，覆盖策略引擎、路由控制平面、审计导出和 provider 治理
+  - 按 sandbox 分钟、缓存消耗和高级爆发容量收取用量费
+  - BYOC 部署、合规控制以及后续私有网络或受监管环境能力的高级套餐
+  unitOfValue: 纳入治理的 agent 执行任务和 sandbox 分钟
+  targetGrossMarginPct: 70
+  expansionLevers:
+  - 在同一客户内部覆盖更多团队、仓库和 agent 工作流
+  - 为 VPC 接入、静态出网、溯源导出和受监管部署模式出售高级控制能力
+  - 从编码 agent overflow 扩到评测任务、浏览器密集型 QA，以及相邻的受治理内部 agent 工作负载
+strategyMap:
+  northStarMetric: 在生产 SLA 下，运行于策略批准 sandbox 中的 agent 生成任务月执行量
+  inputMetrics:
+  - agent 生成任务的中位排队时间下降幅度
+  - pilot 转生产的转化率
+  - 拥有完整溯源与策略证据的运行占比
+  - 被路由工作负载的缓存命中率
+  - 使用超过一家已批准 provider 的生产客户占比
+  - 从第一条工作流扩到第二条工作流的 12 个月内转化率
+  moatsToBuild:
+  - 覆盖成本、延迟、失败率和冷启动行为的跨 provider 遥测图谱，并按工作负载类型细分
+  - 把策略决策、身份、provider 选择和审计结果串起来的执行轨迹数据集
+  - 一套可复用的企业策略模板和 onboarding 模式，让 agent 安全执行能嵌进既有 CI 体系
+  killCriteria:
+  - 如果前 10 个合格 ICP 账户里，不到 3 个愿意为 overflow-only 部署买单，就该重看切口，或者直接止损。
+  - 如果前 3 个付费 pilot 无法把 agent 任务中位排队时间至少降 30%，或无法证明 BYOC 与审计控制能带来采购优势，就暂停扩张。
+  - 如果超过一半的 pilot 工作负载都需要当前不支持、且会实质改写架构的 GPU、浏览器或网络能力，就该收窄 ICP 或重排路线图。
+  mermaid: "flowchart LR\n  Wedge[Agent-only overflow wedge] --> MVP[Signed sandbox MVP]\n  MVP --> Proof[Queue and audit proof]\n  Proof --> Expansion[Broader governed runtime]\n"
+investorMemo:
+  verdict:
+    call: Meet / investigate further
+    conviction: why now 很强，企业切口也自洽，但最终把握取决于一件事：在位厂商把这层能力打包前，买方会不会先为 overflow 治理单独掏预算。
+    whyBelieve: AI 编码正在制造真实的执行瓶颈，而这款产品正好卡在嵌入式 CI、点状 sandbox 和多 provider 治理之间的空白处。
+    whyDoubt: 公司仍得证明，一个中立 broker 能在 GitHub、Modal 或 hyperscaler 把功能补齐之前，先赢得预算与信任。
+    nextDiligence: 先用付费 BYOC pilot 验证三件事：overflow-only 部署能不能缩短排队时间、能不能过采购、以及能不能转成六位数年约。
+  firstCustomer:
+    title: 一家 900 人垂直 SaaS 公司的平台主管工程 VP
+    profile: 这是一家以 GitHub 为中心的 B2B 软件公司，已经把 Claude Code 或类似内部编码 agent 推给后端团队，现在 agent 生成的 PR 检查与集成测试正在把发布周 runner 容量压满。
+    trigger: 一次 agent 推广从 pilot 扩到多支团队后，CI backlog、云超支，或“生成代码如何执行”的安全审查突然成为卡点。
+    buyer: 平台主管工程副总裁
+    initialContract: 先签一笔 8-12 周、约 $25k-$50k 的付费 BYOC pilot，只覆盖一条 agent 生成工作流；等排队时间与审计目标达成后，再抵扣进 $80k-$180k 的年度生产合同，并叠加按用量计费的超额部分。
+  mustBeTrue:
+  - 至少 30% 的合格滩头账户，愿意在不替换现有 CI 栈的前提下，购买一层 agent 专用 overflow 执行层。
+  - 前 3 个付费 pilot 能把 agent 生成任务的中位排队时间至少压低 30%，同时保持完整执行可追溯性。
+  - 安全和采购团队接受 BYOC、短时凭证与审计导出，认为这足以构成第三方路由的控制边界。
+  - 早期大多数工作负载都能靠 CPU 与浏览器导向的执行层承接，因此公司可以推迟 GPU 密集型架构，而不至于错过购买触发点。
+  - 至少一半付费 pilot 能转成年 ARR 超过 $80k 的合同，因为买方把产品看成控制层，而不是廉价 runner 池。
+  diligenceQuestions:
+  - 第一批买方更想要 overflow-only 部署，还是更想顺手迁走整套 CI 与 sandbox？
+  - 什么证明材料最常用来撬开采购：attestation、network trace、secret access log，还是 customer-cloud 部署？
+  - 前 90 天的主工作负载到底是什么：集成测试、浏览器检查、生成代码执行，还是 GPU 任务？
+  - 在位替代方案里，最常见的是优化 GitHub Actions、采购点状 sandbox，还是内部平台团队自己做？
+  - 第一单预算最可能挂在开发者效率、AI 平台、云基础设施，还是安全工具？
+operatingAssumptions:
+- assumption: 只做 overflow 的部署，是拿下首个付费企业合同的最快路径。
+  basis: research.yaml
+  validationTest: 至少做 10 次共创客户访谈，并拿到 3 个付费 pilot，且首期范围都只覆盖 agent overflow，而不是完整 CI 迁移。
+  decisionImpact: 如果不成立，公司就得更早扩成全栈 CI 替换，或缩到更高控制度、但 ACV 更大的细分市场。
+- assumption: BYOC 加短时凭证，足以过安全审查，而不用要求完全 customer-hosted 的控制平面。
+  basis: research.yaml
+  validationTest: 跟踪前 5 个 pilot 线索的安全问卷，确认至少 3 家愿意接受 BYOC 部署，而不要求控制平面的核心组件必须跑在客户环境里。
+  decisionImpact: 如果不成立，实施成本和销售周期都会拉长，产品也得更重基础设施化，首轮融资规模随之上调。
+- assumption: 首批生产合同能落在 $80k-$180k ARR 区间，同时仍保持按用量计费的说服力。
+  basis: idea.yaml
+  validationTest: 至少把 2 个付费 pilot 转成这个价格带内的年度订阅，并记录买方对定价的真实理由。
+  decisionImpact: 如果不成立，公司可能需要更轻量的 self-serve 方案、更高的用量依赖，或更窄的企业 ICP。
+- assumption: 早期工作负载轨迹会证明，CPU 与浏览器任务占比足够高，因此 GPU 密集型架构可以延后。
+  basis: operator judgment
+  validationTest: 给 pilot 工作负载打点，确认前 6 个月里需要 GPU 的执行分钟数或关键任务占比低于 20%。
+  decisionImpact: 如果不成立，路线图就得提前补 GPU 供应合作，资本计划也要承担更深的基础设施承诺。
+- assumption: 跨 provider 路由加缓存复用，能在单一 provider 基线之上做出可量化的性能或成本改进。
+  basis: research.yaml
+  validationTest: 在前 3 个 pilot 里，把路由后的运行结果与客户当前基线做对比，证明排队时间或突发算力效率至少改善 20%。
+  decisionImpact: 如果不成立，差异化就会被压缩成单纯的策略工具，产品可能需要从 brokerage 转回治理定位。
+experimentRoadmap:
+- horizon: 0–90 天
+  experiment: 访谈 15 位目标平台负责人，以及 5 位已经在推编码 agent 公司的安全相关方。
+  hypothesis: 真正打开预算的，不是团队“试过 AI 编码”，而是 agent 生成的工作负载已经带来排队和采购摩擦。
+  successMetric: 至少 10 个目标账户描述出明确触发点，且至少 5 个愿意共享 runner、队列或安全审查数据。
+  owner: 创始人/CEO
+- horizon: 0–90 天
+  experiment: 做一轮 concierge 式 pilot 模拟：把某个客户的 agent 生成任务封进带签名的 sandbox，并对比当前基线与路由后的排队时间。
+  hypothesis: 只做 overflow 的部署，也能在不替换现有工作流的前提下，带来可见的吞吐提升。
+  successMetric: 至少 1 个共创客户认可这条工作流，并在模拟或受控生产流量下看到 20% 以上的排队时间改善。
+  owner: 创始工程师
+- horizon: 0–90 天
+  experiment: 向早期共创客户测试 3 套采购包，组合方式围绕 BYOC、审计导出和短时凭证。
+  hypothesis: 只要产品被包装成“运行在客户云边界内的受治理执行层”，采购推进就会更快。
+  successMetric: 至少 3 个潜在客户明确指出更偏好的安全包，且没有人要求使用无人管理的长期 secret。
+  owner: 创始人/CEO
+- horizon: 90–180 天
+  experiment: 把 2-3 个共创客户转成付费 BYOC pilot，只覆盖一条线上 agent 生成工作流。
+  hypothesis: 平台团队会先为一条 overflow 工作流付费，再考虑更广的 runtime 标准化。
+  successMetric: 至少签下 2 个单价 $25k+ 的付费 pilot，且至少 1 个在真实使用里把排队时间压低 30%。
+  owner: 创始人/CEO
+- horizon: 90–180 天
+  experiment: 按 CPU、浏览器、GPU、网络和驻留要求，给 pilot 账户的工作负载轨迹打点。
+  hypothesis: 只要 CPU 与浏览器任务占据高价值需求的大头，初始路线图就能继续聚焦。
+  successMetric: 拿到覆盖至少 1,000 个任务的 pilot 数据集，用它判断主工作负载结构，并决定 GPU 支持是否继续后置。
+  owner: 产品/工程负责人
+- horizon: 180–360 天
+  experiment: 在至少两家已批准 provider 上线生产级路由，配好共享缓存策略和 provider 评分卡。
+  hypothesis: 跨 provider 遥测和缓存摆放，足以明显提升可靠性与突发效率，从而推动转化与扩张。
+  successMetric: 至少 2 个生产客户同时使用两家 provider，并确认相较原来的单一 provider 方案，在性能、韧性或成本上有可见收益。
+  owner: 产品/工程负责人
+- horizon: 180–360 天
+  experiment: 测试 1 条集成或联合销售渠道，对象可以是编码 agent 厂商、安全咨询公司或云市场。
+  hypothesis: 只要首批 pilot 已有可引用的证明，合作渠道就能带来更高意向度的 pipeline。
+  successMetric: 至少拿到 3 个通过单一合作渠道稳定导入的合格机会。
+  owner: GTM 负责人
+operations:
+- 每周维护一份 provider 评分卡，按工作负载类型追踪冷启动、失败、策略异常、排队时间和缓存命中表现。
+- 在扩大范围前，逐次复盘每个 pilot 运行是否具备完整轨迹、是否暴露 secret、网络行为是否合规，以及客户采购需要的证明材料是否齐全。
+- 把 sandbox 模板、策略包和 BYOC 部署模式当作版本化产品资产来维护，让 onboarding 逐步标准化，而不是越做越像服务。
+- 和基础设施伙伴建立正式 escalation 路径，专门应对容量短缺；因为爆发可靠性是产品承诺，不是隐性依赖。
+team:
+- role: 创始人/CEO
+  startTiming: 第 0 个月
+  rationale: 负责共创客户销售、定价、采购推进和伙伴拓展，因为当前最核心的风险是 ICP 与预算验证。
+- role: 创始工程师
+  startTiming: 第 0 个月
+  rationale: 搭起控制平面、provider 适配层、带签名的 sandbox 模板，以及 pilot 需要的审计轨迹管线。
+- role: 安全 / 平台工程师
+  startTiming: 第 3-6 个月
+  rationale: 把 OIDC、策略控制、溯源导出和 BYOC 部署模式产品化，避免安全审查长期停留在创始人手工定制。
+- role: 产品 / 解决方案工程师
+  startTiming: 第 6-9 个月
+  rationale: 把 pilot 集成、工作负载打点和客户 onboarding 沉淀成可重复部署模板。
+- role: GTM 负责人
+  startTiming: 第 9-12 个月
+  rationale: 等公司拿到可引用的付费 pilot 与可信转化故事后，再放大 outbound 与合作渠道。
+milestones:
+- horizon: 0–12 个月
+  items:
+  - 完成 20 次 ICP 与安全访谈，拿到 5-8 个共创客户，并把第一条工作流收窄为 agent 生成的 build、集成测试与浏览器检查 overflow。
+  - 交付一个带签名 sandbox 的 MVP，支持 BYOC 部署、策略控制、审计导出，以及至少两家已批准 provider 的路由。
+  - 拿下至少 2 个付费 pilot，并把其中至少 1 个转成年约生产合同。
+  - 建立一套成文的 provider 评分卡与工作负载分类法，用来指导 CPU、浏览器和 GPU 的路线图。
+- horizon: 12–24 个月
+  items:
+  - 在滩头市场做到 8-12 个生产客户，部署周期控制在 45 天以内，并拿下至少两次可引用的安全审查通过案例。
+  - 上线浏览器支持、在必要处提供选择性 GPU 路由，并为私有网络和高溯源要求买方交付可重复策略包。
+  - 证明既有客户会把产品扩到第二条工作流、第二支团队或更多 provider 配置。
+- horizon: 24–36 个月
+  items:
+  - 从编码 agent overflow 扩成更广的受治理 runtime 层，覆盖相邻内部 agent 工作负载。
+  - 沉淀出有防御性的路由与审计数据集，持续改善赢单率、毛利率和与 provider 的议价能力。
+  - 把公司树成企业 agent 执行的中立治理层，而不是某个点状 sandbox 或 runner 厂商。
+risks:
+- risk: GitHub、Modal、Depot 或 hyperscaler 可能在现有产品里打包足够多的策略与突发路由能力，把 broker 的切口压窄。
+  likelihood: Medium
+  impact: High
+  mitigation: 聚焦中立的跨 provider 治理、与既有 CI 共存，以及单一 provider 天生难以提供的审计可移植性。
+- risk: 即便是 BYOC 模式，安全团队也可能拒绝第三方路由层，因为他们仍觉得溯源、secret 或网络控制不够。
+  likelihood: High
+  impact: High
+  mitigation: 从第一批 pilot 起就主打 BYOC、短时凭证、明确的出网策略、可回放轨迹，以及客户指定的证明材料。
+- risk: 真实的早期工作负载，可能比预期更偏 GPU、更偏浏览器，或更受网络约束，导致计划中的 MVP 架构不够用。
+  likelihood: Medium
+  impact: Medium
+  mitigation: 尽早给 pilot 轨迹打点，收窄 ICP，并在工作负载分类真正测出来前，不轻易做宽泛承诺。
+- risk: 平台团队也可能选择继续优化现有 GitHub 或自建 runner，而不是再买一层新的控制平面。
+  likelihood: Medium
+  impact: High
+  mitigation: 只向已有明显排队与采购痛感的账户销售，坚持要求付费 pilot，并把 ROI 同时对比 runner 成本与安全审查人力。
+fundingAsk:
+  round: seed
+  targetFundingRangeUsd: $3-5M
+  runwayMonths: 18
+  useOfFundsSummary: 这轮 seed 需要覆盖 18 个月跑道，目标是把滩头市场跑通：交付生产级 BYOC 控制平面，完成安全与 provider 集成，把早期付费 pilot 转成年约，并搭出第一套可重复的企业销售动作。
