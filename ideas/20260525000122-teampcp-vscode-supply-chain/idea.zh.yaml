@@ -1,0 +1,265 @@
+slug: ide-extension-trust-firewall
+date: '2026-05-24'
+sector: dev-tools
+pitch: 面向企业 VS Code 机群的运行时信任层，拦截恶意扩展并自动轮换暴露的 CI 与云凭据。
+sourceContext:
+  topic: CI/CD supply chain attack via poisoned VS Code extension
+  topicScope: broad
+  timeWindow: '2026-05-24 to 2026-05-24'
+  timeWindowLabel: null
+  sectorHint: dev-tools
+  clusterId: c1
+  headline: "TeamPCP 通过投毒 Nx Console VS Code 扩展攻破 GitHub 3,800 个内部仓库，暴露 CI/CD 凭据治理漏洞"
+  primaryCompanies:
+    - GitHub
+    - TeamPCP
+  topSourceUrls:
+    - https://www.bleepingcomputer.com/news/security/github-confirms-breach-of-3-800-repos-via-malicious-vscode-extension/
+    - https://www.infoworld.com/article/4174734/github-admits-major-source-code-leak-after-3800-internal-repositories-breached.html
+    - https://stepsecurity.io/blog/megalodon-mass-github-actions-secret-exfiltration-across-5-500-public-repositories
+  eventKeys:
+    - teampcp|incident|2026-05
+    - github|incident|2026-05
+  signalStrength: 5
+  qualityScore: 4.7
+  evidenceConfidence: 5
+  incumbentGravity: 2
+  selectionScore: 4.7
+  scoreRationale: "painIntensity（3,800 个仓库的凭据被盗有据可查，受害者点名包含 GitHub 和 OpenAI 员工）与 opportunityClarity（VS Code 扩展完整性扫描、CI 工作流证明、开发者端点凭据轮换）两项得分最高；nonObviousness 略低——供应链攻击并非新鲜事，但代码提交前 IDE 扩展攻击面几乎未被现有 SAST/SCA 工具覆盖；证据扎实，4 个独立抓取来源加 GitHub 自身公开声明。"
+  selectionRationale: "VS Code Marketplace 的扩展验证机制对运行时有效载荷投递毫无意义；新进入者的切口是实时 IDE 扩展行为扫描与 CI/CD 工作流机密轮换工具——集成在代码提交之前，Socket、StepSecurity 及现有 AppSec 平台均未覆盖这一攻击面。"
+  dedupeRationale: "历史记录中不存在 teampcp 或 github incident 事件键；最相近的条目是 safedep npm-attack 和 socket funding，关键词重叠低于 6 项的五级阈值；与 2026-05-20 覆盖的 CISA govcloud 凭据泄露事件明显不同，后者涉及不同公司和事件类型。"
+  gaps: >-
+    分诊来源核实了攻击机制与爆炸半径，但未能量化有多少企业集中管理 IDE
+    扩展机群、哪个预算负责人最先购买此类产品，也未明确扩展携带的窃密行为在此次
+    活动之外能多频繁地触达生产环境凭据。
+  sources:
+    - id: 1
+      title: "GitHub 确认 3,800 个仓库因恶意 VS Code 扩展被攻破"
+      url: https://www.bleepingcomputer.com/news/security/github-confirms-breach-of-3-800-repos-via-malicious-vscode-extension/
+      publisher: BleepingComputer
+      publishedDate: '2026-05-20'
+      company: GitHub
+      eventType: incident
+      fetchVerified: true
+      keyPoints:
+        - "GitHub 确认，某员工安装投毒 VS Code 扩展后，3,800 个内部仓库数据遭窃；客户数据未受影响。"
+        - "TeamPCP 宣称掌握访问权限，在 Breached 论坛以 5 万美元叫价出售被盗仓库，并威胁若未成交将免费公开。"
+        - "此次攻击与 Mini Shai-Hulud 行动相关联，OpenAI 和 Mistral AI 员工同样受到波及。"
+    - id: 2
+      title: "GitHub 承认 3,800 个内部仓库遭攻破，重大源代码泄露曝光"
+      url: https://www.infoworld.com/article/4174734/github-admits-major-source-code-leak-after-3800-internal-repositories-breached.html
+      publisher: InfoWorld
+      publishedDate: '2026-05-19'
+      company: GitHub
+      eventType: incident
+      fetchVerified: true
+      keyPoints:
+        - "恶意 Nx Console VS Code 扩展 18.95.0 版本于 5 月 18 日 12:30 UTC 上传至 Visual Studio Marketplace，18 分钟内即被撤下，但仍有数千名开发者感染。"
+        - "被盗凭据涵盖 Kubernetes、AWS IAM、npm、1Password、GitHub Token，以及从开发者工作站收集的 GCP/Docker 凭据。"
+        - "同一行动还在 AntV 命名空间下发布了 637 个恶意 npm 包，进一步扩大下游暴露面。"
+    - id: 3
+      title: "GitHub 攻击溯源：恶意 Nx Console VS Code 扩展是元凶"
+      url: https://www.infosecurity-magazine.com/news/github-breach-nx-console-vs-code/
+      publisher: Infosecurity Magazine
+      publishedDate: '2026-05-19'
+      company: GitHub
+      eventType: incident
+      fetchVerified: true
+      keyPoints:
+        - "Nx Console 在 VS Code Marketplace 拥有 220 万次安装量及已验证发布者徽章，证明发布者验证无法阻止供应链入侵。"
+        - "恶意载荷在工作区打开时静默收集 Vault Token、AWS IMDS、GCP Docker 凭据、GitHub Actions 机密以及 1Password CLI 保险库内容。"
+        - "Nx Console 安全公告 GHSA-c9j4-9m59-847w 建议立即升级至 18.100.0；仅 18 分钟的暴露窗口就已足以攻破 GitHub 本身。"
+    - id: 4
+      title: "Megalodon：跨 5,500 多个公开仓库的 GitHub Actions 机密大规模外泄行动"
+      url: https://stepsecurity.io/blog/megalodon-mass-github-actions-secret-exfiltration-across-5-500-public-repositories
+      publisher: StepSecurity
+      publishedDate: '2026-05-22'
+      company: StepSecurity
+      eventType: incident
+      fetchVerified: true
+      keyPoints:
+        - "Megalodon 行动于 5 月 18 日在六小时内向 5,500 多个开源仓库注入恶意 CI 工作流文件，系统性攻击分支保护规则薄弱的仓库。"
+        - "外泄载荷将所有收集到的凭据压缩打包后，通过 HTTPS POST 发送至 216.126.225.129:8443，利用 CI Runner 不受限的出站网络访问。"
+        - "攻击映射到 MITRE ATT&CK T1195.002（d-PPE 类）；工作流 YAML 文件受到的安全审查远少于应用代码，是防御薄弱的攻击面。"
+  signals:
+    - title: Marketplace 认证徽章无法保障运行时安全
+      description: Nx Console 持有已验证发布者徽章，安装量高达 220 万，但一次恶意更新仍成功攻破 GitHub，说明仅凭扩展来源检查远远不够。
+      sourceRefs: [3]
+    - title: 数分钟的 Marketplace 暴露足以造成企业级损害
+      description: 投毒扩展仅上线 18 分钟，就波及数千名开发者、造成 3,800 个内部仓库被盗，说明买家需要持续运行时管控，而非周期性审计。
+      sourceRefs: [1, 2, 3]
+    - title: IDE 扩展现在同时窃取开发者与 CI 凭据
+      description: 恶意载荷直接从开发者工作站收集 Vault、AWS、GitHub、Kubernetes、1Password 和 Docker 凭据，将端点爆炸半径与 CI 爆炸半径合并成一条攻击路径。
+      sourceRefs: [2, 3]
+    - title: CI 工作流文件是防御薄弱的下游外泄攻击面
+      description: StepSecurity 的 Megalodon 报告显示，攻击者还利用工作流 YAML 从 5,500 多个仓库外泄机密，证明入侵不会止步于开发者笔记本。
+      sourceRefs: [4]
+    - title: 单一攻击行动正将 IDE、软件包与 CI 攻击面串联
+      description: TeamPCP 与 Mini Shai-Hulud 事件将恶意扩展、npm 包入侵与 CI 机密窃取串联成一场针对开发者工具链的协同攻击。
+      sourceRefs: [1, 2, 4]
+problem: >-
+  平台安全团队仍将 IDE 扩展视为低风险的生产力插件，却忽视了它们运行在开发者权限
+  最高的工作环境中。恶意扩展能在代码审查或运行时安全工具察觉之前，静默读取本地
+  云凭据与密钥管理器凭据、篡改项目文件，并向下游 CI 植入隐患。现有控制手段——
+  Marketplace 验证、MDM 白名单、EDR、GitHub 机密扫描——都无法为团队提供专门针对
+  扩展行为、爆炸半径映射和即时凭据收敛的防护层。
+targetUser:
+  primary: >-
+    规模在 200–2,000 名工程师的软件公司中，统一使用 VS Code 或 Cursor、GitHub
+    Actions 以及开发者笔记本上本地云或密钥管理器 CLI 的平台安全与开发者平台工程师
+  secondary: >-
+    负责工程工作站 IDE 基线、扩展策略及事件响应的端点工程与安全运营负责人
+  buyer: >-
+    拥有集中开发者工具策略的软件公司的平台工程总监、产品安全负责人或首席信息安全官
+startupThesis:
+  nonObviousInsight: >-
+    新的控制点不是软件包注册表或 CI Runner 本身，而是开发者工作站上受信任的扩展
+    运行时——"已验证"的工具可以在安装后投递恶意行为，将本地机密桥接至下游仓库与
+    CI 入侵。赢家将把运行时扩展监控与机密关系图、一键收敛能力配对，而不仅仅是
+    静态来源检查。
+  beachhead: >-
+    拥有 300–1,500 名工程师、托管 VS Code 或 Cursor 扩展基线、GitHub Actions
+    发布流水线，以及日常开发中本地使用 AWS、Kubernetes、Vault 或 1Password CLI
+    凭据的 B–D 轮软件公司
+  wedge: >-
+    一套 IDE 扩展信任防火墙：对扩展行为进行指纹采集，在工作区打开时检测机密访问
+    与文件变更异常，并在发现高风险扩展时触发限定范围的凭据隔离和轮换工作流
+  whyNowCatalyst: >-
+    TeamPCP 事件证明，一个已验证的 VS Code 扩展可在不到 18 分钟内攻破 GitHub
+    本身，同时窃取工作站凭据与 CI 凭据，将 IDE 运行时信任变成紧迫的董事会级
+    管控缺口。
+  ventureScalePath: >-
+    从 VS Code 和 Cursor 扩展运行时安全起步，向本地 AI 编码 Agent、JetBrains
+    插件、浏览器端开发工具以及整条软件交付链上的机器身份治理延伸。
+solution: >-
+  IDE 扩展信任防火墙接入企业已有的扩展基线、端点 Agent 和机密系统。它对每个已安装
+  扩展的观测行为打分，包括凭据文件访问、Shell 执行、工作区打开回调、出站网络模式
+  以及对工作流或配置文件的非授权变更。检测到高风险扩展后，可隔离对应工作站，吊销
+  或轮换其触及的 GitHub、云和 Vault 凭据，并生成爆炸半径报告——列明哪些仓库、工作
+  流和环境可能已被波及。首个版本刻意保持克制：在不强制安全团队全面禁止扩展或每次
+  安全事件后都运行完整笔记本取证的前提下，保护托管 VS Code 机群。
+goToMarketSeed:
+  firstCustomer: >-
+    工程师规模 400–1,200 人、统一使用标准化 VS Code 镜像、拥有 20 个以上 GitHub
+    仓库、以及一支负责开发者笔记本策略和 GitHub Actions 加固的小型平台安全团队的
+    C 轮开发工具、安全或基础设施软件公司
+  buyingTrigger: >-
+    近期发生开发者工具安全事件、开展扩展策略审查，或高层要求在下次安全审计或企业
+    商务谈判前证明已批准的 IDE 扩展不会泄露云、Vault 或 CI 凭据
+  currentAlternative: >-
+    Marketplace 验证、MDM 白名单、通用 EDR、GitHub 机密扫描，以及事件发生后由
+    平台团队与安全团队协作完成的人工凭据轮换
+  switchingReason: >-
+    这个切口能实时观测扩展的行为，并将发现直接与凭据隔离和仓库影响分析挂钩，比
+    静态白名单或通用端点告警快得多，也更有可操作性
+  pricingHypothesis: >-
+    按受保护开发者工作站和托管扩展安装数量收取年度平台费，对自动凭据轮换和爆炸
+    半径调查功能额外收取高级用量费
+whyNow:
+  - point: Nx Console 的验证徽章和 220 万安装量未能阻止恶意更新攻破 GitHub，Marketplace 已验证状态不再能让买家放心。
+    signalRefs: [Marketplace 认证徽章无法保障运行时安全]
+    sourceRefs: [3]
+  - point: 仅 18 分钟的暴露窗口就足以感染数千名开发者并外泄 3,800 个内部仓库，证明时间点式扩展审计远远不够。
+    signalRefs: [数分钟的 Marketplace 暴露足以造成企业级损害]
+    sourceRefs: [1, 2, 3]
+  - point: 该扩展从工作站收集了云、Vault、GitHub、Kubernetes、Docker 和密码管理器凭据，使 IDE 入侵等同于机器身份入侵。
+    signalRefs: [IDE 扩展现在同时窃取开发者与 CI 凭据]
+    sourceRefs: [2, 3]
+  - point: 同一攻击行动还将恶意工作流 YAML 注入 5,500 多个仓库，迫切需要能将笔记本入侵与下游 CI 收敛连接起来的产品。
+    signalRefs: [CI 工作流文件是防御薄弱的下游外泄攻击面, 单一攻击行动正将 IDE、软件包与 CI 攻击面串联]
+    sourceRefs: [1, 2, 4]
+differentiator: >-
+  大多数开发者安全工具止步于包来源、机密检测或通用端点遥测。这家公司将占据缺失的
+  运行时层——已批准的 IDE 扩展实际执行、接触机密、改变仓库状态都在代码进入 CI 之
+  前发生。护城河可通过与企业特定凭据库、仓库拓扑和事件响应剧本绑定的扩展行为图来
+  持续加深，每次收敛事件都让图谱更精准。
+conceptDiagram:
+  title: IDE 扩展信任闭环
+  mermaid: |
+    flowchart LR
+      Buyer[Platform security lead] --> Pain[Trusted IDE extensions can exfiltrate secrets]
+      Pain --> Product[IDE extension trust firewall]
+      Product --> Outcome[Safe developer workflows with instant credential containment]
+businessModelCanvas:
+  customerSegments:
+    - 托管开发者平台团队
+    - 软件公司的平台安全团队
+    - 支撑大型 VS Code 机群的端点工程团队
+  valuePropositions:
+    - 在运行时检测恶意 IDE 扩展行为
+    - 快速隔离并轮换暴露的开发者与 CI 凭据
+    - 在不全面封禁扩展的前提下保障扩展驱动的开发效率
+  channels:
+    - 直销给平台安全与开发者平台负责人
+    - 通过安全咨询公司和 MSSP 推进共创客户落地
+    - 深耕开发者安全社区与平台工程活动
+  customerRelationships:
+    - 在单个托管 IDE 机群完成高触达部署
+    - 向更多仓库和业务单元扩展覆盖
+    - 持续开展事件演练和策略调优
+  revenueStreams:
+    - 年度 SaaS 订阅
+    - 自动轮换和事件调查的用量计费
+    - 高级扩展基线映射的专属上线服务
+  keyResources:
+    - 扩展运行时遥测引擎
+    - 凭据到仓库的爆炸半径关系图
+    - 轮换与收敛剧本库
+  keyActivities:
+    - 扩展行为画像
+    - 将工作站事件与仓库和 CI 风险关联
+    - 自动化限定范围的凭据收敛
+  keyPartners:
+    - 端点管理与身份厂商
+    - 机密管理提供商
+    - 事件响应与开发者安全咨询公司
+  costStructure:
+    - 安全工程与集成
+    - 企业上线与客户成功
+    - 遥测处理与事件调查基础设施
+jobsToBeDone:
+  - job: >-
+      当工程组织批准新 IDE 扩展或更新时，帮助平台安全团队确认它无法访问敏感凭据或
+      篡改高风险项目文件，从而在不开放隐蔽供应链通道的前提下保障开发者效率。
+    currentAlternative: MDM 白名单加临时人工审核
+    successMetric: 在附带明确爆炸半径评估的情况下，批准或拦截一次扩展更新所需的时间
+  - job: >-
+      当开发者工作站发生可疑扩展事件时，帮助安全团队仅隔离受影响的机密、仓库和
+      工作流，在不轮换整个工程栈的前提下完成事件收敛。
+    currentAlternative: 通用 EDR 告警加大范围人工凭据轮换
+    successMetric: 从可疑扩展告警到确认吊销受影响凭据所需的时间
+ideaScorecard:
+  signalStrength:
+    score: 5
+    rationale: >-
+      四个抓取来源记录了一起具体的高危事件，直接将 IDE 入侵与仓库窃取和 CI 机密
+      暴露关联起来。
+  painIntensity:
+    score: 5
+    rationale: >-
+      一个恶意扩展可能迫使团队对开发者、云、Vault 和 CI 身份执行紧急轮换，同时
+      暴露源代码、中断正常工程运作。
+  wedgeClarity:
+    score: 5
+    rationale: >-
+      第一个产品具体且可落地：针对托管 IDE 扩展机群的运行时监控与收敛能力。
+  defensibility:
+    score: 4
+    rationale: >-
+      将扩展行为、机密库与仓库爆炸半径关联的专有关系图，能形成通用端点或 AppSec
+      工具所缺乏的切换成本。
+  ventureScale:
+    score: 4
+    rationale: >-
+      滩头市场从 VS Code 和 Cursor 起步，但可向更广泛的开发者运行时安全和软件
+      交付栈上的机器身份治理延伸。
+topRisks:
+  - name: 原生平台追赶
+    description: Microsoft、GitHub 或大型端点厂商可能加强扩展证明与策略控制，压缩细分市场空间。
+    mitigation: 聚焦跨工具运行时行为、凭据爆炸半径映射和自动收敛工作流，打造超越 Marketplace 证明的差异化能力。
+  - name: 端点部署阻力
+    description: 如果安装过程或误报干扰了开发者工作流，安全团队可能拒绝再引入一个工作站 Agent。
+    mitigation: 以托管机群遥测和监控模式起步，只在高置信度的机密访问与文件变更模式下才逐步开启强制执行。
+  - name: 预算归属不明
+    description: 买家可能将购买决策分散在端点、AppSec 和平台工程团队之间，拖慢初始销售周期。
+    mitigation: 围绕缩短轮换时间、避免仓库或 CI 停服的具体事件响应 ROI 故事来销售，再打包满足各团队需求的集成能力。

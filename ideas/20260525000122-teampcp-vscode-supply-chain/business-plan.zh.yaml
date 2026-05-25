@@ -1,0 +1,284 @@
+slug: ide-extension-trust-firewall
+date: '2026-05-25'
+executiveSummary: >-
+  TeamPCP 投毒 Nx Console 的事件证明，一个已验证的 VS Code 扩展可在数分钟内从开发者
+  笔记本桥接至仓库窃取和 CI 凭据暴露——对统一使用 VS Code 或 Cursor 与 GitHub
+  Actions 的软件公司来说，这是确凿的管控缺口。公司应以已在管理 300–1,500 名工程师
+  扩展策略的 B–D 轮软件企业作为起点，因为这类买家痛感最强，且无需重构整个安全栈
+  就能落地单机群试点。产品切口是审计优先的扩展信任防火墙：在工作区打开时观测运行时
+  行为，标记异常的机密访问或工作流变更，并将可能的爆炸半径映射到 GitHub、云、Vault
+  和密码管理器身份。第一个证明点不是广泛防御，而是缩短告警到收敛的时间、减少可疑
+  扩展事件后需要轮换的凭据与仓库数量。最重要的战略选择是在扩展至 JetBrains、
+  浏览器 IDE 或通用 AI Agent 治理之前，先聚焦托管 VS Code 机群和下游凭据收敛。
+  研究支持紧迫性、买家画像和相邻预算，但尚未证明有多少目标账户的扩展基线管理
+  足够集中、能够快速落地。主要否定性风险是 Microsoft、GitHub 或更广泛的工作站
+  安全厂商在初创公司建立行为数据护城河和可信响应工作流之前抢先填补缺口。如果早期
+  试点能展示低误报率、与 AWS、GitHub、1Password 和 Vault 的可信集成，以及至少
+  一次由事件复盘或审计截止日期触发的付费转化，则可作为天使轮共创客户阶段来投资。
+problem:
+  - >-
+      平台安全团队已有白名单、机密扫描和 EDR，但这些控制手段无法告诉他们某个已批准的
+      IDE 扩展在代码进入审查或 CI 之前到底做了什么。
+  - >-
+      工作站侧开发者工具入侵发生时，响应人员往往轮换了太多凭据、速度又太慢——因为他们
+      无法迅速确定扩展触碰了哪些仓库、工作流和机器身份。
+solution:
+  - >-
+      为托管 VS Code 机群部署审计优先的信任防火墙，在扩展激活和工作区打开时对其行为进行
+      画像，涵盖机密文件访问、Shell 执行、文件变更和出站网络活动。
+  - >-
+      将检测结果与凭据和仓库爆炸半径关系图配对，并提供针对 GitHub、AWS、Vault、Kubernetes
+      和 1Password 的限定范围隔离工作流，让客户只收敛最可能暴露的资产。
+whyWeWin:
+  - >-
+      切口比广义 AppSec 或端点安全更窄，因此产品可以通过解决一个原生管控明显不足的紧迫
+      工作流来更快验证价值。
+  - >-
+      复利护城河可从合法扩展行为的专有基线以及将端点事件与真实凭据、仓库和响应剧本
+      关联的事件数据中沉淀出来。
+strategicChoices:
+  beachhead: >-
+    拥有 300–1,500 名工程师、集中化 VS Code 扩展策略、GitHub Actions 交付流水线，
+    以及日常开发中本地使用 AWS、Vault、Kubernetes 或 1Password 凭据的 B–D 轮软件公司。
+  wedgeRationale: >-
+    这个切片的紧迫性最为明确——一个投毒扩展可以同时引发工作站和 CI 的连锁反应，且足够
+    窄，单机群试点就能在尝试覆盖所有编辑器、包攻击面和 AI 工具之前更快证明价值。
+  sequencingRationale: >-
+    公司应先交付监控和爆炸半径分析，再做全自动修复——买家首先需要确认传感器能融入现有
+    笔记本管控且不影响开发者；一旦告警质量得到验证，自动隔离和轮换就更容易被接受和定价。
+  notYet:
+    - JetBrains、浏览器 IDE 以及非托管承包商机群
+    - 超出扩展运行时事件的完整包防火墙覆盖
+    - IDE 工作站之外的通用 AI Agent 治理
+market:
+  tam: >-
+    估算 TAM $6.2B，基于 1 亿 GitHub 开发者、73.6% VS Code 占比、70% 在职比例以及
+    每位受保护开发者每月保守的 $10 定价。
+  sam: >-
+    估算 SAM $744.0M，筛选条件为拥有 300–1,500 名工程师、正式平台安全职能和托管开发者
+    环境的软件公司。
+  som: >-
+    估算第 3 年 SOM $8.9M，约占 SAM 的 1.2%，对应在细分市场被在位企业大规模捆绑前
+    拿下数十个灯塔账户。
+  segments:
+    - 托管 VS Code 机群中的平台安全与开发者平台团队
+    - 负责工程工作站的端点工程与安全运营负责人
+  buyingProcess: >-
+    商机应从扩展事件、策略审查或审计请求后启动，通常需要平台安全、端点工程以及 GitHub
+    或云管理员共同确认。实际落地动作是在单个托管机群上开展付费审计模式试点，在初创
+    公司证明更快收敛和可接受误报率后再扩展。
+product:
+  mvp: >-
+    第一版只覆盖托管 VS Code 机群。在扩展激活和工作区打开时观测运行时行为，标记高风险的
+    机密访问或工作流变更，并生成爆炸半径报告以及 GitHub、AWS、Vault 和 1Password
+    的人工或 API 触发收敛操作。
+  sixMonth: >-
+    交付审计模式、已批准扩展基线化、GitHub 仓库影响映射，以及 GitHub、AWS、Vault、
+    1Password 和 Kubernetes 凭据源的第一方集成。
+  twelveMonth: >-
+    新增策略调优、自动化限定范围隔离、生产就绪的事件演练工作流，以及针对已在 VS Code
+    API 上标准化的账户提供早期 Cursor 或 Open VSX 兼容支持。
+  twentyFourMonth: >-
+    仅在公司拥有强力部署参考和可复用机器身份关系图（能让跨平面响应明显优于原生管控）
+    之后，才将策略平面扩展至相邻 AI 编码工具和其他编辑器。
+  keyBets:
+    - 如果能融入现有端点管控，买家会接受在托管开发者笔记本上部署审计优先的传感器。
+    - 扩展行为基线能在不阻断常见开发者工作流的前提下达到有用的精准度。
+    - 限定范围的凭据隔离价值足够高，能在现有 AppSec 预算之外开辟新的预算。
+    - VS Code 优先的数据与集成将比立即推出广泛编辑器覆盖更快形成护城河。
+gtm:
+  wedge: >-
+    以审计模式扩展信任防火墙切入单个托管 VS Code 机群，将试点与具体成果挂钩——
+    更快收敛扩展事件，减少不必要的凭据轮换。
+  channels:
+    - 在扩展或 GitHub Actions 安全事件后，对平台安全与开发者平台负责人发起事件驱动的主动触达
+    - 通过 GitHub、机密管理和事件响应生态推进共创客户销售
+    - 在开发者安全与平台工程社区积累信誉
+  funnelTargets: "安全审查到合格试点 20–30%，试点到每周活跃部署 70%+，试点到付费生产 50%+，首个团队到多业务单元扩展 12 个月内 40%+"
+  pricing: >-
+    按受保护开发者工作站数量收取年度 SaaS 费，设置最低平台费，自动隔离和调查功能另设
+    高级层；与按席位计费的安全预算匹配，同时将价格与实际受保护的开发者和扩展范围挂钩。
+businessModel:
+  revenueStreams:
+    - 受保护开发者工作站和托管扩展覆盖的年度订阅
+    - 限定范围凭据轮换和爆炸半径调查的高级自动化费用
+    - 企业级落地和事件演练的高触达上线服务
+  unitOfValue: 处于托管扩展策略下的受保护开发者工作站
+  targetGrossMarginPct: 78
+  expansionLevers:
+    - 从单个托管机群扩展至更多工程业务单元和仓库
+    - 每个账户新增更多机密系统和自动响应动作
+    - 在有证可查后，从 VS Code 延伸至相邻编辑器和 AI 辅助开发工具
+strategyMap:
+  northStarMetric: 处于活跃扩展策略且凭据映射随时可收敛的受保护开发者覆盖数
+  inputMetrics:
+    - 每位客户完成行为画像的已批准扩展数
+    - 从可疑事件到限定范围收敛建议的平均响应时间
+    - 每 100 位受保护开发者每月的误报覆盖率
+    - 试点到生产转化率
+    - 扩展至第二个业务单元的生产账户数
+  moatsToBuild:
+    - 合法扩展运行时行为的专有基线语料库
+    - 关联本地机密系统、仓库和工作流的客户专属关系图
+    - 经过实战验证的 GitHub、AWS、Vault、1Password 和 Kubernetes 收敛剧本库
+    - 展示哪些检测转化为客户真实节省和更快响应的事件数据
+  killCriteria:
+    - 首批 10 个共创客户账户中，少于 3 个能将扩展策略集中管理到足以支撑试点落地的程度
+    - 经 60 天调优后，审计模式试点每 100 名开发者每月仍产生超过 5 起高危误报
+    - 在有明确扩展策略或事件触发的情况下，12 个月内仍少于 2 个付费试点转化为年度生产合同
+  mermaid: |
+    flowchart LR
+      Wedge[Managed VS Code fleet pilot] --> MVP[Runtime profiling and blast-radius graph]
+      MVP --> Proof[Faster scoped containment with low false positives]
+      Proof --> Expansion[More business units then adjacent editors and AI tools]
+investorMemo:
+  verdict:
+    call: "跟进调查"
+    conviction: >-
+      事件驱动的切口有真实买家痛点，但能否在在位企业捆绑这一品类之前证明部署就绪度
+      和预算归属，是建立信念的关键。
+    whyBelieve: >-
+      初创公司瞄准 Marketplace 信任信号与实际运行时行为之间新出现的紧迫管控缺口，
+      且已研究的第一客户可凭具体的事件响应 ROI 故事完成购买决策。
+    whyDoubt: >-
+      如果 Microsoft、GitHub、Endor 或 Aikido 在独立产品积累数据和工作流优势之前就
+      追加了同等的工作站管控，赛道可能迅速收窄。
+    nextDiligence: >-
+      与三个共创客户验证：VS Code 专项审计试点能否融入现有端点管控并将收敛时间缩短
+      到足以赢得付费生产合同的程度。
+  firstCustomer:
+    title: C 轮开发工具、安全或基础设施软件公司的平台安全负责人
+    profile: >-
+      工程师规模 400–1,200 人，拥有标准化 VS Code 镜像、GitHub Actions 发布流水线，
+      以及开发者笔记本上本地使用 AWS、Vault 或 1Password 的场景。
+    trigger: 近期发生过扩展安全事件、扩展策略审查，或企业审计追问已批准 IDE 工具的治理方式。
+    buyer: 平台工程总监或副总裁、产品安全负责人或 CISO
+    initialContract: >-
+      单个托管工程机群 4 万–8 万美元、为期 90 天的付费试点，预期在 GitHub 和至少两个
+      主要机密系统集成到位、收敛 MTTR 改善超过 50% 后，转化为 12 万–25 万美元的年度
+      合同。
+  mustBeTrue:
+    - 至少一半受访目标账户已将扩展策略集中管理到足以支持单机群试点的程度。
+    - 买家认为限定范围的凭据隔离价值足以在现有 GitHub、AppSec 和 EDR 工具之外单独付费。
+    - 审计模式检测能将误报控制在不会让开发者要求全面白名单化的阈值以下。
+    - GitHub 加 AWS、Vault 和 1Password 集成能覆盖首批滩头账户中大多数高价值暴露的机密。
+    - Microsoft 和相邻厂商不会在接下来 18 个月内快速推出同等的运行时收敛能力，将切口商品化。
+  diligenceQuestions:
+    - 有多少目标账户能在试点第一天就导出当前扩展策略和版本数据？
+    - 当平台安全、端点工程和 AppSec 都涉及这个问题时，谁实际签署第一份合同？
+    - 哪些事件响应时间节省足以让客户从试点转为生产？
+    - 哪些机密存储和 CI 身份在第一个版本中必须集成，哪些属于锦上添花？
+    - 如果 Microsoft 改善了证明和管理员默认配置但未推出收敛工作流，产品的差异化程度如何？
+operatingAssumptions:
+  - assumption: 大多数滩头账户已有托管 VS Code 机群，可在不重构笔记本管理的前提下部署仅审计传感器。
+    basis: research.yaml
+    validationTest: 拿下 3 个共创客户，能利用现有端点管控在 45 天内将传感器部署至至少 200 名开发者。
+    decisionImpact: 若为假，须将 ICP 收窄至更集中式的企业，或将产品上移至仅覆盖仓库的监控方案。
+  - assumption: GitHub、AWS、Vault、1Password 和 Kubernetes 集成能覆盖早期账户中大多数高价值的凭据暴露。
+    basis: idea.yaml
+    validationTest: 在前 5 个试点中，对抽样工程工作站上的所有凭据类型进行映射，确认这些集成覆盖至少 80% 的事件关键凭据。
+    decisionImpact: 若为假，路线图和招聘计划须在可信销售自动化功能之前转向更广泛的机密覆盖。
+  - assumption: 如果产品能缩短收敛时间和不必要的轮换范围，买家会接受含最低平台费的按席位定价。
+    basis: research.yaml
+    validationTest: 将至少 2 个付费试点转化为年度合同，且不打折到计划底价以下。
+    decisionImpact: 若为假，定价须向事件响应或用量计费模式转变，收入爬坡速度将放慢。
+  - assumption: 扩展行为基线能在审计模式下在客户要求拦截之前达到足够的准确性。
+    basis: 运营判断
+    validationTest: 在至少 3 个试点中，到第 60 天时将高危覆盖率控制在每 100 名开发者每月不超过 5 起。
+    decisionImpact: 若为假，产品须在可扩展 SaaS 落地之前采用更窄的规则集或更多人工服务包装。
+experimentRoadmap:
+  - horizon: 0–90 天
+    experiment: 采访 15 位滩头 ICP 中的平台安全与开发者平台负责人，收集其当前扩展策略文档。
+    hypothesis: 至少 8 个目标账户已将扩展白名单或版本控制集中管理到足以快速落地试点的程度。
+    successMetric: 8 个或更多合格账户分享策略细节，并同意进行下一步试点设计会议。
+    owner: 创始人/CEO
+  - horizon: 0–90 天
+    experiment: 在托管 macOS 和 Windows 镜像上，使用常见的已批准扩展加模拟恶意更新开展红队演练。
+    hypothesis: 审计模式遥测能在不破坏正常编辑器工作流的前提下区分高风险机密访问和工作流变更。
+    successMetric: 检测到模拟恶意扩展，同时在 20 个已批准扩展中保持不超过 3 起严重误报。
+    owner: 创始工程师
+  - horizon: 0–180 天
+    experiment: 为 GitHub、AWS、Vault 和 1Password 构建共创客户集成，在植入凭据的环境中测试爆炸半径映射。
+    hypothesis: 首批集成集合足以生成客户认为在运营上有用的响应关系图。
+    successMetric: 3 个共创客户确认映射资产至少覆盖他们在真实事件中会轮换的 80% 凭据。
+    owner: 安全集成工程师
+  - horizon: 0–180 天
+    experiment: 销售 3 个与近期扩展策略审查或安全审计截止日期绑定的付费审计模式试点。
+    hypothesis: 事件驱动的主动触达和审计触发需求，能在产品提供完整自动修复之前产生付费试点。
+    successMetric: 3 个付费试点在 6 个月内签约，启动日期确定，试点最低费用高于 4 万美元。
+    owner: 创始人/CEO
+  - horizon: 6–12 个月
+    experiment: 在最成熟的试点中为 GitHub Token 和一个云凭据族启用限定范围的自动隔离。
+    hypothesis: 经过 60 天高质量审计数据和可量化收敛收益后，客户会信任自动化能力。
+    successMetric: 一个试点从仅推荐模式升级为自动收敛，收敛 MTTR 改善超过 50%。
+    owner: 安全响应负责人
+  - horizon: 12–18 个月
+    experiment: 将一个生产客户的覆盖范围从 VS Code 专项扩展至 Cursor 或 Open VSX 兼容环境。
+    hypothesis: 相邻编辑器扩展能提升账户价值，无需开启新的销售动作。
+    successMetric: 一个客户通过相邻编辑器覆盖将受保护席位扩大 25% 以上。
+    owner: 产品负责人
+operations:
+  - 从 VS Code 企业管控和标准镜像工作流中摄取扩展策略
+  - 对扩展激活、文件变更、进程启动和出站网络行为进行画像的运行时遥测流水线
+  - 将开发者工作站连接至 GitHub 仓库、云角色、机密存储和 CI 工作流的凭据关系图服务
+  - 用于隔离、轮换和事件后取证的事件响应引擎
+  - 在托管 macOS 和 Windows 开发者镜像上运行的红队模拟实验室
+team:
+  - role: 创始工程师
+    startTiming: Month 0
+    rationale: 构建运行时传感器、爆炸半径关系图以及 GitHub 和机密系统的首批集成。
+  - role: 创始人/CEO
+    startTiming: Month 0
+    rationale: 主导共创客户销售、客户探索以及面向平台安全买家的事件驱动主动触达。
+  - role: 安全集成工程师
+    startTiming: Month 2
+    rationale: 负责 AWS、Vault、1Password、Kubernetes 和 GitHub 收敛工作流，让试点在运营上切实可行。
+  - role: 检测工程师
+    startTiming: Month 4
+    rationale: 优化行为基线，降低误报率，并固化高置信度的扩展风险规则。
+  - role: 解决方案工程师
+    startTiming: Month 6
+    rationale: 缩短企业部署周期，将试点发现转化为付费生产合同。
+milestones:
+  - horizon: 0–12 个月
+    items:
+      - 交付附带 GitHub 仓库影响映射的 VS Code 审计模式 MVP
+      - 在滩头 ICP 中拿下 3 个付费共创客户试点
+      - 在调优试点中将严重误报覆盖率控制在每 100 名开发者每月不超过 5 起
+      - 为 GitHub 和一个云或 Vault 集成推出首批限定范围收敛操作
+  - horizon: 12–24 个月
+    items:
+      - 将至少 2 个试点账户转化为年度生产部署
+      - 为 GitHub、AWS、Vault 和 1Password 新增自动化隔离剧本
+      - 将一个生产账户扩展至第二个业务单元或相邻编辑器环境
+      - 发布客户案例，证明收敛速度明显快于人工响应、轮换范围也更窄
+  - horizon: 24–36 个月
+    items:
+      - 构建跨 IDE、CI 和 AI 编码工具事件的多平面机器身份关系图
+      - 仅在同一响应工作流能保持完整的前提下，选择性支持相邻编辑器
+      - 通过事件响应和机密管理合作伙伴建立可复制的渠道推荐
+      - 凭借多账户扩展和稳定检测性能，为更大规模的成长轮融资做好准备
+risks:
+  - risk: Microsoft、GitHub 或相邻安全厂商在初创公司建立差异化优势之前捆绑同等的运行时管控。
+    likelihood: Medium
+    impact: High
+    mitigation: 凭借扩展专项收敛工作流、客户数据护城河以及在单个托管机群的更快部署速度胜出。
+  - risk: 误报或笔记本性能开销损害开发者和平台团队的信任。
+    likelihood: High
+    impact: High
+    mitigation: 从审计模式起步，先对已批准扩展建立基线，并在明确置信阈值后才开启自动化。
+  - risk: 买家决策权分散在平台工程、AppSec 和端点团队之间，拖慢首单成交。
+    likelihood: Medium
+    impact: Medium
+    mitigation: 围绕具体事件响应成果销售，并通过付费试点迫使一位高管主导落地。
+  - risk: VS Code 专项覆盖对使用 Cursor、Open VSX 或混合编辑器机群的买家而言显得过于狭窄。
+    likelihood: Medium
+    impact: Medium
+    mitigation: 将 VS Code 定位为验证切口，仅在生产参考账户落地后才逐步纳入兼容的相邻环境。
+fundingAsk:
+  round: pre-seed
+  targetFundingRangeUsd: $2–4M
+  runwayMonths: 18
+  useOfFundsSummary: >-
+    18 个月应足以支撑一支五人团队、共创客户部署、核心 GitHub 和机密集成、审计优先产品
+    上线，以及在 A 轮之前证明试点到生产转化的足够客户证据。

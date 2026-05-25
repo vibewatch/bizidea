@@ -1,0 +1,302 @@
+slug: ide-extension-trust-firewall
+date: '2026-05-24'
+sector: dev-tools
+pitch: Runtime trust layer for enterprise VS Code fleets that blocks malicious extensions and auto-rotates exposed CI and cloud secrets.
+sourceContext:
+  topic: CI/CD supply chain attack via poisoned VS Code extension
+  topicScope: broad
+  timeWindow: '2026-05-24 to 2026-05-24'
+  timeWindowLabel: null
+  sectorHint: dev-tools
+  clusterId: c1
+  headline: "TeamPCP breaches 3,800 GitHub internal repos via poisoned Nx Console VS Code extension, exposing CI/CD credential governance gap"
+  primaryCompanies:
+    - GitHub
+    - TeamPCP
+  topSourceUrls:
+    - https://www.bleepingcomputer.com/news/security/github-confirms-breach-of-3-800-repos-via-malicious-vscode-extension/
+    - https://www.infoworld.com/article/4174734/github-admits-major-source-code-leak-after-3800-internal-repositories-breached.html
+    - https://stepsecurity.io/blog/megalodon-mass-github-actions-secret-exfiltration-across-5-500-public-repositories
+  eventKeys:
+    - teampcp|incident|2026-05
+    - github|incident|2026-05
+  signalStrength: 5
+  qualityScore: 4.7
+  evidenceConfidence: 5
+  incumbentGravity: 2
+  selectionScore: 4.7
+  scoreRationale: "Strongest on painIntensity (documented credential theft from 3,800 repos, named victims including GitHub and OpenAI employees) and opportunityClarity (VS Code extension integrity scanning, CI workflow attestation, developer endpoint credential rotation); nonObviousness slightly lower because supply chain attacks are known but the before-code IDE extension surface is underserved by existing SAST/SCA tools; evidence is thorough with 4 independent fetched sources plus GitHub's own public statement."
+  selectionRationale: "VS Code Marketplace extension verification is meaningless for runtime payload delivery; new-entrant wedge is real-time IDE extension behavioral scanning and CI/CD workflow secret rotation tooling that integrates before code is committed, a surface not addressed by Socket, StepSecurity, or existing AppSec platforms."
+  dedupeRationale: "No teampcp or github incident eventKey in history; nearest entries are safedep npm-attack and socket funding with keyword overlap below the 6-item tier-5 threshold; distinct from the CISA govcloud credential leak covered on 2026-05-20 which involved a different company and event type."
+  gaps: >-
+    The triage sources verify the attack mechanics and blast radius but do not
+    quantify how many enterprises centrally manage IDE extension fleets, which
+    budget owner buys this category first, or how often extension-borne theft
+    reaches production credentials outside this campaign.
+  sources:
+    - id: 1
+      title: "GitHub confirms breach of 3,800 repos via malicious VS Code extension"
+      url: https://www.bleepingcomputer.com/news/security/github-confirms-breach-of-3-800-repos-via-malicious-vscode-extension/
+      publisher: BleepingComputer
+      publishedDate: '2026-05-20'
+      company: GitHub
+      eventType: incident
+      fetchVerified: true
+      keyPoints:
+        - "GitHub confirmed 3,800 internal repositories were exfiltrated after an employee installed a poisoned VS Code extension; customer data was not affected."
+        - "TeamPCP claimed access and offered stolen repos for $50,000 on the Breached forum, threatening a free leak if unsold."
+        - "The attack was linked to the Mini Shai-Hulud campaign that also impacted employees at OpenAI and Mistral AI."
+    - id: 2
+      title: "GitHub admits major source code leak after 3,800 internal repositories breached"
+      url: https://www.infoworld.com/article/4174734/github-admits-major-source-code-leak-after-3800-internal-repositories-breached.html
+      publisher: InfoWorld
+      publishedDate: '2026-05-19'
+      company: GitHub
+      eventType: incident
+      fetchVerified: true
+      keyPoints:
+        - "Malicious Nx Console VS Code extension version 18.95.0 was uploaded to Visual Studio Marketplace on May 18 at 12:30 UTC and pulled within 18 minutes, yet thousands of developers were caught out by the infected version."
+        - "Compromised credentials included Kubernetes, AWS IAM, npm, 1Password, GitHub tokens, and GCP/Docker credentials harvested from developer workstations."
+        - "637 malicious npm packages were published across the AntV namespace as part of the same campaign, broadening downstream exposure."
+    - id: 3
+      title: "GitHub Breach Traced to Malicious Nx Console VS Code Extension"
+      url: https://www.infosecurity-magazine.com/news/github-breach-nx-console-vs-code/
+      publisher: Infosecurity Magazine
+      publishedDate: '2026-05-19'
+      company: GitHub
+      eventType: incident
+      fetchVerified: true
+      keyPoints:
+        - "Nx Console has 2.2 million VS Code Marketplace installs and a verified publisher badge, showing that publisher verification does not prevent supply chain compromise."
+        - "The malicious payload harvested Vault tokens, AWS IMDS, GCP Docker credentials, GitHub Actions secrets, and 1Password CLI vault contents silently on workspace open."
+        - "Nx Console advisory GHSA-c9j4-9m59-847w advised immediate update to version 18.100.0; the 18-minute exposure window was enough to breach GitHub itself."
+    - id: 4
+      title: "Megalodon: Mass GitHub Actions Secret Exfiltration Across 5,500+ Public Repositories"
+      url: https://stepsecurity.io/blog/megalodon-mass-github-actions-secret-exfiltration-across-5-500-public-repositories
+      publisher: StepSecurity
+      publishedDate: '2026-05-22'
+      company: StepSecurity
+      eventType: incident
+      fetchVerified: true
+      keyPoints:
+        - "Megalodon campaign on May 18 injected malicious CI workflow files into 5,500+ open-source repositories in six hours, systematically targeting repos with weak branch protection rules."
+        - "Exfiltration payload compressed all harvested credentials and sent them via HTTPS POST to 216.126.225.129:8443 using the CI runner's unrestricted outbound internet access."
+        - "Attack maps to MITRE ATT&CK T1195.002 (d-PPE class); workflow YAML files receive far less security scrutiny than application code, making them an underdefended surface."
+  signals:
+    - title: Verified marketplace badges do not prove runtime safety
+      description: Nx Console carried a verified publisher badge and 2.2 million installs, yet a malicious update still breached GitHub, so extension provenance checks alone are insufficient.
+      sourceRefs: [3]
+    - title: Minutes of marketplace exposure can still create enterprise-scale damage
+      description: The poisoned extension was live for only 18 minutes but still compromised thousands of developers and 3,800 internal repositories, showing buyers need continuous runtime controls rather than periodic audits.
+      sourceRefs: [1, 2, 3]
+    - title: IDE extensions now harvest both developer and CI credentials
+      description: The payload collected Vault, AWS, GitHub, Kubernetes, 1Password, and Docker credentials directly from developer workstations, collapsing endpoint and CI blast radius into one attack path.
+      sourceRefs: [2, 3]
+    - title: CI workflow files are an underdefended downstream exfiltration surface
+      description: StepSecurity's Megalodon report shows attackers also weaponized workflow YAML to exfiltrate secrets from 5,500+ repositories, proving the compromise does not stop at the laptop.
+      sourceRefs: [4]
+    - title: One adversary campaign is chaining IDE, package, and CI surfaces
+      description: The TeamPCP and Mini Shai-Hulud incidents tie malicious extensions, npm package compromise, and CI secret theft into one coordinated campaign against developer tooling.
+      sourceRefs: [1, 2, 4]
+problem: >-
+  Platform security teams still treat IDE extensions as low-risk productivity
+  add-ons even though they run inside the developer's highest-privilege working
+  environment. A malicious extension can silently read local cloud and secret
+  manager credentials, alter project files, and seed downstream CI compromise
+  before code review or runtime security tools ever see the change. Existing
+  controls like marketplace verification, MDM allowlists, EDR, and GitHub
+  secret scanning do not give teams a purpose-built layer for extension
+  behavior, blast-radius mapping, and immediate credential containment.
+targetUser:
+  primary: >-
+    Platform security and developer-platform engineers at software companies
+    with 200-2,000 engineers standardized on VS Code or Cursor, GitHub Actions,
+    and local cloud or secret-manager CLIs on developer laptops
+  secondary: >-
+    Endpoint engineering and security operations leaders who own IDE baselines,
+    extension policy, and incident response for engineering workstations
+  buyer: >-
+    Director of platform engineering, head of product security, or chief
+    information security officer at a software company with centralized
+    developer-tooling policy
+startupThesis:
+  nonObviousInsight: >-
+    The new control point is not the package registry or the CI runner by
+    itself. It is the trusted extension runtime on the developer workstation,
+    where a "verified" tool can deliver malicious behavior after installation
+    and bridge local secrets into downstream repository and CI compromise. The
+    winning company will pair runtime extension monitoring with secret graphing
+    and one-click containment, not just static provenance checks.
+  beachhead: >-
+    Series B-D software companies with 300-1,500 engineers, a managed VS Code
+    or Cursor extension baseline, GitHub Actions release pipelines, and local
+    use of AWS, Kubernetes, Vault, or 1Password CLI credentials during
+    day-to-day development
+  wedge: >-
+    An IDE extension trust firewall that fingerprints extension behavior,
+    detects secret-access and file-mutation anomalies on workspace open, and
+    launches scoped credential quarantine plus rotation workflows when a risky
+    extension is observed
+  whyNowCatalyst: >-
+    The TeamPCP incident proved that a verified VS Code extension can breach
+    GitHub itself in under 18 minutes and steal both workstation and CI
+    credentials, turning IDE runtime trust into an urgent board-level control
+    gap.
+  ventureScalePath: >-
+    Start with VS Code and Cursor extension runtime security, then expand into
+    local AI coding agents, JetBrains plugins, browser-based developer tools,
+    and broader machine-identity governance across the full software-delivery
+    chain.
+solution: >-
+  IDE Extension Trust Firewall plugs into the enterprise extension baseline,
+  endpoint agent, and secret systems already used by engineering. It scores
+  every installed extension against observed behaviors such as credential-file
+  access, shell execution, workspace-open callbacks, outbound network patterns,
+  and unauthorized mutation of workflow or config files. When it detects a
+  high-risk extension, it can isolate that workstation, revoke or rotate the
+  specific GitHub, cloud, and vault credentials in reach, and generate a
+  blast-radius report showing which repos, workflows, and environments may have
+  been touched. The first release is deliberately narrow: protect managed VS
+  Code fleets without forcing security teams to ban extensions outright or run
+  a full laptop-forensics program after every scare.
+goToMarketSeed:
+  firstCustomer: >-
+    A Series C dev-tools, security, or infrastructure software company with
+    400-1,200 engineers, standardized VS Code images, 20+ GitHub repositories,
+    and a small platform-security team responsible for developer laptop policy
+    and GitHub Actions hardening
+  buyingTrigger: >-
+    A recent developer-tooling incident, extension-policy review, or executive
+    request to prove that approved IDE extensions cannot leak cloud, vault, or
+    CI credentials before the next security audit or enterprise deal
+  currentAlternative: >-
+    Marketplace verification, MDM allowlists, generic EDR, GitHub secret
+    scanning, and manual credential rotation coordinated across platform and
+    security teams after an incident
+  switchingReason: >-
+    This wedge watches what extensions actually do at runtime and ties findings
+    directly to credential quarantine and repo-impact analysis, which is much
+    faster and more actionable than static allowlists or generic endpoint alerts
+  pricingHypothesis: >-
+    Annual platform fee based on protected developer workstations and managed
+    extension installs, with premium usage pricing for automated credential
+    rotation and blast-radius investigations
+whyNow:
+  - point: Verified marketplace status no longer reassures buyers because Nx Console's badge and 2.2 million installs did not stop a malicious update from compromising GitHub.
+    signalRefs: [Verified marketplace badges do not prove runtime safety]
+    sourceRefs: [3]
+  - point: An 18-minute exposure window was enough to infect thousands of developers and exfiltrate 3,800 internal repositories, so point-in-time extension audits are not enough.
+    signalRefs: [Minutes of marketplace exposure can still create enterprise-scale damage]
+    sourceRefs: [1, 2, 3]
+  - point: The extension harvested cloud, vault, GitHub, Kubernetes, Docker, and password-manager secrets from the workstation, making IDE compromise equivalent to machine-identity compromise.
+    signalRefs: [IDE extensions now harvest both developer and CI credentials]
+    sourceRefs: [2, 3]
+  - point: The same campaign also pushed malicious workflow YAML into 5,500+ repositories, creating urgency for products that connect laptop compromise to downstream CI containment.
+    signalRefs: [CI workflow files are an underdefended downstream exfiltration surface, One adversary campaign is chaining IDE, package, and CI surfaces]
+    sourceRefs: [1, 2, 4]
+differentiator: >-
+  Most developer-security tools stop at package provenance, secret detection, or
+  generic endpoint telemetry. This company would own the missing runtime layer
+  where approved IDE extensions actually execute, touch secrets, and alter
+  repository state before code reaches CI. Its moat can compound through an
+  extension-behavior graph tied to enterprise-specific credential inventories,
+  repo topologies, and incident-response playbooks that get sharper with every
+  containment event.
+conceptDiagram:
+  title: IDE extension trust loop
+  mermaid: |
+    flowchart LR
+      Buyer[Platform security lead] --> Pain[Trusted IDE extensions can exfiltrate secrets]
+      Pain --> Product[IDE extension trust firewall]
+      Product --> Outcome[Safe developer workflows with instant credential containment]
+businessModelCanvas:
+  customerSegments:
+    - Managed developer-platform teams
+    - Platform security teams at software companies
+    - Endpoint engineering teams supporting large VS Code fleets
+  valuePropositions:
+    - Detect malicious IDE extension behavior at runtime
+    - Quarantine and rotate exposed developer and CI credentials quickly
+    - Preserve extension-driven productivity without blanket bans
+  channels:
+    - Direct sales to platform security and developer platform leaders
+    - Design-partner rollouts through security consultancies and MSSPs
+    - Developer security communities and platform engineering events
+  customerRelationships:
+    - High-touch deployment into one managed IDE fleet
+    - Expansion across more repositories and business units
+    - Ongoing incident drills and policy tuning
+  revenueStreams:
+    - Annual SaaS subscription
+    - Usage-based fees for automated rotations and investigations
+    - Premium onboarding for extension baseline mapping
+  keyResources:
+    - Extension runtime telemetry engine
+    - Credential-to-repository blast-radius graph
+    - Rotation and containment playbook library
+  keyActivities:
+    - Profiling extension behavior
+    - Correlating workstation events to repo and CI risk
+    - Automating scoped credential containment
+  keyPartners:
+    - Endpoint management and identity vendors
+    - Secret-management providers
+    - Incident-response and developer-security consultancies
+  costStructure:
+    - Security engineering and integrations
+    - Enterprise onboarding and customer success
+    - Telemetry processing and incident investigation infrastructure
+jobsToBeDone:
+  - job: >-
+      When our engineering org approves a new IDE extension or update, help our
+      platform security team verify that it cannot access sensitive credentials
+      or alter high-risk project files, so we can keep developers productive
+      without opening a silent supply-chain path.
+    currentAlternative: MDM allowlists plus ad hoc manual review
+    successMetric: Time to approve or block an extension update with a clear blast-radius assessment
+  - job: >-
+      When a suspicious extension event occurs on a developer workstation, help
+      our security team quarantine only the affected secrets, repos, and
+      workflows, so we can contain the incident without rotating everything in
+      the engineering stack.
+    currentAlternative: Generic EDR alerting plus broad manual credential rotation
+    successMetric: Time from suspicious extension alert to confirmed revocation of affected credentials
+ideaScorecard:
+  signalStrength:
+    score: 5
+    rationale: >-
+      Four fetched sources document a concrete, high-severity incident that ties
+      IDE compromise directly to repository theft and CI secret exposure.
+  painIntensity:
+    score: 5
+    rationale: >-
+      One malicious extension can force emergency rotation across developer,
+      cloud, vault, and CI identities while exposing source code and halting
+      normal engineering operations.
+  wedgeClarity:
+    score: 5
+    rationale: >-
+      The first product is specific and deployable: runtime monitoring and
+      containment for managed IDE extension fleets.
+  defensibility:
+    score: 4
+    rationale: >-
+      A proprietary graph linking extension behaviors, secret inventories, and
+      repo blast radius can create switching costs that generic endpoint or AppSec
+      tools lack.
+  ventureScale:
+    score: 4
+    rationale: >-
+      The beachhead starts in VS Code and Cursor but can expand into broader
+      developer-runtime security and machine-identity governance across the
+      software-delivery stack.
+topRisks:
+  - name: Native platform catch-up
+    description: Microsoft, GitHub, or large endpoint vendors could add stronger extension attestation and policy controls that shrink the category.
+    mitigation: Focus on cross-tool runtime behavior, credential blast-radius mapping, and automated containment workflows that go beyond marketplace attestation.
+  - name: Endpoint deployment friction
+    description: Security teams may resist another workstation agent if installation or false positives disrupt developer workflows.
+    mitigation: Start with managed-fleet telemetry and monitor mode, then phase in enforcement only for high-confidence secret-access and file-mutation patterns.
+  - name: Budget ambiguity
+    description: Buyers may split ownership across endpoint, AppSec, and platform engineering teams, slowing initial sales cycles.
+    mitigation: Sell through a concrete incident-response ROI story around reduced rotation time and avoided repo or CI shutdowns, then package integrations that satisfy each team.
