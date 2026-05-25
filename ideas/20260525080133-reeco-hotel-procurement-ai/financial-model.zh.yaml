@@ -1,0 +1,566 @@
+slug: hotel-supplier-margin-guard
+date: '2026-05-25'
+currency: USD
+modelStartMonth: 2026-06
+assumptions:
+- id: A1
+  name: 模型起始月份
+  value: 2026-06
+  unit: YYYY-MM
+  source: 从 2026-05-25 的商业计划日期后第一个完整月份开始。
+- id: A2
+  name: 每个上线物业的基础 SaaS 价格
+  value: $6,000 每年 / $500 每月
+  unit: USD_per_property_year
+  source: '[research market.bottomUpSizingDrivers; BP gtm.pricing] 调研把这层窄覆盖估到每家物业每年约 $6,000，而 BP 也写明定价应按物业计费，并设置组合最低消费。'
+- id: A3
+  name: 目标毛利率
+  value: 70%
+  unit: percent
+  source: '[BP businessModel.targetGrossMarginPct] 业务计划把目标毛利率定在 70%。'
+- id: A4
+  name: 基础上线物业爬坡
+  value: Y1 M1-M12：0、0、0、6、8、10、16、24、32、45、60、80；Y2 Q1-Q4：120、180、260、360；Y3 Q1-Q4：450、540、620、690。
+  unit: live_properties
+  source: '[BP milestones; BP experimentRoadmap; research market.som] 爬坡从第 1 年的一个 5–10 家物业付费试点起步，第 2 年转成多个全面铺开项目，第 3 年年底落在调研约 700 家物业的 SOM 之下。'
+- id: A5
+  name: 首个付费试点范围
+  value: M4 上线 6 家物业，到 M6 扩到 10 家
+  unit: live_properties
+  source: '[BP investorMemo.initialContract; BP milestones 0-12 months] BP 计划第 1 年先做一个 5–10 家物业的付费试点。'
+- id: A6
+  name: 招聘节奏
+  value: M1 创始人和创始工程师；M2 产品与实施负责人；M4 酒店解决方案分析师；M7 企业销售；M8 第二名工程师；M10 客户成功负责人；Q1Y2 第三名工程师；Q2Y2 第二名销售；Q3Y2 第二名分析师；Q4Y2 G&A；Q1Y3 第四名工程师；Q2Y3 第二名产品与实施成员；Q4Y3 第二名客户成功成员。
+  unit: hiring_timing
+  source: '[BP team; BP strategicChoices.sequencingRationale] 团队先补产品和实施，再在证据跑通后补 GTM，最后为规模化叠加覆盖层。'
+- id: A7
+  name: 福利和工资税负担
+  value: 现金工资上浮 20%
+  unit: percent
+  source: 初创公司财务经验值：美国种子期软件团队通常需要在现金工资上再加约 15–25% 的工资税和福利。
+- id: A8
+  name: 创始人薪酬
+  value: $120,000 基本工资 / $144,000 全成本
+  unit: USD_per_FTE_year
+  source: 以精益 pre-seed 创始人工资为锚，并满足 BP 对 18–24 个月资本效率的要求。
+- id: A9
+  name: 工程薪酬
+  value: $160,000 基本工资 / $192,000 全成本
+  unit: USD_per_FTE_year
+  source: 美国早期 垂直 SaaS 工程招聘的常见经验值。
+- id: A10
+  name: 产品与实施薪酬
+  value: $140,000 基本工资 / $168,000 全成本
+  unit: USD_per_FTE_year
+  source: 企业工作流软件里“产品 + 实施”复合型人才的常见经验值。
+- id: A11
+  name: 解决方案分析师薪酬
+  value: $110,000 基本工资 / $132,000 全成本
+  unit: USD_per_FTE_year
+  source: 支持上线与 QA 的酒店行业分析师常见经验值。
+- id: A12
+  name: 销售薪酬
+  value: $150,000 基薪折算 / $180,000 全成本
+  unit: USD_per_FTE_year
+  source: '[BP team; BP gtm.channels] 创始人主导的企业销售，在后期再补专职销售，支撑一个全成本达到中六位数的销售岗位。'
+- id: A13
+  name: 客户成功薪酬
+  value: $120,000 基本工资 / $144,000 全成本
+  unit: USD_per_FTE_year
+  source: 以铺开转化和报告复盘为重心的客户成功负责人的常见经验值。
+- id: A14
+  name: G&A 薪酬
+  value: $100,000 基本工资 / $120,000 全成本
+  unit: USD_per_FTE_year
+  source: 第 1 年后再补精简财务与运营支持岗位的常见经验值。
+- id: A15
+  name: 非薪资运营支出
+  value: 第 1 年 $257K、第 2 年 $270K、第 3 年 $456K，覆盖托管、数据工具、差旅、安全、法务、保险和软件。
+  unit: USDK
+  source: '[BP operations; BP fundingAsk.useOfFundsSummary] BP 需要集成、审计控制、月度节省复盘和伙伴合作，但排期上明确避免养一支重服务团队。'
+- id: A16
+  name: pre-seed 融资完成后的期初现金
+  value: $2.4M
+  unit: USDM
+  source: '[BP fundingAsk targetFundingRangeUsd $2-3M] 模型采用 $2.4M，接近给定区间中位数，因为这笔钱既能跑到下一里程碑，也还能留下约 6 个月缓冲。'
+- id: A17
+  name: 收入确认约定
+  value: 第 1 年按每个上线物业每月 $0.5K 确认收入；第 2–3 年按每个上线物业每季度 $1.5K 确认收入，计费基数取期末上线物业数。
+  unit: modeling_rule
+  source: 基于 A2 中每个物业每年 $6,000 的价格做建模，使收入机械地和上线物业数量绑定。
+- id: A18
+  name: 每个上线物业的混合 CAC
+  value: $3,000
+  unit: USD_per_property
+  source: 初创公司财务经验值：约 $75K 的混合获客成本，除以一个首批 25 家物业铺开；与 BP 的直销加伙伴辅助打法相符。
+- id: A19
+  name: 单位经济模型里的月度流失率
+  value: 1.2%
+  unit: percent_per_month
+  source: 适用于高粘性财务工作流的初创公司经验值，同时考虑到 BP 提到业主与运营方未必总能对齐的风险。
+- id: A20
+  name: 平均首批铺开规模
+  value: 每个管理公司客户平均 25 家上线物业
+  unit: properties_per_logo
+  source: '[BP initialContract; research validationSignals] BP 从 5–10 家物业试点起步，再扩到 $75K–$180K 的年合约；调研里有 42 家物业运营方的案例，因此取 25 家物业作为偏保守的混合基数。'
+- id: A21
+  name: 融资测算规则
+  value: 融资额度应足以跑到第 2 年的组合铺开里程碑，并为第 3 年保留约 6 个月缓冲。
+  unit: policy
+  source: '[BP fundingAsk runwayMonths 18; BP milestones 12-24 months] 业务计划要求 18 个月跑道；模型额外补上了 6 个月缓冲。'
+- id: A22
+  name: 现金流简化假设
+  value: 期末现金 = 期初现金 + 累计 EBITDA；营运资本波动、资本开支和债务影响视为不重大。
+  unit: formula
+  source: 对于一套种子前软件模型来说，递延收入、资本开支和债务复杂度都很有限，因此可用这个简化。
+headcount:
+- role: 创始人/CEO
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 工程
+  q1y1: 1
+  q2y1: 1
+  q3y1: 2
+  q4y1: 2
+  q4y2: 3
+  q4y3: 4
+- role: 产品与实施
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 2
+- role: 酒店解决方案分析师
+  q1y1: 0
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 2
+  q4y3: 2
+- role: 销售
+  q1y1: 0
+  q2y1: 0
+  q3y1: 1
+  q4y1: 1
+  q4y2: 2
+  q4y3: 2
+- role: 客户成功
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 1
+  q4y2: 1
+  q4y3: 2
+- role: G&A
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 6
+  q4y1: 7
+  q4y2: 11
+  q4y3: 14
+headcountAnnualizedPayrollK:
+  q1y1: 504.0
+  q2y1: 636.0
+  q3y1: 1008.0
+  q4y1: 1152.0
+  q4y2: 1776.0
+  q4y3: 2280.0
+y1Monthly:
+- month: M1
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 28.0
+  salesMarketingK: 3.0
+  researchDevelopmentK: 20.0
+  generalAdministrativeK: 18.0
+  opexK: 41.0
+  ebitdaK: -41.0
+  cashEopK: 2359.0
+- month: M2
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 42.0
+  salesMarketingK: 3.0
+  researchDevelopmentK: 27.0
+  generalAdministrativeK: 25.0
+  opexK: 55.0
+  ebitdaK: -55.0
+  cashEopK: 2304.0
+- month: M3
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 42.0
+  salesMarketingK: 4.0
+  researchDevelopmentK: 28.0
+  generalAdministrativeK: 25.0
+  opexK: 57.0
+  ebitdaK: -57.0
+  cashEopK: 2247.0
+- month: M4
+  customersEop: 6
+  newCustomers: 6
+  revenueK: 3.0
+  cogsK: 0.9
+  grossProfitK: 2.1
+  salaryK: 53.0
+  salesMarketingK: 4.0
+  researchDevelopmentK: 28.0
+  generalAdministrativeK: 37.0
+  opexK: 69.0
+  ebitdaK: -66.9
+  cashEopK: 2180.1
+- month: M5
+  customersEop: 8
+  newCustomers: 2
+  revenueK: 4.0
+  cogsK: 1.2
+  grossProfitK: 2.8
+  salaryK: 53.0
+  salesMarketingK: 5.0
+  researchDevelopmentK: 29.0
+  generalAdministrativeK: 37.0
+  opexK: 71.0
+  ebitdaK: -68.2
+  cashEopK: 2111.9
+- month: M6
+  customersEop: 10
+  newCustomers: 2
+  revenueK: 5.0
+  cogsK: 1.5
+  grossProfitK: 3.5
+  salaryK: 53.0
+  salesMarketingK: 6.0
+  researchDevelopmentK: 29.0
+  generalAdministrativeK: 37.0
+  opexK: 72.0
+  ebitdaK: -68.5
+  cashEopK: 2043.4
+- month: M7
+  customersEop: 16
+  newCustomers: 6
+  revenueK: 8.0
+  cogsK: 2.4
+  grossProfitK: 5.6
+  salaryK: 68.0
+  salesMarketingK: 23.0
+  researchDevelopmentK: 30.0
+  generalAdministrativeK: 38.0
+  opexK: 91.0
+  ebitdaK: -85.4
+  cashEopK: 1958.0
+- month: M8
+  customersEop: 24
+  newCustomers: 8
+  revenueK: 12.0
+  cogsK: 3.6
+  grossProfitK: 8.4
+  salaryK: 84.0
+  salesMarketingK: 24.0
+  researchDevelopmentK: 46.0
+  generalAdministrativeK: 38.0
+  opexK: 108.0
+  ebitdaK: -99.6
+  cashEopK: 1858.4
+- month: M9
+  customersEop: 32
+  newCustomers: 8
+  revenueK: 16.0
+  cogsK: 4.8
+  grossProfitK: 11.2
+  salaryK: 84.0
+  salesMarketingK: 25.0
+  researchDevelopmentK: 47.0
+  generalAdministrativeK: 38.0
+  opexK: 110.0
+  ebitdaK: -98.8
+  cashEopK: 1759.6
+- month: M10
+  customersEop: 45
+  newCustomers: 13
+  revenueK: 22.5
+  cogsK: 6.8
+  grossProfitK: 15.7
+  salaryK: 96.0
+  salesMarketingK: 27.0
+  researchDevelopmentK: 47.0
+  generalAdministrativeK: 51.0
+  opexK: 125.0
+  ebitdaK: -109.3
+  cashEopK: 1650.3
+- month: M11
+  customersEop: 60
+  newCustomers: 15
+  revenueK: 30.0
+  cogsK: 9.0
+  grossProfitK: 21.0
+  salaryK: 96.0
+  salesMarketingK: 27.0
+  researchDevelopmentK: 48.0
+  generalAdministrativeK: 51.0
+  opexK: 126.0
+  ebitdaK: -105.0
+  cashEopK: 1545.3
+- month: M12
+  customersEop: 80
+  newCustomers: 20
+  revenueK: 40.0
+  cogsK: 12.0
+  grossProfitK: 28.0
+  salaryK: 96.0
+  salesMarketingK: 27.0
+  researchDevelopmentK: 48.0
+  generalAdministrativeK: 52.0
+  opexK: 127.0
+  ebitdaK: -99.0
+  cashEopK: 1446.3
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 120
+  revenueK: 180.0
+  cogsK: 54.0
+  grossProfitK: 126.0
+  salaryK: 336.0
+  salesMarketingK: 63.0
+  researchDevelopmentK: 180.0
+  generalAdministrativeK: 138.0
+  opexK: 381.0
+  ebitdaK: -255.0
+  cashEopK: 1191.3
+- quarter: Q2Y2
+  customersEop: 180
+  revenueK: 270.0
+  cogsK: 81.0
+  grossProfitK: 189.0
+  salaryK: 381.0
+  salesMarketingK: 114.0
+  researchDevelopmentK: 183.0
+  generalAdministrativeK: 144.0
+  opexK: 441.0
+  ebitdaK: -252.0
+  cashEopK: 939.3
+- quarter: Q3Y2
+  customersEop: 260
+  revenueK: 390.0
+  cogsK: 117.0
+  grossProfitK: 273.0
+  salaryK: 414.0
+  salesMarketingK: 120.0
+  researchDevelopmentK: 186.0
+  generalAdministrativeK: 183.0
+  opexK: 489.0
+  ebitdaK: -216.0
+  cashEopK: 723.3
+- quarter: Q4Y2
+  customersEop: 360
+  revenueK: 540.0
+  cogsK: 162.0
+  grossProfitK: 378.0
+  salaryK: 444.0
+  salesMarketingK: 126.0
+  researchDevelopmentK: 189.0
+  generalAdministrativeK: 219.0
+  opexK: 534.0
+  ebitdaK: -156.0
+  cashEopK: 567.3
+- quarter: Q1Y3
+  customersEop: 450
+  revenueK: 675.0
+  cogsK: 202.5
+  grossProfitK: 472.5
+  salaryK: 492.0
+  salesMarketingK: 132.0
+  researchDevelopmentK: 237.0
+  generalAdministrativeK: 219.0
+  opexK: 588.0
+  ebitdaK: -115.5
+  cashEopK: 451.8
+- quarter: Q2Y3
+  customersEop: 540
+  revenueK: 810.0
+  cogsK: 243.0
+  grossProfitK: 567.0
+  salaryK: 534.0
+  salesMarketingK: 135.0
+  researchDevelopmentK: 261.0
+  generalAdministrativeK: 246.0
+  opexK: 642.0
+  ebitdaK: -75.0
+  cashEopK: 376.8
+- quarter: Q3Y3
+  customersEop: 620
+  revenueK: 930.0
+  cogsK: 279.0
+  grossProfitK: 651.0
+  salaryK: 534.0
+  salesMarketingK: 138.0
+  researchDevelopmentK: 264.0
+  generalAdministrativeK: 252.0
+  opexK: 654.0
+  ebitdaK: -3.0
+  cashEopK: 373.8
+- quarter: Q4Y3
+  customersEop: 690
+  revenueK: 1035.0
+  cogsK: 310.5
+  grossProfitK: 724.5
+  salaryK: 570.0
+  salesMarketingK: 144.0
+  researchDevelopmentK: 267.0
+  generalAdministrativeK: 291.0
+  opexK: 702.0
+  ebitdaK: 22.5
+  cashEopK: 396.3
+totals:
+  y1:
+    revenueK: 140.5
+    ebitdaK: -953.7
+    cashEopK: 1446.3
+  y2:
+    revenueK: 1380.0
+    ebitdaK: -879.0
+    cashEopK: 567.3
+  y3:
+    revenueK: 3450.0
+    ebitdaK: -171.0
+    cashEopK: 396.3
+unitEconomics:
+  arpuAnnualK: 6.0
+  grossMarginPct: 70.0
+  cacK: 3.0
+  monthlyChurnPct: 1.2
+  avgCustomerLifeMonths: 83.3
+  ltvK: 29.2
+  ltvCacRatio: 9.7
+  cacPaybackMonths: 8.6
+fundingAsk:
+  round: pre-seed
+  amountM: 2.4
+  runwayMonths: 24
+  milestone: 到 Q4Y2 跑出 2 个年度组合 全面铺开、1 条活跃生态转介绍路径，以及约 360 家上线物业，并拿出经核验的节省证据，同时保留 6 个月缓冲。
+  useOfFunds:
+  - bucket: 工程
+    amountUsd: 1008000
+    percentage: 42
+  - bucket: GTM
+    amountUsd: 648000
+    percentage: 27
+  - bucket: G&A
+    amountUsd: 360000
+    percentage: 15
+  - bucket: 缓冲（6 个月）
+    amountUsd: 384000
+    percentage: 16
+scenarios:
+  downside:
+    description: 付费试点转年度 铺开 的转化推迟，伙伴杠杆迟迟起不来，流失率又维持高位，导致公司到第 3 年仍没跨过高效规模门槛。
+    y3RevenueK: 2280.0
+    y3EbitdaK: -640.0
+    cashLowPointK: -140.0
+    keyAssumptionChanges:
+    - 付费试点转年度 铺开 的比例降到约 35%，而不是 50%+。
+    - 伙伴带来的 销售线索 比基准计划晚 2 个季度才出现。
+    - 每月物业流失率从 1.2% 升到 1.8%。
+  base:
+    description: 公司按 商业计划 里程碑推进：按物业定价、毛利率 70%，并维持一条精益但稳定的招聘爬坡。
+    y3RevenueK: 3450.0
+    y3EbitdaK: -171.0
+    cashLowPointK: 373.8
+    keyAssumptionChanges:
+    - 价格维持在每个上线物业每年 $6,000。
+    - 上线物业爬坡到 Q4Y3 达到 690 家。
+    - 招聘按 A6 排期执行，不额外补一支大服务团队。
+  upside:
+    description: 节省证据更快沿伙伴转介绍扩散，铺开 规模更早放大，基准层也开始推高组合扩张。
+    y3RevenueK: 4290.0
+    y3EbitdaK: 310.0
+    cashLowPointK: 520.0
+    keyAssumptionChanges:
+    - 到 Q2Y2，伙伴和转介绍渠道就能贡献有意义的合格 销售线索。
+    - 平均 铺开 从约 25 家物业，提早扩到每个 客户 35–40 家。
+    - 基准和业主报告模块在第 3 年把有效 ARPU 拉高约 10%。
+sensitivity:
+- variable: ARPU
+  downsideCase: 每个物业每年 $5.4K
+  baseCase: 每个物业每年 $6.0K
+  upsideCase: 每个物业每年 $6.6K
+  y3RevenueImpactK: -345.0
+  cashImpactK: -241.5
+- variable: CAC
+  downsideCase: 每个获客物业 $4.0K
+  baseCase: 每个获客物业 $3.0K
+  upsideCase: 每个获客物业 $2.4K
+  y3RevenueImpactK: 0.0
+  cashImpactK: -330.0
+- variable: 流失率
+  downsideCase: 每月 1.8%
+  baseCase: 每月 1.2%
+  upsideCase: 每月 0.8%
+  y3RevenueImpactK: -360.0
+  cashImpactK: -270.0
+- variable: 销售周期
+  downsideCase: 付费试点后 2 个季度才转 全面铺开
+  baseCase: 付费试点后 1 个季度转 全面铺开
+  upsideCase: 最好的试点在同一季度内就完成转化
+  y3RevenueImpactK: -525.0
+  cashImpactK: -260.0
+- variable: 毛利率
+  downsideCase: 65%
+  baseCase: 70%
+  upsideCase: 73%
+  y3RevenueImpactK: 0.0
+  cashImpactK: -173.0
+- variable: 招聘节奏
+  downsideCase: 提前 2 个季度多招 2 名 GTM/产品成员
+  baseCase: 按 A6 招聘
+  upsideCase: 把 1 个非核心岗位推迟到第 3 年、等证据更清楚后再招
+  y3RevenueImpactK: -120.0
+  cashImpactK: -240.0
+modelDiagram:
+  title: 单位经济模型流程
+  mermaid: |
+    flowchart LR
+      Leads[Outbound + partner leads] --> Pilots[Paid pilots]
+      Pilots --> Rollouts[Live properties under monitoring]
+      Rollouts --> Revenue[Subscription revenue]
+      Revenue --> GrossProfit[70% gross profit]
+      GrossProfit --> Cash[Cash and runway]
+      Rollouts --> SavingsProof[Verified savings case studies]
+      SavingsProof --> Rollouts
+modelSanity:
+- checkName: 收入引擎
+  finding: 基准情境的收入引擎，是把小规模 5–10 家物业试点转成组合 全面铺开，到 Q4Y3 达到 690 家上线物业，单价为每个物业每年 $6K。
+- checkName: 必须跑顺的地方
+  finding: 模型要求试点到 全面铺开 的转化率接近 BP 设定的 50%+，这样销售岗位才能站在证据之上放大，而不是背着重服务交付往前冲。
+- checkName: 模型失效条件
+  finding: 如果销售周期拉长 2 个季度、流失率升向 1.8%，而伙伴带来的 销售线索 还没出现，悲观情境下现金会转负。
+- checkName: 下一轮融资证明点
+  finding: 一旦公司到 Q4Y2 跑到约 360 家上线物业、2 个年度 全面铺开 和 1 条可复用转介绍路径，就有资格为下一轮融资给出充分证明。
+sanityChecks:
+  ruleOf40: 第 3 年增长率 150% + EBITDA 利润率 -5.0% = 145.0%。
+  burnMultiple: 第 2 年 烧钱倍数 约 0.5x，对应 $1.68M 的净新增 ARR；第 3 年随着 铺开 扩张追上 运营费用，烧钱倍数 改善到约 0.1x。
+  revenuePerFte: 第 3 年年末每个 FTE 对应 $246K 年收入；在 690 家上线物业时，退出 ARR 口径约为每个 FTE $296K（对比 SaaS 常见基准约 $200K–$400K）。
+  flags:
+  - 上线物业爬坡默认到 Y2H2 前至少有 2 个可引用试点完成转化，并出现 1 条伙伴辅助的 销售线索 来源；如果这些证明延后，第 3 年曲线就过于激进。
+  - 收入按期末上线物业数计费，因此如果实施集中堆在季度末，真实开票时间可能会略晚。
+  - CAC 和 LTV 按单个上线物业计算，但真实 GTM 支出是按管理公司 客户 发生，因此早期合同规模波动会比这套模型呈现得更大。
