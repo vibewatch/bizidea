@@ -1,0 +1,230 @@
+slug: agent-data-scope-simulator
+date: '2026-05-28'
+executiveSummary: Agent Data Scope Simulator 应该先做成一套中立的审批控制平面，服务那些正试图把内部分析或客服智能体从 pilot 推到 production 的财富 2000 强金融和医疗企业；这些客户通常同时跑 Snowflake 或 Databricks，再叠加多套核心 SaaS。第一版产品不该从另一个 agent runtime、泛 AI 安全 dashboard 或大而全的数据治理套件切入；它该做的，是在广泛 MCP 连接器被放开前，精确证明某个具名智能体工作流究竟能读到什么。这个滩头市场之所以成立，是因为用户、买家、触发点、定价依据和分发渠道都围绕同一个场景对齐：由数据治理、平台和安全团队主导、却被生产就绪评审卡住的上线流程。研究支持的测算给出约 $650.0M TAM、$156.0M SAM 和第 3 年 $12.0M 的 SOM，前提是公司先聚焦受监管、跨系统部署，再逐步扩到更广的强制控制和第三方智能体接入。核心产品应该先接入前五个高频系统的原生权限和元数据，模拟字段级、记录级触达，并产出带有最小权限建议和可审计证据的审批包。只要公司能成为“获批智能体访问边界”的中立记录系统，而这恰恰不是云数据平台、授权底座或运行时安全厂商天然会跨工作流拥有的东西，它就有胜面。最关键的反证风险有三项：平台打包、权限脏乱导致的部署拖累，以及买家可能在只读模拟器成熟前就要求运行时强制控制。现有输入还留着两个重要证据缺口：Snowflake 生态之外独立付费部署的深度，以及非 Snowflake 买家的直接定价证据。因此，前 12 个月必须验证三件事：受监管共创客户是否愿意先为审批和模拟买单；前五个连接器是否覆盖了大多数被卡上线；pilot 能否转成年约，而不是演变成咨询项目。
+problem:
+- 治理与平台团队在生产前无法证明一个内部 AI 智能体跨 Snowflake 或 Databricks 以及多套 SaaS 系统到底能读到什么，因此上线流程常常卡死在电子表格式评审里。
+- 现有 IAM、数仓权限和运行时安全工具各自只覆盖控制栈的一段，没有谁能把最小权限访问和上线后漂移，收敛成一套可审计的跨系统审批动作。
+solution:
+- 先做一张只读策略图谱，把 Snowflake、Databricks、Salesforce、ServiceNow、SharePoint 的原生权限、目录元数据和 SaaS scope 拉进来，再精确模拟某个具名智能体工作流可触达的数据边界。
+- 在上线前生成包含最小权限建议、脱敏要求和可交审计证据的审批包；上线后再加入漂移检测，盯住实际触达何时偏离了原先获批的边界。
+whyWeWin:
+- 公司卖的是跨多套系统的“上线解堵证明”，不是另一个单栈治理附加组件，也不是只看运行时的安全层。
+- 受监管企业本来就有风险委员会、审计要求和一批被卡住的内部智能体项目，因此审批工作流是眼前采购，而不是未来想象。
+- “通过/驳回”的访问边界、归一化后的权限图谱和漂移历史，能逐渐积累成一套现有厂商很难在客户现场重建的专有控制数据。
+strategicChoices:
+  beachhead: 财富 2000 强银行、保险公司和医疗系统：这些客户已经在跑内部分析、客服或运营智能体 pilot，需要读取 Snowflake 或 Databricks，再叠加至少三套核心 SaaS 系统。
+  wedgeRationale: 和卖“泛企业 AI 治理”相比，这个切口更快出结果，因为受监管账户本来就有治理委员会、明确的生产阻塞点，以及数据失控触达的清晰下行风险。先从内部、只读、重查询的工作流切，也能避开第一阶段就承担自治写入动作的信任缺口和责任风险。
+  sequencingRationale: 先围绕最常见的五套系统做只读模拟和审批包，这是最快拿到付费 pilot 和采购放行的路径。等客户现场已经沉淀出获批边界后，再补漂移检测；只有当公司证明“光靠模拟就能拿预算”，且集成工作开始可产品化时，才继续叠运行时强制控制和第三方智能体接入。
+  notYet:
+  - 面向客户的外部智能体
+  - 向运营系统执行自治写入动作
+  - 超出前五个高频系统的长尾连接器覆盖
+  - SMB 以及只跑 Snowflake 单栈的账户
+market:
+  tam: $650.0M 的估算 TAM：约 5,000 家全球大型企业会运营跨系统内部智能体，每家对应约 $130k 的年控制平面支出。
+  sam: $156.0M 的估算 SAM：约 1,200 家位于北美和英国/欧盟、符合“Snowflake 或 Databricks + SaaS”画像的受监管企业。
+  som: $12.0M 的第 3 年 SOM：按约 40 个生产账户测算，land-and-expand 后的混合 ACV 约为 $300k。
+  segments:
+  - Primary：受监管的财富 2000 强企业中，负责在数仓与 SaaS 数据之间上线内部只读智能体的数据治理团队和企业 AI 平台团队
+  - Secondary：同一批账户里，负责 AI 审批、可审计性和最小权限控制的安全架构师与 CISO 团队
+  buyingProcess: 运营 champion 通常是数据治理负责人或 AI 平台负责人；经济买家一般是 Chief Data Officer、VP of Data Platform 或 CISO，因为决策同时牵涉部署速度和审计风险。最可信的销售动作是围绕一个被卡住的生产就绪评审卖付费 pilot；一旦客户看到审批变快、数据触达不再失控，再转成年约。
+product:
+  mvp: MVP 应先支持 Snowflake 或 Databricks，再加 Salesforce、ServiceNow 和 SharePoint；产品要能拉取原生权限与元数据、建模一个具名智能体工作流，并输出一份审批包，清楚列出可触达的表、字段、文件、记录，以及建议修改的策略。第一版必须先走只读、保留完整审计日志，并避免在首个部署里承诺运行时强制控制。
+  sixMonth: 在前五个连接器、策略图谱接入、工作流模拟、审批包和基础漂移告警到位的前提下，6 个月内落地 2–3 个付费共创客户 pilot；每家客户先覆盖一条内部智能体工作流。
+  twelveMonth: 至少把 2 个 pilot 转成年约生产部署；补齐 BFSI 和医疗行业可复用的策略模板，把实施周期压到 30 天以内，并打包出一套能让中立多系统部署更容易过审的安全评审材料。
+  twentyFourMonth: 从审批与模拟扩到更完整的企业智能体控制平面：包括漂移监控、运行时证据钩子、更多连接器，以及在现有账户里覆盖更多工作流和业务单元。
+  keyBets:
+  - 买家会先为上线前模拟和审批工作流买单，而不是一开始就要求完整的运行时强制控制。
+  - 前五个连接器足以覆盖滩头市场里大多数被卡上线的场景。
+  - 与新网关或新 runtime 相比，安全评审更愿意先接受只读策略模拟这一低摩擦部署方式。
+  - 首个工作流能落在接近六位数 ARR，并随着更多系统、更多工作流和漂移模块加入，扩到约 $300k。
+gtm:
+  wedge: 卖一项付费 pilot：帮客户放行一条内部分析、客服或运营智能体，让他们清楚看到该智能体跨 Snowflake 或 Databricks 以及核心 SaaS 系统究竟能读到什么；再把这份审批包变成转生产合同的关键资产。
+  channels:
+  - 创始人主导，直接卖给受监管企业里正在经历上线阻塞的数据治理、AI 平台和安全负责人
+  - 通过已经嵌在审批流程里的治理咨询机构、身份合作伙伴和企业 AI 实施公司，拿到共创客户 pilot
+  - 等第一批中立审批案例能作为 reference 后，再和授权、数据治理、SIEM 厂商做联合销售和转介绍
+  funnelTargets: 目标账户→合格 discovery 15–25%；合格 discovery→付费 pilot 20–30%；pilot→production 50%+；production→12 个月内第二条工作流或模块扩展 40%+。
+  pricing: 先卖 10–12 周的付费 pilot：单条受治理工作流收费约 $40k–$75k；随后转成年费订阅，首条生产工作流起步约 $120k–$180k，按受治理数据系统数和已认证智能体工作流收费，而不是按 seat。这样的定价逻辑贴合买家心智——客户真正付费，是为了把生产审批跑通、把审计暴露降下来；随着更多系统、更多工作流和漂移能力加入，单账户可扩到约 $250k–$300k。
+businessModel:
+  revenueStreams:
+  - 策略图谱、工作流模拟、审批包生成和治理管理层的年费订阅
+  - 按受治理数据系统和已认证智能体工作流收取的用量费或阶梯费
+  - 漂移检测、运行时证据、脱敏策略和高级审计导出等高级模块
+  - 仅限最初权限映射和部署设置的少量专业服务
+  unitOfValue: 正在被主动审批管理的“已认证智能体工作流”和“受治理数据系统”
+  targetGrossMarginPct: 70
+  expansionLevers:
+  - 在同一受监管客户内部增加更多智能体工作流和业务单元
+  - 从审批模拟扩到漂移、运行时证据和脱敏模块
+  - 通过更深接入身份、目录、SIEM 和治理系统来提升钱包份额
+strategyMap:
+  northStarMetric: 每月在获批访问边界内运行的生产智能体工作流数
+  inputMetrics:
+  - 付费 pilot 到 production 的转化率
+  - 从上线评审 kickoff 到审批决定的中位时长
+  - 已覆盖工作流里拥有完整跨系统触达地图的比例
+  - 每个生产客户已接入的受治理系统数
+  - 在审计或事故升级前被识别出来的漂移事件比例
+  - 首条工作流在 12 个月内扩展到更多工作流的比例
+  moatsToBuild:
+  - 横跨数仓、身份与 SaaS 权限的跨系统策略图谱
+  - 按工作流和垂直行业沉淀的“通过/驳回/修复后通过”访问边界数据集
+  - 嵌进受监管客户治理流程里的可复用审计材料和评审模板
+  - 随时间把获批范围与真实运行行为绑定起来的漂移 intelligence
+  killCriteria:
+  - 在 25 次合格滩头账户对话后，付费 pilot 少于 3 个
+  - 前 6 个 pilot 的 pilot→production 转化率低于 50%
+  - 超过 60% 的合格 prospect 明确要求平台打包治理，而非中立审批平面
+  - 前五个连接器在共创客户里覆盖不了至少 70% 的被卡上线场景
+  mermaid: |
+    flowchart LR
+      Wedge[Regulated internal-agent approval wedge] --> MVP[Cross-system simulation MVP]
+      MVP --> Proof[Approved launches with auditable least-privilege evidence]
+      Proof --> Expansion[Drift detection and broader control plane]
+investorMemo:
+  verdict:
+    call: 继续会面 / 深挖
+    conviction: 痛点很强，受监管企业切口也清晰，品类时点成立；但最终判断取决于公司能否在平台打包赶上来之前，证明“中立审批”本身就能拿到预算。
+    whyBelieve: Snowflake 收购 Natoma，把控制问题做实了，同时也给一家真正帮客户把上线跑通、而不是卖泛 AI 安全的创业公司留下了清晰的多系统空白。
+    whyDoubt: 市场还早，直接定价证据仍薄，而且如果客户在签单前就要求权限清理或运行时强制控制，产品边界很容易被拖宽。
+    nextDiligence: 用 3–5 个付费 pilot 验证：受监管买家是否愿意先为只读模拟买单，并能在不演变成重服务集成项目的前提下，转成年度合同。
+  firstCustomer:
+    title: 财富 2000 强银行或保险公司的数据治理/AI 平台负责人
+    profile: 一家拥有中央治理办公室、已在跑一条内部分析或客服智能体 pilot、以 Snowflake 或 Databricks 为数仓层，并且至少接了 3 套受评审 SaaS 系统的受监管企业。
+    trigger: 生产就绪评审因为没人能证明该智能体跨系统的最小权限数据触达范围，而不敢放开广泛连接器访问。
+    buyer: Chief Data Officer、VP of Data Platform 或 CISO
+    initialContract: 一条受治理工作流对应 $40k–$75k 的付费 pilot；随后转为首个生产部署约 $120k–$180k 的年度 ARR，随着更多工作流和漂移模块加入，扩到 $250k+。
+  mustBeTrue:
+  - 至少一半的合格滩头账户必须认同：生产被卡的首要原因就是上线前缺少跨系统证明，而不是一个次要顾虑。
+  - 前五个连接器必须覆盖早期共创客户里大多数真实的被卡上线场景。
+  - 只读模拟器加审批包，必须能在不接管 runtime 的前提下，足够快地通过安全评审，进而拿下付费 pilot。
+  - 首个生产工作流必须支撑六位数 ARR，同时对大多数早期客户把 onboarding 控制在 30 天部署窗口内。
+  - 中立多系统定位必须经常能赢过平台原生方案或手工替代方案，才能把 pilot→production 转化率维持在 50% 以上。
+  diligenceQuestions:
+  - 今天真正解锁采购决策的关键产物是什么：波及范围模拟、审批包、审计轨迹，还是漂移监控？
+  - 真实阻塞里，到底有多少是权限边界不清，有多少其实是元数据差、标签缺失或 prompt injection 之类的相邻问题？
+  - 买家是否愿意为“只做模拟”的范围签单，还是多数严肃机会一开始就要运行时强制控制和事故响应钩子？
+  - 哪些连接器组合最常出现在被卡上线里？如果缺少某一个核心系统，价值会掉多少？
+  - 第一笔预算在现实里到底归谁：CDO、平台工程、安全，还是更上层的 AI 项目办公室？
+operatingAssumptions:
+- assumption: 受监管企业会先购买上线前模拟与审批工作流，再要求完整的运行时强制控制。
+  basis: research.yaml
+  validationTest: 拿下至少 3 个付费 pilot，且签约方案里第一阶段只包含只读模拟和审批包，不要求 runtime block path。
+  decisionImpact: 如果不成立，路线图就得提前拉入强制控制能力，产品范围、实施复杂度和资金需求都会上升。
+- assumption: Snowflake、Databricks、Salesforce、ServiceNow 和 SharePoint 足以覆盖滩头市场里大多数被卡上线场景。
+  basis: idea.yaml
+  validationTest: 收集前 8 个共创客户 prospect 的连接器清单，确认至少 70% 的具名 launch blocker 能被前五个集成覆盖。
+  decisionImpact: 如果不成立，切口会被迫过早拉宽，公司要么进一步收窄 ICP，要么推迟大规模 GTM 招聘。
+- assumption: 与新网关或平台迁移相比，中立审批平面更容易被买家采纳。
+  basis: research.yaml
+  validationTest: 在前 10 个合格机会里，至少有 6 个买家明确偏好只读 overlay 部署，而不是替换现有技术栈。
+  decisionImpact: 如果不成立，公司应改成嵌入式模块定位，或把入口改成平台原生策略。
+- assumption: 创始人能在完整企业销售团队到位前，通过直销拿下前 3–5 个 pilot。
+  basis: 运营判断
+  validationTest: 建立一份 30 个目标账户名单，并在 9 个月内通过创始人主导外联拿下至少 3 个付费 pilot 或已签 LOI。
+  decisionImpact: 如果不成立，就说明 ICP、触发点包装或合作伙伴结构有问题，烧钱节奏必须继续压低，先把动作修正。
+- assumption: “通过/驳回”的访问边界和漂移事件，会在跨客户维度沉淀成可防守的产品护城河。
+  basis: research.yaml
+  validationTest: 在 pilot 中累计至少 100 次受治理工作流评审，并证明后续推荐确实降低 reviewer override 或审批时长。
+  decisionImpact: 如果不成立，差异化就会更偏向集成和服务，长期毛利与 venture scale 都会走弱。
+experimentRoadmap:
+- horizon: 0–90 天
+  experiment: 访谈 12–15 位数据治理、AI 平台和安全负责人，围绕一条最近被卡住的内部智能体上线展开。
+  hypothesis: 第一笔预算会在一个具名生产评审因跨系统数据触达不确定而停摆时打开。
+  successMetric: 至少 10 次访谈拿到真实的被卡上线案例，且其中至少 6 次符合目标“数仓 + SaaS”技术栈。
+  owner: 创始人/CEO
+- horizon: 0–90 天
+  experiment: 用导出的权限和样本元数据，为两个共创客户跑一条历史工作流的 concierge 式模拟。
+  hypothesis: 一份模拟出来的数据波及范围报告，足以暴露隐藏触达或策略缺口，并推动客户签付费 pilot。
+  successMetric: 至少 2 个目标账户认同这份报告会改变真实上线决策，且至少 1 个账户签 pilot 或 LOI。
+  owner: 创始工程师
+- horizon: 0–90 天
+  experiment: 测试三种 pilot 打包方式，把模拟、审批工作流和漂移监控拆开定价。
+  hypothesis: 买家会更偏好“审批先行”的方案，而不是泛 AI 安全或可观测性方案。
+  successMetric: 在 8 次定价交流里，审批先行方案至少赢 5 次，并进入 2 份已签 pilot scope。
+  owner: 创始人/CEO
+- horizon: 90–180 天
+  experiment: 在 2–3 个付费 pilot 里部署前五个连接器和审批包工作流。
+  hypothesis: 不需要为每个客户额外定制连接器，公司也能把模拟精度和采购接受度做到可用水平。
+  successMetric: 至少 2 个 pilot 能在技术 kickoff 后 30 天内完成模拟和治理评审。
+  owner: 产品与工程负责人
+- horizon: 90–180 天
+  experiment: 打包一套安全评审工具包，覆盖架构、审计输出、最小权限控制和托管身份 guidance。
+  hypothesis: 标准化评审工具包能显著缩短中立审批软件的采购与安全放行时间。
+  successMetric: 至少 3 个 prospect 能在不要求完全定制控制叙事的情况下完成安全评审。
+  owner: 产品安全负责人
+- horizon: 6–12 个月
+  experiment: 为首批 production 客户上线围绕获批边界的漂移检测。
+  hypothesis: 上线后的漂移证据，比单纯再补更多模拟功能，更能提升转化和扩单。
+  successMetric: 至少 2 个生产客户开启漂移监控，并在 90 天内记录到可执行的告警，同时没有明显的误报升级。
+  owner: 产品负责人
+- horizon: 12–18 个月
+  experiment: 与一家身份、治理或企业 AI 实施伙伴试跑 partner-led motion。
+  hypothesis: 可信合作伙伴能拿来质量不差于创始人直销的被卡上线机会。
+  successMetric: 至少 25% 的合格 pipeline 来自 2 个活跃伙伴，且伙伴来源的 pilot 转化不差于直销。
+  owner: GTM 负责人
+operations:
+- 维护首批 pilot 中最常见的数仓和 SaaS 系统的版本化连接器与策略模板库。
+- 为审计场景生成不可篡改的审批记录，把模拟输入、reviewer 决定、修复步骤和获批边界连起来。
+- 在扩到更深控制前，先把部署标准化到托管身份、最小权限访问和只读接入。
+- 每轮 pilot 结束后都做复盘，比对基础审批时长、覆盖缺口、reviewer override 和漂移事件，再决定是否扩范围。
+team:
+- role: 创始人/CEO
+  startTiming: 第 0 个月
+  rationale: 负责创始人主导销售、ICP 探索、定价，以及在首批受监管账户里跑通跨职能采购流程。
+- role: 创始工程师
+  startTiming: 第 0 个月
+  rationale: 搭建策略图谱、工作流模拟器和首批连接器，用付费 pilot 先证明产品是否真的成立。
+- role: 产品安全负责人
+  startTiming: 第 2 个月
+  rationale: 把监管和安全要求沉淀成可复制的审批架构，以及一套能过采购的评审工具包。
+- role: 集成工程师
+  startTiming: 第 3 个月
+  rationale: 把前五个连接器做成产品，而不是让业务沦为定制服务。
+- role: 产品负责人
+  startTiming: 第 6 个月
+  rationale: 把 pilot 学到的东西收束成清晰路线图，覆盖模拟、漂移、行业模板和产品打包。
+- role: GTM 负责人
+  startTiming: 第 9 个月
+  rationale: 只有在付费 pilot、定价和部署周期已经显示出可复制性之后，才开始放大 pipeline。
+milestones:
+- horizon: 0–12 个月
+  items:
+  - 签下 3–5 个受监管、Snowflake 或 Databricks + SaaS 画像的付费 pilot。
+  - 前五个连接器上线，并至少在 2 个客户里把“模拟 + 审批评审”周期压到 30 天以内。
+  - 至少把 2 个 pilot 转成年度生产合同。
+  - 打包出可复用的安全评审工具包，以及 BFSI 或医疗审批模板。
+- horizon: 12–24 个月
+  items:
+  - 拿到 10–15 个生产客户，覆盖一条或多条内部智能体工作流。
+  - 上线与获批边界绑定的漂移检测和运行时证据钩子。
+  - 建立 2 条能带来合格 pilot 的合作伙伴渠道。
+  - 在现有客户里扩到更多工作流或业务单元。
+- horizon: 24–36 个月
+  items:
+  - 拿到约 40 个生产账户，或达到与模型 SOM 一致的等价 ARR。
+  - 把控制平面扩到更多连接器，并至少沉淀 2 套受监管行业模板。
+  - 根据留存和 win rate，决定是继续往强制控制/认证加深，还是坚持做中立审批层。
+risks:
+- risk: Snowflake、Databricks 或相邻安全厂商把足够多的治理能力打包进来，让独立审批预算看起来像是重复建设。
+  likelihood: High
+  impact: High
+  mitigation: 靠中立的跨系统覆盖、工作流级审批证据，以及脱离任何单一平台生态的更快部署来赢。
+- risk: 客户的权限、元数据和连接器治理太乱，不做重服务就难以准确建模。
+  likelihood: High
+  impact: High
+  mitigation: 第一版只服务最常见的系统，要求最低数据准备度；需要大规模 remediation 才能证明价值的账户直接不接。
+- risk: 买家在只做模拟的部署上仍不放心，签单前就要求运行时强制控制或事故控制。
+  likelihood: Medium
+  impact: High
+  mitigation: 尽早把漂移检测和运行时证据钩子排进路线图，并把第一轮 pilot 定位成通往更广控制能力的最低摩擦入口。
+- risk: 治理、平台和安全团队之间的预算归属始终模糊，把企业销售周期拖得很长。
+  likelihood: Medium
+  impact: Medium
+  mitigation: 只筛选那些绑定具名 blocked launch 的机会，并在技术 scope 前就锁定一位真正持预算的高管 sponsor。
+fundingAsk:
+  round: seed
+  targetFundingRangeUsd: $3–5M
+  runwayMonths: 18
+  useOfFundsSummary: 本轮资金要覆盖 18 个月：搭起策略图谱、做出前五个连接器、完成 3–5 个付费 pilot、把早期受监管客户转成年度合同、补齐漂移检测和可过采购的安全评审工具包，并在放大 GTM 之前证明中立审批平面本身就能拿到预算。
