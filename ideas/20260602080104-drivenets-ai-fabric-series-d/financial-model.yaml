@@ -1,0 +1,620 @@
+slug: gpu-fabric-bringup-os
+date: '2026-06-02'
+currency: USD
+modelStartMonth: '2026-07'
+assumptions:
+  - id: A1
+    name: Model start month
+    value: '2026-07'
+    unit: month
+    source: "[BP date 2026-06-02]; heuristic: start the model on the next full month after plan creation"
+  - id: A2
+    name: Opening cash from seed round
+    value: '3600'
+    unit: USD K
+    source: "[BP fundingAsk targetFundingRangeUsd $3-5M]; base case uses a mid-range $3.6M close at model start"
+  - id: A3
+    name: Steady-state annual revenue per paid fabric domain
+    value: '300'
+    unit: USD K
+    source: "[BP gtm.pricing roughly $250k-$350k annual subscription]; [Research market.som $300k ACV]"
+  - id: A4
+    name: Steady-state gross margin
+    value: '70'
+    unit: percent
+    source: "[BP businessModel.targetGrossMarginPct 70]"
+  - id: A5
+    name: Customer unit definition
+    value: paid fabric domain
+    unit: unit
+    source: "[BP businessModel.unitOfValue fabric domains and GPU capacity under validated readiness coverage]"
+  - id: A6
+    name: Y1 end-of-month paying domains
+    value: '0,0,0,1,1,2,2,3,3,4,4,5'
+    unit: domains
+    source: "[BP milestones 2-3 paid design partners and 2 annual conversions in 12 months]; founder-led enterprise sales ramp heuristic"
+  - id: A7
+    name: Y2 quarter-end paying domains
+    value: '6,8,11,14'
+    unit: domains
+    source: "[BP funnelTargets and 12-24 month milestones]; assumes one repeatable partner channel begins contributing late in Y2"
+  - id: A8
+    name: Y3 quarter-end paying domains
+    value: '16,20,25,30'
+    unit: domains
+    source: "[Research market.som 30 paying domains by year 3]; [BP expansion from one launch to multiple domains]"
+  - id: A9
+    name: Revenue recognition cadence
+    value: '25'
+    unit: USD K per active domain per month
+    source: "[A3]; heuristic: annual contract value is recognized ratably each month"
+  - id: A10
+    name: Paid sprint to annual conversion
+    value: '50'
+    unit: percent
+    source: "[BP gtm.funnelTargets paid sprint→annual production subscription 50%+]"
+  - id: A11
+    name: Monthly logo churn
+    value: '1.5'
+    unit: percent
+    source: "Startup-finance heuristic for high-ACV infrastructure SaaS with concentrated but sticky accounts"
+  - id: A12
+    name: Loaded annual cost per founder or exec FTE
+    value: '240'
+    unit: USD K
+    source: "Startup-finance heuristic for seed-stage founder/exec cash comp plus payroll tax and benefits"
+  - id: A13
+    name: Loaded annual cost per engineering FTE
+    value: '250'
+    unit: USD K
+    source: "[BP requires senior networking, systems, and product-security talent]; startup-finance heuristic"
+  - id: A14
+    name: Loaded annual cost per solutions FTE
+    value: '180'
+    unit: USD K
+    source: "[BP team includes solutions engineer]; startup-finance heuristic"
+  - id: A15
+    name: Loaded annual cost per sales FTE
+    value: '220'
+    unit: USD K
+    source: "Startup-finance heuristic for one enterprise AE with modest variable compensation at seed stage"
+  - id: A16
+    name: Loaded annual cost per G&A FTE
+    value: '150'
+    unit: USD K
+    source: "Startup-finance heuristic for finance and operations support"
+  - id: A17
+    name: Y1 hiring schedule
+    value: 'M1 founder CEO + founding eng; M2 solutions; M4 network systems; M6 product/security; M10 first AE'
+    unit: hires
+    source: "[BP team startTiming list]"
+  - id: A18
+    name: Y2 hiring schedule
+    value: 'Add one engineering hire in Q2, one solutions hire in Q3, and one sales plus one G&A hire in Q4'
+    unit: hires
+    source: "[BP 12-24 month milestones]; startup-finance heuristic to support recurring drift detection and channel buildout"
+  - id: A19
+    name: Y3 hiring schedule
+    value: 'Add one engineering hire in Q1, one engineering hire in Q2, one sales hire in Q3, and one exec hire in Q4'
+    unit: hires
+    source: "[BP 24-36 month milestones]; startup-finance heuristic for measured scale after product-market proof"
+  - id: A20
+    name: Y1 non-salary operating spend ramp
+    value: '29.2 to 93.3'
+    unit: USD K per month
+    source: "[BP operations requires reference lab, deployment packaging, and travel]; startup-finance heuristic"
+  - id: A21
+    name: Y2 non-salary operating spend
+    value: '240,275,335,445'
+    unit: USD K per quarter
+    source: "[BP operations and partner/channel buildout]; startup-finance heuristic"
+  - id: A22
+    name: Y3 non-salary operating spend
+    value: '390,410,415,445'
+    unit: USD K per quarter
+    source: "[BP multi-domain expansion and benchmark-history roadmap]; startup-finance heuristic"
+  - id: A23
+    name: Funding milestone for this round
+    value: 14 paid domains, one repeatable partner channel, and security-reviewed deployment package by Q4Y2
+    unit: milestone
+    source: "[BP milestones 0-12 and 12-24 months]"
+  - id: A24
+    name: Base-case CAC
+    value: '80'
+    unit: USD K per new paying domain
+    source: "[BP founder-led direct sales and enterprise funnel]; startup-finance heuristic for narrow high-ACV infrastructure software"
+headcount:
+  - role: Founder/Exec
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 2
+  - role: Engineering
+    q1y1: 1
+    q2y1: 3
+    q3y1: 3
+    q4y1: 3
+    q4y2: 5
+    q4y3: 7
+  - role: Solutions
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 2
+    q4y3: 2
+  - role: Sales
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 1
+    q4y3: 2
+  - role: "G&A"
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 5
+  q3y1: 5
+  q4y1: 6
+  q4y2: 10
+  q4y3: 14
+headcountAnnualizedPayrollK:
+  q1y1: 670.0
+  q2y1: 1170.0
+  q3y1: 1170.0
+  q4y1: 1390.0
+  q4y2: 2220.0
+  q4y3: 3180.0
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    averageCustomers: 0.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 40.8
+    nonSalaryOpexK: 29.2
+    salesMarketingK: 10.0
+    researchDevelopmentK: 40.0
+    generalAdministrativeK: 20.0
+    opexK: 70.0
+    ebitdaK: -70.0
+    cashEopK: 3530.0
+  - month: M2
+    customersEop: 0
+    averageCustomers: 0.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 55.8
+    nonSalaryOpexK: 26.2
+    salesMarketingK: 11.0
+    researchDevelopmentK: 48.0
+    generalAdministrativeK: 23.0
+    opexK: 82.0
+    ebitdaK: -82.0
+    cashEopK: 3448.0
+  - month: M3
+    customersEop: 0
+    averageCustomers: 0.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 55.8
+    nonSalaryOpexK: 28.2
+    salesMarketingK: 11.0
+    researchDevelopmentK: 49.0
+    generalAdministrativeK: 24.0
+    opexK: 84.0
+    ebitdaK: -84.0
+    cashEopK: 3364.0
+  - month: M4
+    customersEop: 1
+    averageCustomers: 1.0
+    newCustomers: 1
+    blendedArpuMonthlyK: 25.0
+    revenueK: 25.0
+    cogsK: 7.5
+    grossProfitK: 17.5
+    salaryK: 76.6
+    nonSalaryOpexK: 33.4
+    salesMarketingK: 13.0
+    researchDevelopmentK: 66.0
+    generalAdministrativeK: 31.0
+    opexK: 110.0
+    ebitdaK: -92.5
+    cashEopK: 3271.5
+  - month: M5
+    customersEop: 1
+    averageCustomers: 1.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 25.0
+    cogsK: 7.5
+    grossProfitK: 17.5
+    salaryK: 76.6
+    nonSalaryOpexK: 35.4
+    salesMarketingK: 13.0
+    researchDevelopmentK: 67.0
+    generalAdministrativeK: 32.0
+    opexK: 112.0
+    ebitdaK: -94.5
+    cashEopK: 3177.0
+  - month: M6
+    customersEop: 2
+    averageCustomers: 2.0
+    newCustomers: 1
+    blendedArpuMonthlyK: 25.0
+    revenueK: 50.0
+    cogsK: 15.0
+    grossProfitK: 35.0
+    salaryK: 97.4
+    nonSalaryOpexK: 37.6
+    salesMarketingK: 15.0
+    researchDevelopmentK: 80.0
+    generalAdministrativeK: 40.0
+    opexK: 135.0
+    ebitdaK: -100.0
+    cashEopK: 3077.0
+  - month: M7
+    customersEop: 2
+    averageCustomers: 2.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 50.0
+    cogsK: 15.0
+    grossProfitK: 35.0
+    salaryK: 97.4
+    nonSalaryOpexK: 40.6
+    salesMarketingK: 16.0
+    researchDevelopmentK: 82.0
+    generalAdministrativeK: 40.0
+    opexK: 138.0
+    ebitdaK: -103.0
+    cashEopK: 2974.0
+  - month: M8
+    customersEop: 3
+    averageCustomers: 3.0
+    newCustomers: 1
+    blendedArpuMonthlyK: 25.0
+    revenueK: 75.0
+    cogsK: 22.5
+    grossProfitK: 52.5
+    salaryK: 97.4
+    nonSalaryOpexK: 43.6
+    salesMarketingK: 18.0
+    researchDevelopmentK: 83.0
+    generalAdministrativeK: 40.0
+    opexK: 141.0
+    ebitdaK: -88.5
+    cashEopK: 2885.5
+  - month: M9
+    customersEop: 3
+    averageCustomers: 3.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 75.0
+    cogsK: 22.5
+    grossProfitK: 52.5
+    salaryK: 97.4
+    nonSalaryOpexK: 46.6
+    salesMarketingK: 18.0
+    researchDevelopmentK: 84.0
+    generalAdministrativeK: 42.0
+    opexK: 144.0
+    ebitdaK: -91.5
+    cashEopK: 2794.0
+  - month: M10
+    customersEop: 4
+    averageCustomers: 4.0
+    newCustomers: 1
+    blendedArpuMonthlyK: 25.0
+    revenueK: 100.0
+    cogsK: 30.0
+    grossProfitK: 70.0
+    salaryK: 115.7
+    nonSalaryOpexK: 79.3
+    salesMarketingK: 40.0
+    researchDevelopmentK: 93.0
+    generalAdministrativeK: 62.0
+    opexK: 195.0
+    ebitdaK: -125.0
+    cashEopK: 2669.0
+  - month: M11
+    customersEop: 4
+    averageCustomers: 4.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 100.0
+    cogsK: 30.0
+    grossProfitK: 70.0
+    salaryK: 115.7
+    nonSalaryOpexK: 89.3
+    salesMarketingK: 43.0
+    researchDevelopmentK: 95.0
+    generalAdministrativeK: 67.0
+    opexK: 205.0
+    ebitdaK: -135.0
+    cashEopK: 2534.0
+  - month: M12
+    customersEop: 5
+    averageCustomers: 5.0
+    newCustomers: 1
+    blendedArpuMonthlyK: 25.0
+    revenueK: 125.0
+    cogsK: 37.5
+    grossProfitK: 87.5
+    salaryK: 115.7
+    nonSalaryOpexK: 93.3
+    salesMarketingK: 44.0
+    researchDevelopmentK: 96.0
+    generalAdministrativeK: 69.0
+    opexK: 209.0
+    ebitdaK: -121.5
+    cashEopK: 2412.5
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 6
+    averageCustomers: 5.5
+    blendedArpuMonthlyK: 25.0
+    revenueK: 412.5
+    cogsK: 123.7
+    grossProfitK: 288.8
+    salaryK: 360.0
+    nonSalaryOpexK: 240.0
+    salesMarketingK: 105.0
+    researchDevelopmentK: 320.0
+    generalAdministrativeK: 175.0
+    opexK: 600.0
+    ebitdaK: -311.2
+    cashEopK: 2101.3
+  - quarter: Q2Y2
+    customersEop: 8
+    averageCustomers: 7.0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 525.0
+    cogsK: 157.5
+    grossProfitK: 367.5
+    salaryK: 400.0
+    nonSalaryOpexK: 275.0
+    salesMarketingK: 125.0
+    researchDevelopmentK: 350.0
+    generalAdministrativeK: 200.0
+    opexK: 675.0
+    ebitdaK: -307.5
+    cashEopK: 1793.8
+  - quarter: Q3Y2
+    customersEop: 11
+    averageCustomers: 9.5
+    blendedArpuMonthlyK: 25.0
+    revenueK: 712.5
+    cogsK: 213.8
+    grossProfitK: 498.7
+    salaryK: 445.0
+    nonSalaryOpexK: 335.0
+    salesMarketingK: 145.0
+    researchDevelopmentK: 390.0
+    generalAdministrativeK: 245.0
+    opexK: 780.0
+    ebitdaK: -281.3
+    cashEopK: 1512.5
+  - quarter: Q4Y2
+    customersEop: 14
+    averageCustomers: 12.5
+    blendedArpuMonthlyK: 25.0
+    revenueK: 937.5
+    cogsK: 281.3
+    grossProfitK: 656.2
+    salaryK: 500.0
+    nonSalaryOpexK: 445.0
+    salesMarketingK: 190.0
+    researchDevelopmentK: 450.0
+    generalAdministrativeK: 305.0
+    opexK: 945.0
+    ebitdaK: -288.8
+    cashEopK: 1223.7
+  - quarter: Q1Y3
+    customersEop: 16
+    averageCustomers: 15.0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 1125.0
+    cogsK: 337.5
+    grossProfitK: 787.5
+    salaryK: 560.0
+    nonSalaryOpexK: 390.0
+    salesMarketingK: 210.0
+    researchDevelopmentK: 450.0
+    generalAdministrativeK: 290.0
+    opexK: 950.0
+    ebitdaK: -162.5
+    cashEopK: 1061.2
+  - quarter: Q2Y3
+    customersEop: 20
+    averageCustomers: 18.0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 1350.0
+    cogsK: 405.0
+    grossProfitK: 945.0
+    salaryK: 590.0
+    nonSalaryOpexK: 410.0
+    salesMarketingK: 225.0
+    researchDevelopmentK: 470.0
+    generalAdministrativeK: 305.0
+    opexK: 1000.0
+    ebitdaK: -55.0
+    cashEopK: 1006.2
+  - quarter: Q3Y3
+    customersEop: 25
+    averageCustomers: 22.5
+    blendedArpuMonthlyK: 25.0
+    revenueK: 1687.5
+    cogsK: 506.3
+    grossProfitK: 1181.2
+    salaryK: 625.0
+    nonSalaryOpexK: 415.0
+    salesMarketingK: 245.0
+    researchDevelopmentK: 495.0
+    generalAdministrativeK: 300.0
+    opexK: 1040.0
+    ebitdaK: 141.2
+    cashEopK: 1147.4
+  - quarter: Q4Y3
+    customersEop: 30
+    averageCustomers: 27.5
+    blendedArpuMonthlyK: 25.0
+    revenueK: 2062.5
+    cogsK: 618.7
+    grossProfitK: 1443.8
+    salaryK: 665.0
+    nonSalaryOpexK: 445.0
+    salesMarketingK: 260.0
+    researchDevelopmentK: 525.0
+    generalAdministrativeK: 325.0
+    opexK: 1110.0
+    ebitdaK: 333.8
+    cashEopK: 1481.2
+totals:
+  y1:
+    revenueK: 625.0
+    ebitdaK: -1187.5
+    cashEopK: 2412.5
+  y2:
+    revenueK: 2587.5
+    ebitdaK: -1188.8
+    cashEopK: 1223.7
+  y3:
+    revenueK: 6225.0
+    ebitdaK: 257.5
+    cashEopK: 1481.2
+unitEconomics:
+  arpuAnnualK: 300.0
+  grossMarginPct: 70.0
+  cacK: 80.0
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 66.7
+  ltvK: 1167.3
+  ltvCacRatio: 14.6
+  cacPaybackMonths: 4.6
+fundingAsk:
+  round: seed
+  amountM: 3.6
+  runwayMonths: 18
+  milestone: "Reach 14 paid domains, one repeatable partner channel, and a security-reviewed deployment package before the next round."
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 1584000
+      percentage: 44
+    - bucket: GTM
+      amountUsd: 864000
+      percentage: 24
+    - bucket: "G&A"
+      amountUsd: 504000
+      percentage: 14
+    - bucket: "Buffer (6 mo)"
+      amountUsd: 648000
+      percentage: 18
+scenarios:
+  downside:
+    description: "Security review slows data access, conversion slips below target, and the company exits Y3 at 22 paid domains instead of 30."
+    y3RevenueK: 4525.0
+    y3EbitdaK: -725.0
+    cashLowPointK: 420.0
+    keyAssumptionChanges:
+      - "Sales cycle stretches from roughly 5 months to roughly 7 months."
+      - "Paid sprint to annual conversion falls from 50% to 35%."
+      - "Monthly churn rises from 1.5% to 2.5%."
+  base:
+    description: "Founder-led sales convert enough launch sprints to finish Y2 with 14 paid domains and reach the research-backed 30-domain year-3 SOM."
+    y3RevenueK: 6225.0
+    y3EbitdaK: 257.5
+    cashLowPointK: 1006.2
+    keyAssumptionChanges:
+      - "Annual ACV stays at roughly $300K per paid domain."
+      - "Paid sprint to annual conversion stays at the plan's 50%+ target."
+      - "Headcount rises from 6 FTE at Y1 exit to 14 FTE at Y3 exit."
+  upside:
+    description: "A repeatable partner channel and faster multi-domain expansion lift the company above the base domain ramp without needing a much larger team."
+    y3RevenueK: 7125.0
+    y3EbitdaK: 980.0
+    cashLowPointK: 1180.0
+    keyAssumptionChanges:
+      - "Quarter-end paid domains reach 36 by Q4Y3 instead of 30."
+      - "Expansion modules lift realized ACV to roughly $320K on mature accounts."
+      - "Gross margin improves from 70% to 72% as deployment playbooks standardize."
+sensitivity:
+  - variable: ARPU
+    downsideCase: "$250K annual ACV"
+    baseCase: "$300K annual ACV"
+    upsideCase: "$320K annual ACV"
+    y3RevenueImpactK: -1037.5
+    cashImpactK: -726.3
+  - variable: CAC
+    downsideCase: "$100K CAC per new domain"
+    baseCase: "$80K CAC per new domain"
+    upsideCase: "$60K CAC per new domain"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -360.0
+  - variable: churn
+    downsideCase: "2.5% monthly churn"
+    baseCase: "1.5% monthly churn"
+    upsideCase: "1.0% monthly churn"
+    y3RevenueImpactK: -650.0
+    cashImpactK: -455.0
+  - variable: sales cycle
+    downsideCase: "7 months from qualification to close"
+    baseCase: "5 months from qualification to close"
+    upsideCase: "4 months from qualification to close"
+    y3RevenueImpactK: -900.0
+    cashImpactK: -640.0
+  - variable: gross margin
+    downsideCase: "65% gross margin"
+    baseCase: "70% gross margin"
+    upsideCase: "74% gross margin"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -311.3
+  - variable: hiring pace
+    downsideCase: "Pull two hires forward before partner-sourced demand proves out"
+    baseCase: "Reach 14 FTE by Q4Y3"
+    upsideCase: "Delay the last two hires until after Q2Y3 conversion proof"
+    y3RevenueImpactK: -150.0
+    cashImpactK: -280.0
+modelDiagram:
+  title: unit economics flow
+  mermaid: |
+    flowchart LR
+      Pipeline[Qualified launch assessments] --> Paid[Paid commissioning sprints]
+      Paid --> Domains[Paid fabric domains]
+      Domains --> Revenue[Recurring revenue]
+      Revenue --> GrossProfit[Gross profit]
+      GrossProfit --> Cash[Ending cash]
+modelSanity:
+  - checkName: Revenue engine
+    finding: Base-case Y3 revenue is driven mainly by reaching 30 paid fabric domains at about $300K ACV rather than by aggressive price expansion.
+  - checkName: Must go right
+    finding: At least half of paid commissioning sprints must convert to annual subscriptions or the company misses the 14-domain Y2 milestone that underpins the seed plan.
+  - checkName: Model breaks if
+    finding: If security review stretches the sales cycle past roughly 7 months or churn rises above roughly 2.5%, cash trends toward the downside case before repeatability is proven.
+  - checkName: Next-round proof
+    finding: The next round is justified by exiting Y2 with about 14 paid domains, one repeatable partner channel, and a visible path to positive quarterly EBITDA in H2 Y3.
+sanityChecks:
+  ruleOf40: "Y3 growth 140.6% + EBITDA margin 4.1% = 144.7%"
+  burnMultiple: "Y2 burn multiple 0.4x (-$1.2M EBITDA on roughly $2.7M net new ARR from 5 to 14 paid domains)."
+  revenuePerFte: "$444.6K Y3 using Q4Y3 headcount of 14 FTE (above the generic SaaS $200-400K benchmark, but plausible for high-ACV infrastructure software)."
+  flags:
+    - "Base case requires the company to hit the full 30-domain research SOM by Q4Y3, so partner-led sourcing cannot slip materially."
+    - "Gross margin is held at 70% even though the first year is deployment-heavy; more bespoke services work would delay profitability."
+    - "Customer concentration remains high, so one lost $300K domain in Y2 would noticeably reduce revenue and runway."

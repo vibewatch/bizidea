@@ -1,0 +1,620 @@
+slug: gpu-fabric-bringup-os
+date: '2026-06-02'
+currency: USD
+modelStartMonth: '2026-07'
+assumptions:
+  - id: A1
+    name: 模型起始月份
+    value: '2026-07'
+    unit: month
+    source: "[BP date 2026-06-02]；启发式：模型从计划创建后的下一个完整月份开始"
+  - id: A2
+    name: seed 轮起始现金
+    value: '3600'
+    unit: USD K
+    source: "[BP fundingAsk targetFundingRangeUsd $3-5M]；基准情形取中位数，模型起始时到账 $3.6M"
+  - id: A3
+    name: 每个付费 fabric 域的稳定态年度收入
+    value: '300'
+    unit: USD K
+    source: "[BP gtm.pricing roughly $250k-$350k annual subscription]；[Research market.som $300k ACV]"
+  - id: A4
+    name: 稳态毛利率
+    value: '70'
+    unit: percent
+    source: "[BP businessModel.targetGrossMarginPct 70]"
+  - id: A5
+    name: 客户单元定义
+    value: 付费 fabric 域
+    unit: unit
+    source: "[BP businessModel.unitOfValue fabric domains and GPU capacity under validated readiness coverage]"
+  - id: A6
+    name: 第 1 年月末付费域数
+    value: '0,0,0,1,1,2,2,3,3,4,4,5'
+    unit: domains
+    source: "[BP milestones 2-3 paid design partners and 2 annual conversions in 12 months]；创始人主导企业销售爬坡启发式"
+  - id: A7
+    name: 第 2 年季末付费域数
+    value: '6,8,11,14'
+    unit: domains
+    source: "[BP funnelTargets and 12-24 month milestones]；假设一条可复制伙伴渠道在第 2 年后段开始贡献"
+  - id: A8
+    name: 第 3 年季末付费域数
+    value: '16,20,25,30'
+    unit: domains
+    source: "[Research market.som 30 paying domains by year 3]；[BP expansion from one launch to multiple domains]"
+  - id: A9
+    name: 收入确认节奏
+    value: '25'
+    unit: USD K per active domain per month
+    source: "[A3]；启发式：年合同价值按月平均确认"
+  - id: A10
+    name: 付费 sprint 转年合同
+    value: '50'
+    unit: percent
+    source: "[BP gtm.funnelTargets paid sprint→annual production subscription 50%+]"
+  - id: A11
+    name: 月度 logo 流失率
+    value: '1.5'
+    unit: percent
+    source: 高 ACV 基础设施 SaaS、客户集中但粘性较强的创业公司财务启发式
+  - id: A12
+    name: 创始人或高管 FTE 的年全成本
+    value: '240'
+    unit: USD K
+    source: seed 阶段创始人/高管现金薪酬、薪资税和福利的创业公司财务启发式
+  - id: A13
+    name: 工程 FTE 的年全成本
+    value: '250'
+    unit: USD K
+    source: "[BP requires senior networking, systems, and product-security talent]；创业公司财务启发式"
+  - id: A14
+    name: 解决方案 FTE 的年全成本
+    value: '180'
+    unit: USD K
+    source: "[BP team includes solutions engineer]；创业公司财务启发式"
+  - id: A15
+    name: 销售 FTE 的年全成本
+    value: '220'
+    unit: USD K
+    source: seed 阶段一名企业 AE、含适度浮动薪酬的创业公司财务启发式
+  - id: A16
+    name: G&A FTE 的年全成本
+    value: '150'
+    unit: USD K
+    source: 财务与运营支持岗位的创业公司财务启发式
+  - id: A17
+    name: 第 1 年招聘节奏
+    value: 'M1 创始人 CEO + 创始工程师；M2 解决方案；M4 网络系统；M6 产品/安全；M10 首个 AE'
+    unit: hires
+    source: "[BP team startTiming list]"
+  - id: A18
+    name: 第 2 年招聘节奏
+    value: 'Q2 增加 1 名工程；Q3 增加 1 名解决方案；Q4 增加 1 名销售和 1 名 G&A'
+    unit: hires
+    source: "[BP 12-24 month milestones]；为持续漂移检测和渠道建设预留的人才投入启发式"
+  - id: A19
+    name: 第 3 年招聘节奏
+    value: 'Q1 增加 1 名工程；Q2 再增 1 名工程；Q3 增加 1 名销售；Q4 增加 1 名高管'
+    unit: hires
+    source: "[BP 24-36 month milestones]；产品市场匹配被证明后，按节奏扩张的财务启发式"
+  - id: A20
+    name: 第 1 年非薪酬运营支出爬坡
+    value: '29.2 to 93.3'
+    unit: USD K per month
+    source: "[BP operations requires reference lab, deployment packaging, and travel]；创业公司财务启发式"
+  - id: A21
+    name: 第 2 年非薪酬运营支出
+    value: '240,275,335,445'
+    unit: USD K per quarter
+    source: "[BP operations and partner/channel buildout]；创业公司财务启发式"
+  - id: A22
+    name: 第 3 年非薪酬运营支出
+    value: '390,410,415,445'
+    unit: USD K per quarter
+    source: "[BP multi-domain expansion and benchmark-history roadmap]；创业公司财务启发式"
+  - id: A23
+    name: 本轮融资里程碑
+    value: 在 Q4Y2 前拿到 14 个付费域、1 条可复制伙伴渠道，以及通过安全评审的部署包
+    unit: milestone
+    source: "[BP milestones 0-12 and 12-24 months]"
+  - id: A24
+    name: 基准 CAC
+    value: '80'
+    unit: USD K per new paying domain
+    source: "[BP founder-led direct sales and enterprise funnel]；聚焦高 ACV 基础设施软件的创业公司财务启发式"
+headcount:
+  - role: 创始人/高管
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 2
+  - role: 工程
+    q1y1: 1
+    q2y1: 3
+    q3y1: 3
+    q4y1: 3
+    q4y2: 5
+    q4y3: 7
+  - role: 解决方案
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 2
+    q4y3: 2
+  - role: 销售
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 1
+    q4y3: 2
+  - role: "G&A"
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 5
+  q3y1: 5
+  q4y1: 6
+  q4y2: 10
+  q4y3: 14
+headcountAnnualizedPayrollK:
+  q1y1: 670.0
+  q2y1: 1170.0
+  q3y1: 1170.0
+  q4y1: 1390.0
+  q4y2: 2220.0
+  q4y3: 3180.0
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    averageCustomers: 0.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 40.8
+    nonSalaryOpexK: 29.2
+    salesMarketingK: 10.0
+    researchDevelopmentK: 40.0
+    generalAdministrativeK: 20.0
+    opexK: 70.0
+    ebitdaK: -70.0
+    cashEopK: 3530.0
+  - month: M2
+    customersEop: 0
+    averageCustomers: 0.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 55.8
+    nonSalaryOpexK: 26.2
+    salesMarketingK: 11.0
+    researchDevelopmentK: 48.0
+    generalAdministrativeK: 23.0
+    opexK: 82.0
+    ebitdaK: -82.0
+    cashEopK: 3448.0
+  - month: M3
+    customersEop: 0
+    averageCustomers: 0.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 55.8
+    nonSalaryOpexK: 28.2
+    salesMarketingK: 11.0
+    researchDevelopmentK: 49.0
+    generalAdministrativeK: 24.0
+    opexK: 84.0
+    ebitdaK: -84.0
+    cashEopK: 3364.0
+  - month: M4
+    customersEop: 1
+    averageCustomers: 1.0
+    newCustomers: 1
+    blendedArpuMonthlyK: 25.0
+    revenueK: 25.0
+    cogsK: 7.5
+    grossProfitK: 17.5
+    salaryK: 76.6
+    nonSalaryOpexK: 33.4
+    salesMarketingK: 13.0
+    researchDevelopmentK: 66.0
+    generalAdministrativeK: 31.0
+    opexK: 110.0
+    ebitdaK: -92.5
+    cashEopK: 3271.5
+  - month: M5
+    customersEop: 1
+    averageCustomers: 1.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 25.0
+    cogsK: 7.5
+    grossProfitK: 17.5
+    salaryK: 76.6
+    nonSalaryOpexK: 35.4
+    salesMarketingK: 13.0
+    researchDevelopmentK: 67.0
+    generalAdministrativeK: 32.0
+    opexK: 112.0
+    ebitdaK: -94.5
+    cashEopK: 3177.0
+  - month: M6
+    customersEop: 2
+    averageCustomers: 2.0
+    newCustomers: 1
+    blendedArpuMonthlyK: 25.0
+    revenueK: 50.0
+    cogsK: 15.0
+    grossProfitK: 35.0
+    salaryK: 97.4
+    nonSalaryOpexK: 37.6
+    salesMarketingK: 15.0
+    researchDevelopmentK: 80.0
+    generalAdministrativeK: 40.0
+    opexK: 135.0
+    ebitdaK: -100.0
+    cashEopK: 3077.0
+  - month: M7
+    customersEop: 2
+    averageCustomers: 2.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 50.0
+    cogsK: 15.0
+    grossProfitK: 35.0
+    salaryK: 97.4
+    nonSalaryOpexK: 40.6
+    salesMarketingK: 16.0
+    researchDevelopmentK: 82.0
+    generalAdministrativeK: 40.0
+    opexK: 138.0
+    ebitdaK: -103.0
+    cashEopK: 2974.0
+  - month: M8
+    customersEop: 3
+    averageCustomers: 3.0
+    newCustomers: 1
+    blendedArpuMonthlyK: 25.0
+    revenueK: 75.0
+    cogsK: 22.5
+    grossProfitK: 52.5
+    salaryK: 97.4
+    nonSalaryOpexK: 43.6
+    salesMarketingK: 18.0
+    researchDevelopmentK: 83.0
+    generalAdministrativeK: 40.0
+    opexK: 141.0
+    ebitdaK: -88.5
+    cashEopK: 2885.5
+  - month: M9
+    customersEop: 3
+    averageCustomers: 3.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 75.0
+    cogsK: 22.5
+    grossProfitK: 52.5
+    salaryK: 97.4
+    nonSalaryOpexK: 46.6
+    salesMarketingK: 18.0
+    researchDevelopmentK: 84.0
+    generalAdministrativeK: 42.0
+    opexK: 144.0
+    ebitdaK: -91.5
+    cashEopK: 2794.0
+  - month: M10
+    customersEop: 4
+    averageCustomers: 4.0
+    newCustomers: 1
+    blendedArpuMonthlyK: 25.0
+    revenueK: 100.0
+    cogsK: 30.0
+    grossProfitK: 70.0
+    salaryK: 115.7
+    nonSalaryOpexK: 79.3
+    salesMarketingK: 40.0
+    researchDevelopmentK: 93.0
+    generalAdministrativeK: 62.0
+    opexK: 195.0
+    ebitdaK: -125.0
+    cashEopK: 2669.0
+  - month: M11
+    customersEop: 4
+    averageCustomers: 4.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 100.0
+    cogsK: 30.0
+    grossProfitK: 70.0
+    salaryK: 115.7
+    nonSalaryOpexK: 89.3
+    salesMarketingK: 43.0
+    researchDevelopmentK: 95.0
+    generalAdministrativeK: 67.0
+    opexK: 205.0
+    ebitdaK: -135.0
+    cashEopK: 2534.0
+  - month: M12
+    customersEop: 5
+    averageCustomers: 5.0
+    newCustomers: 1
+    blendedArpuMonthlyK: 25.0
+    revenueK: 125.0
+    cogsK: 37.5
+    grossProfitK: 87.5
+    salaryK: 115.7
+    nonSalaryOpexK: 93.3
+    salesMarketingK: 44.0
+    researchDevelopmentK: 96.0
+    generalAdministrativeK: 69.0
+    opexK: 209.0
+    ebitdaK: -121.5
+    cashEopK: 2412.5
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 6
+    averageCustomers: 5.5
+    blendedArpuMonthlyK: 25.0
+    revenueK: 412.5
+    cogsK: 123.7
+    grossProfitK: 288.8
+    salaryK: 360.0
+    nonSalaryOpexK: 240.0
+    salesMarketingK: 105.0
+    researchDevelopmentK: 320.0
+    generalAdministrativeK: 175.0
+    opexK: 600.0
+    ebitdaK: -311.2
+    cashEopK: 2101.3
+  - quarter: Q2Y2
+    customersEop: 8
+    averageCustomers: 7.0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 525.0
+    cogsK: 157.5
+    grossProfitK: 367.5
+    salaryK: 400.0
+    nonSalaryOpexK: 275.0
+    salesMarketingK: 125.0
+    researchDevelopmentK: 350.0
+    generalAdministrativeK: 200.0
+    opexK: 675.0
+    ebitdaK: -307.5
+    cashEopK: 1793.8
+  - quarter: Q3Y2
+    customersEop: 11
+    averageCustomers: 9.5
+    blendedArpuMonthlyK: 25.0
+    revenueK: 712.5
+    cogsK: 213.8
+    grossProfitK: 498.7
+    salaryK: 445.0
+    nonSalaryOpexK: 335.0
+    salesMarketingK: 145.0
+    researchDevelopmentK: 390.0
+    generalAdministrativeK: 245.0
+    opexK: 780.0
+    ebitdaK: -281.3
+    cashEopK: 1512.5
+  - quarter: Q4Y2
+    customersEop: 14
+    averageCustomers: 12.5
+    blendedArpuMonthlyK: 25.0
+    revenueK: 937.5
+    cogsK: 281.3
+    grossProfitK: 656.2
+    salaryK: 500.0
+    nonSalaryOpexK: 445.0
+    salesMarketingK: 190.0
+    researchDevelopmentK: 450.0
+    generalAdministrativeK: 305.0
+    opexK: 945.0
+    ebitdaK: -288.8
+    cashEopK: 1223.7
+  - quarter: Q1Y3
+    customersEop: 16
+    averageCustomers: 15.0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 1125.0
+    cogsK: 337.5
+    grossProfitK: 787.5
+    salaryK: 560.0
+    nonSalaryOpexK: 390.0
+    salesMarketingK: 210.0
+    researchDevelopmentK: 450.0
+    generalAdministrativeK: 290.0
+    opexK: 950.0
+    ebitdaK: -162.5
+    cashEopK: 1061.2
+  - quarter: Q2Y3
+    customersEop: 20
+    averageCustomers: 18.0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 1350.0
+    cogsK: 405.0
+    grossProfitK: 945.0
+    salaryK: 590.0
+    nonSalaryOpexK: 410.0
+    salesMarketingK: 225.0
+    researchDevelopmentK: 470.0
+    generalAdministrativeK: 305.0
+    opexK: 1000.0
+    ebitdaK: -55.0
+    cashEopK: 1006.2
+  - quarter: Q3Y3
+    customersEop: 25
+    averageCustomers: 22.5
+    blendedArpuMonthlyK: 25.0
+    revenueK: 1687.5
+    cogsK: 506.3
+    grossProfitK: 1181.2
+    salaryK: 625.0
+    nonSalaryOpexK: 415.0
+    salesMarketingK: 245.0
+    researchDevelopmentK: 495.0
+    generalAdministrativeK: 300.0
+    opexK: 1040.0
+    ebitdaK: 141.2
+    cashEopK: 1147.4
+  - quarter: Q4Y3
+    customersEop: 30
+    averageCustomers: 27.5
+    blendedArpuMonthlyK: 25.0
+    revenueK: 2062.5
+    cogsK: 618.7
+    grossProfitK: 1443.8
+    salaryK: 665.0
+    nonSalaryOpexK: 445.0
+    salesMarketingK: 260.0
+    researchDevelopmentK: 525.0
+    generalAdministrativeK: 325.0
+    opexK: 1110.0
+    ebitdaK: 333.8
+    cashEopK: 1481.2
+totals:
+  y1:
+    revenueK: 625.0
+    ebitdaK: -1187.5
+    cashEopK: 2412.5
+  y2:
+    revenueK: 2587.5
+    ebitdaK: -1188.8
+    cashEopK: 1223.7
+  y3:
+    revenueK: 6225.0
+    ebitdaK: 257.5
+    cashEopK: 1481.2
+unitEconomics:
+  arpuAnnualK: 300.0
+  grossMarginPct: 70.0
+  cacK: 80.0
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 66.7
+  ltvK: 1167.3
+  ltvCacRatio: 14.6
+  cacPaybackMonths: 4.6
+fundingAsk:
+  round: seed
+  amountM: 3.6
+  runwayMonths: 18
+  milestone: "下一轮融资前，做到 14 个付费域、1 条可复制伙伴渠道，以及一个通过安全评审的部署包。"
+  useOfFunds:
+    - bucket: 工程
+      amountUsd: 1584000
+      percentage: 44
+    - bucket: GTM
+      amountUsd: 864000
+      percentage: 24
+    - bucket: "G&A"
+      amountUsd: 504000
+      percentage: 14
+    - bucket: "缓冲（6 个月）"
+      amountUsd: 648000
+      percentage: 18
+scenarios:
+  downside:
+    description: "如果安全评审拖慢数据接入、转化率低于目标，公司到 Y3 末只做到 22 个付费域，而不是 30 个。"
+    y3RevenueK: 4525.0
+    y3EbitdaK: -725.0
+    cashLowPointK: 420.0
+    keyAssumptionChanges:
+      - "销售周期会从约 5 个月拉长到约 7 个月。"
+      - "付费 sprint 转年合同的比例会从 50% 降到 35%。"
+      - "月度流失率会从 1.5% 升到 2.5%。"
+  base:
+    description: "在创始人主导销售下，足够多的 launch sprint 能完成转化，使公司在 Y2 末做到 14 个付费域，并在 Y3 达到研究支持的 30 域 SOM。"
+    y3RevenueK: 6225.0
+    y3EbitdaK: 257.5
+    cashLowPointK: 1006.2
+    keyAssumptionChanges:
+      - "年 ACV 保持在每个付费域约 $300K。"
+      - "付费 sprint 转年合同维持在计划设定的 50%+。"
+      - "团队规模从 Y1 末 6 FTE 增长到 Y3 末 14 FTE。"
+  upside:
+    description: "如果可复制伙伴渠道跑通、多域扩张也更快，公司能在不显著扩大的团队规模下，跑出高于基准的域数爬坡。"
+    y3RevenueK: 7125.0
+    y3EbitdaK: 980.0
+    cashLowPointK: 1180.0
+    keyAssumptionChanges:
+      - "Q4Y3 季末付费域数达到 36，而不是 30。"
+      - "扩展模块会把成熟客户的实际 ACV 拉升到约 $320K。"
+      - "随着部署 playbook 标准化，毛利率会从 70% 提升到 72%。"
+sensitivity:
+  - variable: ARPU
+    downsideCase: "$250K annual ACV"
+    baseCase: "$300K annual ACV"
+    upsideCase: "$320K annual ACV"
+    y3RevenueImpactK: -1037.5
+    cashImpactK: -726.3
+  - variable: CAC
+    downsideCase: "$100K CAC per new domain"
+    baseCase: "$80K CAC per new domain"
+    upsideCase: "$60K CAC per new domain"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -360.0
+  - variable: 流失率
+    downsideCase: "2.5% monthly churn"
+    baseCase: "1.5% monthly churn"
+    upsideCase: "1.0% monthly churn"
+    y3RevenueImpactK: -650.0
+    cashImpactK: -455.0
+  - variable: 销售周期
+    downsideCase: "从线索合格到签单需要 7 个月"
+    baseCase: "从线索合格到签单需要 5 个月"
+    upsideCase: "从线索合格到签单需要 4 个月"
+    y3RevenueImpactK: -900.0
+    cashImpactK: -640.0
+  - variable: 毛利率
+    downsideCase: "65% gross margin"
+    baseCase: "70% gross margin"
+    upsideCase: "74% gross margin"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -311.3
+  - variable: 招聘节奏
+    downsideCase: "在伙伴来源需求被证明前，提前招入 2 个人"
+    baseCase: "到 Q4Y3 达到 14 FTE"
+    upsideCase: "最后 2 个岗位延后到 Q2Y3 转化证明之后再招"
+    y3RevenueImpactK: -150.0
+    cashImpactK: -280.0
+modelDiagram:
+  title: 单位经济流转
+  mermaid: |
+    flowchart LR
+      Pipeline[合格的上线评估] --> Paid[付费 commissioning sprint]
+      Paid --> Domains[付费 fabric 域]
+      Domains --> Revenue[经常性收入]
+      Revenue --> GrossProfit[毛利润]
+      GrossProfit --> Cash[期末现金]
+modelSanity:
+  - checkName: 收入引擎
+    finding: 基准情形下，Y3 收入主要来自 30 个付费 fabric 域、每个约 $300K ACV，而不是靠激进提价撑出来。
+  - checkName: 必须成立的前提
+    finding: 至少一半付费 commissioning sprint 必须转成年订阅，否则公司达不到 seed 计划赖以成立的 Y2 末 14 域里程碑。
+  - checkName: 模型会失效的情况
+    finding: 如果安全评审把销售周期拖到约 7 个月以上，或流失率升到约 2.5% 以上，在可复制性被证明前，现金走势就会滑向 downside 情形。
+  - checkName: 下一轮融资证明
+    finding: 如果公司在 Y2 末做到约 14 个付费域、1 条可复制伙伴渠道，并且在 Y3 下半年看见季度 EBITDA 转正路径，就足以支撑下一轮融资叙事。
+sanityChecks:
+  ruleOf40: "Y3 增速 140.6% + EBITDA 利润率 4.1% = 144.7%"
+  burnMultiple: "Y2 burn multiple 为 0.4x（大约 -$1.2M EBITDA，对应从 5 个付费域增至 14 个付费域带来的约 $2.7M 净新增 ARR）。"
+  revenuePerFte: "按 Q4Y3 的 14 FTE 计算，Y3 人均收入为 $444.6K（高于通用 SaaS 的 $200-400K 基准，但对高 ACV 基础设施软件仍属合理）。"
+  flags:
+    - "基准情形要求公司在 Q4Y3 前打满研究测算的 30 域 SOM，所以伙伴渠道不能明显掉链子。"
+    - "毛利率固定在 70%，但首年交付很重；如果定制化服务占比更高，盈利时间会被继续推迟。"
+    - "客户集中度依然很高，所以 Y2 若丢掉 1 个 $300K 域，收入和现金跑道都会明显受压。"
