@@ -1,0 +1,217 @@
+slug: home-health-referral-conversion
+date: '2026-06-03'
+executiveSummary: 这家公司最该先做成的，不是另一套全栈机构软件，而是一层 vendor-neutral 的转介转化引擎，专门帮区域型居家健康机构接住那些在护理还没开始前就掉掉的高摩擦转介。最理想的首个客户，是位于德州的独立或 PE 支持机构：有 5-20 个分支、100-500 名临床人员、多个医院转介伙伴，而且晚间、周末或混合 payer 的转介积压很明显，团队来不及清。产品切口必须刻意收窄：吃进出院材料包，核验 coverage 与服务区域匹配，编码分支接收规则，给出 staffing 推荐，并在机构正式接单前生成一条临床可直接执行的 start-of-care 工作队列。这个范围和买方触发点是对齐的，因为只有当拒单、分支扩张，或新的医院合作把收入流失和响应时效风险暴露出来时，运营负责人才会动起来。最强的战略优势，不是通用 OCR，而是持续积累分支层面的接收/拒绝逻辑、payer 细节、缺文档模式，以及后续 QA 结果——这些数据，今天的 incumbents 和人工团队都没有集中起来。产品节奏必须守纪律：先证明基于传真、邮件和转介门户导出的 overlay 部署能跑通，再谈更深的 EHR 集成、更宽的 staffing 优化或 payer 表现产品。公开市场规模和定价目前仍以模型估算为主，不是交易数据回填；最大未决问题，是机构会不会足够快地为独立 overlay 批预算，从而支撑可复制的 ACV。所以下面 12 个月，最重要的是拿到客户自有数据证明：接收率抬升、转介到决策时长缩短、pilot 到 production 的转化，以及实施负担是否足够轻。
+problem:
+- 机构会丢掉本来有利润的开案服务，因为复杂转介在有人点头之前，要先做人工 coverage 核验、查询分支特定规则、四处打 staffing 电话，还得反复补 chart。
+- 医院和出院团队会记住谁响应慢、谁前后不一致，因此晚间或混合 payer 的病例一旦卡住，机构丢的不只是当下在服患者规模，还有长期转介份额。
+solution:
+- 部署一层 intake overlay，解析传真或导出的转介材料包，核验 payer 与地理覆盖匹配度，标出缺失文档，并判断哪个分支能接这单。
+- 把已接收的病例转成临床可直接开工的工作队列，附上 staffing 推荐、审计日志和 QA 风险标记，让机构在不按比例加 intake 人头的前提下更快开案。
+whyWeWin:
+- 公司拿下的是入院前最值钱的决策窗口：每救回一笔转介，收入会立刻进来，而 incumbents 在这一步反而没那么专业。
+- 每次部署都会沉淀分支规则、payer 例外、拒绝原因、响应时长和下游 QA 结果这类专有数据，工作流护城河会越跑越厚，点状 AI 功能很难迅速追上。
+strategicChoices:
+  beachhead: 德州及周边州的独立和 PE 支持居家健康机构，分支 5-20 家，Medicare 与商业保险 payer 混合，而且医院转介经常在下班后进来。
+  wedgeRationale: 这个入口比直接卖一整套机构操作系统更容易先拿到证明，因为买方今天就已经在为转介拒绝、响应时长和在服患者流失头疼。一个窄而准的接单前 overlay，不要求机构替换 EHR 或计费栈，几周内就能在接收率、决策时长和协调员节省的人效上把价值跑出来。
+  sequencingRationale: 公司第一步应该先把材料摄取、分支规则编码、coverage 核验、staffing 匹配和工作队列做好，因为这就是把难转介转成开案服务所需的最小功能集。只有当 3-5 个 production 账户证明 ROI 可复制后，路线图才该往更深的 EHR 集成、QA benchmark、并购整合工具和更宽的网络路由扩；否则实施复杂度和邻近场景会先把证据吃掉。
+  notYet:
+  - 不替换核心居家健康 EHR 或收入循环系统
+  - 在机构侧证明没出来前，不直接把医院当一号买方去卖
+  - 在分支级接收逻辑还不可靠前，不先做全国性的转介路由市场
+  - 第一年不扩到泛居家护理或 hospice 工作流
+market:
+  tam: $137.7M 的估算 TAM，基于 11,474 家 Medicare 认证 HHA、目标客群约 20% 的适配占比，以及每个目标账户约 $60k 的年度软件预算。
+  sam: 面向德州及周边州的估算 SAM 为 $24.8M，使用研究中的区域集中度假设，并沿用同样的品类预算模型。
+  som: 第 3 年估算 SOM 为 $2.6M，基于 40 个在线客户、每个客户约 $65k 的混合年合同价值。
+  segments:
+  - 拥有多分支 intake 运营的区域型独立与 PE 支持居家健康机构
+  - 在滩头市场跑通后，作为二阶段扩张路径的多机构平台与转介网络伙伴
+  buyingProcess: 项目 champion 通常是负责 intake 吞吐和分支 staffing 的 COO、运营副总裁或区域运营负责人，而 intake 经理和 QA 负责人会决定需求细节。交易应该在医院关系、分支开设，或拒单率飙升把收入流失暴露出来时启动，先用有限分支范围的付费 pilot，再往年度 rollout 转。
+product:
+  mvp: MVP 是一层轻量 intake overlay，先服务传真、邮件和门户导出的转介：抽取材料数据，核验 payer 与分支适配规则，标出缺项，给出 staffing 建议，并生成一条可审计的接收工作队列。它要证明的是：不替换 system of record，也能让一家机构多接难转介，并缩短从转介到决策的时长。
+  sixMonth: 6 个月内，跑出 2-3 个付费 pilot，覆盖材料摄取、分支规则、coverage 与地域核验、staffing 推荐、异常队列，以及围绕接收率、响应时长和拒绝原因的 dashboard。
+  twelveMonth: 12 个月内，至少把 3 个 pilot 转成 production，补上常见转介来源和 EHR 导出流的可复用 connector，并上线与缺文档和开案完成结果挂钩的 QA 风险预测。
+  twentyFourMonth: 24 个月内，在 production 数据足够支撑跨分支标准化后，再扩到多分支 benchmark、被并购机构 onboarding 模板，以及 payer 表现分析。
+  keyBets:
+  - 只要先把协同瓶颈拆掉，机构就能在没完全解决临床供给问题前，先明显抬高接收率。
+  - 买方会比更换核心平台更快批准一个基于现有转介输入的 overlay 部署。
+  - 分支特定规则和拒绝结果数据，会比通用 AI 抽取功能更能形成防守。
+  - 把 intake 决策和 QA 风险预测连起来，对留存和扩张的帮助会大过单点文档自动化。
+gtm:
+  wedge: 卖的是一层转介转化 overlay，让机构更快对难转介说“能接”，而不是把自己包装成通用 AI 助手或替代 EHR。
+  channels:
+  - 由创始人亲自向区域型机构的 COO 和运营副总裁直销
+  - 通过 PE 支持的居家健康平台和运营合伙人做暖启动引荐
+  - 等首个机构案例证明难安置患者能更快被接住后，再让医院出院团队和转介网络成为影响者
+  funnelTargets: 线索→合格 pilot 20-30%；合格 pilot→付费 pilot 30-40%；付费 pilot→production 60%+；production 账户里 50%+ 能在 12 个月内完成多分支扩张。
+  pricing: 先做覆盖 2-5 个分支的付费 pilot，再转成按活跃分支计费的年度订阅，并按平台处理的每笔接收转介或每次开案收 usage fee。这样定价更贴合买方经济账，因为他们买的是救回的在服患者规模和真实工作流里的协同成本下降，不是用户席位。
+businessModel:
+  revenueStreams:
+  - 按分支计费的年度软件订阅
+  - 按接收转介或已完成 staffing 的开案服务收 usage fee
+  - 一次性的实施费和分支规则配置费
+  - 高级 benchmark 模块和并购机构 onboarding 模块
+  unitOfValue: 以“接收转介被转成已经配好人、且合规的开案服务”为价值单位，并由分支订阅锚定
+  targetGrossMarginPct: 70
+  expansionLevers:
+  - pilot 跑通后，在同一机构内继续加分支
+  - 向 PE 支持的多机构组合上卷，用统一 intake 工作流铺开
+  - 等结果数据积累起来后，再叠加 QA benchmark 和 payer 表现分析
+  - 为正在做并购的客户补上并购机构整合工具
+strategyMap:
+  northStarMetric: 目标难转介中，在 48 小时内被转成已完成 staffing 的开案服务的比例
+  inputMetrics:
+  - 从转介到决策的中位耗时（小时）
+  - 晚间、周末或混合 payer 转介的接收率
+  - 首次 AI 处理后仍需人工追文档的材料占比
+  - 每笔被接收转介节省的 pilot 分支协调员工时
+  - 付费 pilot 到年度 production 的转化率
+  moatsToBuild:
+  - 跨 payer、地理区域和病情复杂度画像的分支级接收规则与拒绝原因数据集
+  - 把 intake 决策与 QA 缺陷、开案延迟和下游护理结果连起来的反馈回路
+  - 面向碎片化区域机构与并购分支的可复用集成和 onboarding playbook
+  - 跨机构的响应时效与转介转化 benchmark 数据
+  killCriteria:
+  - 如果前 3 家 design-partner 机构在 45 天内都给不出足够的转介状态数据，无法建立拒绝原因和响应时长基线，独立 overlay 假设就太难落地。
+  - 如果付费 pilot 不能把目标难转介的接收率至少提高 15%，或把转介到决策时长至少压缩 30%，这个切口就不够强，撑不起 premium 定价。
+  - 如果有可量化 ROI 证明后，付费 pilot 里仍不到一半能转成年付 production，说明预算归属太弱，不适合走 venture-scale 增长。
+  mermaid: "flowchart LR\n  Wedge[Referral conversion wedge] --> MVP[Overlay intake MVP]\n  MVP --> Proof[Acceptance and response-time proof]\n  Proof --> Expansion[Multi-branch benchmarks and portfolio expansion]\n"
+investorMemo:
+  verdict:
+    call: 见面 / 继续尽调
+    conviction: 痛点够重，切口也自洽，值得安排 partner meeting；但在一家机构证明独立 overlay 真能转成年预算前，整体 conviction 仍应保持中等。
+    whyBelieve: 公司卡的是一个严重且可量化的瓶颈：机构在入院前就已经丢收入，而且它可以用短周期运营指标证明价值，不必等长期临床结果。
+    whyDoubt: 现有系统、人工工作流和临床供给约束，都可能削弱机构为新 overlay 买单的意愿，哪怕运营痛点是真的。
+    nextDiligence: 重点验证一个真实的多分支 pilot：客户自有数据要能证明接收率抬升、决策速度明显更快，而且年度 rollout 路径可信。
+  firstCustomer:
+    title: 德州多分支居家健康机构的 COO 或运营副总裁
+    profile: 运营 5-20 个分支、拥有 100-500 名临床人员，持续接收混合 payer 的医院转介，而且 intake 仍靠传真队列、表格和分支电话协调。
+    trigger: 新的医院关系、分支扩张，或晚间和周末拒单明显攀升，把在服患者流失和转介份额风险直接暴露出来。
+    buyer: COO 或运营副总裁
+    initialContract: 先做覆盖 2-5 个分支、金额 $25K-$50K 的付费 pilot；如果机构愿意把这套工作流铺到更多分支和转介来源，再转成约 $60K-$150K ARR 加 usage fee。
+  mustBeTrue:
+  - 前 5 家目标机构里，必须有相当一部分拒单真的是 intake 和文档摩擦导致，而不只是临床人手短缺。
+  - 轻量 overlay 必须能在现有传真、邮件或门户导出流上上线，不需要一做就是多季度的 EHR 集成项目。
+  - 付费 pilot 必须足够抬高难转介接收率，或显著压缩转介到决策时长，机构才会愿意用运营预算买年合约。
+  - 买方必须更愿意先上一个 vendor-neutral 的接单前层，而不是等 incumbent EHR 套件以后补相似功能。
+  - 分支规则、payer 数据和 QA 结果必须能不断提高决策质量并带来扩张；否则产品最终会塌缩成一个低价值自动化工具。
+  diligenceQuestions:
+  - 目标机构当前的拒单里，到底有多少比例是文档、payer 和协同问题驱动，而不是纯粹的临床产能不足？
+  - 哪些分支特定接收规则今天仍是经验口传，而没有被 incumbent 系统真正编码？
+  - 在要求原生 EHR 集成之前，买方最多能接受多少周的实施工作？
+  - pilot 要跑出什么证明阈值，创新预算才会转成经常性运营预算？
+  - 如果 WellSky 或主要 EHR 厂商在未来 12 个月补上基础 AI intake 自动化，这个切口会被压缩到什么程度？
+operatingAssumptions:
+- assumption: 滩头市场里，被拒转介中必须有一块可观比例，能在额外招临床人员之前，先靠更好的 intake 协同救回来。
+  basis: research.yaml
+  validationTest: 从 3 家试点机构收集连续 90 天的转介状态导出数据，验证目标拒单里至少 25% 被标记为文档、payer、服务区域或协同失败，而不是单纯“没有可用临床人员”。
+  decisionImpact: 如果不成立，产品就得往 staffing 优化转，或只盯那些协同流失更明确的机构。
+- assumption: 买方愿意先接受一个基于传真、邮件和门户导出的 overlay，而不是一开始就要求完整 EHR 集成。
+  basis: idea.yaml
+  validationTest: 在 10 通合格 discovery call 里，至少拿到 5 个买方承诺：第一天不用原生写回核心 EHR，也愿意启动 pilot。
+  decisionImpact: 如果不成立，实施成本会陡增，路线图就要优先做更少但更深的 EHR 专项集成，而不是追求 pilot 数量。
+- assumption: 按分支加 usage 的定价模型，能落在研究中的品类预算区间内，同时仍让运营负责人觉得 ROI 为正。
+  basis: research.yaml
+  validationTest: 在 pilot 提案里测试 3 套定价包，至少让 4 个合格买方接受：只要接收指标改善，他们愿意走到 $60K-$150K 的年支出。
+  decisionImpact: 如果不成立，ACV 和毛利预期都要下修，公司可能得更依赖服务收入或企业级组合交易。
+- assumption: 分支特定的接收规则和 QA 结果，并没有被 incumbents 套件记录得足够完整，否则创业公司的切口就站不住。
+  basis: operator judgment
+  validationTest: 在 5 次实施范围梳理里，把现有 incumbent 工作流逐条画出来，确认运营团队在关键接收决策上，依然高度依赖人工表格、电话或未文档化的分支规则。
+  decisionImpact: 如果不成立，公司就得把差异化转到更快部署，或往 benchmark 分析等更上层的位置移动。
+- assumption: 一旦跑出首个机构案例，PE 支持平台就能成为可规模化的第二渠道。
+  basis: idea.yaml
+  validationTest: 首个 production 案例出来后 6 个月内，至少拿到 3 个平台级会议和 1 个已签约的 portfolio pilot。
+  decisionImpact: 如果不成立，分发就仍然完全依赖创始人直销，增长假设也要按更慢的直销节奏重置。
+experimentRoadmap:
+- horizon: 0–90 天
+  experiment: 采访滩头市场里的 15 位 COO、intake 负责人和分支负责人，覆盖德州及周边州机构。
+  hypothesis: 买方会反复描述同一种高优先级失效模式：下班后、混合 payer 和文档负担重的转介最容易掉。
+  successMetric: 至少 10 场访谈确认了共同的采购触发点，且有 5 家提供样例拒绝原因或响应时长数据。
+  owner: 创始人/CEO
+- horizon: 0–90 天
+  experiment: 在完整产品自动化之前，先用历史材料样本和人工规则编码，跑 2 次 concierge 式转介转化评估。
+  hypothesis: 即便是半人工流程，也能找出足够多可救回的转介，为付费 pilot 提供理由。
+  successMetric: 两家机构都拿到可量化的接收率提升基线估算，并签下 pilot 范围确认文件。
+  owner: 创始工程师
+- horizon: 90–180 天
+  experiment: 为 2-5 个分支交付第一版 overlay MVP，覆盖材料摄取、分支规则、coverage 核验、异常队列和审计日志。
+  hypothesis: 在不替换 system of record 的前提下，产品能在 8 周内上线。
+  successMetric: 首个付费 pilot 在 8 周内上线，且数据完整到能按周跟踪接收率、决策中位时长和主要拒绝原因。
+  owner: 产品与实施负责人
+- horizon: 90–180 天
+  experiment: 拿清晰定义的 pilot 包和年度分支订阅 + usage 定价，去测试至少 3 个合格买方。
+  hypothesis: 买方会比起没有边界的服务项目，更愿意为一个定义明确的 pilot 批预算；只要 ROI 讲清楚，也会接受转年费的定价逻辑。
+  successMetric: 至少签下 2 个付费 pilot，且有 1 个买方在 KPI 达标的前提下预先接受年费框架。
+  owner: 创始人/CEO
+- horizon: 180–360 天
+  experiment: 加入 QA 风险预测，并比较只用 intake 自动化的机构，与同时使用 intake + QA 风险评分的机构，在续约上的差异。
+  hypothesis: 把接收决策和下游 QA 结果连起来，会提高留存和扩张。
+  successMetric: 至少 2 个客户在续约或扩张决策里明确提到 QA 风险报告。
+  owner: 产品负责人
+- horizon: 180–540 天
+  experiment: 在首个 production 案例出来后，启动 1 条 PE 平台或转介网络的联合销售路径。
+  hypothesis: 一旦公司能证明分支级 ROI，渠道伙伴就能明显缩短销售周期。
+  successMetric: 渠道来源机会占到合格 pipeline 的至少 20%，并带来 1 个签约 pilot。
+  owner: 战略合作负责人
+operations:
+- 先围绕有限的分支集合、明确的拒绝原因分类和每周 KPI 复盘把 onboarding 标准化，再谈全系统 rollout。
+- 必须保留审计日志、对高风险字段做人审，并准备好可应对审查的文档，因为接收决策本身就踩在 CMS 的产能与质量要求上。
+- 把与 incumbent EHR 和转介网络的共存能力，当成核心运营纪律来做，而不是以后再补的集成项目。
+team:
+- role: 创始人/CEO
+  startTiming: 第 0 个月
+  rationale: 负责创始人主导销售、pilot 设计、定价，以及 PE 或医院关系拓展，因为这一阶段仍以市场发现为主。
+- role: 创始工程师
+  startTiming: 第 0 个月
+  rationale: 负责搭起材料摄取、规则引擎、审计日志和首批集成，这些直接决定部署速度和产品可信度。
+- role: 产品与实施负责人
+  startTiming: 第 2 个月
+  rationale: 把分支工作流编码进产品，缩短 pilot 上线时间，并把客户运营细节沉淀成可复制的部署 playbook。
+- role: 临床信息化与 QA 顾问
+  startTiming: 第 3 个月
+  rationale: 确保接收建议、文档检查和 QA 风险逻辑，能和合规要求以及开案流程严丝合缝地对上。
+- role: 战略客户经理
+  startTiming: 第 9 个月
+  rationale: 只有在公司已经有一套可复制的 pilot 案例和 rollout 流程后，才加销售产能。
+milestones:
+- horizon: 0–12 个月
+  items:
+  - 完成 15-20 次买方访谈和 2 次 concierge 评估，把按拒绝原因划分的转介流失量算出来。
+  - 启动 2-3 个付费 pilot，每个覆盖 2-5 个分支，并跑通接收率、响应时长和拒绝原因的基线报告。
+  - 至少把 3 个 pilot 或 design partner 转成 production 部署，并形成年度定价框架。
+- horizon: 12–24 个月
+  items:
+  - 做到 10-15 家 production 机构，在常见转介输入上形成可复制 onboarding，并至少沉淀 1 套与 incumbent 共存的 playbook。
+  - 上线跨分支 benchmark 报告，以及与开案和文档结果挂钩的 QA 风险预测。
+  - 拿下第一个 PE 平台或多机构 rollout，并用它把被收购分支的 onboarding 标准化。
+- horizon: 24–36 个月
+  items:
+  - 跑到研究里第 3 年约 40 个在线客户的 SOM 路径，并证明已转化账户内部能做多分支扩张。
+  - 补上 payer 表现分析和并购机构整合模块，但不把自己做成替代 EHR。
+  - 判断 benchmark 密度和渠道杠杆，是否已经足以支撑更宽的转介路由网络策略。
+risks:
+- risk: 如果跨分支变更管理太重，买方可能抗拒再加一层新的 intake 系统。
+  likelihood: Medium
+  impact: High
+  mitigation: 先覆盖现有转介输入做 overlay，pilot 只选少量分支，并把 time-to-live 当成核心产品 KPI 去盯。
+- risk: 临床供给约束可能比 intake 自动化更主导结果，从而把产品价值遮住。
+  likelihood: Medium
+  impact: High
+  mitigation: 优先找那些拒单数据已经显示“协同摩擦占比不低”的机构，并把 staffing 原因和文档原因的拒单分开报告。
+- risk: AI 抽取错误或黑箱式建议，可能让 intake 和 QA 团队对合规性失去信任。
+  likelihood: Medium
+  impact: High
+  mitigation: 对高风险字段保留人工复核，记录每一条推荐，并把模型输出绑定到可审计的分支规则上。
+- risk: incumbent EHR 与转介管理厂商，可能补上足够多的 AI intake 功能，从而压缩差异化。
+  likelihood: High
+  impact: Medium
+  mitigation: 差异化要押在 vendor-neutral 的部署速度、分支特定接收逻辑和跨机构 benchmark 数据，而不是通用抽取能力。
+- risk: 在报销承压的环境里，独立软件预算可能很难抢下来。
+  likelihood: Medium
+  impact: Medium
+  mitigation: 定价直接锚定救回的开案服务，用短期付费 pilot 和清晰 ROI scorecard 降低门槛，并优先争取标准化价值更高的 portfolio rollout。
+fundingAsk:
+  round: pre-seed
+  targetFundingRangeUsd: $2-4M
+  runwayMonths: 18
+  useOfFundsSummary: 把 overlay MVP 做出来，证明 2-3 个付费 pilot，夯实合规与集成底座，并在德州滩头市场跑出第一批可复制的 production rollout。
