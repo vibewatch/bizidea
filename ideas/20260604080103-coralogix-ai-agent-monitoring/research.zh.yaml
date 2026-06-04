@@ -1,0 +1,2242 @@
+slug: incident-agent-replay-layer
+date: '2026-06-04'
+researchCoverage:
+  sourceTarget: 100
+  sourcesFound: 142
+  sourcesFetched: 142
+  sourcesRetained: 142
+  duplicatesRemoved: 0
+  memoSourcesUsed: 40
+  reputablePublisherCount: 31
+  searchedQueries:
+  - 企业采用 AI Agent 监控、可观测性与事故响应 copilot
+  - SRE 事故响应工作流痛点、postmortem 指标、MTTM、MTTR
+  - LLM 可观测性、tracing、评测、Agent 监控与治理
+  - 可观测性工具与平台市场规模、CAGR
+  - AI 辅助事故调查从仪表盘转向 CLI
+  - PagerDuty、incident.io、Rootly 的事故管理平台定价
+  - Datadog、LangSmith、Langfuse、Arize、Portkey、Braintrust 的定价与 tracing
+  - NIST AI RMF、OWASP LLM Top 10、AI Agent 治理与监控
+  - Google SRE、Gemini CLI、故障处理与事故管理指南
+  - Portkey、Helicone、Langfuse、Braintrust 的 AI Agent 可观测性与生产落地
+  sourceQualityMix:
+    primarySources: 115
+    tierOneNews: 1
+    analystOrMarketData: 1
+    tradePress: 3
+    regulatoryOrGovernment: 4
+    communityOrReview: 0
+  coverageGap: null
+deduplication:
+  method: 规范化 URL + 标准化标题 + 事件/公司/日期 + 抓取正文相似度 + 来源家族校验
+  candidateUrlsFound: 142
+  candidateUrlsFetched: 142
+  duplicatesRemoved: 0
+  uniqueCorpusItems: 142
+  uniqueMemoSources: 40
+  duplicateClusters: []
+reportMemo:
+  executiveTakeaways:
+  - 这个切口是真实存在的，因为事故调查已经从仪表盘转向 CLI 和 Agent 界面，但团队仍缺一套中立方法，来证明 Agent 在人类行动前是否看对了证据。
+  - 预算就在现有的 observability 和事故响应支出里：周边平台已经靠事故协同、on-call、Agent tracing 和评测赚钱，所以创业公司可以吃现成预算线，而不是重新造一个品类。
+  - 竞争极其激烈，横跨 observability 套件、事故管理平台和 Agent eval 栈；因此公司只有在拿住跨厂商 replay、证据覆盖评分和审批闸门时才有机会赢，而不是只做通用 tracing。
+  - 最难的问题不是把遥测收上来，而是把历史事故、工具调用 trace 和 postmortem 结果拼成一层值得工程管理者信任的认证系统，用来决定 AI 主导的响应路径该放行还是拦下。
+  marketDefinition: 一个面向 AI 主导事故响应的跨栈 trust layer：它重放历史事故，给证据覆盖和根因质量打分，并在响应者行动前为实时 Agent 建议加上闸门。
+  customerAndBuyer: 主要用户是已经在尝试 AI 辅助调查的云原生 SaaS 与金融科技公司的 SRE、平台和事故管理团队。经济买家通常是工程副总裁、SRE 负责人或平台工程总监，因为这笔支出同时压在 observability、incident management 和 AI platform 预算上。
+  buyingTriggers:
+  - point: 最近一次 sev-1 或 sev-2 事故暴露出 AI 助手给出了有争议的诊断，或调查路径不完整，于是管理层要求在更大规模推广前先拿出证明。
+    sourceRefs:
+    - 1
+    - 4
+    - 64
+  - point: 团队发现协同税和复盘苦活吃掉了 MTTR 的很大一块，因此管理层想要既提速、又不牺牲可审计性的自动化。
+    sourceRefs:
+    - 6
+    - 45
+    - 67
+  - point: 安全与治理审查要求组织先证明 Agent 行为可被人工监督、可被监控、可被追溯，之后才会让它碰关键运营环节。
+    sourceRefs:
+    - 10
+    - 12
+    - 14
+  willingnessToPay:
+    summary: 付费意愿应来自现有的可靠性和 AI 工程预算：PagerDuty 和 incident.io 已经按用户为事故工作流收费，LangSmith 和 Langfuse 也按 seat、trace 或用量收费，因此 trust layer 可以被包装成现有事故或 agent-ops 支出中的一小块，而不是新增大类。
+    sourceRefs:
+    - 46
+    - 62
+    - 77
+    - 86
+  competitiveLandscape: 这不是一张简单名单。Coralogix 和 Datadog 正把 observability 延伸到自家遥测栈内部的 AI 调查；PagerDuty、incident.io 和 Rootly 正沿着 AI 辅助事故运营继续深入；LangSmith、Langfuse、Arize、Braintrust、Portkey、Helicone 和 Weave 则吃住了相邻的 tracing/eval 工作流。真正的空档，是一层厂商中立的事故认证系统：它衡量 Agent 是否收集了足够的生产证据，是否值得人类信任。
+  incumbentThesis:
+  - incumbentClass: 云平台
+    point: Azure、Google Cloud 和 AWS 已经提供了监控、tracing 和 Agent runtime 控制，但它们只覆盖自家云，无法认证横跨第三方 observability 与 on-call 工具的跨栈事故调查。
+    sourceRefs:
+    - 14
+    - 15
+    - 16
+    - 17
+  - incumbentClass: 可观测性套件
+    point: Coralogix 和 Datadog 能在自家平台里追踪和排查 AI 工作负载，但它们天然更想强化自家 Agent 的使用深度，而不是做一个中立裁判，判断一次调查是否已经足够完整。
+    sourceRefs:
+    - 21
+    - 30
+    - 31
+    - 32
+  - incumbentClass: 事故管理平台
+    point: PagerDuty 和 incident.io 拿住了响应工作流、on-call 和 postmortem 界面，但它们的差异化核心仍是协同与自动化，不是严谨的跨工具 replay 与证据覆盖评分。
+    sourceRefs:
+    - 45
+    - 46
+    - 64
+    - 66
+  - incumbentClass: Agent 可观测性与评测栈
+    point: LangSmith、Langfuse 和 Arize 证明 tracing 与评测已经是独立品类，但它们面向的是应用构建者和通用 Agent 质量，而不是拿历史故障真值集和人工 runbook 去认证事故响应 Agent。
+    sourceRefs:
+    - 78
+    - 79
+    - 90
+    - 94
+    - 99
+    - 100
+  regulatoryLandscape: 短期压力主要来自广义的可信 AI、安全与审计预期，而不是针对事故工具的专门监管。即便如此，只要 AI 系统会影响生产操作，买家就会要求它具备可追溯性、人工监督和抗 prompt injection 能力。
+  technologyLandscape: 关键基础设施其实已经齐了——OpenTelemetry 风格的 trace、评测服务、云监控 API 和 Agent runtime 遥测都在。真正难的是把这些东西拼成可 replay 的调查图谱，以及能跨异构工具工作的决策级 trust score。
+  distributionChannels:
+  - point: 从与 AI 事故助手上线或 observability 栈扩容绑定的共创客户试点切入，因为团队此时最需要证明：更快的 AI 分诊不会制造虚假信心。
+    sourceRefs:
+    - 34
+    - 41
+    - 64
+  - point: 通过 observability 与云生态做联合销售，因为 tracing 和监控集成已经被接受，但跨厂商治理仍然薄弱。
+    sourceRefs:
+    - 31
+    - 41
+    - 16
+  - point: 在客户已经想削减协同开销、提高事故文档一致性时，借助 SRE enablement、可靠性咨询和 postmortem/流程改进伙伴进入。
+    sourceRefs:
+    - 6
+    - 45
+    - 66
+  partnershipEcosystem:
+  - point: 第一圈集成应锁定 Datadog、Grafana、PagerDuty 和 incident.io，因为这些工具就坐在告警→事故的工作流中心，决定证据能否迅速拼起来。
+    sourceRefs:
+    - 34
+    - 41
+    - 45
+    - 62
+  - point: 在开放 tracing 与 AI telemetry 标准上保持对齐很重要，因为买家不会接受一个会把 Agent observability 锁死在私有格式里的死胡同。
+    sourceRefs:
+    - 32
+    - 94
+    - 102
+  - point: 当事故 Agent 直接操作生产系统时，Azure、Google Cloud 和 AWS 这类云 runtime 伙伴很关键，它们能提供模型调用日志、Agent 身份与治理信号。
+    sourceRefs:
+    - 15
+    - 16
+    - 17
+  dataMoats:
+  - point: 把提示词、工具调用、已收集证据、批准根因和人工覆盖串起来的历史事故 replay 语料，会随着每次认证上线和每次 miss 不断升值。
+    sourceRefs:
+    - 64
+    - 65
+    - 67
+  - point: 一个把 Agent trace、observability 遥测与事故工作流数据连在一起的归一化调查图谱，有机会成为系统记录层，而这正是单一厂商工具最难跨栈复刻的部分。
+    sourceRefs:
+    - 31
+    - 32
+    - 78
+  - point: 围绕“什么算证据过薄、什么是危险自动化、什么会触发 prompt injection 风险、什么输出低置信”积累起来的 policy 数据，会沉淀成生产操作里差异化的审批规则。
+    sourceRefs:
+    - 12
+    - 90
+    - 99
+    - 100
+  geographicConsiderations:
+  - point: 美国和英语优先的云原生 SaaS 公司是最干净的首个切口，因为 Agent 工具、observability 预算和 SRE 流程成熟度都在这里最密集。
+    sourceRefs:
+    - 33
+    - 76
+  - point: 受监管或跨国买家会更看重审计日志、数据位置和治理控制，因此更偏爱能跨云运行、支持企业评审工作流的产品。
+    sourceRefs:
+    - 10
+    - 14
+    - 15
+  sensitivityCases:
+  - case: 现有厂商捆绑挤压
+    impact: 如果 Datadog、Coralogix、PagerDuty 或 incident.io 的原生 replay 与 trust scoring 做到“足够好”，独立方案的 ACV 和赢单率就会被压缩，除非创业公司能证明自己在跨栈中立性上明显更强。
+    sourceRefs:
+    - 30
+    - 34
+    - 45
+    - 64
+  - case: Agent 采用停留在 advisory 阶段更久
+    impact: 如果大多数团队仍让 AI 停留在只读 copilot 模式，紧迫性就会从实时审批闸门转向更慢的 replay 和 postmortem 工作流，销售周期也会被拉长。
+    sourceRefs:
+    - 1
+    - 64
+    - 76
+  - case: 一次高关注度的 AI 事故失败引发治理压力
+    impact: 如果线上出现一次广受关注的 Agent 失误，市场对可审计 trace 和人工审批闸门的需求可能会突然上升，反而加速这个品类。
+    sourceRefs:
+    - 10
+    - 12
+    - 14
+  validationPlan:
+  - priority: high
+    question: 在准备替换任何现有事故工具之前，SRE 负责人会不会先买一层中立 trust layer？
+    evidenceToGather: 跑共创客户试点，用客户当前 AI 助手重放 20–50 起历史事故，并衡量输出是否真的改变了 go/no-go 决策。
+  - priority: high
+    question: 要在 30 天内证明价值，最小必须接入哪一组集成？
+    evidenceToGather: 按技术栈组合追踪试点成功率，在 Datadog、Grafana、PagerDuty、incident.io、Jira、GitHub 和 Kubernetes 之间找出最小可爱的集成组合。
+  - priority: medium
+    question: 中端团队手里实际有多少带标签的历史事故数据？
+    evidenceToGather: 在前 10 个潜在客户里量化时间线完整度、部署元数据可得性，以及批准根因覆盖率。
+analysisModels:
+  marketMapDiagram:
+    title: 事故 Agent 信任版图
+    mermaid: |
+      quadrantChart
+        title 事故 Agent 信任版图
+        x-axis 通用平台广度 --> 事故 Agent 信任专精
+        y-axis 离线评测导向 --> 实时运营紧迫性
+        quadrant-1 专精实时运营
+        quadrant-2 信任层
+        quadrant-3 构建者工具
+        quadrant-4 宽平台
+        Datadog: [0.28, 0.82]
+        PagerDuty: [0.34, 0.86]
+        Coralogix: [0.48, 0.80]
+        LangSmith: [0.73, 0.36]
+        拟议创业公司: [0.90, 0.92]
+  fiveForces:
+    supplierPower:
+      score: 3
+      rationale: 公司依赖 Datadog、Grafana、PagerDuty、Azure、Google 和 AWS 等厂商的遥测、工单和云 API，但开放 tracing 和多厂商集成削弱了任何单一供应商的议价权。
+      sourceRefs:
+      - 16
+      - 17
+      - 32
+      - 41
+    buyerPower:
+      score: 4
+      rationale: 目标买家是成熟的可靠性团队；如果新产品不能迅速证明它能让事故处理更快、更稳，他们完全可以延后采购、继续扩现有工具，或者干脆维持手工复盘。
+      sourceRefs:
+      - 45
+      - 46
+      - 67
+    threatOfEntrants:
+      score: 4
+      rationale: tracing 和评测底层能力正变得越来越标准化，邻近创业公司和现有厂商都更容易进场；真正能守住的壁垒不是模型接入，而是私有 replay 数据和工作流贴合度。
+      sourceRefs:
+      - 78
+      - 90
+      - 99
+      - 102
+    threatOfSubstitutes:
+      score: 5
+      rationale: 替代方案非常强：买家可以把 observability 套件、事故管理平台、通用 eval 栈和手工 postmortem 流程拼在一起，而不是单独买一层 trust layer。
+      sourceRefs:
+      - 34
+      - 45
+      - 65
+      - 79
+    competitiveRivalry:
+      score: 5
+      rationale: 竞争已经很高，因为 observability 厂商、事故平台和 Agent eval 工具都在同时向 trace、评测和 AI 辅助运营收敛。
+      sourceRefs:
+      - 21
+      - 31
+      - 45
+      - 78
+      - 99
+  pestle:
+  - factor: 政治
+    impact: neutral
+    point: 公共部门与企业治理框架正把买家推向“可监控、可复核”的 AI 系统，但这些框架还没有强到能自动释放预算。
+    sourceRefs:
+    - 10
+    - 14
+  - factor: 经济
+    impact: positive
+    point: 相邻的 observability 市场仍在增长，这让 trust layer 更容易挂靠在扩张中的基础设施预算上，而不是争夺一笔全新的费用。
+    sourceRefs:
+    - 19
+  - factor: 社会
+    impact: positive
+    point: SRE 团队正承受减少 toil 的压力，只要信任和问责机制还在，他们越来越愿意让 AI 参与事故处理。
+    sourceRefs:
+    - 4
+    - 6
+    - 64
+  - factor: 技术
+    impact: positive
+    point: 云监控、Agent runtime、tracing 与评测框架已经足够成熟，创业公司可以把精力放在跨栈 replay 和评分上，而不用从零发明遥测采集。
+    sourceRefs:
+    - 16
+    - 17
+    - 32
+    - 102
+  - factor: 法律
+    impact: negative
+    point: prompt injection、不安全输出和可审计性要求，都会抬高任何会影响生产操作系统的举证门槛。
+    sourceRefs:
+    - 12
+    - 14
+    - 15
+  adoptionFrictionMatrix:
+  - friction: 历史事故数据稀疏或不一致
+    severity: 高
+    affectedBuyer: SRE 负责人
+    mitigation: 先从文档最完整的 sev-1/sev-2 事故开始，先导入 postmortem、时间线和部署元数据，再去追求更大范围覆盖。
+    sourceRefs:
+    - 6
+    - 7
+    - 65
+  - friction: 监控、on-call 与部署工具间的集成跨度过大
+    severity: 高
+    affectedBuyer: 平台工程负责人
+    mitigation: 首版只盯最窄的通用技术栈——Datadog 或 Grafana，加 PagerDuty/incident.io、Kubernetes 和 GitHub——然后再往外扩。
+    sourceRefs:
+    - 34
+    - 41
+    - 45
+  - friction: 担心 AI 产出制造虚假信心
+    severity: 高
+    affectedBuyer: 工程副总裁
+    mitigation: 采用保守的信任阈值，明确展示缺失证据解释；只要 replay 分或实时证据覆盖偏薄，就要求人工审批。
+    sourceRefs:
+    - 65
+    - 67
+  - friction: 可靠性团队与 AI 平台团队之间的预算归属不清
+    severity: 中
+    affectedBuyer: 平台工程总监
+    mitigation: 把产品定价成一层可靠性风险覆盖层，用 MTTR、postmortem 吞吐和错误 Agent 决策减少来证明价值，而不是讲泛化的 AI ROI。
+    sourceRefs:
+    - 46
+    - 62
+    - 77
+    - 86
+market:
+  tam:
+    value: $1.2B
+    rationale: 自下而上的估算：未来几年里，大约有 15,000 家组织可能会采用 AI 主导的事故调查；按 replay、trust score 和认证能力每家每年约 $80k 测算，总盘子约 $1.2B。这个数字也低于 2028 年 observability 市场 $4.1B 的天花板。
+    isEstimate: true
+    sourceRefs:
+    - 19
+    - 1
+    - 33
+  sam:
+    value: $270.0M
+    rationale: 滩头市场约束：约 3,000 家中端云原生 SaaS 与金融科技团队，拥有集中式 SRE/平台负责人，并且已经启动 AI 事故落地；按模型里约 $90k ACV 计算。
+    isEstimate: true
+    sourceRefs:
+    - 1
+    - 33
+    - 64
+  som:
+    value: $12.0M
+    rationale: 第 3 年的可达场景：约 160 家客户，按约 $75k ACV 计算，对应模型里的滩头市场低个位数份额；实现方式是共创客户试点，再叠加现有可靠性预算内的扩张。
+    isEstimate: true
+    sourceRefs:
+    - 34
+    - 45
+    - 62
+bottomUpSizingDrivers:
+- driver: 总可触达单位数
+  value: 15,000 家组织
+  source: est.
+- driver: 滩头市场单位数
+  value: 3,000 家组织
+  source: calc
+- driver: 模型中的年 ACV
+  value: $75k–$90k
+  source: '[46], [62], [77], [86]'
+- driver: SOM 场景下第 3 年客户数
+  value: '160'
+  source: calc
+categoryDynamics:
+  growthRate: 11.7% CAGR
+  growthRateSourceRefs:
+  - 19
+  tailwinds:
+  - point: 事故调查已经从仪表盘转向 AI 和 CLI 界面，因此团队现在需要审计的是 Agent 行为，而不只是系统健康度。
+    sourceRefs:
+    - 1
+    - 4
+  - point: 生产 AI 系统正变得更多模型、更长链路，这会进一步抬高对结构化评测、tracing 和治理的需求。
+    sourceRefs:
+    - 31
+    - 33
+    - 94
+  - point: 云平台正在把 Agent 监控、tracing 和治理原语做得更标准，这让实时运营的埋点与评分更容易落地。
+    sourceRefs:
+    - 14
+    - 16
+    - 17
+  headwinds:
+  - point: 现有 observability 和 incident 厂商可以把相邻功能打包进去，对独立 trust layer 形成“够用就行”的替代。
+    sourceRefs:
+    - 31
+    - 34
+    - 45
+  - point: AI 辅助 postmortem 和事故叙述很容易听起来有道理，却未必真正建立在扎实证据上，因此买家会天然警惕自动化结论。
+    sourceRefs:
+    - 12
+    - 65
+competitors:
+- name: Coralogix
+  stage: 成长期
+  wedge: 横跨多栈的 observability，加上 AI observability、AI Center 和类似 Olly 的 Agent 工作流。
+  pricing: 销售驱动；抓取到的 AI observability 页面没有公开标价。
+  strength: 遥测架构强，而且已经有企业级证据证明客户会通过 AI 与 CLI 界面查询事故。
+  weaknessVsUs: 平台原生激励让它更难在 Datadog、Grafana、PagerDuty 和自研 Agent 之间做真正中立的认证。
+  sourceRefs:
+  - 1
+  - 2
+  - 21
+  - 30
+- name: Datadog
+  stage: 在位厂商
+  wedge: 把 LLM trace、评测和事故响应都收进同一套 observability 平台。
+  pricing: 从抓取到的产品页面看，以定制 / 用量计费为主；LLM observability 页面没有透明价格。
+  strength: 装机量巨大，且能把 Agent 行为和基础设施、服务、真实用户遥测直接串起来。
+  weaknessVsUs: 最适合买家已经 All-in Datadog 的场景；一旦要做跨栈事故调查的独立裁判，优势就弱了。
+  sourceRefs:
+  - 31
+  - 32
+  - 33
+  - 34
+- name: PagerDuty
+  stage: 在位厂商
+  wedge: 围绕更快的事故协同，提供 AIOps、on-call、分析和工作流自动化。
+  pricing: 事故管理套餐从免费到 enterprise 分层；AIOps 走相邻加购路径。
+  strength: 在运营层面信誉深，告警路由、事故分析和“更快解决”的 ROI 故事都很成熟。
+  weaknessVsUs: 更偏工作流，而不是证据本身；它原生并不会认证 AI 调查员在提出行动建议前是否已经收集足够遥测。
+  sourceRefs:
+  - 45
+  - 46
+  - 47
+  - 48
+- name: incident.io
+  stage: 成长期
+  wedge: Slack 原生事故指挥，加上 AI SRE 调查和 AI 辅助 postmortem。
+  pricing: $15–$25 每用户每月，on-call 另加；enterprise 定制定价。
+  strength: 非常贴近实时事故场景，且围绕 AI SRE 工作流迭代很快。
+  weaknessVsUs: 核心仍是协同体验和平台内自动化，不是面向异构 observability 与 incident 栈的中立 replay。
+  sourceRefs:
+  - 62
+  - 64
+  - 65
+  - 66
+  - 67
+- name: LangSmith
+  stage: 成长期
+  wedge: 面向 AI 应用构建者的通用 Agent 可观测性与评测平台。
+  pricing: 付费版 $39 每 seat 每月，另加 trace 量计费。
+  strength: tracing、评测和数据集工作流都很强，而且在 Agent 构建者里已有明显采用。
+  weaknessVsUs: 对 AI 应用团队非常强，但不是 incident-native；缺少 outage 时间线、升级流程和批准根因真值集这些原生概念。
+  sourceRefs:
+  - 76
+  - 77
+  - 78
+  - 79
+regulatoryTechnicalConstraints:
+- point: 可信 AI 项目越来越要求：只要 AI 系统会影响关键运营，就必须有可追溯性、监控和治理材料。
+  sourceRefs:
+  - 10
+  - 14
+- point: prompt injection 和不安全输出风险意味着，只要涉及实时 remediation 或高严重度建议，就必须上保守安全闸门和清晰审计轨迹。
+  sourceRefs:
+  - 12
+- point: 不同云厂商暴露的监控与 Agent runtime 原语并不相同，所以跨平台归一化本身就是一道真实的工程题。
+  sourceRefs:
+  - 15
+  - 16
+  - 17
+- point: 高质量 replay 的前提，是历史事故记录、工具调用 trace 和部署上下文能以一致格式被拿到。
+  sourceRefs:
+  - 6
+  - 7
+  - 45
+validationSignals:
+- point: Coralogix 表示，超过一半的企业客户已经通过 CLI 和 agentic 界面使用 Olly 或自有 AI 模型来调查事故。
+  sourceRefs:
+  - 1
+- point: Google SRE 公开描述过：他们会在缓解、根因分析和 postmortem 生成等环节使用 Gemini CLI。
+  sourceRefs:
+  - 4
+  - 6
+- point: incident.io 已把 AI SRE 定位成实时事故调查引擎，而不再只是静态助手，这说明需求已经进入真实工作流。
+  sourceRefs:
+  - 64
+- point: Datadog 关于超过一千家客户生产遥测的报告显示，多步、agentic 的 AI 工作负载已经普及到值得被系统化监控。
+  sourceRefs:
+  - 33
+openQuestions:
+- 买家会不会坚持需要一层独立 trust layer，还是说厂商原生 incident copilot 最终对大多数团队已经够用？
+- 中端 SRE 团队的中位数，到底有多少带标签的历史事故能支撑高置信 replay？
+- 前 90 天真正必需的集成到底是哪几类：observability、incident management、source control、deployment，还是全部都要？
+- 这个品类会先靠只读认证扩张，还是必须等客户愿意让 Agent 触发 remediation 动作之后才会爆发？
+evidenceCorpus:
+- id: 1
+  publisher: TechCrunch
+  title: Coralogix 融资 $200M，押注总得有人来盯 AI agents | TechCrunch
+  date: '2026-06-03'
+  url: https://techcrunch.com/2026/06/03/coralogix-raises-200m-in-race-to-build-the-monitoring-layer-for-ai-agents/
+  sourceType: tier-one-news
+  topicBucket: funding-news
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明厂商势能与企业需求都已出现的融资和采用证据。
+- id: 2
+  publisher: Calcalist Tech
+  title: Coralogix 获投 $200 million，估值达 $1.6 billion，AI 推动数据量激增 | Ctech
+  date: '2026-06-03'
+  url: https://www.calcalistech.com/ctechnews/article/bkifhk6gmx
+  sourceType: trade-press
+  topicBucket: funding-news
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明厂商势能与企业需求都已出现的融资和采用证据。
+- id: 3
+  publisher: Ventureburn
+  title: Coralogix 完成 $200M F 轮融资，押注 AI 可观测性平台
+  date: '2026-06-03'
+  url: https://ventureburn.com/coralogix-raises-200m-to-scale-ai-native-observability-platform/
+  sourceType: trade-press
+  topicBucket: funding-news
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明厂商势能与企业需求都已出现的融资和采用证据。
+- id: 4
+  publisher: Google Cloud
+  title: Google SREs 如何用 Gemini CLI 处理真实世界故障 | Google Cloud Blog
+  date: null
+  url: https://cloud.google.com/blog/topics/developers-practitioners/how-google-sres-use-gemini-cli-to-solve-real-world-outages
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 5
+  publisher: InfoQ
+  title: 从告警呼叫到事后复盘：Google Cloud SREs 如何用 Gemini CLI 响应故障 - InfoQ
+  date: null
+  url: https://www.infoq.com/news/2026/02/google-sre-gemini-cli-outage/
+  sourceType: trade-press
+  topicBucket: customer-pain
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 6
+  publisher: Google SRE
+  title: Google SRE - 学习 SRE 事故管理与响应
+  date: null
+  url: https://sre.google/resources/practices-and-processes/incident-management-guide/
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 7
+  publisher: Google SRE
+  title: Google SRE - 用无责事后复盘提升系统韧性
+  date: null
+  url: https://sre.google/sre-book/postmortem-culture/
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 8
+  publisher: Google SRE
+  title: Google SRE：用于故障处置的事故事后复盘示例
+  date: null
+  url: https://sre.google/sre-book/example-postmortem/
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 9
+  publisher: NIST
+  title: 计算机安全事件处置指南 (NIST SP 800-61 Rev. 2)
+  date: null
+  url: https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-61r2.pdf
+  sourceType: regulatory-government
+  topicBucket: validation
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明真实使用情况、产品工作流或运营结果的验证证据。
+- id: 10
+  publisher: NIST
+  title: AI 风险管理框架 | NIST
+  date: '2021-07-12'
+  url: https://www.nist.gov/itl/ai-risk-management-framework
+  sourceType: regulatory-government
+  topicBucket: regulation
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明可信 AI、可审计性与监控义务的治理或安全证据。
+- id: 11
+  publisher: NIST
+  title: AI 标准 | NIST
+  date: '2021-08-03'
+  url: https://www.nist.gov/artificial-intelligence/ai-standards
+  sourceType: regulatory-government
+  topicBucket: regulation
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明可信 AI、可审计性与监控义务的治理或安全证据。
+- id: 12
+  publisher: OWASP
+  title: 面向大语言模型应用的 OWASP Top 10 | OWASP Foundation
+  date: null
+  url: https://owasp.org/www-project-top-10-for-large-language-model-applications/
+  sourceType: regulatory-government
+  topicBucket: regulation
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明可信 AI、可审计性与监控义务的治理或安全证据。
+- id: 13
+  publisher: Cloud Security Alliance
+  title: Agentic AI 身份管理方法 | CSA
+  date: '2025-03-11'
+  url: https://cloudsecurityalliance.org/blog/2025/03/11/agentic-ai-identity-management-approach
+  sourceType: primary
+  topicBucket: regulation
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明可信 AI、可审计性与监控义务的治理或安全证据。
+- id: 14
+  publisher: Microsoft Learn
+  title: 组织范围内 AI agents 的治理与安全 - Cloud Adoption Framework | Microsoft Learn
+  date: null
+  url: https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ai-agents/governance-security-across-organization
+  sourceType: technical-docs
+  topicBucket: regulation
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明可信 AI、可审计性与监控义务的治理或安全证据。
+- id: 15
+  publisher: Microsoft Learn
+  title: 在 Microsoft Foundry Models (classic) 中监控 Azure OpenAI - Microsoft Foundry (classic) 门户 | Microsoft Learn
+  date: null
+  url: https://learn.microsoft.com/en-us/azure/foundry-classic/openai/how-to/monitor-openai
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 16
+  publisher: docs.cloud.google.com
+  title: 扩展你的 agents &nbsp;|&nbsp; Gemini Enterprise Agent Platform &nbsp;|&nbsp; Google Cloud Documentation
+  date: null
+  url: https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale
+  sourceType: technical-docs
+  topicBucket: validation
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明真实使用情况、产品工作流或运营结果的验证证据。
+- id: 17
+  publisher: AWS
+  title: 监控 bedrock-runtime 端点 - Amazon Bedrock
+  date: null
+  url: https://docs.aws.amazon.com/bedrock/latest/userguide/monitoring.html
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 18
+  publisher: OpenAI
+  title: 使用 evals | OpenAI API
+  date: null
+  url: https://developers.openai.com/api/docs/guides/evals
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 19
+  publisher: MarketsandMarkets
+  title: 到 2028 年，可观测性工具与平台市场规模将达 $4.1 billion
+  date: null
+  url: https://www.marketsandmarkets.com/PressReleases/observability-tools-and-platforms.asp
+  sourceType: analyst-market-data
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 20
+  publisher: Coralogix
+  title: Coralogix - 完整可观测性，零妥协。
+  date: null
+  url: https://coralogix.com/
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 21
+  publisher: Coralogix
+  title: AI 可观测性 - Coralogix
+  date: null
+  url: https://coralogix.com/platform/ai-observability/
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 22
+  publisher: Coralogix
+  title: 什么是 AI 监控，为什么它很重要 - Coralogix
+  date: '2023-08-16'
+  url: https://coralogix.com/blog/what-is-ai-monitoring-and-why-is-it-important/
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 23
+  publisher: Coralogix
+  title: 全栈可观测性指南 - Coralogix
+  date: '2022-07-26'
+  url: https://coralogix.com/blog/full-stack-observability-guide/
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 24
+  publisher: Coralogix
+  title: 读懂可观测性的三大支柱 - Coralogix
+  date: '2021-10-11'
+  url: https://coralogix.com/blog/understanding-the-three-pillars-of-observability/
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 25
+  publisher: Coralogix
+  title: 微服务中的分布式追踪可观测性 - Coralogix
+  date: '2022-09-13'
+  url: https://coralogix.com/blog/distributed-tracing-observability-in-microservices/
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 26
+  publisher: Coralogix
+  title: 为什么你的平均修复时间 (MTTR) 高于应有水平 - Coralogix
+  date: '2021-03-09'
+  url: https://coralogix.com/blog/why-your-mean-time-to-repair-mttr-is-higher-than-it-should-be/
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 27
+  publisher: Coralogix
+  title: AIOps 入门：把 AI 和机器学习用进 DevOps - Coralogix
+  date: '2021-07-14'
+  url: https://coralogix.com/blog/intro-to-aiops-leveraging-ai-and-machine-learning-in-devops/
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 28
+  publisher: Coralogix
+  title: 生成式 AI 如何让可观测性人人可用 - Coralogix
+  date: '2023-11-29'
+  url: https://coralogix.com/blog/how-generative-ai-makes-observability-accessible-for-everyone/
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 29
+  publisher: Coralogix
+  title: 用 Flow Alerts 即刻定位数据库故障 - Coralogix
+  date: '2022-09-06'
+  url: https://coralogix.com/blog/instantly-diagnose-a-database-outage-with-flow-alerts/
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 30
+  publisher: Coralogix
+  title: Coralogix AI Center 发布：实时 AI 可观测性 - Coralogix
+  date: '2025-03-19'
+  url: https://coralogix.com/blog/introducing-coralogixs-ai-center-real-time-ai-observability/
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 31
+  publisher: Datadog
+  title: Datadog LLM 可观测性 | Datadog
+  date: '2025-03-05'
+  url: https://www.datadoghq.com/product/ai/llm-observability/
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 32
+  publisher: Datadog Docs
+  title: LLM 可观测性
+  date: null
+  url: https://docs.datadoghq.com/llm_observability/
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 33
+  publisher: Datadog
+  title: AI 工程现状 | Datadog
+  date: '2026-04-21'
+  url: https://www.datadoghq.com/state-of-ai-engineering/
+  sourceType: primary
+  topicBucket: market-size
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于估算 AI 可观测性、事故响应或 Agent 采用需求的市场规模锚点。
+- id: 34
+  publisher: Datadog
+  title: Datadog 事故响应 | Datadog
+  date: '2025-02-10'
+  url: https://www.datadoghq.com/product/incident-response/
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 35
+  publisher: Datadog
+  title: DevSecOps 现状 | Datadog
+  date: '2026-02-26'
+  url: https://www.datadoghq.com/state-of-devsecops/
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 36
+  publisher: Datadog
+  title: 什么是 AI 可观测性？ | Datadog
+  date: '2026-05-21'
+  url: https://www.datadoghq.com/knowledge-center/ai-observability/
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 37
+  publisher: Datadog
+  title: 什么是 LLM 评测框架？ | Datadog
+  date: '2026-05-21'
+  url: https://www.datadoghq.com/knowledge-center/llm-evaluation-frameworks/
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 38
+  publisher: Datadog
+  title: 什么是 LLMOps？ | Datadog
+  date: '2026-05-21'
+  url: https://www.datadoghq.com/knowledge-center/llmops/
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 39
+  publisher: Datadog
+  title: AI Agent 目录 | Datadog
+  date: '2026-03-19'
+  url: https://www.datadoghq.com/product/ai/agent-directory/
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 40
+  publisher: Datadog
+  title: Bits AI 安全分析师 | Datadog
+  date: '2026-03-17'
+  url: https://www.datadoghq.com/product/ai/bits-ai-security-analyst/
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 41
+  publisher: Grafana Labs
+  title: 事故响应与管理 | Grafana Cloud | Grafana Labs
+  date: null
+  url: https://grafana.com/products/cloud/irm/
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 42
+  publisher: Grafana Labs
+  title: 告警与 IRM | Grafana Cloud documentation
+  date: null
+  url: https://grafana.com/docs/grafana-cloud/alerting-and-irm/
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 43
+  publisher: Grafana Labs
+  title: Grafana 定价 | 免费、Pro、Enterprise
+  date: null
+  url: https://grafana.com/pricing/
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于判断付费意愿和预算线对比的定价证据。
+- id: 44
+  publisher: Grafana Labs
+  title: OnCall | Grafana Cloud 值班管理系统 | Grafana Labs
+  date: null
+  url: https://grafana.com/products/cloud/oncall/
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 45
+  publisher: PagerDuty
+  title: PagerDuty 事故响应文档
+  date: null
+  url: https://response.pagerduty.com/
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 46
+  publisher: PagerDuty
+  title: 事故管理定价 | PagerDuty
+  date: null
+  url: https://www.pagerduty.com/pricing/incident-management/
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于判断付费意愿和预算线对比的定价证据。
+- id: 47
+  publisher: PagerDuty
+  title: 搜索
+  date: null
+  url: https://www.pagerduty.com/platform/aiops/
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 48
+  publisher: PagerDuty
+  title: 运营看板与分析 | PagerDuty
+  date: null
+  url: https://www.pagerduty.com/platform/incident-management/analytics/
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 49
+  publisher: PagerDuty
+  title: 可靠且丰富的告警能力 | PagerDuty
+  date: null
+  url: https://www.pagerduty.com/platform/incident-management/on-call-management/alerting/
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 50
+  publisher: PagerDuty
+  title: 简单排班与自动升级 | PagerDuty
+  date: null
+  url: https://www.pagerduty.com/platform/incident-management/on-call-management/schedules-and-escalations/
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 51
+  publisher: PagerDuty
+  title: 服务与团队 | PagerDuty
+  date: null
+  url: https://www.pagerduty.com/platform/incident-management/on-call-management/services/
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 52
+  publisher: PagerDuty
+  title: AIOps 定价 | PagerDuty
+  date: null
+  url: https://www.pagerduty.com/pricing/aiops/
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于判断付费意愿和预算线对比的定价证据。
+- id: 53
+  publisher: PagerDuty
+  title: PagerDuty 扩展 GenAI 与分析能力 | PagerDuty
+  date: null
+  url: https://www.pagerduty.com/newsroom/pagerduty-generative-ai-runbooks/
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 54
+  publisher: PagerDuty
+  title: PagerDuty 生成式 AI 安全使用指南 | PagerDuty
+  date: null
+  url: https://www.pagerduty.com/security/generative-ai-guidelines/
+  sourceType: primary
+  topicBucket: regulation
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明可信 AI、可审计性与监控义务的治理或安全证据。
+- id: 55
+  publisher: Rootly
+  title: AI 原生事故管理平台 | Rootly
+  date: null
+  url: https://rootly.com/
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 56
+  publisher: Rootly
+  title: Rootly | 定价
+  date: null
+  url: https://rootly.com/pricing
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于判断付费意愿和预算线对比的定价证据。
+- id: 57
+  publisher: Rootly
+  title: Rootly | 博客
+  date: null
+  url: https://rootly.com/blog
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 58
+  publisher: Rootly
+  title: Rootly | 工程团队全面转向 Agent 之后，哪里先出了问题
+  date: null
+  url: https://rootly.com/blog/what-broke-when-engineering-went-fully-agent-based
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 59
+  publisher: Rootly
+  title: Rootly | 先回放，别重建：给一条处理数百万告警的流水线加上一周级延后能力
+  date: null
+  url: https://rootly.com/blog/replay-dont-rebuild-adding-week-long-deferrals-to-a-pipeline-that-handles-millions-of-alerts
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 60
+  publisher: Rootly
+  title: Rootly | Rootly MCP 的 5 种用法
+  date: null
+  url: https://rootly.com/blog/5-ways-to-use-the-rootly-mcp
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 61
+  publisher: incident.io
+  title: 一体化事故管理平台 | incident.io
+  date: null
+  url: https://incident.io/
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 62
+  publisher: incident.io
+  title: 定价 | incident.io
+  date: null
+  url: https://incident.io/pricing
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于判断付费意愿和预算线对比的定价证据。
+- id: 63
+  publisher: incident.io
+  title: 集成 | incident.io
+  date: null
+  url: https://incident.io/integrations
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 64
+  publisher: incident.io
+  title: 用 AI SRE 跑一次事故响应，到底是什么体验 | Blog | incident.io
+  date: null
+  url: https://incident.io/blog/how-it-feels-to-run-an-incident-with-ai-sre
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 65
+  publisher: incident.io
+  title: 用 AI 做 post-mortem，究竟意味着什么？ | Blog | incident.io
+  date: null
+  url: https://incident.io/blog/what-does-using-ai-for-post-mortems-actually-mean
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 66
+  publisher: incident.io
+  title: 如何评估事故管理平台：Rootly 与替代方案的对比框架 | Blog | incident.io
+  date: null
+  url: https://incident.io/blog/evaluate-incident-management-platforms-framework
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 67
+  publisher: incident.io
+  title: PagerDuty 的 MTTR 基准 vs 替代方案：能把处置时间最多砍掉 80% 吗？ | Blog | incident.io
+  date: null
+  url: https://incident.io/blog/pagerduty-mttr-benchmarks-alternatives
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 68
+  publisher: incident.io
+  title: 为什么 PagerDuty 不是按今天工程团队的发版速度设计的 | Blog | incident.io
+  date: null
+  url: https://incident.io/blog/why-pagerduty-wasnt-built-for-the-rate-at-which-engineering-teams-now-ship-code
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 69
+  publisher: incident.io
+  title: 你的 PagerDuty 团队已经习以为常的 5 个 on-call 权宜之计（以及它们真正的代价） | Blog | incident.io
+  date: null
+  url: https://incident.io/blog/5-on-call-workarounds-your-pagerduty-team-has-normalized
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 70
+  publisher: incident.io
+  title: 值班工具的 99.9% vs 99.99% 可用性：凌晨 3 点，多那一个 9 为什么关键 | Blog | incident.io
+  date: null
+  url: https://incident.io/blog/999-vs-9999-uptime-for-on-call-tools-why-that-extra-nine-matters-at-3am
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 71
+  publisher: incident.io
+  title: 事故升级策略：智能告警路由与值班分派完整指南 | Blog | incident.io
+  date: null
+  url: https://incident.io/blog/incident-escalation-policies-guide
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 72
+  publisher: incident.io
+  title: 值班排班策略：真正管用的轮值模型 | Blog | incident.io
+  date: null
+  url: https://incident.io/blog/on-call-scheduling-rotation-models
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 73
+  publisher: incident.io
+  title: 值班入职清单：新工程师 30 天上手路径 | Blog | incident.io
+  date: null
+  url: https://incident.io/blog/on-call-onboarding-30-day-checklist
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 74
+  publisher: incident.io
+  title: 团队会愿意用的 on-call 软件 | incident.io
+  date: null
+  url: https://incident.io/on-call
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 75
+  publisher: incident.io
+  title: 事后复盘 | incident.io
+  date: null
+  url: https://incident.io/post-mortems
+  sourceType: primary
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明事故响应流程、postmortem 或协同开销痛点的客户侧证据。
+- id: 76
+  publisher: LangChain
+  title: 关于 LangChain：Agent 工程平台
+  date: null
+  url: https://www.langchain.com/about
+  sourceType: primary
+  topicBucket: market-size
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于估算 AI 可观测性、事故响应或 Agent 采用需求的市场规模锚点。
+- id: 77
+  publisher: LangChain
+  title: LangSmith 套餐与定价
+  date: null
+  url: https://www.langchain.com/pricing
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于判断付费意愿和预算线对比的定价证据。
+- id: 78
+  publisher: LangChain
+  title: LangSmith：AI Agent 与 LLM 可观测性平台
+  date: null
+  url: https://www.langchain.com/langsmith/observability
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 79
+  publisher: LangChain
+  title: LangSmith - LLM 与 AI Agent 评测平台：持续改进 agents
+  date: null
+  url: https://www.langchain.com/langsmith/evaluation
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 80
+  publisher: LangChain
+  title: LangChain AI Agents 现状报告：2024 趋势
+  date: null
+  url: https://www.langchain.com/stateofaiagents
+  sourceType: primary
+  topicBucket: market-size
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于估算 AI 可观测性、事故响应或 Agent 采用需求的市场规模锚点。
+- id: 81
+  publisher: LangChain
+  title: AI Agents 现状
+  date: null
+  url: https://www.langchain.com/state-of-agent-engineering
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 82
+  publisher: LangChain
+  title: AI 可观测性：捕捉传统指标漏掉的故障
+  date: null
+  url: https://www.langchain.com/articles/ai-observability
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 83
+  publisher: LangChain
+  title: 为什么 LLM 可观测性与监控离不开评测
+  date: null
+  url: https://www.langchain.com/articles/llm-monitoring-observability
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 84
+  publisher: LangChain
+  title: LLM 评测：从生产监控到回归测试
+  date: null
+  url: https://www.langchain.com/articles/llm-evals
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 85
+  publisher: LangChain
+  title: LLM-as-Judge：如何用人工纠偏做校准
+  date: null
+  url: https://www.langchain.com/articles/llm-as-a-judge
+  sourceType: primary
+  topicBucket: validation
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明真实使用情况、产品工作流或运营结果的验证证据。
+- id: 86
+  publisher: Langfuse
+  title: 定价 - Langfuse
+  date: null
+  url: https://langfuse.com/pricing
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于判断付费意愿和预算线对比的定价证据。
+- id: 87
+  publisher: Langfuse
+  title: AI 工程闭环 - Langfuse
+  date: null
+  url: https://langfuse.com/academy/ai-engineering-loop
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 88
+  publisher: Langfuse
+  title: 数据集 - Langfuse
+  date: null
+  url: https://langfuse.com/academy/datasets
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 89
+  publisher: Langfuse
+  title: 评测 - Langfuse
+  date: null
+  url: https://langfuse.com/academy/evaluate
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 90
+  publisher: Langfuse
+  title: 监控 - Langfuse
+  date: null
+  url: https://langfuse.com/academy/monitoring
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 91
+  publisher: Langfuse
+  title: 错误分析 - Langfuse
+  date: null
+  url: https://langfuse.com/academy/monitoring/error-analysis
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 92
+  publisher: Langfuse
+  title: 追踪 - Langfuse
+  date: null
+  url: https://langfuse.com/academy/tracing
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 93
+  publisher: Langfuse
+  title: 监控 LLM 安全并降低 LLM 风险 - Langfuse
+  date: null
+  url: https://langfuse.com/blog/2024-06-monitoring-llm-security
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 94
+  publisher: Langfuse
+  title: 用 Langfuse 做 AI Agent 可观测性、追踪与评测 - Langfuse
+  date: null
+  url: https://langfuse.com/blog/2024-07-ai-agent-observability-with-langfuse
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 95
+  publisher: Langfuse
+  title: 多步骤 LLM 系统中的可观测性 - Langfuse
+  date: null
+  url: https://langfuse.com/blog/2024-10-observability-in-multi-step-llm-systems
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 96
+  publisher: Langfuse
+  title: 面向 LLM 可观测性的 OpenTelemetry (OTel) - Langfuse
+  date: null
+  url: https://langfuse.com/blog/2024-10-opentelemetry-for-llm-observability
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 97
+  publisher: Langfuse
+  title: LLM 评测 101：最佳实践、常见挑战与已验证技巧 - Langfuse
+  date: '2025-03-04'
+  url: https://langfuse.com/blog/2025-03-04-llm-evaluation-101-best-practices-and-challenges
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 98
+  publisher: Langfuse
+  title: LLM 应用的 Rage Clicks：面向 AI 客服 Agent 的高信号生产监控 - Langfuse
+  date: '2026-04-01'
+  url: https://langfuse.com/blog/2026-04-01-llm-as-a-judge-production-monitoring
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 99
+  publisher: Arize AI
+  title: 面向 AI Agents 与应用的 LLM 可观测性 - Arize AI
+  date: '2025-07-18'
+  url: https://arize.com/blog/llm-observability-for-ai-agents-and-applications/
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 100
+  publisher: Arize AI
+  title: 客户端评测 (SDK) - Phoenix
+  date: null
+  url: https://arize.com/docs/phoenix/evaluation/how-to-evals
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 101
+  publisher: Arize AI
+  title: 定价 - Arize AI
+  date: null
+  url: https://arize.com/pricing/
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于判断付费意愿和预算线对比的定价证据。
+- id: 102
+  publisher: GitHub
+  title: GitHub - Arize-ai/openinference：面向 AI 可观测性的 OpenTelemetry 插桩 · GitHub
+  date: null
+  url: https://github.com/Arize-ai/openinference
+  sourceType: technical-docs
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 103
+  publisher: Arize AI
+  title: 超越监控：可观测性的崛起 - Arize AI
+  date: '2021-05-19'
+  url: https://arize.com/blog/beyond-monitoring-the-rise-of-observability/
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 104
+  publisher: Arize AI
+  title: 什么是 ML 可观测性？ - Arize AI
+  date: '2021-05-27'
+  url: https://arize.com/blog/what-is-ml-observability/
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 105
+  publisher: Arize AI
+  title: 生产环境模型性能监控作战手册 - Arize AI
+  date: '2021-03-04'
+  url: https://arize.com/blog/monitor-your-model-in-production/
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 106
+  publisher: Helicone
+  title: Helicone / AI Gateway 与 LLM 可观测性
+  date: null
+  url: https://www.helicone.ai/
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 107
+  publisher: Helicone
+  title: Helicone 定价 | 让你的 AI 应用放心上线
+  date: null
+  url: https://www.helicone.ai/pricing
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于判断付费意愿和预算线对比的定价证据。
+- id: 108
+  publisher: Helicone Docs
+  title: 告警 - Helicone OSS LLM 可观测性
+  date: null
+  url: https://docs.helicone.ai/features/alerts
+  sourceType: technical-docs
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 109
+  publisher: Helicone Docs
+  title: 数据集 - Helicone OSS LLM 可观测性
+  date: null
+  url: https://docs.helicone.ai/features/datasets
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 110
+  publisher: Helicone Docs
+  title: 报告 - Helicone OSS LLM 可观测性
+  date: null
+  url: https://docs.helicone.ai/features/reports
+  sourceType: technical-docs
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 111
+  publisher: Helicone Docs
+  title: 会话 - Helicone OSS LLM 可观测性
+  date: null
+  url: https://docs.helicone.ai/features/sessions
+  sourceType: technical-docs
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 112
+  publisher: Helicone Docs
+  title: 用户反馈 - Helicone OSS LLM 可观测性
+  date: null
+  url: https://docs.helicone.ai/features/advanced-usage/feedback
+  sourceType: technical-docs
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 113
+  publisher: Helicone Docs
+  title: LLM 安全 - Helicone OSS LLM 可观测性
+  date: null
+  url: https://docs.helicone.ai/features/advanced-usage/llm-security
+  sourceType: technical-docs
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 114
+  publisher: Helicone Docs
+  title: 评测分数 - Helicone OSS LLM 可观测性
+  date: null
+  url: https://docs.helicone.ai/features/advanced-usage/scores
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 115
+  publisher: Helicone Docs
+  title: OpenAI Agents 集成 - Helicone OSS LLM 可观测性
+  date: null
+  url: https://docs.helicone.ai/gateway/integrations/openai-agents
+  sourceType: technical-docs
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 116
+  publisher: Helicone Docs
+  title: LangGraph 集成 - Helicone OSS LLM 可观测性
+  date: null
+  url: https://docs.helicone.ai/gateway/integrations/langgraph
+  sourceType: technical-docs
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 117
+  publisher: Portkey
+  title: 面向 Gen AI 构建者的生产栈 | Portkey
+  date: null
+  url: https://portkey.ai/
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 118
+  publisher: Portkey
+  title: Portkey | 生产级 AI 控制台
+  date: null
+  url: https://portkey.ai/pricing
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于判断付费意愿和预算线对比的定价证据。
+- id: 119
+  publisher: Portkey
+  title: 面向 AI 应用的全栈可观测性 | Portkey
+  date: null
+  url: https://portkey.ai/features/observability
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 120
+  publisher: Portkey
+  title: 用 Model Catalog 做集中治理 | Portkey
+  date: null
+  url: https://portkey.ai/features/ai-agent-new
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 121
+  publisher: Portkey
+  title: 用 guardrails 保护你的 AI 请求 | Portkey
+  date: null
+  url: https://portkey.ai/features/guardrails
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 122
+  publisher: Portkey
+  title: 企业级 AI Gateway | Portkey
+  date: null
+  url: https://portkey.ai/features/ai-gateway
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 123
+  publisher: Portkey
+  title: MCP Gateway：安全访问 MCP Servers | Portkey
+  date: null
+  url: https://portkey.ai/features/mcp
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 124
+  publisher: Portkey
+  title: 最佳 AI Gateway 方案
+  date: null
+  url: https://portkey.ai/buyers-guide/ai-agent-observability-platform
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 125
+  publisher: Portkey
+  title: 最佳 AI Gateway 方案
+  date: null
+  url: https://portkey.ai/buyers-guide/ai-gateway-solutions
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 126
+  publisher: Portkey
+  title: 2026 年顶级 MCP Gateway 盘点
+  date: null
+  url: https://portkey.ai/buyers-guide/mcp-gateways
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 127
+  publisher: Portkey
+  title: 全组织审计日志 | Portkey
+  date: null
+  url: https://portkey.ai/for/org-wide-audit-logs
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 128
+  publisher: Portkey
+  title: Claude Code Gateway 方案 | Portkey
+  date: null
+  url: https://portkey.ai/for/claude-code
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 129
+  publisher: Weights & Biases
+  title: W&amp;B Weave：面向生产环境 Agent 的可观测性
+  date: null
+  url: https://wandb.ai/site/weave/
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 130
+  publisher: Weights & Biases Docs
+  title: 理解 Ops、Calls 与 Traces - Weights &amp; Biases Documentation
+  date: null
+  url: https://docs.wandb.ai/weave/guides/tracking/tracing
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 131
+  publisher: Weights & Biases Docs
+  title: 评分概览 - Weights &amp; Biases Documentation
+  date: null
+  url: https://docs.wandb.ai/weave/guides/evaluation/scorers
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 132
+  publisher: Weights & Biases
+  title: 查看 Weights &amp; Biases 定价方案
+  date: null
+  url: https://wandb.ai/site/pricing/
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于判断付费意愿和预算线对比的定价证据。
+- id: 133
+  publisher: Braintrust
+  title: Braintrust - 用来打造高质量 AI 产品的 AI 可观测性平台
+  date: null
+  url: https://www.braintrust.dev/
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 134
+  publisher: Braintrust
+  title: 定价 - Braintrust
+  date: null
+  url: https://www.braintrust.dev/pricing
+  sourceType: primary
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于判断付费意愿和预算线对比的定价证据。
+- id: 135
+  publisher: Braintrust
+  title: 什么是 eval？ - Evals - Braintrust
+  date: '2026-04-20'
+  url: https://www.braintrust.dev/foundations/what-is-an-eval
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 136
+  publisher: Braintrust
+  title: 如何读懂一条 trace - Evals - Braintrust
+  date: '2026-04-20'
+  url: https://www.braintrust.dev/foundations/how-to-read-a-trace
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 137
+  publisher: Braintrust
+  title: 分析生产日志 - Evals - Braintrust
+  date: '2026-04-20'
+  url: https://www.braintrust.dev/foundations/analyzing-production-logs
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 138
+  publisher: Braintrust
+  title: 分析多轮 trace - Evals - Braintrust
+  date: '2026-04-20'
+  url: https://www.braintrust.dev/foundations/analyzing-multi-turn-traces
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 139
+  publisher: Braintrust
+  title: 在线评分 - Evals - Braintrust
+  date: '2026-04-20'
+  url: https://www.braintrust.dev/foundations/online-scoring
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于评估可观测性、事故响应或 Agent 工具竞品/替代方案的证据。
+- id: 140
+  publisher: Braintrust
+  title: eval 改进闭环 - Evals - Braintrust
+  date: '2026-04-20'
+  url: https://www.braintrust.dev/foundations/understanding-the-eval-improvement-loop
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 141
+  publisher: Braintrust
+  title: AI 可观测性的定义 - Braintrust
+  date: null
+  url: https://www.braintrust.dev/encyclopedia/ai-observability
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+- id: 142
+  publisher: Braintrust
+  title: 为你的应用做插桩 - Braintrust
+  date: null
+  url: https://www.braintrust.dev/docs/instrument
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: false
+  oneLineRelevance: 用于证明 tracing、评测、监控或 Agent runtime 埋点能力的技术证据。
+sources:
+- id: 1
+  publisher: TechCrunch
+  title: Coralogix 融资 $200M，押注总得有人来盯 AI agents | TechCrunch
+  date: '2026-06-03'
+  url: https://techcrunch.com/2026/06/03/coralogix-raises-200m-in-race-to-build-the-monitoring-layer-for-ai-agents/
+- id: 2
+  publisher: Calcalist Tech
+  title: Coralogix 获投 $200 million，估值达 $1.6 billion，AI 推动数据量激增 | Ctech
+  date: '2026-06-03'
+  url: https://www.calcalistech.com/ctechnews/article/bkifhk6gmx
+- id: 4
+  publisher: Google Cloud
+  title: Google SREs 如何用 Gemini CLI 处理真实世界故障 | Google Cloud Blog
+  date: null
+  url: https://cloud.google.com/blog/topics/developers-practitioners/how-google-sres-use-gemini-cli-to-solve-real-world-outages
+- id: 6
+  publisher: Google SRE
+  title: Google SRE - 学习 SRE 事故管理与响应
+  date: null
+  url: https://sre.google/resources/practices-and-processes/incident-management-guide/
+- id: 7
+  publisher: Google SRE
+  title: Google SRE - 用无责事后复盘提升系统韧性
+  date: null
+  url: https://sre.google/sre-book/postmortem-culture/
+- id: 10
+  publisher: NIST
+  title: AI 风险管理框架 | NIST
+  date: '2021-07-12'
+  url: https://www.nist.gov/itl/ai-risk-management-framework
+- id: 12
+  publisher: OWASP
+  title: 面向大语言模型应用的 OWASP Top 10 | OWASP Foundation
+  date: null
+  url: https://owasp.org/www-project-top-10-for-large-language-model-applications/
+- id: 14
+  publisher: Microsoft Learn
+  title: 组织范围内 AI agents 的治理与安全 - Cloud Adoption Framework | Microsoft Learn
+  date: null
+  url: https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ai-agents/governance-security-across-organization
+- id: 15
+  publisher: Microsoft Learn
+  title: 在 Microsoft Foundry Models (classic) 中监控 Azure OpenAI - Microsoft Foundry (classic) 门户 | Microsoft Learn
+  date: null
+  url: https://learn.microsoft.com/en-us/azure/foundry-classic/openai/how-to/monitor-openai
+- id: 16
+  publisher: docs.cloud.google.com
+  title: 扩展你的 agents &nbsp;|&nbsp; Gemini Enterprise Agent Platform &nbsp;|&nbsp; Google Cloud Documentation
+  date: null
+  url: https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale
+- id: 17
+  publisher: AWS
+  title: 监控 bedrock-runtime 端点 - Amazon Bedrock
+  date: null
+  url: https://docs.aws.amazon.com/bedrock/latest/userguide/monitoring.html
+- id: 19
+  publisher: MarketsandMarkets
+  title: 到 2028 年，可观测性工具与平台市场规模将达 $4.1 billion
+  date: null
+  url: https://www.marketsandmarkets.com/PressReleases/observability-tools-and-platforms.asp
+- id: 21
+  publisher: Coralogix
+  title: AI 可观测性 - Coralogix
+  date: null
+  url: https://coralogix.com/platform/ai-observability/
+- id: 26
+  publisher: Coralogix
+  title: 为什么你的平均修复时间 (MTTR) 高于应有水平 - Coralogix
+  date: '2021-03-09'
+  url: https://coralogix.com/blog/why-your-mean-time-to-repair-mttr-is-higher-than-it-should-be/
+- id: 30
+  publisher: Coralogix
+  title: Coralogix AI Center 发布：实时 AI 可观测性 - Coralogix
+  date: '2025-03-19'
+  url: https://coralogix.com/blog/introducing-coralogixs-ai-center-real-time-ai-observability/
+- id: 31
+  publisher: Datadog
+  title: Datadog LLM 可观测性 | Datadog
+  date: '2025-03-05'
+  url: https://www.datadoghq.com/product/ai/llm-observability/
+- id: 32
+  publisher: Datadog Docs
+  title: LLM 可观测性
+  date: null
+  url: https://docs.datadoghq.com/llm_observability/
+- id: 33
+  publisher: Datadog
+  title: AI 工程现状 | Datadog
+  date: '2026-04-21'
+  url: https://www.datadoghq.com/state-of-ai-engineering/
+- id: 34
+  publisher: Datadog
+  title: Datadog 事故响应 | Datadog
+  date: '2025-02-10'
+  url: https://www.datadoghq.com/product/incident-response/
+- id: 41
+  publisher: Grafana Labs
+  title: 事故响应与管理 | Grafana Cloud | Grafana Labs
+  date: null
+  url: https://grafana.com/products/cloud/irm/
+- id: 45
+  publisher: PagerDuty
+  title: PagerDuty 事故响应文档
+  date: null
+  url: https://response.pagerduty.com/
+- id: 46
+  publisher: PagerDuty
+  title: 事故管理定价 | PagerDuty
+  date: null
+  url: https://www.pagerduty.com/pricing/incident-management/
+- id: 47
+  publisher: PagerDuty
+  title: 搜索
+  date: null
+  url: https://www.pagerduty.com/platform/aiops/
+- id: 48
+  publisher: PagerDuty
+  title: 运营看板与分析 | PagerDuty
+  date: null
+  url: https://www.pagerduty.com/platform/incident-management/analytics/
+- id: 55
+  publisher: Rootly
+  title: AI 原生事故管理平台 | Rootly
+  date: null
+  url: https://rootly.com/
+- id: 62
+  publisher: incident.io
+  title: 定价 | incident.io
+  date: null
+  url: https://incident.io/pricing
+- id: 64
+  publisher: incident.io
+  title: 用 AI SRE 跑一次事故响应，到底是什么体验 | Blog | incident.io
+  date: null
+  url: https://incident.io/blog/how-it-feels-to-run-an-incident-with-ai-sre
+- id: 65
+  publisher: incident.io
+  title: 用 AI 做 post-mortem，究竟意味着什么？ | Blog | incident.io
+  date: null
+  url: https://incident.io/blog/what-does-using-ai-for-post-mortems-actually-mean
+- id: 66
+  publisher: incident.io
+  title: 如何评估事故管理平台：Rootly 与替代方案的对比框架 | Blog | incident.io
+  date: null
+  url: https://incident.io/blog/evaluate-incident-management-platforms-framework
+- id: 67
+  publisher: incident.io
+  title: PagerDuty 的 MTTR 基准 vs 替代方案：能把处置时间最多砍掉 80% 吗？ | Blog | incident.io
+  date: null
+  url: https://incident.io/blog/pagerduty-mttr-benchmarks-alternatives
+- id: 76
+  publisher: LangChain
+  title: 关于 LangChain：Agent 工程平台
+  date: null
+  url: https://www.langchain.com/about
+- id: 77
+  publisher: LangChain
+  title: LangSmith 套餐与定价
+  date: null
+  url: https://www.langchain.com/pricing
+- id: 78
+  publisher: LangChain
+  title: LangSmith：AI Agent 与 LLM 可观测性平台
+  date: null
+  url: https://www.langchain.com/langsmith/observability
+- id: 79
+  publisher: LangChain
+  title: LangSmith - LLM 与 AI Agent 评测平台：持续改进 agents
+  date: null
+  url: https://www.langchain.com/langsmith/evaluation
+- id: 86
+  publisher: Langfuse
+  title: 定价 - Langfuse
+  date: null
+  url: https://langfuse.com/pricing
+- id: 90
+  publisher: Langfuse
+  title: 监控 - Langfuse
+  date: null
+  url: https://langfuse.com/academy/monitoring
+- id: 94
+  publisher: Langfuse
+  title: 用 Langfuse 做 AI Agent 可观测性、追踪与评测 - Langfuse
+  date: null
+  url: https://langfuse.com/blog/2024-07-ai-agent-observability-with-langfuse
+- id: 99
+  publisher: Arize AI
+  title: 面向 AI Agents 与应用的 LLM 可观测性 - Arize AI
+  date: '2025-07-18'
+  url: https://arize.com/blog/llm-observability-for-ai-agents-and-applications/
+- id: 100
+  publisher: Arize AI
+  title: 客户端评测 (SDK) - Phoenix
+  date: null
+  url: https://arize.com/docs/phoenix/evaluation/how-to-evals
+- id: 102
+  publisher: GitHub
+  title: GitHub - Arize-ai/openinference：面向 AI 可观测性的 OpenTelemetry 插桩 · GitHub
+  date: null
+  url: https://github.com/Arize-ai/openinference
