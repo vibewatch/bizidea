@@ -1,0 +1,574 @@
+slug: home-robot-independence-ops
+date: "2026-06-05"
+currency: USD
+modelStartMonth: 2026-06
+assumptions:
+  - id: A1
+    name: 模型起始月份
+    value: 2026-06
+    unit: YYYY-MM
+    source: "[BP date] 从商业计划的月份起算。"
+  - id: A2
+    name: pre-seed 交割后的期初现金
+    value: "2700"
+    unit: USDK
+    source: >-
+      [BP fundingAsk targetFundingRangeUsd $2–4M] 基础情景按 $2.7M 交割建模，对应 Q4Y2 里程碑外加 6 个月缓冲。
+  - id: A3
+    name: 预测客户单位
+    value: 处于管理中的活跃辅助型家用部署机器人
+    unit: 定义
+    source: >-
+      [BP businessModel.unitOfValue]、[Research market.som] 都按活跃机器人计，因为定价和 SOM 口径都以机器人为单位。
+  - id: A4
+    name: M1 起始付费活跃机器人
+    value: "0"
+    unit: 数量
+    source: "[BP milestones 0–12 months] 公司从零收入起步。"
+  - id: A5
+    name: Y1 每月净新增机器人
+    value: "[0, 0, 0, 0, 0, 10, 0, 8, 4, 0, 11, 0]"
+    unit: 数量
+    source: >-
+      [BP milestones sign 3 paid pilots]、[BP investorMemo.firstCustomer initialContract 10–30 homes] 建模为 3 批群组启动，加 1 次早期扩容。
+  - id: A6
+    name: Y2 机器人爬坡
+    value: Q1Y2 60、Q2Y2 90、Q3Y2 125、Q4Y2 165 台活跃机器人
+    unit: 数量
+    source: >-
+      [BP milestones 12–24 months]、[BP strategicChoices.sequencingRationale] 假设 2 个试点转正，再稳步扩群组，然后才扩大渠道。
+  - id: A7
+    name: Y3 机器人爬坡
+    value: Q1Y3 205、Q2Y3 240、Q3Y3 270、Q4Y3 300 台活跃机器人
+    unit: 数量
+    source: >-
+      [BP milestones 24–36 months]、[Research market.som 300 台活跃机器人] 基础情景只做到研究里的第 3 年 SOM 退出目标，不再往上抬。
+  - id: A8
+    name: 已实现收入节奏
+    value: >-
+      Y1 试点月份折算后，每台活跃机器人年化收入约为 $8.0K–$9.5K，因为一次性启用费叠加在持续软件收入之上；Y2 各季度实际 ARPU 依次为 $7.0K、$7.2K、$7.6K、$8.0K；Y3 维持 $8.0K。
+    unit: USDK per active robot per year
+    source: >-
+      [BP gtm.pricing]、[BP investorMemo.firstCustomer.initialContract]、[Research market.bottomUpSizingDrivers blended annual revenue $8,000]，再加启用费收入口径假设。
+  - id: A9
+    name: 稳态 ARPU
+    value: "8.0"
+    unit: USDK per active robot per year
+    source: >-
+      [BP market TAM/SAM/SOM]、[Research market.bottomUpSizingDrivers blended annual revenue per active robot $8,000]。
+  - id: A10
+    name: 毛利率爬坡
+    value: Y1 55%-62%; Y2 64%-68%; Y3 70%
+    unit: 百分比
+    source: >-
+      [BP businessModel.targetGrossMarginPct 70]、[BP risks on services heaviness] 毛利率起步低于目标，因为部署和支持仍偏手工；到 Y3 才爬到目标。
+  - id: A11
+    name: 全成本薪资区间
+    value: >-
+      Founder/Exec 180；Engineering 160；Clinical/Implementation 145；Customer Success 110；Sales/Partnerships 160；G&A 90
+    unit: USDK per FTE per year
+    source: >-
+      [BP team]、[BP experimentRoadmap owners]，再加美国 pre-seed 团队卖给临床运营场景的创业财务经验值。
+  - id: A12
+    name: 招聘节奏
+    value: >-
+      M1 创始人、创始工程师、临床工作流负责人；M4 客户成功 / 现场运营；M7 解决方案工程师；M10 企业 GTM 负责人；M16 第二位实施人员；M21 财务 / 运营；M29 第三位工程师；M31 第二位销售。
+    unit: 时间安排
+    source: >-
+      [BP team startTiming]、[BP strategicChoices.sequencingRationale]，并按第一批验证结果后招聘放缓的节奏做平滑处理。
+  - id: A13
+    name: 非人力运营费用爬坡
+    value: >-
+      Y1 月度非人力 opex 从 12K 升到 27K；Y2 各季度从 89K 升到 123K；Y3 各季度从 135K 升到 168K。
+    unit: USDK
+    source: >-
+      [BP operations]、[Research regulatoryLandscape]，再加偏实施型动作下差旅、云、法务、培训和 OEM 集成成本的创业财务经验值。
+  - id: A14
+    name: 用于单位经济模型的月流失率
+    value: "1.8"
+    unit: 百分比
+    source: >-
+      [BP killCriteria 60%+ paid-pilot to production]、[Research sensitivityCases reimbursement stays unclear]，经验口径：部署有粘性，但预算仍较敏感。
+  - id: A15
+    name: 每台活跃机器人的全成本 CAC
+    value: "2.5"
+    unit: USDK
+    source: >-
+      [BP gtm.funnelTargets]、[BP investorMemo.firstCustomer.initialContract]，经验假设为单批群组获客成本约 $50K，摊到一个 20 台机器人的初始项目上。
+  - id: A16
+    name: 机器人数量背后的账户结构
+    value: >-
+      Y1 大约 3 个付费试点；到 Q4Y2 约 6–8 个服务方项目；到 Q4Y3 约 10–15 个服务方项目，平均每个项目约 20 台活跃机器人。
+    unit: 口径
+    source: "[BP milestones]、[Research market.som] 让机器人数量与服务方项目里程碑保持一致。"
+  - id: A17
+    name: 现金转换简化口径
+    value: 期末现金 = 期初现金 + 累计 EBITDA
+    unit: 公式
+    source: >-
+      创业财务经验口径：这层轻资产软件模型里，不单列债务、capex 或营运资金项目。
+  - id: A18
+    name: 融资规模规则
+    value: 融到足够跑到 Q4Y2 可复制性里程碑的资金，并额外留 6 个月缓冲
+    unit: 口径
+    source: >-
+      开发指令 + [BP fundingAsk.runwayMonths 18] 以及 [BP investorMemo.verdict.nextDiligence]。
+headcount:
+  - role: 创始人 / 高管
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 工程
+    q1y1: 1
+    q2y1: 1
+    q3y1: 2
+    q4y1: 2
+    q4y2: 2
+    q4y3: 3
+  - role: 临床 / 实施
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 2
+    q4y3: 2
+  - role: 客户成功 / 现场运营
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 销售 / 合作
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 1
+    q4y3: 2
+  - role: 行政
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 5
+  q4y1: 6
+  q4y2: 8
+  q4y3: 10
+headcountAnnualizedPayrollK:
+  q1y1: 485
+  q2y1: 595
+  q3y1: 755
+  q4y1: 915
+  q4y2: 1150
+  q4y3: 1470
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0
+    cogsK: 0
+    grossProfitK: 0
+    salesMarketingK: 2
+    researchDevelopmentK: 6
+    generalAdministrativeK: 4
+    salaryK: 40.4
+    opexK: 52.4
+    ebitdaK: -52.4
+    cashEopK: 2647.6
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0
+    cogsK: 0
+    grossProfitK: 0
+    salesMarketingK: 2
+    researchDevelopmentK: 6
+    generalAdministrativeK: 4
+    salaryK: 40.4
+    opexK: 52.4
+    ebitdaK: -52.4
+    cashEopK: 2595.2
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0
+    cogsK: 0
+    grossProfitK: 0
+    salesMarketingK: 2
+    researchDevelopmentK: 6
+    generalAdministrativeK: 4
+    salaryK: 40.4
+    opexK: 52.4
+    ebitdaK: -52.4
+    cashEopK: 2542.8
+  - month: M4
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0
+    cogsK: 0
+    grossProfitK: 0
+    salesMarketingK: 3
+    researchDevelopmentK: 7
+    generalAdministrativeK: 4
+    salaryK: 49.6
+    opexK: 63.6
+    ebitdaK: -63.6
+    cashEopK: 2479.2
+  - month: M5
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0
+    cogsK: 0
+    grossProfitK: 0
+    salesMarketingK: 3
+    researchDevelopmentK: 7
+    generalAdministrativeK: 4
+    salaryK: 49.6
+    opexK: 63.6
+    ebitdaK: -63.6
+    cashEopK: 2415.6
+  - month: M6
+    customersEop: 10
+    newCustomers: 10
+    revenueK: 3.3
+    cogsK: 1.5
+    grossProfitK: 1.8
+    salesMarketingK: 4
+    researchDevelopmentK: 7
+    generalAdministrativeK: 4
+    salaryK: 49.6
+    opexK: 64.6
+    ebitdaK: -62.8
+    cashEopK: 2352.8
+  - month: M7
+    customersEop: 10
+    newCustomers: 0
+    revenueK: 6.7
+    cogsK: 3
+    grossProfitK: 3.7
+    salesMarketingK: 5
+    researchDevelopmentK: 8
+    generalAdministrativeK: 5
+    salaryK: 62.9
+    opexK: 80.9
+    ebitdaK: -77.2
+    cashEopK: 2275.6
+  - month: M8
+    customersEop: 18
+    newCustomers: 8
+    revenueK: 9.9
+    cogsK: 4.3
+    grossProfitK: 5.6
+    salesMarketingK: 6
+    researchDevelopmentK: 8
+    generalAdministrativeK: 5
+    salaryK: 62.9
+    opexK: 81.9
+    ebitdaK: -76.3
+    cashEopK: 2199.3
+  - month: M9
+    customersEop: 22
+    newCustomers: 4
+    revenueK: 15
+    cogsK: 6
+    grossProfitK: 9
+    salesMarketingK: 8
+    researchDevelopmentK: 8
+    generalAdministrativeK: 5
+    salaryK: 62.9
+    opexK: 83.9
+    ebitdaK: -74.9
+    cashEopK: 2124.4
+  - month: M10
+    customersEop: 22
+    newCustomers: 0
+    revenueK: 16.5
+    cogsK: 6.6
+    grossProfitK: 9.9
+    salesMarketingK: 9
+    researchDevelopmentK: 9
+    generalAdministrativeK: 6
+    salaryK: 76.3
+    opexK: 100.3
+    ebitdaK: -90.4
+    cashEopK: 2034
+  - month: M11
+    customersEop: 33
+    newCustomers: 11
+    revenueK: 21.8
+    cogsK: 8.3
+    grossProfitK: 13.5
+    salesMarketingK: 10
+    researchDevelopmentK: 9
+    generalAdministrativeK: 6
+    salaryK: 76.3
+    opexK: 101.3
+    ebitdaK: -87.8
+    cashEopK: 1946.2
+  - month: M12
+    customersEop: 33
+    newCustomers: 0
+    revenueK: 26.1
+    cogsK: 9.9
+    grossProfitK: 16.2
+    salesMarketingK: 11
+    researchDevelopmentK: 10
+    generalAdministrativeK: 6
+    salaryK: 76.3
+    opexK: 103.3
+    ebitdaK: -87.1
+    cashEopK: 1859.1
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 60
+    revenueK: 81.4
+    cogsK: 29.3
+    grossProfitK: 52.1
+    salesMarketingK: 38
+    researchDevelopmentK: 30
+    generalAdministrativeK: 21
+    salaryK: 228.8
+    opexK: 317.8
+    ebitdaK: -265.7
+    cashEopK: 1593.4
+  - quarter: Q2Y2
+    customersEop: 90
+    revenueK: 135
+    cogsK: 45.9
+    grossProfitK: 89.1
+    salesMarketingK: 44
+    researchDevelopmentK: 33
+    generalAdministrativeK: 24
+    salaryK: 265
+    opexK: 366
+    ebitdaK: -276.9
+    cashEopK: 1316.5
+  - quarter: Q3Y2
+    customersEop: 125
+    revenueK: 204.3
+    cogsK: 67.4
+    grossProfitK: 136.9
+    salesMarketingK: 48
+    researchDevelopmentK: 36
+    generalAdministrativeK: 27
+    salaryK: 272.5
+    opexK: 383.5
+    ebitdaK: -246.6
+    cashEopK: 1069.9
+  - quarter: Q4Y2
+    customersEop: 165
+    revenueK: 290
+    cogsK: 92.8
+    grossProfitK: 197.2
+    salesMarketingK: 54
+    researchDevelopmentK: 39
+    generalAdministrativeK: 30
+    salaryK: 287.5
+    opexK: 410.5
+    ebitdaK: -213.3
+    cashEopK: 856.6
+  - quarter: Q1Y3
+    customersEop: 205
+    revenueK: 370
+    cogsK: 111
+    grossProfitK: 259
+    salesMarketingK: 60
+    researchDevelopmentK: 42
+    generalAdministrativeK: 33
+    salaryK: 287.5
+    opexK: 422.5
+    ebitdaK: -163.5
+    cashEopK: 693.1
+  - quarter: Q2Y3
+    customersEop: 240
+    revenueK: 445
+    cogsK: 133.5
+    grossProfitK: 311.5
+    salesMarketingK: 66
+    researchDevelopmentK: 45
+    generalAdministrativeK: 35
+    salaryK: 314.2
+    opexK: 460.2
+    ebitdaK: -148.7
+    cashEopK: 544.4
+  - quarter: Q3Y3
+    customersEop: 270
+    revenueK: 510
+    cogsK: 153
+    grossProfitK: 357
+    salesMarketingK: 72
+    researchDevelopmentK: 48
+    generalAdministrativeK: 37
+    salaryK: 367.5
+    opexK: 524.5
+    ebitdaK: -167.5
+    cashEopK: 376.9
+  - quarter: Q4Y3
+    customersEop: 300
+    revenueK: 570
+    cogsK: 171
+    grossProfitK: 399
+    salesMarketingK: 78
+    researchDevelopmentK: 51
+    generalAdministrativeK: 39
+    salaryK: 367.5
+    opexK: 535.5
+    ebitdaK: -136.5
+    cashEopK: 240.4
+totals:
+  y1:
+    revenueK: 99.3
+    grossProfitK: 59.7
+    opexK: 900.6
+    ebitdaK: -840.9
+    cashEopK: 1859.1
+  y2:
+    revenueK: 710.7
+    grossProfitK: 475.3
+    opexK: 1477.8
+    ebitdaK: -1002.5
+    cashEopK: 856.6
+  y3:
+    revenueK: 1895
+    grossProfitK: 1326.5
+    opexK: 1942.7
+    ebitdaK: -616.2
+    cashEopK: 240.4
+unitEconomics:
+  arpuAnnualK: 8
+  grossMarginPct: 70
+  cacK: 2.5
+  monthlyChurnPct: 1.8
+  avgCustomerLifeMonths: 55.6
+  ltvK: 25.9
+  ltvCacRatio: 10.4
+  cacPaybackMonths: 5.4
+fundingAsk:
+  round: pre-seed
+  amountM: 2.7
+  runwayMonths: 24
+  milestone: >-
+    在 6–8 个服务方项目中做到约 165 台活跃机器人，至少把 2 个试点转成年度生产合同，并验证出 1 条 OEM 或集成商联合销售路径，同时仍保留 6 个月现金缓冲。
+  useOfFunds:
+    - bucket: 工程
+      amountUsd: 1100000
+      percentage: 40.7
+    - bucket: GTM
+      amountUsd: 650000
+      percentage: 24.1
+    - bucket: 行政
+      amountUsd: 250000
+      percentage: 9.3
+    - bucket: 缓冲（6 个月）
+      amountUsd: 700000
+      percentage: 25.9
+scenarios:
+  downside:
+    description: >-
+      硬件部署节奏和服务方预算审批落地更晚，公司会低于研究中的 SOM 路径，并接近需要过桥轮融资。
+    y3RevenueK: 1515
+    y3EbitdaK: -845
+    cashLowPointK: -110
+    keyAssumptionChanges:
+      - Q4Y2 只做到 130 台活跃机器人，Q4Y3 只做到 220 台，而不是 300 台。
+      - 到 Y3 时实际 ARPU 只能爬到 $7.5K，因为重启用费结构的试点转正更慢。
+      - 毛利率最高只能到约 67%，因为支持和实施依然偏手工。
+  base:
+    description: >-
+      Y1 的 3 个付费试点到 Q4Y2 扩成 6–8 个服务方项目，到 Q4Y3 做到 300 台活跃机器人，与商业计划中的 SOM 路径和稳态定价一致。
+    y3RevenueK: 1895
+    y3EbitdaK: -616.2
+    cashLowPointK: 240.4
+    keyAssumptionChanges:
+      - Q4Y2 达到 165 台活跃机器人，Q4Y3 达到 300 台，和研究中的 SOM 退出情景一致。
+      - 一旦 启用费收入开始收敛、持续软件收入占主导，实际定价就会回到每年 $8K 的混合收入水平。
+      - 因为任务包模板和遥测集成开始能跨家庭复用，毛利率在 Y3 爬到 70% 目标。
+  upside:
+    description: >-
+      试点转正持续高于目标，而且 OEM 联合销售更早打开，因此可以在不明显增加人头的情况下更快启动新群组。
+    y3RevenueK: 2205
+    y3EbitdaK: -260
+    cashLowPointK: 520
+    keyAssumptionChanges:
+      - Q4Y3 期末做到 340 台活跃机器人，而不是 300 台。
+      - 因为高级支持和结果报告挂得更稳，实际 ARPU 退出时接近 $8.4K。
+      - 启用流程更依赖模板、现场运营更轻，毛利率提升到 72%。
+sensitivity:
+  - variable: ARPU
+    downsideCase: 稳态 ARPU 为 $7.2K
+    baseCase: 稳态 ARPU 为 $8.0K
+    upsideCase: 稳态 ARPU 为 $8.4K
+    y3RevenueImpactK: -190
+    cashImpactK: -133
+  - variable: CAC
+    downsideCase: 每台活跃机器人 $3.0K
+    baseCase: 每台活跃机器人 $2.5K
+    upsideCase: 每台活跃机器人 $2.0K
+    y3RevenueImpactK: 0
+    cashImpactK: -135
+  - variable: 流失率
+    downsideCase: 月流失率 2.5%
+    baseCase: 月流失率 1.8%
+    upsideCase: 月流失率 1.2%
+    y3RevenueImpactK: -85
+    cashImpactK: -110
+  - variable: 销售周期
+    downsideCase: 试点到生产拉长到 9–12 个月
+    baseCase: 试点到生产约 6–9 个月成交
+    upsideCase: 试点到生产约 4–6 个月成交
+    y3RevenueImpactK: -320
+    cashImpactK: -260
+  - variable: 毛利率
+    downsideCase: 退出毛利率 67%
+    baseCase: 退出毛利率 70%
+    upsideCase: 退出毛利率 72%
+    y3RevenueImpactK: 0
+    cashImpactK: -76
+  - variable: 招聘节奏
+    downsideCase: Y2 额外增加 1 名工程师和 1 名实施人员
+    baseCase: 按 headcount 表中的精简招聘计划执行
+    upsideCase: 第三名工程师推迟到 Q2Y3 之后再招
+    y3RevenueImpactK: 0
+    cashImpactK: -305
+modelDiagram:
+  title: 单位经济模型流转
+  mermaid: |-
+    flowchart LR
+      Leads[Provider cohort leads] --> Pilots[Paid pilot cohorts]
+      Pilots --> Robots[Active robots under management]
+      Robots --> Revenue[Onboarding + recurring software revenue]
+      Revenue --> GrossProfit[Gross profit]
+      GrossProfit --> Cash[Cash runway]
+modelSanity:
+  - checkName: 收入引擎
+    finding: >-
+      基础情景下，收入增长来自活跃机器人从 Y1 期末的 33 台爬到 Q4Y3 的 300 台，同时稳态单机收入回到研究中的每台 $8K 水平。
+  - checkName: 必须做对的事
+    finding: >-
+      公司必须让任务包部署足够模板化，才能在把试点转成年化生产群组的同时，跑到 70% 毛利率目标。
+  - checkName: 模型何时会失灵
+    finding: >-
+      如果服务方预算审批或 OEM 遥测接入把销售周期拖向下行情景，在还没跑到 Y3 SOM 目标前，现金就会先掉到 0 以下。
+  - checkName: 下一轮融资 proof
+    finding: >-
+      到 Q4Y2 能证明约 165 台活跃机器人、2 个年度转正，以及 1 条可复制的伙伴驱动扩张路径，下一轮融资才站得住。
+sanityChecks:
+  ruleOf40: >-
+    Y3 增长 166.6% + EBITDA 利润率 -32.5% = 134.1%，方向上说明增长很强，但效率仍处在规模化前阶段。
+  burnMultiple: >-
+    随着活跃机器人增长带来的新增 ARR 开始快过经营现金消耗，burn multiple 从 Y2 的约 0.9x 改善到 Y3 的约 0.6x。
+  revenuePerFte: >-
+    按 10 名期末 FTE 计算，Y3 每人创造收入约 $189.5K（低于成熟 SaaS 基准，但符合一个实施占比较高的部署工作流业务）。
+  flags:
+    - 这套模型只有到 Y3 期末才摸到研究中的 300 台机器人 SOM，所以 FY2028 已确认收入仍低于 SOM 算出来的 $2.4M 退出 ARR。
+    - 每名期末 FTE 对应收入仍低于典型成熟 SaaS 基准，因为临床实施和现场支持还在吃掉真实人力。
+    - 源材料里预算归属仍没定，所以销售周期和 ARPU 的敏感性，比 headcount 计划更脆弱。
