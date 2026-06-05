@@ -1,0 +1,216 @@
+slug: workspace-shard-control
+date: '2026-06-05'
+executiveSummary: Workspace Shard Control 面向那些会为每个客户工作区、环境或代理工作流创建一个 Postgres 数据库或分支的平台团队，卖的是一层与云厂商无关的控制平面。第一个买家会是正在逼近企业级部署、且已经采用 Supabase 或 Neon 式开通方式的 AI 原生 SaaS 公司的平台工程负责人或基础设施 VP。产品眼下最重要的工作，是判断某个工作区该继续共享、迁到专用实例，还是升到分布式拓扑，然后以可审计、低停机风险的方式把这次升迁跑完。这个市场切口虽窄但确实存在：Supabase 披露数据库创建量同比增长 600%，并表示多数新数据库由 AI 工具创建，而平台团队本来就给每项目基础设施做预算。以 Supabase 和 Neon 为中心的初始 SAM 只有约 $28.8M，所以公司必须继续扩到跨云策略、合规和成本优化，才撑得起 venture 叙事。GTM 不该从大规模自助采用起步，而应从企业 onboarding、延迟事故或安全审查触发的“带监督、先给建议”的部署开始。最大的战略风险，是 Supabase、AWS 或 Azure 的原生功能追赶；这也让“与云厂商无关”以及“工作流级策略”成为最核心的差异化来源。因此路线图要先卡住 Supabase-first 的插入点，证明升迁确实能减少迁移人力和事故，再谈更广的多云扩展。
+problem:
+- AI 原生 SaaS 团队现在创建的 Postgres 工作区数量，已经多到人工 DBA 审核、Terraform 改动和云厂商控制台操作再也守不住租户、迁移与 HA 决策的一致性。
+- 总会有少数客户工作区变热、或被合规要求卡住，平台团队必须在不停机、不踩合规坑、也不单开定制迁移项目的前提下，把它们隔离出去。
+solution:
+- 把控制平面插进开通路径里，让每个新工作区从第一天起就带上租户类别、敏感度、预期负载画像和明确的升迁策略。
+- 持续监控负载与风险信号，给出建议或直接执行下一次拓扑迁移，并把预检、零停机升迁、回滚和审计轨迹打包成一条工作流。
+whyWeWin:
+- 现有数据库厂商卖的是底层能力，但买家真正没被解决的问题，是工作区级别“什么时候继续共享、什么时候隔离、什么时候上分片”的决策和执行逻辑。
+- 跨云遥测、策略图和切换历史会越积越厚，最后沉淀成比再卖一个托管 Postgres SKU 更难复制的 recommendation 与 execution 层。
+strategicChoices:
+  beachhead: 滩头市场是 Series B-C 的 AI 原生垂直 SaaS 公司：它们使用 Supabase for Platforms 或类似的 API-first Postgres 开通方式，每月创建 300-5,000 个客户工作区，正准备迎来首个大型企业或受监管部署。
+  wedgeRationale: 高价值租户的工作区升迁，本身就是一条有预算、和事故直接绑定、责任人也清晰的工作流；如果一开始就讲“大而全的数据库舰队管理”，紧迫感会在太多场景里被稀释。
+  sequencingRationale: 公司应该先在 Supabase 为主的资产里做 recommendation 模式和带监督执行，因为现阶段最重要的是拿到信任、卡住开通路径，而不是一上来支持所有后端。等它证明自己能缩短隔离时间、减少切换后事故，再接 Neon、专用实例目标，最后扩到混合 Postgres 舰队上的策略、合规和成本优化。
+  notYet:
+  - 大范围的 MySQL 或非 Postgres 数据库编排
+  - 面向 SMB 的完整自助打法
+  - 首个版本就做完全自主、无人监督的切换
+  - 深度分析型数仓或可观测性替代品
+market:
+  tam: $150.0M：估算 TAM，假设全球 2,500 个高规模 Postgres 平台团队，每年在控制平面软件上花约 $60k
+  sam: $28.8M：估算 SAM，假设 600 家以 Supabase 和 Neon 为中心的 AI 原生 SaaS builder，年 ACV 约 $48k
+  som: $3.0M：估算第 3 年 SOM，假设 60 个客户、年 ACV 约 $50k
+  segments:
+  - 在 Supabase 或 Neon 式技术栈上运行“每工作区一个数据库”架构的 AI 原生垂直 SaaS 平台团队
+  - 必须把企业级或受监管租户迁到专用或分布式 Postgres 目标上的 B2B 软件公司基础设施负责人
+  buyingProcess: 采购通常由企业客户 onboarding、一次延迟事故或安全审查触发，随后由平台工程牵头、CTO 背书，并由安全或合规给出最终放行。早期交易更可能以围绕某次高风险租户迁移的带监督试点开始，而不是直接被定成平台标准。
+product:
+  mvp: 先交付一个 Supabase-first 控制平面：在开通时捕捉工作区元数据，根据负载和策略信号计算升迁分数，并支持 recommendation 模式，以及带回滚和审计日志的受监督升迁，目标是专用 Supabase 项目或托管 Postgres 实例。
+  sixMonth: 6 个月内交付 Supabase 集成、recommendation 仪表盘、升迁 runbook、预检、审计轨迹，以及面向首批共创客户的带监督执行。
+  twelveMonth: 12 个月内补上 Neon 和专用实例目标、面向私有网络与受监管负载的更强策略模板，以及能改进升迁时机判断的 benchmark 数据。
+  twentyFourMonth: 24 个月内扩成与云厂商无关的生命周期治理层，支持 Multigres、Aurora Limitless、基于 Citus 的集群等分布式拓扑目标，并叠加成本与合规优化层。
+  keyBets:
+  - 买家会先接受 recommendation-first 的部署方式，并愿意开放开通路径访问权限
+  - 租户遥测足够准确，可以把升迁时机建模到明显减少人工审核
+  - 跨云策略与审计工作流的重要性，会高于任何单一后端功能集
+  - 只要能解决真实的企业迁移问题，共创客户会接受一个切口很窄的 Supabase-first 产品
+  - 切换执行数据会持续提升建议质量，并随着时间长出切换成本
+gtm:
+  wedge: 卖的是一套带监督的工作区升迁控制平面，帮平台团队比内部脚本更快、更稳地隔离首批发热或受监管租户。
+  channels:
+  - 在企业 onboarding 或事故触发后，由创始人直接卖给平台工程负责人、基础设施 VP 和 CTO
+  - 通过 Supabase、Neon 生态集成、模板和技术内容切入 AI builder 平台团队
+  - 与云数据库咨询方和偏合规的 Postgres 专家合作，服务受监管账户
+  funnelTargets: 线索到合格试点 20-30%，合格试点到付费共创客户 50%+，付费试点到年度生产合同 60%+，首个生产客户在 6 个月内把第二个租户升迁上来 70%+
+  pricing: 按管理中的活跃数据库收年度基础设施软件订阅费，目标定价是买家现有 Postgres 底座支出的 5-15% 软件叠加层，再加上带监督自动升迁事件的高阶服务费。首批试点应落在 $20k-$40k，等控制平面进入生产工作流后，再转成约 $48k-$60k 的年合同。
+businessModel:
+  revenueStreams:
+  - 按管理中的活跃数据库或工作区收年费
+  - 对带监督升迁或零停机迁移事件收取高阶服务费
+  - 只在初始策略配置和第一次切换时提供有限实施服务
+  unitOfValue: 带明确升迁策略和遥测覆盖的受管工作区数据库
+  targetGrossMarginPct: 78
+  expansionLevers:
+  - 从仅支持 Supabase，扩到混合的 Supabase、Neon 和专用 Postgres 资产
+  - 增加合规策略包、私有网络工作流和 BYO-cloud 部署选项
+  - 把累计切换遥测沉淀成高级 recommendation 模型和 benchmark 洞察并收费
+  - 随着客户在平台里标准化更多租户类别和升迁目标，提升钱包份额
+strategyMap:
+  northStarMetric: 在客户无感知停机的前提下，被成功升迁或隔离的高价值工作区数量
+  inputMetrics:
+  - 开通时已经附带策略元数据的新工作区占比
+  - 从风险信号出现到升迁方案获批的时间
+  - 试点转生产的转化率
+  - 切换后 14 天内的事故率
+  - 每个客户支持的云厂商或拓扑目标数量
+  moatsToBuild:
+  - 跨云的升迁触发、切换时长和回滚率数据集
+  - 可复用的租户隔离、合规与网络要求策略图
+  - 深度卡进开通 API 和 runbook 里的工作流黏性
+  killCriteria:
+  - 前 10 个共创客户里，付费试点转化少于 3 个
+  - 6 个月后，recommendation 分数仍无法以可接受精度预测需要升迁的候选对象
+  - 在公司证明中立价值之前，云厂商就已把原生工作区升迁做得足够傻瓜化
+  - 安全审查持续要求公司无法经济支持的部署模型
+  mermaid: "flowchart LR\n  Wedge[Supabase-first workspace promotion] --> MVP[Recommendation plus supervised execution]\n  MVP --> Proof[Faster tenant isolation with fewer incidents]\n  Proof --> Expansion[Multi-provider policy and compliance control plane]\n"
+investorMemo:
+  verdict:
+    call: 观察
+    conviction: 工作流痛点很强、插入点也可信，但初始切口偏窄，而且原生功能追赶风险高。
+    whyBelieve: 公司瞄准的是由代理驱动数据库膨胀带来的真实运维瓶颈，而且问题直接连着现有基础设施预算和企业迁移痛点。
+    whyDoubt: 切口市场规模估算不大，替代方案又强；如果与云厂商无关的策略层没有变得足够刚需，Supabase 这类厂商可能会把大量执行层能力吃掉。
+    nextDiligence: 要先和共创客户确认：recommendation-first 部署是否真能把隔离时间缩短到足以支撑 $48k-$60k 年合同，然后再看云厂商是否会在那之前补齐功能。
+  firstCustomer:
+    title: 正在逼近企业级上线的 AI 原生垂直 SaaS 公司平台工程团队
+    profile: 一家 Series B-C 软件公司，用 Supabase for Platforms 或类似的 API 驱动 Postgres 开通方式创建专属客户工作区，现在正面对第一个 Fortune 500 客户或受监管部署。
+    trigger: 大租户、安全审查或延迟事故会暴露出：一个或多个工作区已经不能继续留在默认单实例配置上。
+    buyer: 平台工程负责人或基础设施 VP
+    initialContract: 先签一份 $20k-$40k 的带监督试点，围绕一次高风险租户隔离项目交付；等团队在生产环境里管理更广的一组工作区后，再转成 $48k-$60k 的年度订阅。
+  mustBeTrue:
+  - 至少 30% 的合格线索已经管理了足够多的工作区数据库，人工升迁审核确实痛到影响运作
+  - recommendation-first 试点能把从风险信号到升迁方案获批的时间，相比现有 runbook 至少砍掉 50%
+  - 一半以上的付费试点能在 6 个月内转成年化生产合同
+  - 买家愿意开放足够的 API 和数据库访问，让产品做带监督执行，而不是只能落回本地专业服务
+  - 即便 Supabase 等厂商继续补原生扩容，与云厂商无关的策略与审计工作流仍然有价值
+  diligenceQuestions:
+  - 到底要到多少工作区、多少迁移频次，或多高的事故率，买家才会把它当成有预算的采购，而不是脚本项目？
+  - 早期买家更看重 Supabase-first 的深度，还是要立即横跨 Supabase、Neon 和专用 Postgres 目标？
+  - 第一年合同里，真正的经常性软件收入和实施/迁移服务分别占多少？
+  - 哪些遥测信号最能预测必须升迁，又不会制造太多误报？
+  - 这个工作流里，安全审查有多频繁会要求 BYO cloud 或私有部署？
+operatingAssumptions:
+- assumption: 买家会先接受 recommendation 模式，再逐步信任完全自动化。
+  basis: research.yaml
+  validationTest: 跑 3 个共创客户试点，对比仅有建议的告警和带监督执行，跟踪接受率以及隔离耗时。
+  decisionImpact: 如果不成立，公司就得更早投入高触达服务和更慢的自动化 rollout，烧钱更快、软件杠杆更弱。
+- assumption: Supabase-first 的深度足以在扩展目标之前拿下前 5-10 个客户。
+  basis: idea.yaml
+  validationTest: 跟踪前 10 个合格机会的云厂商组合，确认至少 60% 可以从 Supabase-only 集成起步。
+  decisionImpact: 如果不成立，路线图就得提前加速 Neon 和专用实例支持，牺牲首个工作流的打磨深度。
+- assumption: 只要能显著降低迁移人力和事故风险，现有数据库支出上再叠 5-15% 软件层，买家是能接受的。
+  basis: research.yaml
+  validationTest: 在 10 次 discovery call 里测试定价，并拿到至少 3 份围绕真实迁移问题的 $20k-$40k 试点 LOI。
+  decisionImpact: 如果不成立，公司就得下调 ACV 预期，或者加重服务型包装，venture 逻辑会变弱。
+- assumption: 可以用负载、连接、维护和策略信号把升迁时机建模到足够可信。
+  basis: 创始团队判断
+  validationTest: 在试点里测 recommendation 的 precision 和 recall，只有达到可接受精度后才放开更大范围自动化。
+  decisionImpact: 如果不成立，产品就会退化为给人工决策者用的工作流软件，而不是自动化层，差异化也会变弱。
+- assumption: 对相当一部分潜在线索来说，安全团队会允许托管式控制平面访问。
+  basis: research.yaml
+  validationTest: 记录前 10 次企业安全审查里的部署异议，确认对多数目标账户而言，托管式或私网连接的 SaaS 是可接受的。
+  decisionImpact: 如果不成立，公司就得更早支持 BYO-cloud 或客户自托管部署，实施成本上升，销售周期也会拉长。
+experimentRoadmap:
+- horizon: 0-90 天
+  experiment: 访谈 12 个使用 Supabase 或 Neon 的平台团队，了解工作区数量、迁移频率和当前升迁 runbook。
+  hypothesis: 只要团队管理的工作区多到人工审核跟不上，这个痛点就会值得单独拨预算。
+  successMetric: 至少 8 个团队能讲出最近一次升迁或隔离事件，并明确指出运维成本或事故暴露。
+  owner: 创始人 CEO
+- horizon: 0-90 天
+  experiment: 在开通路径里做一个 Supabase-first 的元数据采集与 recommendation 原型。
+  hypothesis: 只要对现有工作流干扰足够小，团队愿意安装一个以读取为主的控制平面组件。
+  successMetric: 3 个共创客户在 30 天内完成集成，并回传真实工作区遥测。
+  owner: 创始工程师
+- horizon: 90-180 天
+  experiment: 给前 3 个被升迁的工作区跑带监督切换，配上审计日志、回滚检查和迁移后复盘。
+  hypothesis: 带监督执行有机会把迁移耗时和事故风险压到足以支撑试点付费。
+  successMetric: 3 次切换都在客户无感知停机的前提下完成，且切换后事故率低于现有基线。
+  owner: 创始人 CTO
+- horizon: 90-180 天
+  experiment: 围绕年度订阅加升迁事件收费，与共创客户一起测试定价和包装。
+  hypothesis: 相比纯服务费，买家更偏好经常性基础设施软件定价。
+  successMetric: 至少拿下 3 个 $20k-$40k 的付费试点，并记录买家愿意转成 $48k-$60k 年合同。
+  owner: 创始人 CEO
+- horizon: 180-365 天
+  experiment: 新增一个次级目标，如 Neon 或专用托管 Postgres，并测试多云策略工作流。
+  hypothesis: 与云厂商无关的中立性是扩张所必需的，但可以放在 Supabase 跑通之后。
+  successMetric: 两家客户采用第二个目标后端，并明确把策略可迁移性作为扩大支出的原因。
+  owner: 产品负责人
+operations:
+- 维护一份控制平面事件日志，记录开通动作、升迁审批、切换与回滚
+- 接入 Supabase Management API、IaC 工作流和客户现有可观测性工具
+- 每次切换前都检查隔离策略、网络、备份状态和回滚准备度
+- 把事故复盘和迁移后分析纳入早期客户的技术成功服务
+team:
+- role: 创始人 CEO
+  startTiming: 第 0 个月
+  rationale: 负责创始人主导销售、招募共创客户，并把事故驱动的痛点打磨成可复制包装。
+- role: 创始人 CTO
+  startTiming: 第 0 个月
+  rationale: 负责升迁引擎架构、信任模型，以及与 Supabase 和目标后端的首批生产级集成。
+- role: 创始工程师
+  startTiming: 第 0 个月
+  rationale: 负责搭建 MVP 必需的开通 hook、遥测流水线和审计能力。
+- role: 产品与解决方案工程师
+  startTiming: 第 6 个月
+  rationale: 连接共创客户落地与产品需求，把定制化诉求收束成产品路线，并减少部署对创始人的依赖。
+- role: 安全与可靠性工程师
+  startTiming: 第 9 个月
+  rationale: 一旦企业审查和生产切换成为销售速度与信任的关键门槛，就需要这类角色补位。
+milestones:
+- horizon: 0-12 个月
+  items:
+  - 拿下 5-8 个 Supabase-first 部署的共创客户
+  - 在前 10 个生产工作区上证明带监督升迁可行，并带上审计轨迹和回滚检查
+  - 至少把 3 个付费试点转成年合同
+  - 公开证明产品能缩短隔离时间并降低切换后事故
+- horizon: 12-24 个月
+  items:
+  - 增加 Neon 和一个专用托管 Postgres 目标
+  - 推出面向受监管或私有网络负载的策略包
+  - 做到 20-25 个生产客户，并建立基于 benchmark 的 recommendation 模型
+  - 把实施工作量压到大多数新客户能在 30 天内上线
+- horizon: 24-36 个月
+  items:
+  - 支持 Multigres、Aurora Limitless、基于 Citus 的集群等分布式升迁目标
+  - 扩展到多云生命周期治理、合规与成本优化
+  - 做到约 60 个客户，并在初始建模的 SOM 内跑到约 $3.0M ARR
+  - 证明与云厂商无关的策略和遥测，能带来超出最初 Supabase 切口的扩张
+risks:
+- risk: 云厂商补上原生工作区升迁功能，吃掉大部分产品表面。
+  likelihood: High
+  impact: High
+  mitigation: 把差异化压在与云厂商无关的策略、审计工作流和混合后端编排上，而不是单纯的迁移机械动作。
+- risk: 一旦切换失败或延期，产品很早就会失去信任，因为它直接碰在线客户数据路径。
+  likelihood: Medium
+  impact: High
+  mitigation: 从 recommendation 模式起步，坚持带监督执行，并用强预检和回滚控制去卡自动化放量。
+- risk: 成熟的平台团队继续用脚本、共享池 + RLS 或更大的专用实例，而不是买一个新控制平面。
+  likelihood: High
+  impact: Medium
+  mitigation: 围绕事故驱动的 ROI 和企业 onboarding 截止日期销售，而不是抽象的未来规模。
+- risk: 安全团队拒绝把开通和数据库工作流的托管式第三方访问权交出来。
+  likelihood: Medium
+  impact: High
+  mitigation: 补齐最小权限角色、私有网络，以及面向敏感账户的 BYO-cloud 部署路径。
+- risk: 在扩展产品成熟之前，市场切口一直太窄，撑不起 venture 回报。
+  likelihood: Medium
+  impact: High
+  mitigation: 尽早验证扩展需求，在首个工作流跑通后优先补相邻的合规与多云模块。
+fundingAsk:
+  round: pre-seed
+  targetFundingRangeUsd: $2-4M
+  runwayMonths: 18
+  useOfFundsSummary: 融资覆盖 18 个月：把 Supabase-first 产品做出来，完成共创客户试点，在真实租户上证明带监督升迁，新增一个次级后端目标，并建立可复制企业销售所需的安全与审计能力。

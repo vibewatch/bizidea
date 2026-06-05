@@ -1,0 +1,988 @@
+slug: workspace-shard-control
+date: '2026-06-05'
+researchCoverage:
+  sourceTarget: 100
+  sourcesFound: 31
+  sourcesFetched: 31
+  sourcesRetained: 31
+  duplicatesRemoved: 0
+  memoSourcesUsed: 31
+  reputablePublisherCount: 13
+  searchedQueries:
+  - supabase series f multigres ai databases growth
+  - supabase for platforms management api project provisioning
+  - neon branching pricing multitenancy database per user
+  - aurora limitless postgres architecture docs
+  - citus multi-tenant postgres noisy neighbors big tenants
+  - azure elastic clusters sharding models tenant monitoring
+  - pgedge active active postgres byo cloud compliance
+  - crunchy bridge pricing isolated postgres ha
+  - aws postgres row level security multi-tenant isolation
+  - postgresql adoption ranking state of postgres ai tools
+  sourceQualityMix:
+    primarySources: 14
+    tierOneNews: 0
+    analystOrMarketData: 2
+    tradePress: 1
+    regulatoryOrGovernment: 0
+    communityOrReview: 1
+  coverageGap: 保留了 31 个已核验来源，但没有达到 100 个来源目标，因为这是个很窄的基础设施主题，信息主要被彼此重叠的厂商文档、平台公告和定价页占满；后续新增候选要么内容重复，要么是抓不下来的动态页面，不足以构成新的可信证据。
+deduplication:
+  method: 规范 URL + 归一化标题 + 事件/公司/日期 + 抓取正文相似度 + 来源家族校验
+  candidateUrlsFound: 31
+  candidateUrlsFetched: 31
+  duplicatesRemoved: 0
+  uniqueCorpusItems: 31
+  uniqueMemoSources: 31
+  duplicateClusters: []
+reportMemo:
+  executiveTakeaways:
+  - 这个切口确实成立：AI 开发团队现在已经在 Supabase 上创建了多数新数据库，而“每个用户一个数据库”加上大量分支的工作流，会随着租户数上升把单实例 Postgres 运维拖得越来越脆。
+  - 预算本来就在数据库基础设施支出里。买家已经习惯按项目、按分支、按集群付费，所以控制平面可以直接围绕迁移人力和停机预防收费，而不是硬造一个全新品类。
+  - 原生扩容选项正在变多——从 Multigres、Aurora Limitless 到基于 Citus 的 Elastic Clusters 和 pgEdge——所以这家创业公司只有站到云厂商之上，做中立的升迁与策略层，而不是再做一个数据库厂商，才有赢面。
+  - 真正扎人的痛点并不是抽象意义上的分片，而是判断哪个工作区该继续共享、哪个该隔离、哪个该迁到分布式拓扑，然后把这一步在不停机、不踩合规坑的前提下跑完。
+  marketDefinition: 一类控制平面软件：盯住大量小型 Postgres 工作区，执行租户策略，并把工作区从共享或单实例部署自动升迁到隔离或分布式拓扑。
+  customerAndBuyer: 核心用户是 AI 原生 SaaS 公司的平台工程师和基础设施负责人。这些公司会为每个客户工作区、预览环境或代理工作流创建一个数据库或分支。经济买家通常是平台工程负责人、基础设施 VP 或 CTO；一旦企业租户需要私有网络、可审计性或 HIPAA/SOC 2 控制，安全与合规团队就会被拉进来。
+  buyingTriggers:
+  - point: 大客户上线、安全审查或受监管部署，会逼团队离开默认共享池，转向隔离或私有化的 Postgres 环境。
+    sourceRefs:
+    - 3
+    - 20
+    - 21
+    - 23
+    - 24
+  - point: 公司开始用程序批量创建项目或分支后，人工审批开通流程再也跟不上数据库创建速度。
+    sourceRefs:
+    - 1
+    - 4
+    - 5
+    - 8
+    - 9
+    - 10
+  - point: 噪音邻居、重型租户分析或维护压力，会让单实例性能变得不可预测，进而触发升迁工作。
+    sourceRefs:
+    - 14
+    - 17
+    - 25
+    - 27
+  willingnessToPay:
+    summary: 可替代支出已经清清楚楚摆在栈里：Supabase 的计算费用加组织费用是每项目每月 $10-$3,730+，Neon 是每 CU 小时 $0.106，额外分支每月 $1.50，Crunchy Bridge 的生产实例在开启 HA 前大约每月 $70-$560 起。只要控制平面真能砍掉迁移人力和事故风险，按这部分底座成本再加 5-15% 的软件层收费，买家是能接受的。
+    sourceRefs:
+    - 3
+    - 7
+    - 22
+  competitiveLandscape: 竞争大致分四类：想把原生扩容做进去的托管 Postgres 平台、以分支优先或 serverless 为卖点的 Postgres 厂商、分布式/分片 Postgres 方案，以及虽然能给独立实例、但仍把升迁编排留给买家的托管单租户 Postgres。真正空白的位置，是一个与云厂商无关的生命周期层，决定工作区该继续共享、被隔离，还是迁上分片。
+  incumbentThesis:
+  - incumbentClass: 托管式 Postgres 平台
+    point: Supabase 已经卡住了开通路径，也在建设 Multigres，但它的优势主要发生在 Supabase 自己的体系里，而不是横跨混合 Postgres 后端做中立策略。
+    sourceRefs:
+    - 4
+    - 5
+    - 6
+  - incumbentClass: 以分支优先的 serverless Postgres
+    point: Neon 让“每用户一个数据库”和分支工作流真正可用，但它的核心卖点是低成本隔离和开发速度，不是判断发热工作区该在什么时候升到另一种拓扑。
+    sourceRefs:
+    - 7
+    - 8
+    - 9
+    - 10
+  - incumbentClass: 分布式 Postgres 服务
+    point: Aurora Limitless 和基于 Citus 的 Elastic Clusters 把横向扩展的复杂度往下压了，但买家仍然要自己判断哪些租户该分片、什么时候该迁。
+    sourceRefs:
+    - 11
+    - 12
+    - 13
+    - 14
+    - 15
+  - incumbentClass: 多主与地理分布式 Postgres
+    point: pgEdge 解决的是多主和强合规部署，但它更像目标底座，而不是工作区级别的升迁控制平面。
+    sourceRefs:
+    - 18
+    - 19
+    - 20
+  regulatoryLandscape: 这款产品卖的是基础设施，所以真正卡点不是单独的数据库监管条例，而是企业级数据治理与运维保障。买家会盯强隔离、私有网络或 BYO cloud、审计日志、HIPAA 与 SOC 2 准备度，以及避免那些会悄悄绕过 RLS、或把受监管租户和噪音邻居混在一起的架构。
+  technologyLandscape: 关键拼图已经成熟：Postgres 本体持续在高并发场景里进步，Neon 和 Supabase 把 API 驱动的项目与分支创建做成常态，而 Multigres、Citus、Aurora Limitless、pgEdge 也给出了可信的目标拓扑。现在缺的不是底层能力，而是把租户信号串成安全升迁动作的编排逻辑。
+  distributionChannels:
+  - point: 通过 Supabase、Neon 的生态集成、模板和 AI builder 合作切进去，因为那里的开通路径本来就是程序化的。
+    sourceRefs:
+    - 4
+    - 8
+    - 9
+    - 10
+  - point: 等企业客户上线、延迟事故或高风险租户迁移把人工 runbook 的上限暴露出来后，直接卖给平台工程团队。
+    sourceRefs:
+    - 1
+    - 3
+    - 21
+    - 22
+    - 27
+  - point: 面对受监管买家时，可以联合 pgEdge、Crunchy Bridge 和数据库咨询方，用合规驱动的 BYO cloud 与私有网络方案推进。
+    sourceRefs:
+    - 20
+    - 21
+    - 22
+  partnershipEcosystem:
+  - point: Supabase Management API 和 Supabase for Platforms 天然就是挂开通 hook 和采集工作区元数据的入口。
+    sourceRefs:
+    - 4
+    - 5
+  - point: Neon API 和分支接口让团队可以先在预览流和测试流里试 recommendation 与 promotion 逻辑，再碰生产。
+    sourceRefs:
+    - 8
+    - 10
+  - point: Multigres、Aurora Limitless、Elastic Clusters、pgEdge 这类分布式后端，既可以被视为对手，也可以被当作升迁目标。
+    sourceRefs:
+    - 6
+    - 12
+    - 13
+    - 15
+    - 19
+  dataMoats:
+  - point: 跨工作区的连接饱和、噪音邻居事件、切换时长和回滚率遥测，能让升迁建议越用越准。
+    sourceRefs:
+    - 14
+    - 17
+    - 25
+    - 27
+  - point: 把哪些租户需要私有网络、BYO cloud 或更严格 RLS 检查编码成策略图之后，就能在不同云厂商和账户之间复用。
+    sourceRefs:
+    - 20
+    - 21
+    - 23
+    - 24
+  - point: 横跨 Supabase 项目、Neon 分支和分布式目标的执行历史，会沉淀成有差异化的回滚知识库和 runbook 语料。
+    sourceRefs:
+    - 4
+    - 6
+    - 8
+    - 10
+    - 15
+  geographicConsiderations:
+  - point: 如果买家面向欧盟或强监管负载，就会更在意区域感知的部署位置，有时还会要求直接落到客户云，而不是完全共享的控制平面。
+    sourceRefs:
+    - 4
+    - 20
+    - 21
+  - point: 多区域和驻留敏感型工作负载，会让 active-active 或分片后端更像理想的升迁目标。
+    sourceRefs:
+    - 13
+    - 15
+    - 19
+  - point: 最干净的第一切口，是那些已经在用 API-first Postgres 平台和自助开通的英语区 AI 原生 SaaS 团队。
+    sourceRefs:
+    - 1
+    - 4
+    - 28
+  sensitivityCases:
+  - case: 原生功能追赶
+    impact: 如果 Supabase、AWS 或 Azure 把工作区升迁做得足够傻瓜化，这家公司就会被逼着把重心从执行本身转向跨云策略与审计控制。
+    sourceRefs:
+    - 6
+    - 12
+    - 15
+  - case: 共享 schema 续命
+    impact: 如果买家把共享池 + RLS 架构撑得比预期更久，转化就得等少数大客户租户出现并强行触发隔离。
+    sourceRefs:
+    - 23
+    - 24
+    - 29
+  - case: 分支优先工作流加速
+    impact: 如果“每个预览一个分支”“每个用户一个数据库”的模式扩散得比预期更快，平台管理下的工作区数量会远快于单工作区收入。
+    sourceRefs:
+    - 8
+    - 9
+    - 10
+  - case: 一次迁移事故重置信任
+    impact: 只要出现一次高可见度的失败切换，客户就会更倾向只接受 recommendation 模式，全面自动化的路径也会被拉长。
+    sourceRefs:
+    - 25
+    - 27
+  validationPlan:
+  - priority: high
+    question: 工作区数量或月度迁移负载到什么规模时，自动升迁会从“可有可无”变成一笔有预算的控制平面采购？
+    evidenceToGather: 访谈 12 个使用 Supabase 或 Neon 的平台团队，记录工作区数量和迁移频率，找出 runbook 或 Terraform 开始不可接受的那个拐点。
+  - priority: high
+    question: 买家会先接受 recommendation-only，还是从第一天起就希望产品能编排执行？
+    evidenceToGather: 跑 3 个共创客户试点，对比“只给建议的告警”和“带监督的执行”，衡量隔离时长和切换后事故率。
+  - priority: medium
+    question: 最先重要的升迁目标到底是哪一类：独立 Supabase 项目、Neon 项目、基于 Citus 或 Aurora 的分布式分片，还是隔离的托管实例？
+    evidenceToGather: 跟踪前 10 个潜在线索的当前云厂商组合、目标拓扑和合规要求，给集成路线排优先级。
+analysisModels:
+  marketMapDiagram:
+    title: 工作区升迁竞争图谱
+    mermaid: "quadrantChart\n  title Workspace promotion landscape\n  x-axis Low lifecycle automation --> High lifecycle automation\n  y-axis Single-instance orientation --> Distributed-topology depth\n  Crunchy Bridge: [0.20, 0.22]\n  Supabase: [0.45, 0.58]\n  Neon: [0.67, 0.38]\n  pgEdge: [0.58, 0.84]\n  Aurora Limitless: [0.50, 0.90]\n  Proposed startup: [0.90, 0.76]"
+  fiveForces:
+    supplierPower:
+      score: 3
+      rationale: 产品要依赖云数据库 API，以及买家已经在用的各类后端，但可选的 Postgres 目标足够多，不至于让单一供应商掌握过强议价权。
+      sourceRefs:
+      - 4
+      - 10
+      - 15
+      - 20
+    buyerPower:
+      score: 4
+      rationale: 目标买家是成熟的平台团队；如果新控制平面不能明显降低迁移风险，他们完全可以继续用共享 schema + RLS、多买托管 Postgres，或把内部脚本再往前推一段。
+      sourceRefs:
+      - 9
+      - 21
+      - 22
+      - 24
+      - 29
+    threatOfEntrants:
+      score: 3
+      rationale: 轻量编排层可以基于公开 API 和现成 Postgres 原语做出来，但运营数据、迁移手册和买家信任没有那么容易快速复制。
+      sourceRefs:
+      - 4
+      - 8
+      - 10
+      - 24
+    threatOfSubstitutes:
+      score: 5
+      rationale: 替代方案很强：买家可以继续留在共享池 + RLS，也可以守着 schema-per-tenant、database-per-tenant 的 runbook，或者干脆把热租户搬到更大的托管实例上。
+      sourceRefs:
+      - 21
+      - 22
+      - 23
+      - 24
+      - 29
+    competitiveRivalry:
+      score: 4
+      rationale: 竞争正在升温，因为托管 Postgres、分布式 Postgres 和托管独立实例厂商都在往这个扩容问题的不同环节伸手。
+      sourceRefs:
+      - 6
+      - 12
+      - 15
+      - 19
+  pestle:
+  - factor: 政治
+    impact: neutral
+    point: 云厂商路线图变化很快。Microsoft 正在下线 Cosmos DB for PostgreSQL，并把用户引到 Elastic Clusters，这会让买家更想要可迁移的编排层。
+    sourceRefs:
+    - 15
+    - 16
+  - factor: 经济
+    impact: positive
+    point: Supabase、Neon 和 Crunchy Bridge 都公开了基础设施定价，说明买家本来就会给每项目数据库支出做预算，软件叠加层的收费逻辑是讲得通的。
+    sourceRefs:
+    - 3
+    - 7
+    - 22
+  - factor: 社会
+    impact: positive
+    point: AI 工具正在改变谁能拉起后端，这会抬高数据库创建速度，即使 DBA 编制并没有同步增加。
+    sourceRefs:
+    - 1
+    - 4
+    - 28
+  - factor: 技术
+    impact: positive
+    point: Postgres 及其生态在高并发和分布式负载上持续进步，所以现在可信的目标拓扑比两年前多得多。
+    sourceRefs:
+    - 6
+    - 12
+    - 13
+    - 31
+  - factor: 法律
+    impact: positive
+    point: RLS、私有网络、SOC2、HIPAA 和 BYO-cloud 这些要求，会把买家推向显式策略层和审计层，而不是继续靠临时脚本。
+    sourceRefs:
+    - 3
+    - 20
+    - 23
+    - 24
+  adoptionFrictionMatrix:
+  - friction: 客户可感知的迁移失败风险
+    severity: high
+    affectedBuyer: 平台工程
+    mitigation: 先从 recommendation 模式起步，每次切换都做预检，并优先使用已经暴露故障转移与分布式原语的目标后端。
+    sourceRefs:
+    - 6
+    - 12
+    - 13
+    - 25
+  - friction: 客户之间的租户模型没有共识
+    severity: high
+    affectedBuyer: CTO 或架构负责人
+    mitigation: 同时支持共享池、schema、每租户独库和分布式升迁路径，而不是强推一种模式。
+    sourceRefs:
+    - 9
+    - 14
+    - 23
+    - 27
+    - 29
+  - friction: 安全团队抗拒把数据库访问权广泛交给第三方
+    severity: high
+    affectedBuyer: 安全与合规
+    mitigation: 提供 BYO cloud、私有网络、最小权限角色，以及可审计的执行轨迹。
+    sourceRefs:
+    - 3
+    - 20
+    - 21
+    - 24
+  - friction: 遥测太弱会让升迁时机判断失真
+    severity: medium
+    affectedBuyer: SRE 或 DBA
+    mitigation: 在自动执行前，先把租户级指标、连接饱和、维护压力和分支活跃度合成一个统一的升迁分数。
+    sourceRefs:
+    - 14
+    - 17
+    - 25
+market:
+  tam:
+    value: $150.0M
+    rationale: 估算：全球约 2,500 个高规模 Postgres 平台团队 × 每年约 $60k 的控制平面支出。团队数按 Supabase 250,000 客户中约 1% 会成长为复杂到值得自动化的 AI 原生 builder 建模，并用 Neon 明确的“每用户一个数据库”定位和现有基础设施价格带做交叉校验。
+    isEstimate: true
+    sourceRefs:
+    - 2
+    - 7
+    - 9
+    - 22
+  sam:
+    value: $28.8M
+    rationale: 估算：首个切口锁定 600 家以 Supabase 和 Neon 为中心的 builder，购买一个更窄的升迁与治理产品，年 ACV 约 $48k。
+    isEstimate: true
+    sourceRefs:
+    - 4
+    - 7
+    - 9
+  som:
+    value: $3.0M
+    rationale: 估算：第 3 年做到 60 个客户、年 ACV 约 $50k。对那些已经在为生产级 Postgres 基础设施付费的平台团队来说，这个事故驱动的采用速度是说得通的。
+    isEstimate: true
+    sourceRefs:
+    - 3
+    - 7
+    - 22
+bottomUpSizingDrivers:
+- driver: 可触达总单位数
+  value: 全球 2,500 个高规模平台团队
+  source: '[2] + calc'
+- driver: 初始切口单位数
+  value: 600 家以 Supabase 和 Neon 为中心的 AI 原生 SaaS 构建者
+  source: '[4], [9] + calc'
+- driver: 隐含年 ACV
+  value: $48k-$60k
+  source: '[3], [7], [22]'
+categoryDynamics:
+  growthRate: Supabase 数据库创建量同比增长 600%；Supabase for Platforms 在过去 6 个月客户数增长 370%
+  growthRateSourceRefs:
+  - 1
+  - 2
+  tailwinds:
+  - point: 代理和 AI 工具现在已经在 Supabase 上创建了多数新数据库。
+    sourceRefs:
+    - 1
+    - 2
+  - point: Supabase 和 Neon 把 API 驱动的项目与分支创建做成常态，让“每个工作区一个数据库”的模式更容易落地。
+    sourceRefs:
+    - 4
+    - 8
+    - 9
+    - 10
+  - point: 分布式 Postgres 目标在变多，从 Multigres 到 Aurora Limitless、Elastic Clusters、pgEdge 都在补齐。
+    sourceRefs:
+    - 6
+    - 12
+    - 13
+    - 15
+    - 19
+  headwinds:
+  - point: 对很多团队来说，RLS、共享池和基于 schema 的模型会在比预期更长的时间里更便宜也更简单。
+    sourceRefs:
+    - 23
+    - 24
+    - 29
+  - point: 厂商正在补原生扩容功能，可能会吃掉创业公司的一部分产品表面。
+    sourceRefs:
+    - 6
+    - 12
+    - 15
+    - 19
+  - point: 托管单租户服务提供了一个非常直接的替代方案——“直接买个更大的实例”。
+    sourceRefs:
+    - 21
+    - 22
+competitors:
+- name: Supabase + Multigres
+  stage: incumbent
+  wedge: 通过 API 管理的 Postgres 平台，正在把原生横向扩展和 HA 原语往里补。
+  pricing: Pro 版 $25/月起，外加每项目计算费用：从 $10/月（Micro）到 $3,730/月（16XL）；Enterprise 需定制。
+  strength: 对已经在 Supabase 内部的客户，它掌握着开通路径、项目生命周期和未来的 Multigres 底座。
+  weaknessVsUs: 它优化的是 Supabase 自己的资产，而不是横跨混合 Postgres 后端的中立生命周期与升迁层。
+  sourceRefs:
+  - 3
+  - 4
+  - 6
+- name: Neon
+  stage: scale-up
+  wedge: 带 copy-on-write 分支能力、强调“每用户一个数据库”的 serverless Postgres。
+  pricing: Launch 按量计费，每 CU 小时 $0.106，额外分支每分支每月 $1.50；Scale 档为每 CU 小时 $0.222。
+  strength: 把隔离数据库和分支工作流做得既便宜又对开发者友好。
+  weaknessVsUs: 它非常适合隔离和预览工作流，但不是一个横跨其他 Postgres 目标的完整工作区升迁编排器。
+  sourceRefs:
+  - 7
+  - 8
+  - 9
+  - 10
+- name: pgEdge
+  stage: scale-up
+  wedge: 面向 HA、地理分布和 AI 原生部署的开源分布式 / active-active Postgres。
+  pricing: 抓取到的页面里，托管云版本价格以企业销售为主，需要联系销售。
+  strength: 在多主、数据驻留、零停机扩展和 BYO-cloud 合规上故事很强。
+  weaknessVsUs: 它提供的是目标数据库底座，不负责决定哪个工作区该何时迁过去。
+  sourceRefs:
+  - 18
+  - 19
+  - 20
+- name: Crunchy Bridge
+  stage: incumbent
+  wedge: 完全托管、独立隔离的 Postgres 实例，附带 HA、支持和跨云部署。
+  pricing: 生产计划约 $70/月（Standard-4）和 $140/月（Standard-8）起；开启 HA 后集群价格翻倍。
+  strength: 独立实例路径简单，隔离性和生产支持都强。
+  weaknessVsUs: 舰队级升迁逻辑、优先级判断和迁移编排仍然要买家自己做。
+  sourceRefs:
+  - 21
+  - 22
+regulatoryTechnicalConstraints:
+- point: RLS 和共享池模型要求极其严谨的策略设计；PostgreSQL 在没有策略时默认拒绝，但表所有者和 BYPASSRLS 角色如果配置不慎，仍可绕过保护。
+  sourceRefs:
+  - 23
+  - 24
+- point: Autovacuum 和 VACUUM 会带来 I/O 与维护开销，所以热租户的升迁时机和迁移窗口都很敏感。
+  sourceRefs:
+  - 25
+  - 31
+- point: 企业部署可能要求私有网络、BYO cloud、SOC 2、HIPAA 或区域隔离，这会更偏向客户云部署模型。
+  sourceRefs:
+  - 3
+  - 20
+  - 21
+- point: 云厂商路线图会变；Azure 正把用户从停用的 Cosmos DB for PostgreSQL 迁到 Elastic Clusters，所以编排层必须保持可迁移。
+  sourceRefs:
+  - 15
+  - 16
+validationSignals:
+- point: Supabase for Platforms 明确面向 AI builder，并开放项目管理 API，证明开通工作流里确实有程序化插入点。
+  sourceRefs:
+  - 4
+  - 5
+- point: Neon 明确营销“每用户一个数据库”和即时分支，验证了买家对强隔离和 API 控制的真实需求。
+  sourceRefs:
+  - 8
+  - 9
+  - 10
+- point: Citus 与 Azure 的文档都在强调噪音邻居、大租户、分片模型和租户级监控，说明这家创业公司要解决的运维痛点是真实存在的。
+  sourceRefs:
+  - 14
+  - 15
+  - 17
+  - 27
+- point: pgEdge 和 Crunchy Bridge 都把合规就绪的隔离部署放在前面，说明企业买家愿意为降低数据库运维风险付费。
+  sourceRefs:
+  - 20
+  - 21
+  - 22
+openQuestions:
+- 到底哪些遥测阈值——连接数、存储增长、vacuum 延迟，还是企业 SLA 违约——最能预测工作区什么时候需要升迁？
+- 早期买家要的是 Supabase-first 的深度，还是从第一天起就要求横跨 Supabase、Neon 和专用 Postgres 的中立性？
+- 首单合同里，软件 ACV 和付费迁移 / 专业服务各占多少？
+- 安全团队会接受托管式控制平面吗，还是对大多数企业账户来说，BYO cloud 或私有部署才是硬门槛？
+evidenceCorpus:
+- id: 1
+  publisher: Supabase
+  title: Supabase Series F
+  date: '2026-06-04'
+  url: https://supabase.com/blog/supabase-series-f
+  sourceType: primary
+  topicBucket: funding-news
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 这是 600% 数据库创建同比增长，以及“超过 60% 新数据库由 AI 工具发起”这两个关键说法的原始来源。
+- id: 2
+  publisher: PR Newswire
+  title: Supabase Raises $500M at $10.5B to Accelerate Lead in Agentic Infrastructure
+  date: '2026-06-04'
+  url: https://www.prnewswire.com/news-releases/supabase-raises-500m-at-10-5b-to-accelerate-lead-in-agentic-infrastructure-302791787.html
+  sourceType: primary
+  topicBucket: funding-news
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 补上了 250,000 客户规模、数据库多数由代理创建，以及 Supabase for Platforms 增长 370% 这几项关键数据。
+- id: 3
+  publisher: Supabase
+  title: Supabase Pricing
+  date: null
+  url: https://supabase.com/pricing
+  sourceType: technical-docs
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 展示了按项目计费和专用计算层级，为付费意愿和替代支出提供锚点。
+- id: 4
+  publisher: Supabase
+  title: Supabase for Platforms
+  date: null
+  url: https://supabase.com/docs/guides/integrations/supabase-for-platforms
+  sourceType: technical-docs
+  topicBucket: validation
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 确认 Supabase 常被 AI builder 使用，而且可以通过 Management API 做程序化管理。
+- id: 5
+  publisher: Supabase
+  title: Supabase Platform
+  date: null
+  url: https://supabase.com/docs/guides/platform
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 明确写出每个 Supabase 项目都带一个独立 Postgres 数据库，这与“每工作区一个数据库”的架构直接相关。
+- id: 6
+  publisher: Supabase
+  title: 'Multigres v0.1 Alpha: an operating system for Postgres'
+  date: '2026-06-04'
+  url: https://supabase.com/blog/multigres-v0-1-alpha
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 详细说明了新的 Multigres 层：连接池、自动故障转移、备份编排，以及未来的分片能力。
+- id: 7
+  publisher: Neon
+  title: Neon Pricing Plans
+  date: null
+  url: https://neon.tech/pricing
+  sourceType: technical-docs
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 给出了按量计费的 serverless Postgres 价格、分支价格和 scale-to-zero 经济模型，是一个重要替代方案的价格基线。
+- id: 8
+  publisher: Neon
+  title: Branching
+  date: null
+  url: https://neon.tech/docs/introduction/branching
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 解释了 copy-on-write 分支，以及分支如何用于开发、测试和预览工作流。
+- id: 9
+  publisher: Neon
+  title: Multitenancy with Neon
+  date: null
+  url: https://neon.com/docs/guides/multitenancy
+  sourceType: technical-docs
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 直接框定了“每用户一个数据库”的 Postgres 架构、它的好处，以及在 AWS 上管理大量实例的运维痛点。
+- id: 10
+  publisher: Neon
+  title: Branching with the Neon API
+  date: null
+  url: https://neon.tech/docs/guides/branching-neon-api
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 说明分支创建与删除都能通过 API 完成，这对自动化开通流程里的插入点非常关键。
+- id: 11
+  publisher: AWS
+  title: Amazon Aurora Limitless Database
+  date: null
+  url: https://aws.amazon.com/about-aws/whats-new/2023/11/amazon-aurora-limitless-database/
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 展示 AWS 如何把 Limitless 定位成一个 serverless 的关系型扩展层，可承载每秒百万次写入和 PB 级数据。
+- id: 12
+  publisher: AWS
+  title: Using Amazon Aurora PostgreSQL Limitless Database
+  date: null
+  url: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/limitless.html
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 这是 Aurora PostgreSQL Limitless 的官方概览，说明了自动横向扩展和 shard group 等核心概念。
+- id: 13
+  publisher: AWS
+  title: Aurora PostgreSQL Limitless Database architecture
+  date: null
+  url: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/limitless-architecture.html
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 描述了 router + shard 的架构，解释它如何在分布式分片之上维持“单数据库”的使用体验。
+- id: 14
+  publisher: Citus Data
+  title: Multi-tenant Applications - Citus 13.0.1 documentation
+  date: null
+  url: https://docs.citusdata.com/en/stable/use_cases/multi_tenant.html
+  sourceType: technical-docs
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 解释了噪音邻居、大租户，以及多租户 SaaS 增长后单个关系型节点为何会吃不消。
+- id: 15
+  publisher: Microsoft Learn
+  title: Elastic Clusters - Azure Database for PostgreSQL
+  date: '2025-11-18'
+  url: https://learn.microsoft.com/en-us/azure/postgresql/elastic-clusters/concepts-elastic-clusters
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 把 Elastic Clusters 定位成基于 Citus 的 PostgreSQL 托管分片方案，支持按行和按 schema 两种模型。
+- id: 16
+  publisher: Microsoft Learn
+  title: Sharding models - Azure Cosmos DB for PostgreSQL
+  date: '2023-09-08'
+  url: https://learn.microsoft.com/en-us/azure/cosmos-db/postgresql/concepts-sharding-models
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 记录了按行与按 schema 的分片模型，也说明 Microsoft 正在让这套旧托管表面退出新项目。
+- id: 17
+  publisher: Microsoft Learn
+  title: Monitor statistics with multi-tenant monitoring on Azure Cosmos DB for PostgreSQL
+  date: '2025-10-29'
+  url: https://learn.microsoft.com/en-us/azure/cosmos-db/postgresql/howto-monitor-tenant-stats
+  sourceType: technical-docs
+  topicBucket: customer-pain
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 说明在分片 Postgres 资产里，租户级监控已经是一等公民问题。
+- id: 18
+  publisher: pgEdge
+  title: Enterprise grade Postgres for Agentic AI, high availability and more
+  date: null
+  url: https://www.pgedge.com/
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 把 pgEdge 定位成适用于 agentic AI 的企业级 Postgres，强调零停机、任意地点部署和开源资质。
+- id: 19
+  publisher: pgEdge
+  title: New approaches bolster effectiveness of Postgres multi-master database architecture
+  date: null
+  url: https://www.pgedge.com/solutions/benefit/multi-master
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 解释 pgEdge 的 active-active 多主、冲突解决和地理分布复制能力。
+- id: 20
+  publisher: pgEdge
+  title: Managed Enterprise Postgres Cloud
+  date: null
+  url: https://www.pgedge.com/products/pgedge-cloud
+  sourceType: primary
+  topicBucket: regulation
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 强调私有部署、BYOA，以及对 PCI/HIPAA/SOC2/ISO27001 的适配，直接对应合规敏感型买家。
+- id: 21
+  publisher: Crunchy Data
+  title: Crunchy Bridge
+  date: null
+  url: https://www.crunchydata.com/products/crunchy-bridge
+  sourceType: primary
+  topicBucket: competitor
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 展示了“独立实例 + 托管 Postgres”这一替代方案，包含隔离实例、HA 和跨云部署。
+- id: 22
+  publisher: Crunchy Bridge Docs
+  title: Plans and pricing - Crunchy Bridge
+  date: null
+  url: https://docs.crunchybridge.com/concepts/plans-pricing
+  sourceType: technical-docs
+  topicBucket: pricing
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 给出明确的生产价格带，并指出开启 HA 后集群价格会翻倍。
+- id: 23
+  publisher: AWS Database Blog
+  title: Multi-tenant data isolation with PostgreSQL Row Level Security
+  date: null
+  url: https://aws.amazon.com/blogs/database/multi-tenant-data-isolation-with-postgresql-row-level-security/
+  sourceType: primary
+  topicBucket: regulation
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 总结了 silo、bridge、pool 三种租户模型，以及成本和隔离性之间的权衡。
+- id: 24
+  publisher: PostgreSQL Global Development Group
+  title: Row Security Policies
+  date: null
+  url: https://www.postgresql.org/docs/current/ddl-rowsecurity.html
+  sourceType: technical-docs
+  topicBucket: regulation
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 这是 RLS 的权威参考，解释默认拒绝行为，以及哪些角色可以绕过策略。
+- id: 25
+  publisher: PostgreSQL Global Development Group
+  title: Routine Vacuuming
+  date: null
+  url: https://www.postgresql.org/docs/current/routine-vacuuming.html
+  sourceType: technical-docs
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 记录了 autovacuum、I/O 和维护开销，在热租户和负载不均场景下这些痛点会更明显。
+- id: 26
+  publisher: DB-Engines
+  title: DB-Engines Ranking
+  date: null
+  url: https://db-engines.com/en/ranking
+  sourceType: analyst-market-data
+  topicBucket: market-size
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 给出外部市场信号，说明 PostgreSQL 仍是全球最主流的数据库系统之一。
+- id: 27
+  publisher: ScaleGrid
+  title: How Tenant Growth Pushes PostgreSQL Beyond Its Comfort Zone
+  date: null
+  url: https://scalegrid.io/blog/implementing-multi-tenant-saas-on-postgresql-using-citus-sharding/
+  sourceType: trade-press
+  topicBucket: customer-pain
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 具体描述了租户负载不均、延迟波动、autovacuum 吃力以及每租户独库的额外开销。
+- id: 28
+  publisher: Tiger Data
+  title: A Sneak Peek Into the State of PostgreSQL 2024
+  date: '2024-12-17'
+  url: https://www.tigerdata.com/blog/state-of-postgresql-2024
+  sourceType: analyst-market-data
+  topicBucket: validation
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 展示 PostgreSQL 生态仍在成熟，也指出受访的 PostgreSQL 开发者中已有 55.3% 在使用 AI 工具。
+- id: 29
+  publisher: GitHub Discussions
+  title: 'Multi-tenant · supabase · Discussion #1615'
+  date: null
+  url: https://github.com/orgs/supabase/discussions/1615
+  sourceType: community-review
+  topicBucket: customer-pain
+  reputationTier: medium
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 真实呈现了在 Supabase 多租户场景里，独立数据库、schema、RLS 以及连接/进程成本上的困惑。
+- id: 30
+  publisher: PostgreSQL Global Development Group
+  title: What is PostgreSQL?
+  date: null
+  url: https://www.postgresql.org/about/
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 为核心 Postgres 生态的耐久性和跨多种工作负载的可扩展性提供了锚点。
+- id: 31
+  publisher: PostgreSQL Global Development Group
+  title: PostgreSQL 17 Released!
+  date: '2024-09-26'
+  url: https://www.postgresql.org/about/news/postgresql-17-released-2936/
+  sourceType: primary
+  topicBucket: technology
+  reputationTier: high
+  fetchVerified: true
+  usedInMemo: true
+  oneLineRelevance: 说明核心数据库仍在持续提升性能和高并发能力，这会抬高厂商与买家的基线预期。
+sources:
+- id: 1
+  publisher: Supabase
+  title: Supabase Series F
+  date: '2026-06-04'
+  url: https://supabase.com/blog/supabase-series-f
+- id: 2
+  publisher: PR Newswire
+  title: Supabase Raises $500M at $10.5B to Accelerate Lead in Agentic Infrastructure
+  date: '2026-06-04'
+  url: https://www.prnewswire.com/news-releases/supabase-raises-500m-at-10-5b-to-accelerate-lead-in-agentic-infrastructure-302791787.html
+- id: 3
+  publisher: Supabase
+  title: Supabase Pricing
+  date: null
+  url: https://supabase.com/pricing
+- id: 4
+  publisher: Supabase
+  title: Supabase for Platforms
+  date: null
+  url: https://supabase.com/docs/guides/integrations/supabase-for-platforms
+- id: 5
+  publisher: Supabase
+  title: Supabase Platform
+  date: null
+  url: https://supabase.com/docs/guides/platform
+- id: 6
+  publisher: Supabase
+  title: 'Multigres v0.1 Alpha: an operating system for Postgres'
+  date: '2026-06-04'
+  url: https://supabase.com/blog/multigres-v0-1-alpha
+- id: 7
+  publisher: Neon
+  title: Neon Pricing Plans
+  date: null
+  url: https://neon.tech/pricing
+- id: 8
+  publisher: Neon
+  title: Branching
+  date: null
+  url: https://neon.tech/docs/introduction/branching
+- id: 9
+  publisher: Neon
+  title: Multitenancy with Neon
+  date: null
+  url: https://neon.com/docs/guides/multitenancy
+- id: 10
+  publisher: Neon
+  title: Branching with the Neon API
+  date: null
+  url: https://neon.tech/docs/guides/branching-neon-api
+- id: 11
+  publisher: AWS
+  title: Amazon Aurora Limitless Database
+  date: null
+  url: https://aws.amazon.com/about-aws/whats-new/2023/11/amazon-aurora-limitless-database/
+- id: 12
+  publisher: AWS
+  title: Using Amazon Aurora PostgreSQL Limitless Database
+  date: null
+  url: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/limitless.html
+- id: 13
+  publisher: AWS
+  title: Aurora PostgreSQL Limitless Database architecture
+  date: null
+  url: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/limitless-architecture.html
+- id: 14
+  publisher: Citus Data
+  title: Multi-tenant Applications - Citus 13.0.1 documentation
+  date: null
+  url: https://docs.citusdata.com/en/stable/use_cases/multi_tenant.html
+- id: 15
+  publisher: Microsoft Learn
+  title: Elastic Clusters - Azure Database for PostgreSQL
+  date: '2025-11-18'
+  url: https://learn.microsoft.com/en-us/azure/postgresql/elastic-clusters/concepts-elastic-clusters
+- id: 16
+  publisher: Microsoft Learn
+  title: Sharding models - Azure Cosmos DB for PostgreSQL
+  date: '2023-09-08'
+  url: https://learn.microsoft.com/en-us/azure/cosmos-db/postgresql/concepts-sharding-models
+- id: 17
+  publisher: Microsoft Learn
+  title: Monitor statistics with multi-tenant monitoring on Azure Cosmos DB for PostgreSQL
+  date: '2025-10-29'
+  url: https://learn.microsoft.com/en-us/azure/cosmos-db/postgresql/howto-monitor-tenant-stats
+- id: 18
+  publisher: pgEdge
+  title: Enterprise grade Postgres for Agentic AI, high availability and more
+  date: null
+  url: https://www.pgedge.com/
+- id: 19
+  publisher: pgEdge
+  title: New approaches bolster effectiveness of Postgres multi-master database architecture
+  date: null
+  url: https://www.pgedge.com/solutions/benefit/multi-master
+- id: 20
+  publisher: pgEdge
+  title: Managed Enterprise Postgres Cloud
+  date: null
+  url: https://www.pgedge.com/products/pgedge-cloud
+- id: 21
+  publisher: Crunchy Data
+  title: Crunchy Bridge
+  date: null
+  url: https://www.crunchydata.com/products/crunchy-bridge
+- id: 22
+  publisher: Crunchy Bridge Docs
+  title: Plans and pricing - Crunchy Bridge
+  date: null
+  url: https://docs.crunchybridge.com/concepts/plans-pricing
+- id: 23
+  publisher: AWS Database Blog
+  title: Multi-tenant data isolation with PostgreSQL Row Level Security
+  date: null
+  url: https://aws.amazon.com/blogs/database/multi-tenant-data-isolation-with-postgresql-row-level-security/
+- id: 24
+  publisher: PostgreSQL Global Development Group
+  title: Row Security Policies
+  date: null
+  url: https://www.postgresql.org/docs/current/ddl-rowsecurity.html
+- id: 25
+  publisher: PostgreSQL Global Development Group
+  title: Routine Vacuuming
+  date: null
+  url: https://www.postgresql.org/docs/current/routine-vacuuming.html
+- id: 26
+  publisher: DB-Engines
+  title: DB-Engines Ranking
+  date: null
+  url: https://db-engines.com/en/ranking
+- id: 27
+  publisher: ScaleGrid
+  title: How Tenant Growth Pushes PostgreSQL Beyond Its Comfort Zone
+  date: null
+  url: https://scalegrid.io/blog/implementing-multi-tenant-saas-on-postgresql-using-citus-sharding/
+- id: 28
+  publisher: Tiger Data
+  title: A Sneak Peek Into the State of PostgreSQL 2024
+  date: '2024-12-17'
+  url: https://www.tigerdata.com/blog/state-of-postgresql-2024
+- id: 29
+  publisher: GitHub Discussions
+  title: 'Multi-tenant · supabase · Discussion #1615'
+  date: null
+  url: https://github.com/orgs/supabase/discussions/1615
+- id: 30
+  publisher: PostgreSQL Global Development Group
+  title: What is PostgreSQL?
+  date: null
+  url: https://www.postgresql.org/about/
+- id: 31
+  publisher: PostgreSQL Global Development Group
+  title: PostgreSQL 17 Released!
+  date: '2024-09-26'
+  url: https://www.postgresql.org/about/news/postgresql-17-released-2936/
