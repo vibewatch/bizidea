@@ -1,0 +1,543 @@
+slug: "robot-skillops-ledger"
+date: "2026-06-10"
+currency: USD
+modelStartMonth: "2026-07"
+assumptions:
+  - id: A1
+    name: "Model start month"
+    value: "2026-07"
+    unit: month
+    source: "[BP date] First full month after the 2026-06-10 business-plan date."
+  - id: A2
+    name: "Opening cash / pre-seed ask"
+    value: "$2.0M"
+    unit: usdM
+    source: "[BP fundingAsk] The business plan targets a $2-3M pre-seed; the model uses the low end because the base case reaches the next milestone with a six-month buffer."
+  - id: A3
+    name: "Governed cells per production account"
+    value: "5"
+    unit: cells_per_customer
+    source: "[BP market.som; research.market.som] The SOM math assumes 5 active governed cells per customer."
+  - id: A4
+    name: "Steady-state annual subscription ARPU"
+    value: "$60.0K per customer-year"
+    unit: usdK_per_customer_year
+    source: "[BP investorMemo.firstCustomer.initialContract; BP market.som; research.market.som] Five governed cells at $12K per cell implies about $60K ARR once an account is in annual production."
+  - id: A5
+    name: "Conservative pilot revenue treatment"
+    value: "Base P&L recognizes subscription revenue only and excludes separate paid-pilot or onboarding fees"
+    unit: method
+    source: "[BP gtm.pricing; BP investorMemo.firstCustomer.initialContract] The BP describes paid pilots and onboarding fees, but the base case omits them so early revenue is not overstated."
+  - id: A6
+    name: "Year 1 production-customer ramp"
+    value: "M1-M12 customersEop = 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4"
+    unit: customers
+    source: "[BP milestones 0-12 months; BP experimentRoadmap] This reflects three paid pilots in the first six months and four annual-production accounts by month 12."
+  - id: A7
+    name: "Year 2 and Year 3 customer ramp"
+    value: "Q1Y2-Q4Y3 customersEop = 6, 10, 14, 18, 26, 36, 48, 60"
+    unit: customers
+    source: "[BP milestones; research.market.som] The ramp reaches the BP year-3 target of 60 customers while keeping Y2 below full SOM penetration."
+  - id: A8
+    name: "Target gross margin"
+    value: "70%"
+    unit: percent
+    source: "[BP businessModel.targetGrossMarginPct] The P&L models COGS at 30% of revenue to match the business-plan target."
+  - id: A9
+    name: "Monthly churn"
+    value: "1.8%"
+    unit: percent
+    source: "Startup-finance heuristic for early but sticky industrial workflow software where retention should be strong after deployment, but OEM bundling and services friction still create real logo risk."
+  - id: A10
+    name: "Fully loaded CAC"
+    value: "$24.0K per production customer"
+    unit: usdK_per_customer
+    source: "[BP gtm.channels; BP gtm.funnelTargets; BP operatingAssumptions] Founder-led selling plus OEM/integrator referrals should keep CAC below pure outbound enterprise software, but each win still requires plant-level proof and implementation support."
+  - id: A11
+    name: "Loaded salary bands"
+    value: "Founder CEO $100K; engineering $130K; field solutions $110K; product/design $120K; partner sales $120K; G&A/ops $80K; customer success $90K"
+    unit: usdK_per_fte_year
+    source: "Startup-finance heuristic for a lean U.S. pre-seed industrial software team with below-big-tech cash pay and meaningful equity."
+  - id: A12
+    name: "Headcount ramp snapshots"
+    value: "Founder 1/1/1/1/1/1; engineering 1/1/1/2/3/3; field solutions 0/1/1/1/1/1; product/design 0/0/1/1/1/1; sales/partnerships 0/0/0/1/1/2; G&A/ops 0/0/0/0/1/1; customer success 0/0/0/0/0/1 across q1y1/q2y1/q3y1/q4y1/q4y2/q4y3"
+    unit: fte
+    source: "[BP team; BP strategicChoices.sequencingRationale] The model follows the BP order of founding product build first, implementation second, and partner-led GTM only after repeatability exists."
+  - id: A13
+    name: "Payroll smoothing in Y2 and Y3"
+    value: "Quarterly salary expense ramps gradually between Q4Y1, Q4Y2, and Q4Y3 snapshots rather than stepping only at year-end"
+    unit: method
+    source: "[Financial Modeler instructions] The quarterly salary line is smoothed so hiring remains consistent with the business-plan sequence."
+  - id: A14
+    name: "Non-payroll operating budgets"
+    value: "Y1 monthly S&M $5K-$8K, R&D $8K-$12K, G&A $5K-$8K; Y2 quarterly S&M $21K-$33K, R&D $30K-$39K, G&A $18K-$27K; Y3 quarterly S&M $36K-$60K, R&D $36K-$45K, G&A $24K-$33K"
+    unit: usdK
+    source: "Startup-finance heuristic anchored to [BP operations] and [BP fundingAsk.useOfFundsSummary] for lean software, travel, legal, cloud, and partner-enablement spend."
+  - id: A15
+    name: "Cash roll-forward convention"
+    value: "Ending cash equals opening cash plus EBITDA"
+    unit: method
+    source: "Startup-finance heuristic for an asset-light pre-seed software company with immaterial debt, tax, capex, and working-capital swings."
+  - id: A16
+    name: "Downside scenario deltas"
+    value: "40 customers by Q4Y3, 65% gross margin, 2.5% monthly churn, and slower partner referrals"
+    unit: scenario_inputs
+    source: "[BP risks; research.sensitivityCases] This downside maps directly to small fleets tolerating spreadsheets longer and OEM or robot-OS bundling narrowing willingness to pay."
+  - id: A17
+    name: "Upside scenario deltas"
+    value: "70 customers by Q4Y3, 72% gross margin, 1.2% monthly churn, and faster OEM/integrator referrals"
+    unit: scenario_inputs
+    source: "[BP milestones; BP product.twentyFourMonth] The upside assumes the first sister-plant transfer works cleanly and premium analytics increase account expansion."
+headcount:
+  - role: "Founder CEO"
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: "Engineering"
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 2
+    q4y2: 3
+    q4y3: 3
+  - role: "Field solutions"
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: "Product/design"
+    q1y1: 0
+    q2y1: 0
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: "Sales/partnerships"
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 1
+    q4y3: 2
+  - role: "G&A/ops"
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+  - role: "Customer success"
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 0
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 2
+  q2y1: 3
+  q3y1: 4
+  q4y1: 6
+  q4y2: 8
+  q4y3: 10
+headcountAnnualizedPayrollK:
+  q1y1: 230.0
+  q2y1: 340.0
+  q3y1: 460.0
+  q4y1: 710.0
+  q4y2: 920.0
+  q4y3: 1130.0
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 19.2
+    salesMarketingK: 5.0
+    researchDevelopmentK: 8.0
+    generalAdministrativeK: 5.0
+    opexK: 37.2
+    ebitdaK: -37.2
+    cashEopK: 1962.8
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 19.2
+    salesMarketingK: 5.0
+    researchDevelopmentK: 8.0
+    generalAdministrativeK: 5.0
+    opexK: 37.2
+    ebitdaK: -37.2
+    cashEopK: 1925.6
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 19.2
+    salesMarketingK: 5.0
+    researchDevelopmentK: 8.0
+    generalAdministrativeK: 5.0
+    opexK: 37.2
+    ebitdaK: -37.2
+    cashEopK: 1888.4
+  - month: M4
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 5.0
+    cogsK: 1.5
+    grossProfitK: 3.5
+    salaryK: 28.3
+    salesMarketingK: 5.0
+    researchDevelopmentK: 9.0
+    generalAdministrativeK: 6.0
+    opexK: 48.3
+    ebitdaK: -44.8
+    cashEopK: 1843.6
+  - month: M5
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 5.0
+    cogsK: 1.5
+    grossProfitK: 3.5
+    salaryK: 28.3
+    salesMarketingK: 5.0
+    researchDevelopmentK: 9.0
+    generalAdministrativeK: 6.0
+    opexK: 48.3
+    ebitdaK: -44.8
+    cashEopK: 1798.8
+  - month: M6
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 5.0
+    cogsK: 1.5
+    grossProfitK: 3.5
+    salaryK: 28.3
+    salesMarketingK: 5.0
+    researchDevelopmentK: 9.0
+    generalAdministrativeK: 6.0
+    opexK: 48.3
+    ebitdaK: -44.8
+    cashEopK: 1754.0
+  - month: M7
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 10.0
+    cogsK: 3.0
+    grossProfitK: 7.0
+    salaryK: 38.3
+    salesMarketingK: 6.0
+    researchDevelopmentK: 10.0
+    generalAdministrativeK: 7.0
+    opexK: 61.3
+    ebitdaK: -54.3
+    cashEopK: 1699.7
+  - month: M8
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 10.0
+    cogsK: 3.0
+    grossProfitK: 7.0
+    salaryK: 38.3
+    salesMarketingK: 6.0
+    researchDevelopmentK: 10.0
+    generalAdministrativeK: 7.0
+    opexK: 61.3
+    ebitdaK: -54.3
+    cashEopK: 1645.4
+  - month: M9
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 10.0
+    cogsK: 3.0
+    grossProfitK: 7.0
+    salaryK: 38.3
+    salesMarketingK: 6.0
+    researchDevelopmentK: 10.0
+    generalAdministrativeK: 7.0
+    opexK: 61.3
+    ebitdaK: -54.3
+    cashEopK: 1591.1
+  - month: M10
+    customersEop: 3
+    newCustomers: 1
+    revenueK: 15.0
+    cogsK: 4.5
+    grossProfitK: 10.5
+    salaryK: 59.2
+    salesMarketingK: 8.0
+    researchDevelopmentK: 12.0
+    generalAdministrativeK: 8.0
+    opexK: 87.2
+    ebitdaK: -76.7
+    cashEopK: 1514.4
+  - month: M11
+    customersEop: 3
+    newCustomers: 0
+    revenueK: 15.0
+    cogsK: 4.5
+    grossProfitK: 10.5
+    salaryK: 59.2
+    salesMarketingK: 8.0
+    researchDevelopmentK: 12.0
+    generalAdministrativeK: 8.0
+    opexK: 87.2
+    ebitdaK: -76.7
+    cashEopK: 1437.7
+  - month: M12
+    customersEop: 4
+    newCustomers: 1
+    revenueK: 20.0
+    cogsK: 6.0
+    grossProfitK: 14.0
+    salaryK: 59.2
+    salesMarketingK: 8.0
+    researchDevelopmentK: 12.0
+    generalAdministrativeK: 8.0
+    opexK: 87.2
+    ebitdaK: -73.2
+    cashEopK: 1364.5
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 6
+    revenueK: 75.0
+    cogsK: 22.5
+    grossProfitK: 52.5
+    salaryK: 190.0
+    salesMarketingK: 21.0
+    researchDevelopmentK: 30.0
+    generalAdministrativeK: 18.0
+    opexK: 259.0
+    ebitdaK: -206.5
+    cashEopK: 1158.0
+  - quarter: Q2Y2
+    customersEop: 10
+    revenueK: 120.0
+    cogsK: 36.0
+    grossProfitK: 84.0
+    salaryK: 202.5
+    salesMarketingK: 24.0
+    researchDevelopmentK: 33.0
+    generalAdministrativeK: 21.0
+    opexK: 280.5
+    ebitdaK: -196.5
+    cashEopK: 961.5
+  - quarter: Q3Y2
+    customersEop: 14
+    revenueK: 180.0
+    cogsK: 54.0
+    grossProfitK: 126.0
+    salaryK: 216.3
+    salesMarketingK: 27.0
+    researchDevelopmentK: 36.0
+    generalAdministrativeK: 24.0
+    opexK: 303.3
+    ebitdaK: -177.3
+    cashEopK: 784.2
+  - quarter: Q4Y2
+    customersEop: 18
+    revenueK: 240.0
+    cogsK: 72.0
+    grossProfitK: 168.0
+    salaryK: 230.0
+    salesMarketingK: 33.0
+    researchDevelopmentK: 39.0
+    generalAdministrativeK: 27.0
+    opexK: 329.0
+    ebitdaK: -161.0
+    cashEopK: 623.2
+  - quarter: Q1Y3
+    customersEop: 26
+    revenueK: 330.0
+    cogsK: 99.0
+    grossProfitK: 231.0
+    salaryK: 240.0
+    salesMarketingK: 36.0
+    researchDevelopmentK: 36.0
+    generalAdministrativeK: 24.0
+    opexK: 336.0
+    ebitdaK: -105.0
+    cashEopK: 518.2
+  - quarter: Q2Y3
+    customersEop: 36
+    revenueK: 465.0
+    cogsK: 139.5
+    grossProfitK: 325.5
+    salaryK: 253.8
+    salesMarketingK: 42.0
+    researchDevelopmentK: 39.0
+    generalAdministrativeK: 27.0
+    opexK: 361.8
+    ebitdaK: -36.3
+    cashEopK: 481.9
+  - quarter: Q3Y3
+    customersEop: 48
+    revenueK: 630.0
+    cogsK: 189.0
+    grossProfitK: 441.0
+    salaryK: 268.8
+    salesMarketingK: 51.0
+    researchDevelopmentK: 42.0
+    generalAdministrativeK: 30.0
+    opexK: 391.8
+    ebitdaK: 49.2
+    cashEopK: 531.1
+  - quarter: Q4Y3
+    customersEop: 60
+    revenueK: 810.0
+    cogsK: 243.0
+    grossProfitK: 567.0
+    salaryK: 282.5
+    salesMarketingK: 60.0
+    researchDevelopmentK: 45.0
+    generalAdministrativeK: 33.0
+    opexK: 420.5
+    ebitdaK: 146.5
+    cashEopK: 677.6
+totals:
+  y1:
+    revenueK: 95.0
+    ebitdaK: -635.5
+    cashEopK: 1364.5
+  y2:
+    revenueK: 615.0
+    ebitdaK: -741.3
+    cashEopK: 623.2
+  y3:
+    revenueK: 2235.0
+    ebitdaK: 54.4
+    cashEopK: 677.6
+unitEconomics:
+  arpuAnnualK: 60.0
+  grossMarginPct: 70.0
+  cacK: 24.0
+  monthlyChurnPct: 1.8
+  avgCustomerLifeMonths: 55.6
+  ltvK: 233.5
+  ltvCacRatio: 9.7
+  cacPaybackMonths: 6.9
+fundingAsk:
+  round: pre-seed
+  amountM: 2.0
+  runwayMonths: 24
+  milestone: "Reach 18 annual subscription accounts, ship two OEM connectors, and prove one sister-plant rollout with six months of cash buffer left."
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 900000
+      percentage: 45.0
+    - bucket: GTM
+      amountUsd: 450000
+      percentage: 22.5
+    - bucket: "G&A"
+      amountUsd: 250000
+      percentage: 12.5
+    - bucket: "Buffer (6 mo)"
+      amountUsd: 400000
+      percentage: 20.0
+scenarios:
+  downside:
+    description: "OEM and integrator referrals ramp more slowly, gross margin stays services-heavy, and the company exits year 3 with only 40 customers."
+    y3RevenueK: 1560.0
+    y3EbitdaK: -310.0
+    cashLowPointK: 90.0
+    keyAssumptionChanges:
+      - "Q4Y3 customers fall to 40 instead of 60."
+      - "Gross margin falls to 65% instead of 70%."
+      - "Monthly churn rises to 2.5%."
+      - "Second sales hire slips and channel conversion stays weak."
+  base:
+    description: "Commissioning-time pilots convert into annual subscriptions and OEM or integrator referrals compound after repeatable proof exists."
+    y3RevenueK: 2235.0
+    y3EbitdaK: 54.4
+    cashLowPointK: 481.9
+    keyAssumptionChanges:
+      - "Q4Y3 customers reach 60."
+      - "Steady-state ARPU stays at $60K per account-year."
+      - "Gross margin reaches the 70% business-plan target."
+      - "Headcount reaches 10 FTE by Q4Y3."
+  upside:
+    description: "The first sister-plant transfer becomes a strong proof point, partner referrals accelerate, and premium analytics expand account value."
+    y3RevenueK: 2715.0
+    y3EbitdaK: 338.0
+    cashLowPointK: 620.0
+    keyAssumptionChanges:
+      - "Q4Y3 customers reach 70 instead of 60."
+      - "Gross margin improves to 72%."
+      - "Monthly churn improves to 1.2%."
+      - "OEM and integrator referrals shorten the sales cycle by about two months."
+sensitivity:
+  - variable: ARPU
+    downsideCase: "$54K annual subscription value per account"
+    baseCase: "$60K annual subscription value per account"
+    upsideCase: "$66K annual subscription value per account"
+    y3RevenueImpactK: 223.5
+    cashImpactK: 156.5
+  - variable: CAC
+    downsideCase: "$30K fully loaded CAC as direct sales replaces referrals"
+    baseCase: "$24K fully loaded CAC"
+    upsideCase: "$18K CAC from stronger OEM and integrator sourcing"
+    y3RevenueImpactK: 0.0
+    cashImpactK: 180.0
+  - variable: churn
+    downsideCase: "2.5% monthly logo churn"
+    baseCase: "1.8% monthly logo churn"
+    upsideCase: "1.2% monthly logo churn"
+    y3RevenueImpactK: 180.0
+    cashImpactK: 126.0
+  - variable: sales cycle
+    downsideCase: "9-month cycle from pilot start to annual subscription"
+    baseCase: "6-7 month cycle"
+    upsideCase: "4-5 month cycle"
+    y3RevenueImpactK: 420.0
+    cashImpactK: 260.0
+  - variable: gross margin
+    downsideCase: "65% gross margin from services-heavy deployments"
+    baseCase: "70% gross margin"
+    upsideCase: "73% gross margin from repeatable connectors"
+    y3RevenueImpactK: 0.0
+    cashImpactK: 111.8
+  - variable: hiring pace
+    downsideCase: "Second seller and customer success hire happen two quarters early"
+    baseCase: "Current lean ramp to 10 FTE by Q4Y3"
+    upsideCase: "Noncritical hires are delayed until expansion is proven"
+    y3RevenueImpactK: 60.0
+    cashImpactK: 150.0
+modelDiagram:
+  title: "Robot SkillOps revenue flow"
+  mermaid: |
+    flowchart LR
+      Leads["OEM & integrator commissioning leads"] --> Pilots["Paid pilot / proof project"]
+      Pilots --> Accounts["Annual subscription accounts"]
+      Accounts --> Cells["5 governed cells per account"]
+      Cells --> Revenue["Subscription revenue"]
+      Revenue --> GrossProfit["70% gross profit"]
+      GrossProfit --> Cash["Cash and runway"]
+modelSanity:
+  - checkName: "Revenue engine"
+    finding: "The base case is driven by converting commissioning-time pilots into $60K annual accounts and then expanding referral-led wins to 60 customers by Q4Y3."
+  - checkName: "Must go right"
+    finding: "OEM and integrator channels must supply enough qualified cell expansions for sales efficiency to hold near the $24K CAC assumption."
+  - checkName: "Model breaks if"
+    finding: "If implementations stay services-heavy and the business stalls near 40 customers, the downside case compresses cash and likely forces a bridge round."
+  - checkName: "Next-round proof"
+    finding: "Exiting Y2 with 18 customers, two OEM connectors, and one sister-plant rollout is the milestone most likely to justify the next financing."
+sanityChecks:
+  ruleOf40: "Y3 growth 263.4% + EBITDA margin 2.4% = 265.8%."
+  burnMultiple: "Y2 burn multiple is about 0.9x ($741K EBITDA burn against roughly $840K of net new ARR from 4 to 18 accounts); Y3 turns EBITDA positive."
+  revenuePerFte: "$224K Y3 using 10 Q4Y3 FTE (benchmark roughly $200-400K for emerging SaaS)."
+  flags:
+    - "The Y3 exit depends on partner-led acceleration from 18 customers at Y2 exit to 60 customers at Y3 exit; if channel trust builds slower, the ramp will miss."
+    - "The model deliberately excludes separate pilot and onboarding revenue to stay conservative, so early commercial traction may look weaker than field reality."
+    - "Gross margin only works if implementation scope stays narrow and reusable; heavy custom integration would push EBITDA back below zero."
