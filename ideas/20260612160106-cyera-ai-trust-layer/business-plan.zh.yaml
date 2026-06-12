@@ -1,0 +1,223 @@
+slug: agent-activity-attribution-graph
+date: '2026-06-12'
+executiveSummary: 这家公司卖的是一层 agent 归因信任层，面向那些正把 Microsoft 365 Copilot、Copilot Studio 和 ServiceNow agent 推进到受监管企业里的团队，而这些企业本身就背着一套混乱的权限体系。第一款产品是一张只读图谱：在扩容前先告诉你某个 agent 能碰到 Entra ID、SharePoint、OneDrive、Teams 和 ServiceNow 里的什么；上线后再把它实际碰了什么记下来。首个买方是银行或 pharma 里由 CISO 牵头的安全团队，他们拥有 15,000+ Microsoft 365 席位，而且 rollout review 已经被卡住，因为这正是 oversharing 和归因风险已经升到管理层视野的地方。这个切口比泛 AI 治理更窄：卖的是审批包和修复优先级，把原本靠人工表格推进的 rollout signoff 压到几天。研究证明紧迫性是真的：Microsoft 一直在强调 oversharing readiness，多项调查也显示未知 agent、范围越界和审批覆盖不足已经发生；但真实转化率，以及买方究竟愿意为哪一套最小证据包掏钱，还要继续验证。TAM、SAM 和 SOM 都是基于装机盘子与 ACV 假设推出来的模型，不是已经锁定的需求。公司应当刻意避开泛模型治理、面向外部客户的 agent 用例，以及默认内联执行，先把“上线前审批 + 审计证据”这条落地路径跑通。如果团队能拿下 3 个付费共创客户，并把试点转成 $250k–$400k 的生产首单，就有机会在现有厂商把赛道压平之前，先占住 agent 专属证据系统的位置。
+problem:
+- Copilot 和 ServiceNow agent 的 rollout 会继承陈旧的 Microsoft 365 权限，以及 SharePoint / OneDrive 里过度共享的内容，所以安全团队在更大范围部署前，根本证明不了这个 agent 的影响半径。
+- 现有 SIEM、DSPM 和身份工具各自只能看见问题的一部分，没法把人工、委托和 agent 行为收成一份能直接交给审批人的记录。
+- 手工访问审查和审计准备会把 rollout 审批拖到数周甚至数个季度，结果就是：明明 AI 项目预算已经批了，安全团队反而成了总闸门。
+solution:
+- 在 Entra ID、Microsoft 365、SharePoint、OneDrive、Teams 和 ServiceNow 之上搭一张只读归因图谱，在生产扩容前先模拟每个 agent 能触达什么。
+- 采集运行证据，标明敏感访问究竟来自人工、委托用户上下文，还是常驻机器身份，再把这些证据挂回已批准的工作流。
+- 自动生成审批包并按优先级排出权限清理动作，让 rollout committee 不用先做完整 least-privilege 重建，也能更快签字。
+whyWeWin:
+- 产品直接钉在一个具体审批工作流上，而不是做一个泛 AI 治理仪表盘，所以第一性 ROI 指标不是抽象的合规 posture，而是 rollout review 周期能缩短多少。
+- 这个切口在同一套证据模型里把 Microsoft 365 和 ServiceNow 连起来，而原生控制和现有厂商工具通常只盯单一栈，或停留在更宽的数据安全叙事。
+- 先聚焦受监管银行和 pharma，能更快打磨审计证据质量、修复模式和伙伴要求；如果一开始横着铺开，反馈回路反而会更松。
+strategicChoices:
+  beachhead: Fortune 1000 银行和全球 pharma 公司，拥有 15,000+ Microsoft 365 席位，正把内部 HR 或 IT 支持 agent 从试点推向更大范围的员工访问。
+  wedgeRationale: 这批客户本来就有 oversharing 清理项目、正式 rollout committee 和明确的安全 owner，所以只要产品能把 review 时间压下去，买方会先为这个切口付钱，而不是一上来就要求完整 autonomous-agent 安全套件。
+  sequencingRationale: 先从只读切入，先做上线前模拟和运行后证据，优先覆盖风险最高的 Microsoft 与 ServiceNow 连接器；等审批包这件事能稳定复用，再往修复工作流扩；在放大销售前，先补企业级 solutions 和身份工程，因为早期转化更看信任与集成深度，而不是漏斗顶端有多大。
+  notYet:
+  - 面向外部客户的 autonomous agent，以及处理外部客户数据的工作流
+  - 泛模型策略管理
+  - 默认开启的内联阻断和自动修复
+  - 非 Microsoft 的协作栈
+market:
+  tam: TAM 模型约为 $900M：按约 3,000 家大型全球 Microsoft 365 与 ServiceNow 账户、每家约 $300k 年度首单价值估算。
+  sam: SAM 模型约为 $75M：按约 250 家金融与 pharma 账户估算，它们拥有 15k+ Microsoft 365 席位、SharePoint 权限蔓延，并且正在推进 Copilot 或 ServiceNow rollout。
+  som: 第 3 年 SOM 约为 $7.5M：假设拿下 25 家滩头客户、每家约 $300k 年度首单价值。
+  segments:
+  - 正在扩容 Microsoft 365 Copilot 的受监管金融服务企业
+  - 把内部支持 agent 部署在敏感协作数据之上的全球 pharma 企业
+  buyingProcess: 一笔交易通常从 rollout committee 或一次审计事件开始。AI 安全或数据安全团队会拉着 SharePoint、Entra 和 ServiceNow 负责人一起评估；一旦价值验证证明审批周期更快、过度访问路径更少，CISO 或信息安全副总裁就会批预算。
+product:
+  mvp: MVP 是一层只读审批与证据层，覆盖 1 个 Microsoft 365 tenant 和 1 个 ServiceNow instance。它会 ingest 身份、权限、敏感数据指针和审计事件，给 rollout committee 产出按 agent 划分的影响半径图、权限链解释和可下载审批包。
+  sixMonth: 覆盖 Entra ID、SharePoint、OneDrive、Teams 和 1 个 ServiceNow instance；在 2–3 个共创客户处部署；并证明系统在接通数据后的 10 个工作日内就能产出可用审批包。
+  twelveMonth: 补上运行证据留存、金融与 pharma 策略模板、按优先级排序的修复工作流，并打通 Purview、SIEM 和 SailPoint，用于交接而不是 rip-and-replace。
+  twentyFourMonth: 扩到跨 SaaS 的 agent 流和持续 recertification；只有在真实证据证明误报率足够低的地方，再加策略执行和自动修复。
+  keyBets:
+  - 买方会先为只读审批证据付费，再要求内联控制。
+  - 五个核心连接器已经覆盖了滩头市场第 1 年的大部分风险。
+  - 审批包可以在 rollout committee 里变成标准工件。
+  - 运行证据和修复结果可以持续复利，长成有韧性的评分护城河。
+gtm:
+  wedge: 在受监管企业里，围绕被卡住的 Copilot 或 ServiceNow rollout 扩容，做一轮由安全团队牵头的价值验证。
+  channels:
+  - 直接卖给正在做 rollout review 和审计升级的企业
+  - Microsoft 安全、Purview 与身份伙伴
+  - ServiceNow 实施方与安全咨询公司
+  funnelTargets: 目标账户到安全发现 20-30%；发现到付费试点 40-50%；试点到生产 60%+；生产后 12 个月内扩到第二条受治理工作流 50%+
+  pricing: 年度订阅按受监控的 agent 工作流数量，以及接入 tenant / instance 数量收费；付费 proof of value 可抵扣生产订阅。这样定价更贴价值，因为审批工作量和审计范围，更多是随受治理工作流增长，而不是只跟 seat 数走。
+businessModel:
+  revenueStreams:
+  - 年度平台订阅
+  - 付费 proof-of-value 与 onboarding 包
+  - 更长证据留存和修复自动化的高级模块
+  unitOfValue: 生产环境中的受治理 agent 工作流
+  targetGrossMarginPct: 70
+  expansionLevers:
+  - 在同一 tenant 与业务单元里增加更多 agent 工作流
+  - 扩到更多业务单元、地域或受监管数据存储
+  - 向上销售更长证据留存和审计报告
+  - 在手工交接跑通后，向上销售修复自动化
+strategyMap:
+  northStarMetric: 具备持续审批与运行证据覆盖的生产 agent 工作流数量
+  inputMetrics:
+  - 具备真实 rollout 卡点的合格共创客户数
+  - 从连接器启用到第一份审批包产出的天数
+  - 每条已上线工作流修掉的过度访问路径数
+  - 付费试点转生产的转化率
+  - 客户在 12 个月内扩出的生产工作流数
+  moatsToBuild:
+  - 把 Entra、Microsoft 365 和 ServiceNow 连起来的跨系统身份与权限图谱
+  - 对照“审批范围”和“实际运行触达”的历史数据集
+  - 针对 Microsoft 365 过度共享资产的修复 playbook 库
+  - 在受监管企业 rollout committee 里的伙伴信任
+  killCriteria:
+  - 前 15 个目标账户里，少于 3 家承认 rollout 延迟或审计痛点已经严重到愿意为试点付钱。
+  - 付费试点在 6 个月内转生产的比例低于 50%。
+  - Microsoft 或现有厂商把跨系统证据缺口补得足够好，潜在客户不再要求中立第三方审批包。
+  mermaid: "flowchart LR\n  Wedge[Blocked Copilot expansion review] --> MVP[Read-only attribution graph]\n  MVP --> Proof[Approval packets and runtime evidence]\n  Proof --> Expansion[Multi-workflow expansion and recertification]\n"
+investorMemo:
+  verdict:
+    call: 值得见 / 继续深挖
+    conviction: 买方痛点真实、切口也克制，但能否顶住 Microsoft 与 DSPM 现有厂商的复制，还需要一线验证。
+    whyBelieve: 这套方案盯住的是受监管、重 Microsoft 企业里一条已经有预算的审批瓶颈，而不是要求买方从零造一个新的治理预算。
+    whyDoubt: 原生控制或现有厂商扩展，可能已经能吃掉足够多的流程，导致初创公司最终占不住系统记录位。
+    nextDiligence: 先验证 3–5 家银行或 pharma 企业是否愿意为上线前审批包付费，而不是一上来就要求完整的内联执行。
+  firstCustomer:
+    title: 正在扩容 Copilot 的头部银行 AI 安全负责人
+    profile: 一家拥有 15,000+ Microsoft 365 席位的企业，SharePoint 和 OneDrive 里存在过度共享内容，已经在跑 Copilot Studio 或 ServiceNow 的 HR / IT agent，并且有正式 rollout review committee。
+    trigger: 试点已经准备从单一部门扩出去，安全团队必须先证明 least-privilege 数据触达范围，才能放开更广的员工访问。
+    buyer: CISO
+    initialContract: 先签 8–12 周、$50k–$100k 的付费价值验证，可抵扣后续一年 $250k–$400k 的生产订阅；覆盖 1 个 tenant、1 个 ServiceNow instance 和前 5–10 条受治理工作流。
+  mustBeTrue:
+  - 至少一半目标共创客户今天确实因为无法快速证明 agent 专属数据触达，而推迟 rollout 扩容。
+  - 在买方要求内联阻断之前，只读证据加修复优先级本身就足以构成一个值得单独买的首款产品。
+  - Microsoft 和 ServiceNow 暴露出来的身份与运行时遥测，已经足够区分初始工作流里的 agent、委托用户和 service principal 行为。
+  - 一份中立审批包，比现有厂商工具拼装或纯人工 review 更能加快试点转化。
+  - 公司能以 $250k+ ACV 拿下首单，并靠更多工作流做扩张，而不会滑成服务密集型业务。
+  diligenceQuestions:
+  - 到底哪些审批工件，最能让 rollout committee 缩短签字时间？
+  - 早期客户有多常要求文件级或记录级的运行证据，而不是工作流级摘要？
+  - Onboarding 里哪些部分是可复用软件，哪些仍然是定制化权限清理？
+  - 如果 Microsoft 在未来 12 个月补强原生跨应用归因，产品还剩下多大差异化？
+  - 对买方来说，最容易直接扩展的是哪家现有厂商，而不是再引入新供应商？
+operatingAssumptions:
+- assumption: 买方会先为只读审批与证据层付费，再要求内联执行。
+  basis: research.yaml
+  validationTest: 前 4 个付费试点里，至少 2 个能在初始合同不承诺内联阻断的情况下转进。
+  decisionImpact: 如果这条不成立，路线图和招聘计划就得更早转向策略执行和更深的控制面集成。
+- assumption: Entra、SharePoint、OneDrive、Teams 和 ServiceNow 已经覆盖了滩头市场第 1 年的大部分风险。
+  basis: research.yaml
+  validationTest: 前 8 次共创客户范围确认电话里，70% 以上的高风险工作流都落在这五个连接器上。
+  decisionImpact: 如果不成立，要么把 ICP 再收窄，要么在放大销售前先补更宽的集成。
+- assumption: 首个工作流包可以做到 $250k–$400k 的生产首单。
+  basis: 运营判断
+  validationTest: 拿到 3 份书面试点转生产方案，并且每份都能守住至少 $250k 年合同额。
+  decisionImpact: 如果做不到，公司就需要更低成本的 onboarding、不同的定价基准，或者更大的漏斗顶端，才能去融资放量。
+- assumption: 接通数据后，审批包能把 rollout review 周期压到 10 个工作日以内。
+  basis: idea.yaml
+  validationTest: 在 3 个共创客户里测量前后审批周期，并确认至少缩短 50%。
+  decisionImpact: 如果不成立，就该把产品重新定位到审计与事故证据，而不是 rollout 加速。
+- assumption: 相比在第 1 年堆一大支直销团队，伙伴引荐能更快帮企业建立信任。
+  basis: research.yaml
+  validationTest: 前 12 个月的合格 pipeline 至少有 50% 来自 Microsoft、ServiceNow 或咨询伙伴的引荐，或被其显著加速。
+  decisionImpact: 如果不成立，就得更早加大直销招聘，并接受在形成可复制性前需要更多资金。
+experimentRoadmap:
+- horizon: 0–90 天
+  experiment: 访谈并梳理 10 家正在做 Copilot 或 ServiceNow 扩容 review 的目标银行与 pharma 账户。
+  hypothesis: 大多数合格潜客已经有明确的审批瓶颈，也说得清今天的人工作业流。
+  successMetric: 至少 6 家账户分享真实 review 流程，且有 3 家愿意进入共创客户范围确认。
+  owner: 创始人/CEO
+- horizon: 0–90 天
+  experiment: 先搭出 Entra、SharePoint、OneDrive、Teams 和 ServiceNow 的第一版只读数据摄取管道。
+  hypothesis: 核心图谱不需要写权限，也不需要打断现有部署，就能还原 agent 到数据的可达范围。
+  successMetric: 在 1 个试点 tenant 里，至少为 2 条真实 agent 工作流产出可信的影响半径图。
+  owner: 创始工程师
+- horizon: 90–180 天
+  experiment: 为 3 个共创客户跑带审批包的付费 proof-of-value 项目。
+  hypothesis: 审批工件和修复优先级足够有价值，能把免费评估推进成付费项目。
+  successMetric: 签下至少 2 个付费试点，且至少有 1 个安全委员会在真实 review 中使用这份包。
+  owner: 创始人/CEO
+- horizon: 90–180 天
+  experiment: 用按工作流计价的生产方案测试定价与打包。
+  hypothesis: 相比按 seat 计价，买方更接受按工作流收费，因为这更贴风险委员会的范围和内部预算逻辑。
+  successMetric: 至少 2 份年价值高于 $250k 的方案推进到采购或预算审批阶段。
+  owner: 创始安全产品负责人
+- horizon: 6–12 个月
+  experiment: 上线运行证据留存，并对比它与“只做模拟”的部署在试点转化上的差异。
+  hypothesis: 运行后证据会明显提升转化和扩张，因为审计团队要看的不只是模拟可达范围，还要看真实访问。
+  successMetric: 使用运行证据的账户，其生产转化率至少高出 20 个点。
+  owner: 创始工程师
+- horizon: 6–12 个月
+  experiment: 和 1 家聚焦 Microsoft 的集成商、1 家 ServiceNow 实施伙伴，正式跑通联合销售动作。
+  hypothesis: 第 1 年里，伙伴带来的机会会比冷启动外呼更合格、也更接近后期。
+  successMetric: 有 2 个伙伴来源机会进入付费试点，且有 1 个转成生产。
+  owner: 共创客户销售
+operations:
+- 面向 Entra、Microsoft 365 审计信号、SharePoint 权限和 ServiceNow 角色的只读摄取与标准化管道
+- 给 rollout committee 使用的标准审批包模板，覆盖影响半径、证据和修复优先级
+- 一套 solutions-engineering playbook，把权限清理交回客户团队或现有厂商工具，而不是做成定制咨询
+- 满足受监管审计请求的证据留存控制与客户自管访问策略
+- 面向 Microsoft 安全集成商和 ServiceNow 实施方的伙伴赋能
+team:
+- role: 创始工程师
+  startTiming: Month 0
+  rationale: 负责搭建图谱摄取、身份解析和审批包生成引擎。
+- role: 创始安全产品负责人
+  startTiming: Month 0
+  rationale: 把 rollout committee 的痛点翻成产品需求、策略模板和面向买方的证据设计。
+- role: 解决方案架构师
+  startTiming: Month 3
+  rationale: 主导 M365 与 ServiceNow 的部署设计，缩短试点周期，并把 onboarding 守在标准化轨道上。
+- role: 共创客户销售
+  startTiming: Month 6
+  rationale: 在首批证据点出现后，把创始人亲自打单变成可复制的企业销售动作。
+- role: 身份与集成工程师
+  startTiming: Month 6
+  rationale: 当核心切口在生产环境跑起来后，继续补深 Purview、SIEM 和 SailPoint 的互操作性。
+milestones:
+- horizon: 0–12 个月
+  items:
+  - 在银行或 pharma 账户里签下 3 个付费共创客户
+  - 交付带审批包导出的 Microsoft 365 与 ServiceNow 只读图谱
+  - 至少把 2 个试点转成生产订阅
+  - 和 Microsoft 或 ServiceNow 生态伙伴跑出 2 条可引用的合作动作
+- horizon: 12–24 个月
+  items:
+  - 补上运行证据留存与标准化修复工作流
+  - 以可复制的按工作流定价做到 8–10 个生产客户
+  - 至少一半客户能从首条工作流扩到第二条工作流
+  - 发布审批周期缩短和过度访问移除的 benchmark 数据
+- horizon: 24–36 个月
+  items:
+  - 把连接器覆盖面扩到更广的跨 SaaS agent 场景
+  - 在滩头垂直行业里占住 agent recertification 的系统记录位
+  - 证明自动化和留存 upsell 能抬高净收入留存，而不会拖出巨大的服务负担
+risks:
+- risk: Microsoft 把跨应用归因缺口补到足够好，买方开始把第三方证据看成可有可无。
+  likelihood: Medium
+  impact: High
+  mitigation: 把重点放在中立审批包、ServiceNow 关联和原生控制做不到统一的修复优先级工作流上。
+- risk: 现有 DSPM 或身份厂商很快延伸到 agent 审批，压缩新供应商引入空间。
+  likelihood: High
+  impact: High
+  mitigation: 先赢下窄 rollout 审批工作流，优先和现有厂商集成而不是替换它们，并尽快积累“审批范围 vs. 实际运行”专有证据数据。
+- risk: 早期部署变成服务密集的权限清理项目，软件杠杆很弱。
+  likelihood: Medium
+  impact: High
+  mitigation: 首款产品坚持只读，标准化 onboarding playbook，并把修复执行交给客户团队或伙伴。
+- risk: 仍停在小试点的潜客紧迫感不够，不会立刻买。
+  likelihood: Medium
+  impact: Medium
+  mitigation: 只筛选那些已经被扩容、审计或事故复盘触发的账户，把泛 AI 试验型机会直接排除。
+- risk: 关键工作流里的运行时遥测并不稳定，无法稳定区分 agent、委托用户和 service principal 行为。
+  likelihood: Medium
+  impact: High
+  mitigation: 把首批工作流范围收窄到证据信号可靠的连接器，并在 scope 文档里明确写出哪些工作流暂不支持。
+fundingAsk:
+  round: seed
+  targetFundingRangeUsd: $3–5M
+  runwayMonths: 18
+  useOfFundsSummary: 用这笔钱覆盖 18 个月的核心图谱与证据产品研发，证明 3 个付费共创客户和 2–3 个生产转化，补齐工程、solutions 与企业销售能力，并在受监管账户里跑出可复制的 $250k+ 按工作流计价首单。
