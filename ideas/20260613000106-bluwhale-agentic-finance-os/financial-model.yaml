@@ -1,0 +1,546 @@
+slug: hybrid-comp-payday-autopilot
+date: '2026-06-13'
+currency: USD
+modelStartMonth: 2026-07
+assumptions:
+- id: A1
+  name: Model start month
+  value: 2026-07
+  unit: YYYY-MM
+  source: '[BP date 2026-06-13] Base case starts in the first full month after the business-plan date.'
+- id: A2
+  name: Opening cash from pre-seed round
+  value: '2000.0'
+  unit: USDK
+  source: '[BP fundingAsk targetFundingRangeUsd $2-4M] Base case uses the low end of the stated range because the hiring plan stays lean through Y3.'
+- id: A3
+  name: Customer unit in the model
+  value: active paid household with at least one live policy
+  unit: definition
+  source: '[BP businessModel.unitOfValue] customersEop tracks active paying households; first-year onboarding revenue is blended into annualized household revenue instead of modeled as a separate services line.'
+- id: A4
+  name: Starting paid households (M1)
+  value: '0'
+  unit: count
+  source: '[BP milestones 0-12 months] The company begins pre-revenue and converts paid households only after simulation-first onboarding starts.'
+- id: A5
+  name: Blended annual revenue per active paid household
+  value: '0.42'
+  unit: USDK per year
+  source: '[BP investorMemo.firstCustomer.initialContract $149-$299 setup + $180-$300 annual subscription; BP gtm.funnelTargets 20% premium tier within 12 months] Uses roughly $199 of onboarding value plus about $240 of recurring value, rounded down for conservatism.'
+- id: A6
+  name: Revenue recognition method
+  value: average active households per period
+  unit: formula
+  source: 'Startup-finance heuristic: new households go live throughout the month or quarter, so revenue is modeled on average active customers rather than end-of-period counts.'
+- id: A7
+  name: Year 1 net new paid households by month
+  value: '[0,0,0,1,1,2,2,2,3,4,4,5]'
+  unit: count
+  source: '[BP milestones 0-12 months] Ends Y1 at 24 active paid households, which sits inside the plan to convert 20-50 households into paid setup users and early live users.'
+- id: A8
+  name: Year 2 net new paid households by quarter
+  value: '[60,120,180,316]'
+  unit: count
+  source: '[BP milestones 12-24 months; BP experimentRoadmap advisor and community channel tests] Base case reaches 700 active households by Q4Y2 as templates, paid setup, and three referral partners begin compounding.'
+- id: A9
+  name: Year 3 net new paid households by quarter
+  value: '[400,700,1000,1200]'
+  unit: count
+  source: '[BP milestones 24-36 months; research.market.som 25,000 paying households at year-3 reach] Base case exits Y3 at 4,000 active households, well below the researched 25,000-household SOM but high enough to show self-serve scale.'
+- id: A10
+  name: Gross margin ramp
+  value: 55-62% in Y1, 64-68% in Y2, and 69-70% in Y3
+  unit: percent
+  source: '[BP businessModel.targetGrossMarginPct 70; BP operations; research.regulatoryTechnicalConstraints] Gross margin starts below target because support, approvals, and connector exceptions are manual early on, then approaches the BP target by Y3.'
+- id: A11
+  name: Monthly churn for unit economics
+  value: '2.5'
+  unit: percent
+  source: Startup-finance heuristic for a trust-sensitive paid consumer finance subscription where retention can be strong after live activation but is still early-stage and behavior-dependent.
+- id: A12
+  name: Fully loaded CAC
+  value: '0.22'
+  unit: USDK per active paid household
+  source: '[BP gtm.channels; BP funnelTargets; BP operatingAssumptions on advisor referrals] Assumes advisor and community channels outperform broad paid acquisition and that paid setup fees partially offset onboarding spend.'
+- id: A13
+  name: Loaded salary bands
+  value: Founder $120K; engineering $150K; operations/customer success $85K; growth/partnerships $115K; compliance/support $95K
+  unit: USDK annual per FTE
+  source: Startup-finance heuristic for a lean U.S.-based pre-seed fintech team with meaningful but not top-of-market cash salaries.
+- id: A14
+  name: Hiring sequence
+  value: Founder and engineer in M1; operations/customer success in M7; growth/partnerships in M10; second engineer in M16; compliance/support in M22; third engineer in M35
+  unit: timing
+  source: '[BP team startTiming Month 0/6/9; BP strategicChoices.sequencingRationale] The model follows the plan to add operations before aggressive growth and uses smooth post-Y1 hires consistent with a trust-first rollout.'
+- id: A15
+  name: Payroll cost allocation
+  value: Founder 55% S&M / 15% R&D / 30% G&A; engineers 100% R&D; ops/CS 25% S&M / 25% R&D / 50% G&A; growth 80% S&M / 20% G&A; compliance/support 10% S&M / 20% R&D / 70% G&A
+  unit: policy
+  source: '[BP team role descriptions; BP operations] Reflects founder-led selling, engineering-led product work, and a support/compliance load that sits mostly in G&A.'
+- id: A16
+  name: Non-payroll opex ladder
+  value: Y1 monthly S&M $2.5K-$5.0K, R&D $4.5K-$7.0K, G&A $3.5K-$6.0K; Y2 quarterly S&M $18K-$27K, R&D $21K-$30K, G&A $18K-$22.5K; Y3 quarterly S&M $30K-$39K, R&D $33K-$42K, G&A $24K-$28.5K
+  unit: USDK
+  source: '[BP operations; BP risks; research.regulatoryTechnicalConstraints] Covers cloud, legal, compliance tooling, community sponsorships, and support systems without assuming a large services bench.'
+- id: A17
+  name: Funding sizing rule
+  value: raise to Q4Y2 milestone plus roughly 6 months of buffer
+  unit: policy
+  source: '[BP fundingAsk runwayMonths 18; financial-modeler requirement] The pre-seed is sized to hit Y2 proof milestones and still leave buffer for a seed process.'
+- id: A18
+  name: Cash flow simplification
+  value: ending cash equals opening cash plus cumulative EBITDA
+  unit: formula
+  source: 'Startup-finance heuristic: assumes no debt, capex, or material working-capital swings for this asset-light software business.'
+- id: A19
+  name: Downside case deltas
+  value: ARPU $0.36K, Y3 exit 2,500 households, and gross margin stalls at 67%
+  unit: scenario inputs
+  source: '[Research sensitivityCases on price ceiling, trust, and write-access limits] Downside reflects the researched risk that the product remains closer to a premium dashboard than a trusted autopilot.'
+- id: A20
+  name: Upside case deltas
+  value: ARPU $0.45K, Y3 exit 5,200 households, and gross margin reaches 72%
+  unit: scenario inputs
+  source: '[BP milestones 24-36 months; BP gtm channels; research distributionChannels] Upside assumes advisor/community referrals compound faster and template-fit onboarding reduces support drag.'
+headcount:
+- role: Founder/CEO
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Engineering
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 2
+  q4y3: 3
+- role: Operations/customer success
+  q1y1: 0
+  q2y1: 0
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Growth/partnerships
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Compliance/support
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+headcountTotalsFte:
+  q1y1: 2
+  q2y1: 2
+  q3y1: 3
+  q4y1: 4
+  q4y2: 6
+  q4y3: 7
+headcountAnnualizedPayrollK:
+  q1y1: 270.0
+  q2y1: 270.0
+  q3y1: 355.0
+  q4y1: 470.0
+  q4y2: 715.0
+  q4y3: 865.0
+y1Monthly:
+- month: M1
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 22.5
+  salesMarketingK: 8.0
+  researchDevelopmentK: 18.5
+  generalAdministrativeK: 6.5
+  opexK: 33.0
+  ebitdaK: -33.0
+  cashEopK: 1967.0
+- month: M2
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 22.5
+  salesMarketingK: 8.0
+  researchDevelopmentK: 18.5
+  generalAdministrativeK: 6.5
+  opexK: 33.0
+  ebitdaK: -33.0
+  cashEopK: 1934.0
+- month: M3
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 22.5
+  salesMarketingK: 8.0
+  researchDevelopmentK: 19.0
+  generalAdministrativeK: 7.0
+  opexK: 34.0
+  ebitdaK: -34.0
+  cashEopK: 1900.0
+- month: M4
+  customersEop: 1
+  newCustomers: 1
+  revenueK: 0.02
+  cogsK: 0.01
+  grossProfitK: 0.01
+  salaryK: 22.5
+  salesMarketingK: 8.0
+  researchDevelopmentK: 19.0
+  generalAdministrativeK: 7.0
+  opexK: 34.0
+  ebitdaK: -33.99
+  cashEopK: 1866.01
+- month: M5
+  customersEop: 2
+  newCustomers: 1
+  revenueK: 0.05
+  cogsK: 0.02
+  grossProfitK: 0.03
+  salaryK: 22.5
+  salesMarketingK: 8.5
+  researchDevelopmentK: 19.5
+  generalAdministrativeK: 7.5
+  opexK: 35.5
+  ebitdaK: -35.47
+  cashEopK: 1830.54
+- month: M6
+  customersEop: 4
+  newCustomers: 2
+  revenueK: 0.11
+  cogsK: 0.05
+  grossProfitK: 0.06
+  salaryK: 22.5
+  salesMarketingK: 8.5
+  researchDevelopmentK: 19.5
+  generalAdministrativeK: 7.5
+  opexK: 35.5
+  ebitdaK: -35.44
+  cashEopK: 1795.1
+- month: M7
+  customersEop: 6
+  newCustomers: 2
+  revenueK: 0.18
+  cogsK: 0.07
+  grossProfitK: 0.1
+  salaryK: 29.58
+  salesMarketingK: 10.77
+  researchDevelopmentK: 21.77
+  generalAdministrativeK: 11.54
+  opexK: 44.08
+  ebitdaK: -43.98
+  cashEopK: 1751.12
+- month: M8
+  customersEop: 8
+  newCustomers: 2
+  revenueK: 0.25
+  cogsK: 0.1
+  grossProfitK: 0.14
+  salaryK: 29.58
+  salesMarketingK: 10.77
+  researchDevelopmentK: 21.77
+  generalAdministrativeK: 11.54
+  opexK: 44.08
+  ebitdaK: -43.94
+  cashEopK: 1707.18
+- month: M9
+  customersEop: 11
+  newCustomers: 3
+  revenueK: 0.33
+  cogsK: 0.13
+  grossProfitK: 0.2
+  salaryK: 29.58
+  salesMarketingK: 11.27
+  researchDevelopmentK: 22.27
+  generalAdministrativeK: 12.04
+  opexK: 45.58
+  ebitdaK: -45.38
+  cashEopK: 1661.79
+- month: M10
+  customersEop: 15
+  newCustomers: 4
+  revenueK: 0.46
+  cogsK: 0.18
+  grossProfitK: 0.27
+  salaryK: 39.17
+  salesMarketingK: 19.44
+  researchDevelopmentK: 22.27
+  generalAdministrativeK: 13.96
+  opexK: 55.67
+  ebitdaK: -55.39
+  cashEopK: 1606.4
+- month: M11
+  customersEop: 19
+  newCustomers: 4
+  revenueK: 0.6
+  cogsK: 0.23
+  grossProfitK: 0.37
+  salaryK: 39.17
+  salesMarketingK: 19.44
+  researchDevelopmentK: 22.77
+  generalAdministrativeK: 14.46
+  opexK: 56.67
+  ebitdaK: -56.3
+  cashEopK: 1550.1
+- month: M12
+  customersEop: 24
+  newCustomers: 5
+  revenueK: 0.75
+  cogsK: 0.29
+  grossProfitK: 0.47
+  salaryK: 39.17
+  salesMarketingK: 19.94
+  researchDevelopmentK: 22.77
+  generalAdministrativeK: 14.46
+  opexK: 57.17
+  ebitdaK: -56.7
+  cashEopK: 1493.4
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 84
+  revenueK: 5.67
+  cogsK: 2.04
+  grossProfitK: 3.63
+  salaryK: 117.5
+  salesMarketingK: 62.81
+  researchDevelopmentK: 68.31
+  generalAdministrativeK: 43.38
+  opexK: 174.5
+  ebitdaK: -170.87
+  cashEopK: 1322.53
+- quarter: Q2Y2
+  customersEop: 204
+  revenueK: 15.12
+  cogsK: 5.29
+  grossProfitK: 9.83
+  salaryK: 155.0
+  salesMarketingK: 65.81
+  researchDevelopmentK: 108.81
+  generalAdministrativeK: 44.88
+  opexK: 219.5
+  ebitdaK: -209.67
+  cashEopK: 1112.86
+- quarter: Q3Y2
+  customersEop: 384
+  revenueK: 30.87
+  cogsK: 10.19
+  grossProfitK: 20.68
+  salaryK: 155.0
+  salesMarketingK: 68.81
+  researchDevelopmentK: 111.81
+  generalAdministrativeK: 46.38
+  opexK: 227.0
+  ebitdaK: -206.32
+  cashEopK: 906.54
+- quarter: Q4Y2
+  customersEop: 700
+  revenueK: 56.91
+  cogsK: 18.21
+  grossProfitK: 38.7
+  salaryK: 178.75
+  salesMarketingK: 74.19
+  researchDevelopmentK: 119.56
+  generalAdministrativeK: 64.5
+  opexK: 258.25
+  ebitdaK: -219.55
+  cashEopK: 686.99
+- quarter: Q1Y3
+  customersEop: 1100
+  revenueK: 94.5
+  cogsK: 29.3
+  grossProfitK: 65.21
+  salaryK: 178.75
+  salesMarketingK: 77.19
+  researchDevelopmentK: 122.56
+  generalAdministrativeK: 66.0
+  opexK: 265.75
+  ebitdaK: -200.54
+  cashEopK: 486.44
+- quarter: Q2Y3
+  customersEop: 1800
+  revenueK: 152.25
+  cogsK: 47.2
+  grossProfitK: 105.05
+  salaryK: 178.75
+  salesMarketingK: 80.19
+  researchDevelopmentK: 125.56
+  generalAdministrativeK: 67.5
+  opexK: 273.25
+  ebitdaK: -168.2
+  cashEopK: 318.25
+- quarter: Q3Y3
+  customersEop: 2800
+  revenueK: 241.5
+  cogsK: 72.45
+  grossProfitK: 169.05
+  salaryK: 178.75
+  salesMarketingK: 83.19
+  researchDevelopmentK: 128.56
+  generalAdministrativeK: 69.0
+  opexK: 280.75
+  ebitdaK: -111.7
+  cashEopK: 206.55
+- quarter: Q4Y3
+  customersEop: 4000
+  revenueK: 357.0
+  cogsK: 107.1
+  grossProfitK: 249.9
+  salaryK: 203.75
+  salesMarketingK: 86.19
+  researchDevelopmentK: 156.56
+  generalAdministrativeK: 70.5
+  opexK: 313.25
+  ebitdaK: -63.35
+  cashEopK: 143.2
+totals:
+  y1:
+    revenueK: 2.75
+    grossProfitK: 1.65
+    ebitdaK: -506.59
+    cashEopK: 1493.4
+  y2:
+    revenueK: 108.57
+    grossProfitK: 72.84
+    ebitdaK: -806.41
+    cashEopK: 686.99
+  y3:
+    revenueK: 845.25
+    grossProfitK: 589.21
+    ebitdaK: -543.79
+    cashEopK: 143.2
+unitEconomics:
+  arpuAnnualK: 0.42
+  grossMarginPct: 70.0
+  cacK: 0.22
+  monthlyChurnPct: 2.5
+  avgCustomerLifeMonths: 40.0
+  ltvK: 0.98
+  ltvCacRatio: 4.45
+  cacPaybackMonths: 8.98
+fundingAsk:
+  round: pre-seed
+  amountM: 2.0
+  runwayMonths: 30
+  milestone: Reach roughly 700 active paid households by Q4Y2, prove 50%+ paid-setup-to-live activation with sub-10% manual-correction rates, and show three repeatable advisor or community acquisition channels before raising the seed round.
+  useOfFunds:
+  - bucket: Engineering
+    amountUsd: 900000
+    percentage: 45
+  - bucket: GTM
+    amountUsd: 360000
+    percentage: 18
+  - bucket: G&A
+    amountUsd: 240000
+    percentage: 12
+  - bucket: Buffer (6 mo)
+    amountUsd: 500000
+    percentage: 25
+scenarios:
+  downside:
+    description: Trust converts more slowly, pricing compresses toward premium-dashboard levels, and the product exits Y3 as a smaller paid household base with more support drag.
+    y3RevenueK: 459.0
+    y3EbitdaK: -826.9
+    cashLowPointK: -168.2
+    keyAssumptionChanges:
+    - Blended annual revenue per active household falls from $420 to $360.
+    - Q4Y3 ends at about 2,500 active paid households instead of 4,000.
+    - Gross margin stalls near 67% because live-policy support and exception handling remain manual longer.
+  base:
+    description: The company converts the first paid setup cohorts, scales advisor and community referrals, and exits Y3 with 4,000 active households on a still-lean team.
+    y3RevenueK: 845.25
+    y3EbitdaK: -543.79
+    cashLowPointK: 143.2
+    keyAssumptionChanges:
+    - Matches A1-A20 with 24 active paid households at M12, 700 by Q4Y2, and 4,000 by Q4Y3.
+    - Uses $420 blended annual revenue per active household under A5 and average-active-household recognition under A6.
+    - Gross margin improves toward the 70% BP target while the team grows from 2 to 7 FTE over the modeled period.
+  upside:
+    description: Referral channels outperform, template-driven onboarding scales faster, and premium-tier adoption nudges both household count and blended revenue above the base plan.
+    y3RevenueK: 1147.5
+    y3EbitdaK: -310.1
+    cashLowPointK: 355.8
+    keyAssumptionChanges:
+    - Blended annual revenue per active household rises from $420 to $450.
+    - Q4Y3 ends near 5,200 active paid households instead of 4,000.
+    - Gross margin reaches about 72% as policy templates and connector support become more repeatable.
+sensitivity:
+- variable: ARPU
+  downsideCase: $360 blended annual household revenue
+  baseCase: $420 blended annual household revenue
+  upsideCase: $450 blended annual household revenue
+  y3RevenueImpactK: -120.8
+  cashImpactK: -168.0
+- variable: CAC
+  downsideCase: $300 CAC per active paid household
+  baseCase: $220 CAC per active paid household
+  upsideCase: $180 CAC per active paid household
+  y3RevenueImpactK: 0.0
+  cashImpactK: -320.0
+- variable: churn
+  downsideCase: 3.5% monthly household churn
+  baseCase: 2.5% monthly household churn
+  upsideCase: 1.8% monthly household churn
+  y3RevenueImpactK: -140.0
+  cashImpactK: -180.0
+- variable: sales cycle
+  downsideCase: Paid-setup-to-live takes about 4 months
+  baseCase: Paid-setup-to-live takes about 2 months
+  upsideCase: Template-fit households go live in about 1 month
+  y3RevenueImpactK: -180.0
+  cashImpactK: -160.0
+- variable: gross margin
+  downsideCase: Y3 gross margin stalls at 66%
+  baseCase: Y3 gross margin reaches 70%
+  upsideCase: Y3 gross margin reaches 72%
+  y3RevenueImpactK: 0.0
+  cashImpactK: -110.0
+- variable: hiring pace
+  downsideCase: Add the third engineer and extra support 6 months earlier
+  baseCase: Hire the third engineer only in late Q4Y3
+  upsideCase: Hold 6 FTE until the seed round
+  y3RevenueImpactK: 0.0
+  cashImpactK: -190.0
+modelDiagram:
+  title: unit economics flow
+  mermaid: |-
+    flowchart LR
+      Leads[Community and advisor leads] --> PaidSetup[Paid setup and simulation]
+      PaidSetup --> LivePolicies[Live policy households]
+      LivePolicies --> Revenue[Subscription and setup revenue]
+      LivePolicies --> Referrals[Household and advisor referrals]
+      Referrals --> Leads
+      Revenue --> GrossProfit[Gross profit after support and connector costs]
+      GrossProfit --> Cash[Cash runway]
+modelSanity:
+- checkName: Revenue engine
+  finding: Base-case revenue comes from scaling active paid households from 24 at M12 to 700 by Q4Y2 and 4,000 by Q4Y3 at roughly $420 of blended annual household revenue.
+- checkName: Must go right
+  finding: Simulation users must authorize one live policy quickly enough that advisor and community referrals compound before support and compliance costs overwhelm the subscription envelope.
+- checkName: Model breaks if
+  finding: If pricing compresses toward $360 and active households reach only about 2,500 by Q4Y3, the downside case runs roughly $168K below zero before the next round.
+- checkName: Next-round proof
+  finding: A seed raise is justified once Q4Y2 shows about 700 active households, sub-10% manual-correction rates, and repeatable referral CAC below broad paid-direct channels.
+sanityChecks:
+  ruleOf40: Y3 growth 678.5% + EBITDA margin -64.3% = 614.2% (directionally inflated by a tiny Y2 revenue base).
+  burnMultiple: Y2 burn multiple 2.84x on $283.9K net new ARR, improving to 0.39x in Y3 on $1386.0K net new ARR.
+  revenuePerFte: $120.8K Y3 on 7 exit FTE (benchmark $200-400K SaaS)
+  flags:
+  - The base case requires advisor and community acquisition to scale from 24 active households at M12 to 700 by Q4Y2; if referral velocity lags, the $2.0M round is too small.
+  - Even with 4,000 active households and near-target gross margin, Y3 EBITDA remains negative because price points stay anchored near premium personal-finance software levels while compliance and support still matter.
+  - Revenue per FTE remains below typical SaaS benchmarks, so the next round depends on proving that onboarding and exception handling are becoming genuinely self-serve rather than concierge-heavy.
+  - The model assumes the company can delay the third engineering hire until late Q4Y3; any earlier hiring without faster conversion would tighten runway materially.
