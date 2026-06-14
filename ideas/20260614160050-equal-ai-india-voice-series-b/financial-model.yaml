@@ -1,0 +1,584 @@
+slug: voice-kyc-recovery-layer
+date: '2026-06-14'
+currency: USD
+modelStartMonth: '2026-07'
+
+assumptions:
+  - id: A1
+    name: Starting production customers (M1)
+    value: "0"
+    unit: count
+    source: "[BP exec summary: pre-revenue at model launch; design partners in M1–M3 are unpaid]"
+  - id: A2
+    name: Seed funding received at model start
+    value: "3000"
+    unit: K USD
+    source: "[BP fundingAsk: $2–4M seed round; midpoint $3M used for base case]"
+  - id: A3
+    name: Paid pilot contract value
+    value: "25"
+    unit: K USD per pilot
+    source: "[BP investorMemo.firstCustomer: $20k–$40k pilot value; $25k midpoint used]"
+  - id: A4
+    name: Monthly pilot billing rate
+    value: "8.0"
+    unit: K USD per month
+    source: "[A3 / 2 months average pilot duration = $25k / ~3 months ~ $8k/month billed]"
+  - id: A5
+    name: Production ACV — Y1 and Y2
+    value: "100"
+    unit: K USD per year
+    source: "[BP gtm.pricing: path toward $120k blended ACV; $100k used for Y1–Y2 ramp-up period]"
+  - id: A6
+    name: Production ACV — Y3
+    value: "120"
+    unit: K USD per year
+    source: "[BP market.som: 30 live customers x $120k = $3.6M SOM; research.market.som confirms]"
+  - id: A7
+    name: Quarterly ARPU — production (Y1–Y2)
+    value: "25"
+    unit: K USD per customer per quarter
+    source: "[A5 / 4 quarters = $100k / 4 = $25k per quarter]"
+  - id: A8
+    name: Quarterly ARPU — production (Y3)
+    value: "30"
+    unit: K USD per customer per quarter
+    source: "[A6 / 4 quarters = $120k / 4 = $30k per quarter]"
+  - id: A9
+    name: Average pilot duration
+    value: "2"
+    unit: months
+    source: "[BP investorMemo.firstCustomer: 8–12 week pilot = approximately 2 months]"
+  - id: A10
+    name: Target gross margin
+    value: "70"
+    unit: percent
+    source: "[BP businessModel.targetGrossMarginPct: 70%; COGS includes cloud telephony, ASR/TTS APIs, KYC/identity API calls, and compliance-ops overhead]"
+  - id: A11
+    name: Minimum infrastructure COGS (pre-revenue months)
+    value: "2.0"
+    unit: K USD per month
+    source: "[Startup finance heuristic: cloud/telephony/API floor for a seed-stage voice-AI product before meaningful call volume; scales to 30% of revenue once pilots launch]"
+  - id: A12
+    name: First pilot launch month
+    value: "M6"
+    unit: month
+    source: "[BP experimentRoadmap: 0–90 days = design-partner outreach and compliance workshops; 90–180 days = first insurer pilots live; M6 assumed as first paid pilot start]"
+  - id: A13
+    name: Production customers EOP — Year 1
+    value: "3"
+    unit: count
+    source: "[BP milestones 0–12m: 3 paid pilots launched, 2+ production conversions; model achieves 3 production accounts by M12 with 2-month pilot cycles starting M6, M8, M10]"
+  - id: A14
+    name: Production customers EOP — Year 2
+    value: "10"
+    unit: count
+    source: "[BP milestones 12–24m: repeatable production deployment, insurer account expansion, first lender workflow; research.market.sam implies ~45 beachhead accounts reachable]"
+  - id: A15
+    name: Production customers EOP — Year 3
+    value: "30"
+    unit: count
+    source: "[BP market.som: 30 live customers x $120k ACV = $3.6M SOM; adds 5 customers per quarter across Y3]"
+  - id: A16
+    name: Monthly churn rate
+    value: "1.5"
+    unit: percent per month
+    source: "[Startup finance heuristic: conservative enterprise B2B in regulated market; annual equivalent ~17%; higher than typical SaaS to reflect compliance-rejection risk and first-generation product uncertainty flagged in BP risks]"
+  - id: A17
+    name: Founding engineer annual salary
+    value: "72"
+    unit: K USD per year
+    source: "[Startup finance heuristic: senior founding engineer at well-funded Indian B2B startup; INR equivalent ~₹60L; USD-denominated for model consistency across USD investors]"
+  - id: A18
+    name: Product and compliance lead annual salary
+    value: "66"
+    unit: K USD per year
+    source: "[Startup finance heuristic: senior product manager with RBI/IRDAI regulatory experience; India market rate]"
+  - id: A19
+    name: Solutions and integration engineer annual salary
+    value: "48"
+    unit: K USD per year
+    source: "[Startup finance heuristic: mid-senior integration engineer joining M3 per BP team section; India market rate]"
+  - id: A20
+    name: Revenue lead annual salary
+    value: "72"
+    unit: K USD per year
+    source: "[Startup finance heuristic: enterprise sales lead with BFSI vertical experience joining M6 per BP team section; India market rate]"
+  - id: A21
+    name: CS and QA ops annual salary
+    value: "42"
+    unit: K USD per year
+    source: "[Startup finance heuristic: customer-success and QA-operations specialist joining M9 per BP team section; India market rate]"
+  - id: A22
+    name: Y2 incremental hires blended annual salary
+    value: "57"
+    unit: K USD per year per hire
+    source: "[Startup finance heuristic: blended rate across BD/sales $72k, engineer $54k, CS $42k; 5 hires added across Q1–Q4 Y2]"
+  - id: A23
+    name: Y3 incremental hires blended annual salary
+    value: "56"
+    unit: K USD per year per hire
+    source: "[Startup finance heuristic: blended rate across engineer $54k, sales $72k, product analyst $60k, CS $42k, partnerships $60k; 8 hires added across Q1–Q4 Y3]"
+  - id: A24
+    name: R&D non-payroll monthly cost
+    value: "3.0"
+    unit: K USD per month
+    source: "[Startup finance heuristic: cloud infra, third-party voice ASR/TTS/telephony SDKs, KYC API testing, dev tools; $2k in Y1 building phase rising to $4k in Y3 at production scale]"
+  - id: A25
+    name: G&A overhead monthly cost (non-payroll)
+    value: "5.0"
+    unit: K USD per month
+    source: "[Startup finance heuristic: legal, RBI/IRDAI compliance advisory, accounting, office, HR; higher than pure-SaaS baseline due to regulated-workflow compliance burden noted in research.regulatoryLandscape]"
+  - id: A26
+    name: S&M non-payroll monthly cost
+    value: "2.5"
+    unit: K USD per month
+    source: "[Startup finance heuristic: customer-facing travel, BFSI conference presence, partner-event sponsorships; scales from $1.5k (Y1 H2) to $5k (Y3 with partner channel investment)]"
+  - id: A27
+    name: Blended CAC
+    value: "25"
+    unit: K USD per new customer
+    source: "[Derived: Y1 S&M spend $52k / 3 new customers = $17k; Y2 S&M spend ~$180k / 7 new customers = $26k; blended $25k. Consistent with 6-month India enterprise sales cycle at India salary levels. [BP gtm.funnelTargets]]"
+  - id: A28
+    name: Annual customer LTV
+    value: "467"
+    unit: K USD per customer
+    source: "[Formula: (ARPU_monthly x gross_margin) / monthly_churn = ($10k x 70%) / 1.5% = $7k / 0.015 = $467k; ARPU monthly = A6 / 12 = $10k]"
+  - id: A29
+    name: CAC payback period
+    value: "3.6"
+    unit: months
+    source: "[Formula: CAC / (ARPU_monthly x gross_margin) = $25k / ($10k x 70%) = $25k / $7k = 3.57 months; [A27, A28]]"
+
+headcount:
+  - role: Engineering
+    q1y1: 1
+    q2y1: 2
+    q3y1: 2
+    q4y1: 2
+    q4y2: 4
+    q4y3: 7
+  - role: Product
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 2
+  - role: "Sales & GTM"
+    q1y1: 0
+    q2y1: 0
+    q3y1: 1
+    q4y1: 1
+    q4y2: 3
+    q4y3: 6
+  - role: "Customer Success"
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 2
+    q4y3: 3
+
+headcountTotalsFte:
+  q1y1: 2
+  q2y1: 3
+  q3y1: 4
+  q4y1: 5
+  q4y2: 10
+  q4y3: 18
+
+headcountAnnualizedPayrollK:
+  q1y1: 138.0
+  q2y1: 186.0
+  q3y1: 258.0
+  q4y1: 300.0
+  q4y2: 594.0
+  q4y3: 1062.0
+
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 2.0
+    grossProfitK: -2.0
+    salesMarketingK: 0.0
+    researchDevelopmentK: 13.5
+    generalAdministrativeK: 3.5
+    opexK: 17.0
+    ebitdaK: -19.0
+    cashEopK: 2981.0
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 2.0
+    grossProfitK: -2.0
+    salesMarketingK: 0.0
+    researchDevelopmentK: 13.5
+    generalAdministrativeK: 3.5
+    opexK: 17.0
+    ebitdaK: -19.0
+    cashEopK: 2962.0
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 2.0
+    grossProfitK: -2.0
+    salesMarketingK: 0.0
+    researchDevelopmentK: 13.5
+    generalAdministrativeK: 3.5
+    opexK: 17.0
+    ebitdaK: -19.0
+    cashEopK: 2943.0
+  - month: M4
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 2.0
+    grossProfitK: -2.0
+    salesMarketingK: 0.0
+    researchDevelopmentK: 17.5
+    generalAdministrativeK: 3.5
+    opexK: 21.0
+    ebitdaK: -23.0
+    cashEopK: 2920.0
+  - month: M5
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 2.0
+    grossProfitK: -2.0
+    salesMarketingK: 0.0
+    researchDevelopmentK: 17.5
+    generalAdministrativeK: 3.5
+    opexK: 21.0
+    ebitdaK: -23.0
+    cashEopK: 2897.0
+  - month: M6
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 8.0
+    cogsK: 2.5
+    grossProfitK: 5.5
+    salesMarketingK: 7.5
+    researchDevelopmentK: 17.5
+    generalAdministrativeK: 3.5
+    opexK: 28.5
+    ebitdaK: -23.0
+    cashEopK: 2874.0
+  - month: M7
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 8.0
+    cogsK: 2.5
+    grossProfitK: 5.5
+    salesMarketingK: 7.5
+    researchDevelopmentK: 17.5
+    generalAdministrativeK: 3.5
+    opexK: 28.5
+    ebitdaK: -23.0
+    cashEopK: 2851.0
+  - month: M8
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 16.0
+    cogsK: 4.8
+    grossProfitK: 11.2
+    salesMarketingK: 7.5
+    researchDevelopmentK: 17.5
+    generalAdministrativeK: 3.5
+    opexK: 28.5
+    ebitdaK: -17.3
+    cashEopK: 2833.7
+  - month: M9
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 16.0
+    cogsK: 4.8
+    grossProfitK: 11.2
+    salesMarketingK: 7.5
+    researchDevelopmentK: 18.0
+    generalAdministrativeK: 7.5
+    opexK: 33.0
+    ebitdaK: -21.8
+    cashEopK: 2811.9
+  - month: M10
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 25.0
+    cogsK: 7.5
+    grossProfitK: 17.5
+    salesMarketingK: 7.5
+    researchDevelopmentK: 18.0
+    generalAdministrativeK: 7.5
+    opexK: 33.0
+    ebitdaK: -15.5
+    cashEopK: 2796.4
+  - month: M11
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 25.0
+    cogsK: 7.5
+    grossProfitK: 17.5
+    salesMarketingK: 7.5
+    researchDevelopmentK: 18.0
+    generalAdministrativeK: 7.5
+    opexK: 33.0
+    ebitdaK: -15.5
+    cashEopK: 2780.9
+  - month: M12
+    customersEop: 3
+    newCustomers: 1
+    revenueK: 25.0
+    cogsK: 7.5
+    grossProfitK: 17.5
+    salesMarketingK: 7.5
+    researchDevelopmentK: 18.0
+    generalAdministrativeK: 7.5
+    opexK: 33.0
+    ebitdaK: -15.5
+    cashEopK: 2765.4
+
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 5
+    revenueK: 100.0
+    grossProfitK: 70.0
+    opexK: 121.5
+    ebitdaK: -51.5
+    cashEopK: 2713.9
+  - quarter: Q2Y2
+    customersEop: 7
+    revenueK: 150.0
+    grossProfitK: 105.0
+    opexK: 135.0
+    ebitdaK: -30.0
+    cashEopK: 2683.9
+  - quarter: Q3Y2
+    customersEop: 9
+    revenueK: 200.0
+    grossProfitK: 140.0
+    opexK: 145.5
+    ebitdaK: -5.5
+    cashEopK: 2678.4
+  - quarter: Q4Y2
+    customersEop: 10
+    revenueK: 240.0
+    grossProfitK: 168.0
+    opexK: 177.0
+    ebitdaK: -9.0
+    cashEopK: 2669.4
+  - quarter: Q1Y3
+    customersEop: 15
+    revenueK: 375.0
+    grossProfitK: 262.5
+    opexK: 211.5
+    ebitdaK: 51.0
+    cashEopK: 2720.4
+  - quarter: Q2Y3
+    customersEop: 20
+    revenueK: 525.0
+    grossProfitK: 367.5
+    opexK: 244.5
+    ebitdaK: 123.0
+    cashEopK: 2843.4
+  - quarter: Q3Y3
+    customersEop: 25
+    revenueK: 675.0
+    grossProfitK: 472.5
+    opexK: 282.0
+    ebitdaK: 190.5
+    cashEopK: 3033.9
+  - quarter: Q4Y3
+    customersEop: 30
+    revenueK: 825.0
+    grossProfitK: 577.5
+    opexK: 313.5
+    ebitdaK: 264.0
+    cashEopK: 3297.9
+
+totals:
+  y1:
+    revenueK: 123.0
+    ebitdaK: -234.6
+    cashEopK: 2765.4
+  y2:
+    revenueK: 690.0
+    ebitdaK: -96.0
+    cashEopK: 2669.4
+  y3:
+    revenueK: 2400.0
+    ebitdaK: 628.5
+    cashEopK: 3297.9
+
+unitEconomics:
+  arpuAnnualK: 120.0
+  grossMarginPct: 70.0
+  cacK: 25.0
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 67.0
+  ltvK: 467.0
+  ltvCacRatio: 18.7
+  cacPaybackMonths: 3.6
+
+fundingAsk:
+  round: seed
+  amountM: 3.0
+  runwayMonths: 36
+  milestone: >-
+    Compliance-grade MVP live on at least one insurer and one lender queue;
+    3+ paid insurer pilots with baseline-vs-pilot conversion data; 2+
+    production contracts at $100k+ ACV; one consumer-lender pilot launched
+    using the same core recovery rail; repeatable unit economics with
+    CAC payback under 6 months demonstrated to support Series A raise
+    at or around M18.
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 1350000
+      percentage: 45
+    - bucket: GTM
+      amountUsd: 750000
+      percentage: 25
+    - bucket: "G&A"
+      amountUsd: 300000
+      percentage: 10
+    - bucket: "Buffer (6 mo)"
+      amountUsd: 600000
+      percentage: 20
+
+scenarios:
+  downside:
+    description: >-
+      Sales cycles extend to 10–12 months; pilot-to-production conversion
+      falls to 35%; compliance teams restrict AI-led recovery to narrow
+      blocker types, slowing deployments. Year 3 ends at 18 production
+      accounts vs 30 in base case.
+    y3RevenueK: 1440.0
+    y3EbitdaK: 58.0
+    cashLowPointK: 2400.0
+    keyAssumptionChanges:
+      - "Pilot-to-production conversion 35% vs 50% base"
+      - "Sales cycle 10–12 months vs 6–9 months base"
+      - "18 Y3 customers vs 30 base; 2 fewer Y3 sales hires reduce opex ~$100k"
+  base:
+    description: >-
+      Direct enterprise sales at 50% pilot-to-production conversion;
+      6–9 month sales cycles; 30 production accounts at $120k blended ACV
+      by Y3 end; company reaches EBITDA break-even in Q1 Y3 and exits
+      Y3 at $3.6M ARR run-rate.
+    y3RevenueK: 2400.0
+    y3EbitdaK: 628.5
+    cashLowPointK: 2669.4
+    keyAssumptionChanges:
+      - "50% pilot-to-production conversion per BP funnelTargets"
+      - "6–9 month sales cycle; revenue lead from M6"
+      - "30 Y3 customers at $120k ACV; 18-person team at Y3 end"
+  upside:
+    description: >-
+      CPaaS and contact-center partner channel contributes 35% of Y3
+      pipeline; CAC compresses as partners pre-qualify accounts; 40
+      production accounts reached with slightly higher $125k ACV from
+      multi-workflow expansions.
+    y3RevenueK: 3000.0
+    y3EbitdaK: 900.0
+    cashLowPointK: 2600.0
+    keyAssumptionChanges:
+      - "Partner channel 35% of Y3 pipeline per BP gtm.channels"
+      - "Blended CAC compresses to $18k on partner-sourced accounts"
+      - "40 Y3 customers; $125k ACV from account expansion per BP expansionLevers"
+
+sensitivity:
+  - variable: ARPU
+    downsideCase: "$80k ACV (buyers resist $100k+ pricing without full core integration)"
+    baseCase: "$120k ACV (blended production with some account expansion)"
+    upsideCase: "$150k ACV (multi-workflow expansion unlocks premium tier)"
+    y3RevenueImpactK: -800.0
+    cashImpactK: -560.0
+  - variable: "pilot-to-production conversion"
+    downsideCase: "35% conversion (compliance teams restrict AI-led recovery scope)"
+    baseCase: "50% conversion per BP funnelTargets"
+    upsideCase: "65% conversion (escalation-with-transcript design wins compliance early)"
+    y3RevenueImpactK: -720.0
+    cashImpactK: -504.0
+  - variable: "sales cycle"
+    downsideCase: "10–12 months (buyers treat problem as contact-center, not revenue infra)"
+    baseCase: "6–9 months (operations leader champion with ROI framing)"
+    upsideCase: "3–4 months (partner-sourced, pre-qualified accounts)"
+    y3RevenueImpactK: -800.0
+    cashImpactK: -560.0
+  - variable: "gross margin"
+    downsideCase: "55% GM (deep custom integrations inflate COGS; more human QA required)"
+    baseCase: "70% GM per BP targetGrossMarginPct"
+    upsideCase: "75% GM (reusable integration templates reduce per-account COGS)"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -360.0
+  - variable: churn
+    downsideCase: "3% monthly churn (compliance change or integration failure kills renewal)"
+    baseCase: "1.5% monthly churn (annual ~17%; conservative for regulated first-gen product)"
+    upsideCase: "0.5% monthly churn (sticky audit corpus and benchmark reports drive renewals)"
+    y3RevenueImpactK: -100.0
+    cashImpactK: -70.0
+  - variable: "partner channel"
+    downsideCase: "No partner contribution through Y3 (direct-only, CAC stays $25k)"
+    baseCase: "10% of Y3 pipeline from CPaaS/CC partners"
+    upsideCase: "35% of Y3 pipeline from partners, CAC $18k on partner accounts"
+    y3RevenueImpactK: -400.0
+    cashImpactK: -280.0
+
+modelDiagram:
+  title: unit economics flow
+  mermaid: |
+    flowchart LR
+      Queue[Failed-queue account] --> Pilot[Paid pilot 2 mo]
+      Pilot --> |50pct convert| Production[Production account]
+      Production --> |100-120k ACV| Revenue[Revenue]
+      Revenue --> |70pct GM| GrossProfit[Gross profit]
+      GrossProfit --> |minus opex| EBITDA[EBITDA]
+      EBITDA --> Cash[Cash balance]
+      Production --> |30pct expand in 12mo| Expansion[Second workflow]
+      Expansion --> Revenue
+
+modelSanity:
+  - checkName: Revenue engine
+    finding: >-
+      Revenue is driven entirely by direct enterprise sales converting
+      failed-onboarding queue accounts into $100–120k annual production
+      contracts, with pilot billing ($8k/month) bridging the 2-month
+      proof period before each production conversion.
+  - checkName: Must go right
+    finding: >-
+      At least 50% of the first 10 pilots must convert to production
+      contracts at $100k+ ACV within 6 months, because the base-case
+      Y2 revenue ($690k) and Series A narrative both depend on
+      demonstrating repeatable conversion before M18.
+  - checkName: Model breaks if
+    finding: >-
+      If sales cycles extend beyond 9 months or pilot-to-production
+      conversion falls below 35%, Y3 revenue drops to ~$1,440k and
+      the Series A story weakens materially, as shown in the downside
+      scenario and sales-cycle sensitivity row.
+  - checkName: Next-round proof
+    finding: >-
+      A Series A at or around M18 is justified when the company shows
+      10+ production accounts, $690k+ trailing ARR, CAC payback under
+      6 months, and one consumer-lender production workflow live,
+      consistent with the base-case Q4Y2 milestones.
+
+sanityChecks:
+  ruleOf40: "Y3 growth 248% + EBITDA margin 26% = 274% (high-growth early stage; well above 40 threshold)"
+  burnMultiple: >-
+    Y1: 0.78x (net burn $235k / net new ARR $300k);
+    Y2: 0.14x ($96k / $700k net new ARR). Both well below the 1.5x
+    benchmark, reflecting India operating-cost advantage and early
+    revenue traction from M6.
+  revenuePerFte: "$133k Y3 EOP on 18 FTE; below $200–400k SaaS benchmark but consistent with India-market ACV and INR cost base"
+  flags:
+    - "Unit economics (LTV/CAC 18.7x, payback 3.6 months) are unusually strong and depend on achieving 70% gross margin at scale — any compliance-heavy customization that inflates COGS per account will compress these ratios materially."
+    - "Blended churn of 1.5% monthly (annual ~17%) is conservative but unvalidated; with only 3 customers at Y1 end, a single non-renewal would spike realized churn and hurt Y2 pipeline confidence."
+    - "Revenue per FTE of $133k at Y3 end is below the $200–400k SaaS benchmark; the model is deliberately headcount-heavy in Y3 to serve regulated enterprise accounts with compliance QA overhead, but investors may probe this."
+    - "Seed of $3M shows 36-month runway because India team costs are modest; the BP states 18-month runway to Series A, meaning the company will likely raise Series A opportunistically around M18 rather than from necessity — model should not be read as requiring a bridge."
+    - "Y1 revenue ($123k) is thin and concentrated in 3 customers; any compliance rejection or delayed pilot launch shifts EBITDA by ~$75k and could push the first production proof into Y2."
+    - "Customer ramp from 10 (Y2 end) to 30 (Y3 end) requires adding 20 accounts in 12 months — a 3x increase in new-customer velocity that depends on sales team scaling (from 3 to 6 GTM headcount) and partner-channel contribution materializing on schedule."
