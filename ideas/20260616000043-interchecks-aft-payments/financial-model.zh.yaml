@@ -1,0 +1,539 @@
+slug: sportsbook-deposit-approval-engine
+date: '2026-06-16'
+currency: USD
+modelStartMonth: 2026-07
+assumptions:
+  - id: A1
+    name: 模型起始月份
+    value: 2026-07
+    unit: month
+    source: '[BP date] 支出与销售在业务计划标注日期后的次月启动。'
+  - id: A2
+    name: 种子前融资到账后初始现金
+    value: '2400000'
+    unit: USD
+    source: '[BP fundingAsk targetFundingRangeUsd $2-4M] 基准情景采用 $2.4M 融资额（接近低端），因为计划专注于六家客户。'
+  - id: A3
+    name: 付费客户签约节奏
+    value: M5, M9, M12, M16, M22, M29
+    unit: month
+    source: '[BP milestones; BP gtm.funnelTargets] 三家体育博彩共创合作客户在第一年落地，第四、五家体育博彩在第二年签约，一家相邻受监管金融科技客户在第三年签约。'
+  - id: A4
+    name: 每位新客户的影子模式实施费
+    value: '50000'
+    unit: USD
+    source: '[BP investorMemo.firstCustomer] 初始付费试点为 $75K–$150K；模型将 $50K 计为一次性实施和入驻收入。'
+  - id: A5
+    name: 影子模式经常性费用
+    value: '12000'
+    unit: USD/month/logo
+    source: '[BP investorMemo.firstCustomer] 剩余试点经济模型以约 $12K 月度经常性费用建模，覆盖 60–90 天付费影子模式期间。'
+  - id: A6
+    name: 初始正式生产合同
+    value: '35000'
+    unit: USD/month/logo
+    source: '[BP investorMemo.firstCustomer] 年度软件加使用费 $300K–$600K，对应保守的 $420K 年化起始合同。'
+  - id: A7
+    name: 第二条轨道或品牌扩展后合同
+    value: '75000'
+    unit: USD/month/logo
+    source: '[BP gtm.funnelTargets production→second rail or brand expansion 60%+ within 12 months] 基准情景假设首次扩展在有生产证明后将落地收入大致翻倍。'
+  - id: A8
+    name: 成熟多轨道合同
+    value: '110000'
+    unit: USD/month/logo
+    source: '[Research market.som $8.4M on 6 logos] 成熟客户上限约为 $1.32M 年化，略低于研究所得 $1.4M 平均客户合同值，以保持基准情景保守。'
+  - id: A9
+    name: 按客户年龄的收入成熟时间表
+    value: "第 1–4 个月为试点；第 5–12 个月为落地；第 13–20 个月为扩展；第 21 个月起为成熟"
+    unit: stage timing
+    source: '[BP product twelveMonth; BP milestones 12-24 months; BP milestones 24-36 months] 影子模式先于正式控制，随后跟进多轨道和多品牌扩展。'
+  - id: A10
+    name: 规模化后目标毛利率
+    value: '70'
+    unit: pct
+    source: '[BP businessModel.targetGrossMarginPct] 业务计划的明确毛利率目标。'
+  - id: A11
+    name: 固定平台与合规 COGS 底线
+    value: '15000'
+    unit: USD/month
+    source: '[Heuristic] 审计日志、数据连接器、托管案例管理和支付合规工具在规模化之前形成显著的固定 COGS 基础。'
+  - id: A12
+    name: 经常性收入的可变 COGS
+    value: '30'
+    unit: pct
+    source: '[BP businessModel targetGrossMarginPct; Heuristic] 经常性毛利率维持在 70% 附近，意味着数据、托管和支持的可变交付成本约为 30%。'
+  - id: A13
+    name: 实施交付成本
+    value: '45'
+    unit: pct of implementation revenue
+    source: '[Heuristic] 早期体育博彩集成解决方案较重，专业服务毛利率低于成熟 SaaS 毛利率。'
+  - id: A14
+    name: 创始人之外的招聘节奏
+    value: "解决方案工程师 M3；支付/风控负责人 M6；客户主管/合作 M12；工程师 M15；第二位解决方案工程师 M18；第二位客户主管 M21；工程师加运营 M24；工程师加第二位风控负责人 M30；第二位运营 M33"
+    unit: timing
+    source: '[BP team; BP strategicChoices.sequencingRationale] 计划中命名招聘优先执行，之后仅增加支持两条轨道正式控制和一个相邻金融科技业务所需的最少人员。'
+  - id: A15
+    name: 按职能的年化现金薪酬
+    value: "创始人/CEO $120K；工程 $210K；解决方案工程 $170K；支付/风控 $190K；销售/合作 $180K；管理/运营 $140K"
+    unit: USD/year
+    source: '[Heuristic] 美国早期金融科技/软件薪资区间含薪资税和福利负担，创始人现金薪酬低于市场，专业岗位薪酬与市场持平。'
+  - id: A16
+    name: 职能薪资分摊
+    value: "创始人 70% S&M / 30% G&A；工程 100% R&D；解决方案工程 70% R&D / 30% G&A；支付/风控 60% R&D / 40% G&A；销售 100% S&M；运营 100% G&A"
+    unit: allocation
+    source: '[BP team rationales] 分摊遵循创始人主导销售、集成重型交付和担保银行/合规工作流所有权。'
+  - id: A17
+    name: 非薪资运营支出计划
+    value: "S&M $10K→$18K→$22K→$25K monthly; R&D $8K→$10K→$12K monthly; G&A $14K→$18K→$22K monthly"
+    unit: USD/month
+    source: '[Heuristic] 差旅、数据工具、安全、法务、保险和合规支出随试点转为正式受监管工作流而逐步增加。'
+  - id: A18
+    name: 稳态客户获取成本
+    value: '220000'
+    unit: USD per new production logo
+    source: '[BP gtm.channels; BP gtm.funnelTargets] 创始人时间、一位客户主管和合作伙伴转介绍的集中企业销售，建模约为首年 ACV 的一半——对受监管工作流软件而言较为保守。'
+  - id: A19
+    name: 单位经济模型中使用的月度流失率
+    value: '1.5'
+    unit: pct
+    source: '[Heuristic] 集中企业客户续约率应较高，但切入点仍年轻，采购风险高于成熟垂直 SaaS。'
+  - id: A20
+    name: 种子前轮融资里程碑
+    value: "5 家体育博彩生产客户、担保银行批准的跨两条轨道正式控制，以及 1 家相邻受监管金融科技客户签约，同时保留约 6 个月现金储备"
+    unit: milestone
+    source: '[BP milestones 12-24 months; BP milestones 24-36 months; BP fundingAsk runwayMonths] 下一轮应等待体育博彩切入既能转化又能扩展的证明。'
+  - id: A21
+    name: 现金转换政策
+    value: EBITDA 近似现金流动
+    unit: policy
+    source: '[Heuristic] 本软件优先的种子前期业务不建模债务、资本支出、税负或重大营运资金波动。'
+  - id: A22
+    name: 第 36 个月前的基准留存
+    value: 模型结束前无客户流失
+    unit: customer assumption
+    source: '[BP gtm.funnelTargets; BP strategicChoices] 基准情景假设前六家参考客户在各自初始扩展周期内均留存；流失仅出现在下行情景和单位经济敏感性分析中。'
+headcount:
+  - role: 创始人/CEO
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 工程
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 3
+    q4y3: 4
+  - role: 解决方案工程
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 2
+    q4y3: 2
+  - role: 支付/风控
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 2
+  - role: 销售/合作
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 2
+    q4y3: 2
+  - role: 管理/运营
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 2
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 4
+  q4y1: 5
+  q4y2: 10
+  q4y3: 13
+headcountAnnualizedPayrollK:
+  q1y1: 500.0
+  q2y1: 690.0
+  q3y1: 690.0
+  q4y1: 870.0
+  q4y2: 1780.0
+  q4y3: 2320.0
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 15.0
+    grossProfitK: -15.0
+    salesMarketingK: 17.0
+    researchDevelopmentK: 25.5
+    generalAdministrativeK: 17.0
+    opexK: 59.5
+    ebitdaK: -74.5
+    cashEopK: 2325.5
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 15.0
+    grossProfitK: -15.0
+    salesMarketingK: 17.0
+    researchDevelopmentK: 25.5
+    generalAdministrativeK: 17.0
+    opexK: 59.5
+    ebitdaK: -74.5
+    cashEopK: 2251.0
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 15.0
+    grossProfitK: -15.0
+    salesMarketingK: 17.0
+    researchDevelopmentK: 35.4
+    generalAdministrativeK: 21.3
+    opexK: 73.7
+    ebitdaK: -88.7
+    cashEopK: 2162.3
+  - month: M4
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 15.0
+    grossProfitK: -15.0
+    salesMarketingK: 17.0
+    researchDevelopmentK: 35.4
+    generalAdministrativeK: 21.3
+    opexK: 73.7
+    ebitdaK: -88.7
+    cashEopK: 2073.7
+  - month: M5
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 62.0
+    cogsK: 41.1
+    grossProfitK: 20.9
+    salesMarketingK: 17.0
+    researchDevelopmentK: 35.4
+    generalAdministrativeK: 21.3
+    opexK: 73.7
+    ebitdaK: -52.8
+    cashEopK: 2020.9
+  - month: M6
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 12.0
+    cogsK: 18.6
+    grossProfitK: -6.6
+    salesMarketingK: 17.0
+    researchDevelopmentK: 44.9
+    generalAdministrativeK: 27.6
+    opexK: 89.5
+    ebitdaK: -96.1
+    cashEopK: 1924.8
+  - month: M7
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 12.0
+    cogsK: 18.6
+    grossProfitK: -6.6
+    salesMarketingK: 17.0
+    researchDevelopmentK: 44.9
+    generalAdministrativeK: 27.6
+    opexK: 89.5
+    ebitdaK: -96.1
+    cashEopK: 1828.7
+  - month: M8
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 12.0
+    cogsK: 18.6
+    grossProfitK: -6.6
+    salesMarketingK: 17.0
+    researchDevelopmentK: 44.9
+    generalAdministrativeK: 27.6
+    opexK: 89.5
+    ebitdaK: -96.1
+    cashEopK: 1732.6
+  - month: M9
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 97.0
+    cogsK: 51.6
+    grossProfitK: 45.4
+    salesMarketingK: 17.0
+    researchDevelopmentK: 44.9
+    generalAdministrativeK: 27.6
+    opexK: 89.5
+    ebitdaK: -44.1
+    cashEopK: 1688.5
+  - month: M10
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 47.0
+    cogsK: 29.1
+    grossProfitK: 17.9
+    salesMarketingK: 17.0
+    researchDevelopmentK: 44.9
+    generalAdministrativeK: 27.6
+    opexK: 89.5
+    ebitdaK: -71.6
+    cashEopK: 1616.9
+  - month: M11
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 47.0
+    cogsK: 29.1
+    grossProfitK: 17.9
+    salesMarketingK: 17.0
+    researchDevelopmentK: 44.9
+    generalAdministrativeK: 27.6
+    opexK: 89.5
+    ebitdaK: -71.6
+    cashEopK: 1545.3
+  - month: M12
+    customersEop: 3
+    newCustomers: 1
+    revenueK: 109.0
+    cogsK: 55.2
+    grossProfitK: 53.8
+    salesMarketingK: 40.0
+    researchDevelopmentK: 46.9
+    generalAdministrativeK: 31.6
+    opexK: 118.5
+    ebitdaK: -64.7
+    cashEopK: 1480.6
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 3
+    revenueK: 246.0
+    cogsK: 118.8
+    grossProfitK: 127.2
+    salesMarketingK: 120.0
+    researchDevelopmentK: 158.3
+    generalAdministrativeK: 94.8
+    opexK: 373.0
+    ebitdaK: -245.8
+    cashEopK: 1234.8
+  - quarter: Q2Y2
+    customersEop: 4
+    revenueK: 481.0
+    cogsK: 196.8
+    grossProfitK: 284.2
+    salesMarketingK: 120.0
+    researchDevelopmentK: 203.2
+    generalAdministrativeK: 99.0
+    opexK: 422.2
+    ebitdaK: -138.0
+    cashEopK: 1096.8
+  - quarter: Q3Y2
+    customersEop: 4
+    revenueK: 557.0
+    cogsK: 212.1
+    grossProfitK: 344.9
+    salesMarketingK: 139.0
+    researchDevelopmentK: 223.0
+    generalAdministrativeK: 107.5
+    opexK: 469.5
+    ebitdaK: -124.6
+    cashEopK: 972.2
+  - quarter: Q4Y2
+    customersEop: 5
+    revenueK: 786.0
+    cogsK: 288.3
+    grossProfitK: 497.7
+    salesMarketingK: 177.0
+    researchDevelopmentK: 242.5
+    generalAdministrativeK: 123.2
+    opexK: 542.7
+    ebitdaK: -45.0
+    cashEopK: 927.3
+  - quarter: Q1Y3
+    customersEop: 5
+    revenueK: 967.0
+    cogsK: 335.1
+    grossProfitK: 631.9
+    salesMarketingK: 177.0
+    researchDevelopmentK: 281.5
+    generalAdministrativeK: 154.5
+    opexK: 613.0
+    ebitdaK: 18.9
+    cashEopK: 946.2
+  - quarter: Q2Y3
+    customersEop: 6
+    revenueK: 1254.0
+    cogsK: 428.7
+    grossProfitK: 825.3
+    salesMarketingK: 183.0
+    researchDevelopmentK: 308.5
+    generalAdministrativeK: 160.8
+    opexK: 652.3
+    ebitdaK: 173.0
+    cashEopK: 1119.1
+  - quarter: Q3Y3
+    customersEop: 6
+    revenueK: 1344.0
+    cogsK: 448.2
+    grossProfitK: 895.8
+    salesMarketingK: 186.0
+    researchDevelopmentK: 362.5
+    generalAdministrativeK: 185.2
+    opexK: 733.7
+    ebitdaK: 162.1
+    cashEopK: 1281.3
+  - quarter: Q4Y3
+    customersEop: 6
+    revenueK: 1580.0
+    cogsK: 519.0
+    grossProfitK: 1061.0
+    salesMarketingK: 186.0
+    researchDevelopmentK: 362.5
+    generalAdministrativeK: 208.5
+    opexK: 757.0
+    ebitdaK: 304.0
+    cashEopK: 1585.3
+totals:
+  y1:
+    revenueK: 398.0
+    ebitdaK: -919.5
+    cashEopK: 1480.6
+  y2:
+    revenueK: 2070.0
+    ebitdaK: -553.4
+    cashEopK: 927.3
+  y3:
+    revenueK: 5145.0
+    ebitdaK: 658.0
+    cashEopK: 1585.3
+unitEconomics:
+  arpuAnnualK: 420.0
+  grossMarginPct: 70.0
+  cacK: 220.0
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 66.7
+  ltvK: 1633.3
+  ltvCacRatio: 7.4
+  cacPaybackMonths: 9.0
+fundingAsk:
+  round: pre-seed
+  amountM: 2.4
+  runwayMonths: 30
+  milestone: 达成五家体育博彩生产客户、担保银行批准的跨两条轨道正式控制，并在仍持有约六个月现金的情况下签约第一家相邻受监管金融科技客户。
+  useOfFunds:
+    - bucket: 工程
+      amountUsd: 920000
+      percentage: 38
+    - bucket: GTM
+      amountUsd: 580000
+      percentage: 24
+    - bucket: 管理及行政
+      amountUsd: 300000
+      percentage: 13
+    - bucket: "储备金（6 个月）"
+      amountUsd: 600000
+      percentage: 25
+scenarios:
+  downside:
+    description: 担保银行审查拖慢正式审批，第六家客户始终未能签约，现有客户扩展速度也低于计划。
+    y3RevenueK: 3445.0
+    y3EbitdaK: -671.5
+    cashLowPointK: -485.0
+    keyAssumptionChanges:
+      - 客户签约推迟至 M6、M11、M15、M20 和 M27，第四年第四季度仅有五家客户。
+      - 落地、扩展和成熟月度收入分别从 $35K / $75K / $110K 降至 $30K / $60K / $90K。
+      - 固定合规和连接器成本不变而交易量增速放缓，经常性毛利率下滑。
+  base:
+    description: 三家第一年试点客户转化为第二年五家体育博彩生产客户基础，第三年一家相邻金融科技客户落地，前四家客户扩展至多轨道合同。
+    y3RevenueK: 5145.0
+    y3EbitdaK: 658.0
+    cashLowPointK: 922.8
+    keyAssumptionChanges:
+      - "六家付费客户按 A3 节奏签约：M5、M9、M12、M16、M22 和 M29。"
+      - 每家客户收入遵循 A9 成熟曲线，从试点到落地、扩展再到成熟合同层级递进。
+      - 招聘遵循 A14，第四年第四季度仅有 13 名全职员工，EBITDA 在第四、五家体育博彩客户扩展后才转正。
+  upside:
+    description: 处理商转介绍缩短销售周期，早期客户扩展更快，相邻金融科技业务提前一个季度落地。
+    y3RevenueK: 6242.0
+    y3EbitdaK: 1551.6
+    cashLowPointK: 1273.1
+    keyAssumptionChanges:
+      - 客户签约提前至 M5、M8、M11、M15、M20 和 M26。
+      - 扩展和成熟月度合同分别提升至 $85K 和 $125K，因第二条轨道和第二品牌使用量更快挂载。
+      - 可复用连接器和更干净的数据集使经常性 COGS 小幅改善，毛利率稳步提升。
+sensitivity:
+  - variable: ARPU
+    downsideCase: 买家将范围限定在单条轨道，落地/扩展/成熟月度收入降至 $30K / $65K / $95K。
+    baseCase: 落地/扩展/成熟月度收入维持 $35K / $75K / $110K。
+    upsideCase: 跨品牌采用速度加快，落地/扩展/成熟月度收入提升至 $38K / $82K / $120K。
+    y3RevenueImpactK: -685.0
+    cashImpactK: -672.0
+  - variable: CAC
+    downsideCase: 更长的采购周期和更多差旅将实际 CAC 推高至 $300K 以上，后两家客户签约推迟。
+    baseCase: 创始人主导销售结合处理商和银行直付转介绍，CAC 维持在约 $220K。
+    upsideCase: 温热的合作伙伴引荐将 CAC 压至 $180K 以下，两笔交易提前一个季度完成。
+    y3RevenueImpactK: -416.0
+    cashImpactK: -550.0
+  - variable: churn
+    downsideCase: 一家成熟体育博彩客户在第三年因正式证明令关键利益相关方失望而流失或降档。
+    baseCase: 六家客户均在第 36 个月前留存，续约和扩展参考案例仍在积累中。
+    upsideCase: 零流失加上第六家客户提前启动，小幅提升第三年营收和融资就绪度。
+    y3RevenueImpactK: -660.0
+    cashImpactK: -462.0
+  - variable: sales cycle
+    downsideCase: 安全、合规和担保银行审查在每个客户签约上增加约一个季度。
+    baseCase: 前六家客户按 A3 节奏签约，试点在同一运营商预算周期内转为正式合同。
+    upsideCase: 可信转介绍将平均周期缩短一到两个月。
+    y3RevenueImpactK: -504.0
+    cashImpactK: -644.0
+  - variable: gross margin
+    downsideCase: 连接器支持和人工审查使经常性 COGS 维持在约 35%，实施交付成本约 50%。
+    baseCase: 经常性 COGS 维持 30%，实施交付成本 45%，与 70% 目标毛利率一致。
+    upsideCase: 可复用连接器和更干净的数据集将经常性 COGS 改善至约 27%，实施交付成本降至 40%。
+    y3RevenueImpactK: 0.0
+    cashImpactK: -488.7
+  - variable: hiring pace
+    downsideCase: 销售、工程和运营人员在重复性充分验证前提前一个季度入职。
+    baseCase: 招聘遵循 A14，仅在第四家体育博彩客户正式上线或明显扩展后才达到 13 名全职员工。
+    upsideCase: 后期招聘推迟至现金流更强时，现金改善而六家客户计划不变。
+    y3RevenueImpactK: 0.0
+    cashImpactK: -392.5
+modelDiagram:
+  title: 单位经济模型流程
+  mermaid: |
+    flowchart LR
+      Leads[Founder outbound and processor referrals] --> Pilots[Paid shadow-mode pilots]
+      Pilots --> Production[Production logos]
+      Production --> Expansion[Second rail or brand expansion]
+      Expansion --> Revenue[Revenue]
+      Revenue --> GrossProfit[Gross profit]
+      GrossProfit --> Cash[Cash]
+modelSanity:
+  - checkName: 营收引擎
+    finding: 基准情景营收的驱动力与其说是客户数量，不如说是前四家体育博彩客户在第三年从 $35K 落地合同升级为 $75K–$110K 多轨道扩展合同。
+  - checkName: 必须做到
+    finding: 前三个付费试点必须转化，且至少前两家正式客户必须在 12 个月内完成扩展，否则模型将同时错过第二年里程碑和基准情景所示的现金效率路径。
+  - checkName: 模型崩坏条件
+    finding: 销售周期滑期一个季度或一家成熟客户流失，分别可移除约 $500K–$660K 的第三年营收，并吞掉 $460K–$640K 的期末现金——这正是下行情景现金转负的原因。
+  - checkName: 下一轮融资证明
+    finding: 一旦五家体育博彩生产客户、两条轨道正式审批证明和一家相邻金融科技客户到位，下一轮融资即告合理——因为这验证了切入点在研究所得 $8.4M SOM 目标之前的可转化性和可扩展性。
+sanityChecks:
+  ruleOf40: "第三年营收增长 149%（(5145.0-2070.0)/2070.0）加 EBITDA 利润率 12.8%（658.0/5145.0）= 161.4%；方向上强劲，但受小基数企业级增速放大。"
+  burnMultiple: "第三年 EBITDA 已转正，烧钱倍数不再是核心指标；在最后烧钱年（第二年），$553.3K 烧钱额除以 M12 至 M24 新增的退出 ARR 约 $2556.0K，等于 0.22x。"
+  revenuePerFte: "第三年每名第四年第四季度全职员工营收 $395.8K（13 名全职员工；垂直 SaaS 基准约 $200K–$400K）。"
+  flags:
+    - "六家客户仍使基准情景高度集中：失去一家成熟体育博彩账户将移除逾 15% 的退出 ARR。"
+    - 基准情景退出 ARR 在 M36 时达到约 $6.6M，仍低于研究所得 $8.4M 第三年 SOM，模型需要另一轮扩展步骤或该时间范围后的第七家客户。
+    - 担保银行或处理商阻力仍是唯一的门控风险；若正式影响力在前五家客户之后才落地，下行情景显示当前种子前融资额不足。
+    - 第三年盈利取决于早期客户内部扩展，而非仅靠新增预订；若第二条轨道或第二品牌采用停滞，效率指标将迅速逆转。
