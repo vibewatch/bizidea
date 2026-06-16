@@ -1,0 +1,629 @@
+slug: onchain-card-loyalty-rails
+date: '2026-06-16'
+currency: USD
+modelStartMonth: '2026-07'
+assumptions:
+  - id: A1
+    name: 模型起始月份
+    value: '2026-07'
+    unit: 月份
+    source: "[阶段运行日期 2026-06-16；模型从下一个月开始]"
+  - id: A2
+    name: 种子前融资到账后的初始现金
+    value: '2900'
+    unit: USDK
+    source: "[BP fundingAsk 目标 $2–4M；基准情景使用 $2.9M 种子前融资作为初始现金]"
+  - id: A3
+    name: 目标毛利率
+    value: '75'
+    unit: 百分比
+    source: "[BP businessModel.targetGrossMarginPct]"
+  - id: A4
+    name: 订阅价格
+    value: '0.02'
+    unit: USD/活跃持卡人/月
+    source: "[BP gtm.pricing]"
+  - id: A5
+    name: 每位活跃持卡人年均消费代理值
+    value: '3300'
+    unit: USD/用户/年
+    source: "[Research bottomUpSizingDrivers 年均用户消费代理值]"
+  - id: A6
+    name: 奖励池占消费比例
+    value: '1.0'
+    unit: 占卡片消费百分比
+    source: "[Research market.tam 依据及 bottomUpSizingDrivers]"
+  - id: A7
+    name: 市场平台抽成比例
+    value: '5'
+    unit: 占奖励价值百分比
+    source: "[BP gtm.pricing；Research bottomUpSizingDrivers 建模抽成]"
+  - id: A8
+    name: 每位活跃持卡人基础年均收入
+    value: '1.89'
+    unit: USD/用户/年
+    source: "[由 A4+A5+A6+A7 计算得出；与 Research 建模约 $1.91/用户/年 一致]"
+  - id: A9
+    name: 付费试点集成费
+    value: '15'
+    unit: USDK/新发卡机构
+    source: "[BP businessModel 集成费收入流；启发式：企业金融科技试点实施费]"
+  - id: A10
+    name: 付费试点月平台服务费
+    value: '1.5'
+    unit: USDK/发卡机构/月
+    source: "[BP investorMemo initialContract；启发式：生产用量规模化前的低摩擦付费试点费]"
+  - id: A11
+    name: 第一年生产发卡机构活跃持卡人数
+    value: '15000'
+    unit: 活跃持卡人/发卡机构
+    source: "[BP 滩头细分市场 10k–50k 活跃用户；早期生产低于中位数启动]"
+  - id: A12
+    name: 第二年平均生产发卡机构活跃持卡人数
+    value: '25000'
+    unit: 活跃持卡人/发卡机构
+    source: "[BP 滩头细分市场 10k–50k 活跃用户；试点后生产阶段取中位数]"
+  - id: A13
+    name: 第三年成熟发卡机构活跃持卡人数
+    value: '40000'
+    unit: 活跃持卡人/发卡机构
+    source: "[BP market.som 及 15 家发卡机构 / 60 万活跃持卡人里程碑]"
+  - id: A14
+    name: 分析模块附加定价
+    value: '15'
+    unit: USDK ARR/发卡机构
+    source: "[BP businessModel 分析/CRM 扩展；启发式：窄范围基准测试模块定价]"
+  - id: A15
+    name: 分析模块采用爬坡计划
+    value: "Q4Y2 前 1 家，Q4Y3 前 2 家"
+    unit: 发卡机构数
+    source: "[BP 里程碑：12–24 个月内至少将 2 家发卡机构转化为付费分析用户]"
+  - id: A16
+    name: 付费发卡机构增长计划
+    value: "Q4Y1 前 3 家，Q4Y2 前 6 家（生产当量），Q4Y3 前 15 家"
+    unit: 付费发卡机构数
+    source: "[BP 里程碑与产品路线图]"
+  - id: A17
+    name: CEO 现金薪资
+    value: '120'
+    unit: USDK/年
+    source: "[启发式：精益种子前创始人现金薪酬]"
+  - id: A18
+    name: 创始工程师现金薪资
+    value: '140'
+    unit: USDK/年
+    source: "[启发式：种子前高级创始工程师]"
+  - id: A19
+    name: 产品与合规负责人现金薪资
+    value: '120'
+    unit: USDK/年
+    source: "[BP 团队角色；启发式：具备合规意识的产品运营人员]"
+  - id: A20
+    name: 合作伙伴负责人现金薪资
+    value: '100'
+    unit: USDK/年
+    source: "[BP 团队角色；启发式：早期合作伙伴经理薪酬]"
+  - id: A21
+    name: 数据负责人现金薪资
+    value: '120'
+    unit: USDK/年
+    source: "[BP 团队角色；启发式：初创公司数据负责人薪酬]"
+  - id: A22
+    name: 平台工程师现金薪资
+    value: '130'
+    unit: USDK/年
+    source: "[启发式：额外高级工程师薪酬]"
+  - id: A23
+    name: GTM 招聘现金薪资
+    value: '100'
+    unit: USDK/年
+    source: "[启发式：第一位销售/运营人员薪酬]"
+  - id: A24
+    name: 客户成功现金薪资
+    value: '80'
+    unit: USDK/年
+    source: "[启发式：第一位客户成功运营人员薪酬]"
+  - id: A25
+    name: 财务与运营现金薪资
+    value: '90'
+    unit: USDK/年
+    source: "[启发式：精益财务/运营招聘薪酬]"
+  - id: A26
+    name: 工资税及福利负担
+    value: '15'
+    unit: 占现金薪资百分比
+    source: "[启发式：分布式团队初创公司工资负担]"
+  - id: A27
+    name: 非薪资运营费用爬坡
+    value: '15 至 42'
+    unit: USDK/月（从 M1 至 Y3 末）
+    source: "[BP 运营 + 合规/合作工作量；云服务、法务、差旅及工具费用启发式估算]"
+  - id: A28
+    name: 月度客户流失率
+    value: '1.2'
+    unit: 百分比
+    source: "[启发式：集成上线后 B2B 基础设施综合流失率]"
+  - id: A29
+    name: 每发卡机构综合获客成本
+    value: '65'
+    unit: USDK/生产发卡机构
+    source: "[BP 创始人主导及合作伙伴渠道 GTM；集中型企业金融科技销售启发式估算]"
+headcount:
+  - role: CEO
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 创始工程师
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 产品与合规
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 合作伙伴
+    q1y1: 0
+    q2y1: 0
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 数据
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 平台工程师
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 1
+    q4y3: 2
+  - role: GTM
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+  - role: 客户成功
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+  - role: 财务与运营
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 0
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 2
+  q2y1: 3
+  q3y1: 4
+  q4y1: 6
+  q4y2: 8
+  q4y3: 10
+headcountAnnualizedPayrollK:
+  q1y1: 299.0
+  q2y1: 437.0
+  q3y1: 552.0
+  q4y1: 839.5
+  q4y2: 1046.5
+  q4y3: 1414.5
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 15.5
+    researchDevelopmentK: 17.4
+    generalAdministrativeK: 7.0
+    salaryK: 24.9
+    opexK: 39.9
+    ebitdaK: -39.9
+    cashEopK: 2860.1
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 15.5
+    researchDevelopmentK: 17.4
+    generalAdministrativeK: 7.0
+    salaryK: 24.9
+    opexK: 39.9
+    ebitdaK: -39.9
+    cashEopK: 2820.2
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 15.5
+    researchDevelopmentK: 17.4
+    generalAdministrativeK: 7.0
+    salaryK: 24.9
+    opexK: 39.9
+    ebitdaK: -39.9
+    cashEopK: 2780.3
+  - month: M4
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 16.5
+    researchDevelopmentK: 30.9
+    generalAdministrativeK: 9.0
+    salaryK: 36.4
+    opexK: 56.4
+    ebitdaK: -56.4
+    cashEopK: 2723.9
+  - month: M5
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 16.5
+    cogsK: 4.1
+    grossProfitK: 12.4
+    salesMarketingK: 16.5
+    researchDevelopmentK: 30.9
+    generalAdministrativeK: 9.0
+    salaryK: 36.4
+    opexK: 56.4
+    ebitdaK: -44.0
+    cashEopK: 2679.9
+  - month: M6
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 1.5
+    cogsK: 0.4
+    grossProfitK: 1.1
+    salesMarketingK: 16.5
+    researchDevelopmentK: 30.9
+    generalAdministrativeK: 9.0
+    salaryK: 36.4
+    opexK: 56.4
+    ebitdaK: -55.3
+    cashEopK: 2624.6
+  - month: M7
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 1.5
+    cogsK: 0.4
+    grossProfitK: 1.1
+    salesMarketingK: 29.1
+    researchDevelopmentK: 31.9
+    generalAdministrativeK: 9.0
+    salaryK: 46.0
+    opexK: 70.0
+    ebitdaK: -68.9
+    cashEopK: 2555.7
+  - month: M8
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 16.5
+    cogsK: 4.1
+    grossProfitK: 12.4
+    salesMarketingK: 29.1
+    researchDevelopmentK: 31.9
+    generalAdministrativeK: 9.0
+    salaryK: 46.0
+    opexK: 70.0
+    ebitdaK: -57.6
+    cashEopK: 2498.1
+  - month: M9
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 3.9
+    cogsK: 1.0
+    grossProfitK: 2.9
+    salesMarketingK: 29.1
+    researchDevelopmentK: 31.9
+    generalAdministrativeK: 9.0
+    salaryK: 46.0
+    opexK: 70.0
+    ebitdaK: -67.1
+    cashEopK: 2431.0
+  - month: M10
+    customersEop: 3
+    newCustomers: 1
+    revenueK: 18.9
+    cogsK: 4.7
+    grossProfitK: 14.2
+    salesMarketingK: 30.1
+    researchDevelopmentK: 56.9
+    generalAdministrativeK: 11.0
+    salaryK: 70.0
+    opexK: 98.0
+    ebitdaK: -83.8
+    cashEopK: 2347.2
+  - month: M11
+    customersEop: 3
+    newCustomers: 0
+    revenueK: 6.3
+    cogsK: 1.6
+    grossProfitK: 4.7
+    salesMarketingK: 30.1
+    researchDevelopmentK: 56.9
+    generalAdministrativeK: 11.0
+    salaryK: 70.0
+    opexK: 98.0
+    ebitdaK: -93.3
+    cashEopK: 2253.9
+  - month: M12
+    customersEop: 3
+    newCustomers: 0
+    revenueK: 7.2
+    cogsK: 1.8
+    grossProfitK: 5.4
+    salesMarketingK: 30.1
+    researchDevelopmentK: 56.9
+    generalAdministrativeK: 11.0
+    salaryK: 70.0
+    opexK: 98.0
+    ebitdaK: -92.6
+    cashEopK: 2161.3
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 4
+    revenueK: 39.6
+    cogsK: 9.9
+    grossProfitK: 29.7
+    salesMarketingK: 90.3
+    researchDevelopmentK: 174.7
+    generalAdministrativeK: 35.0
+    salaryK: 209.9
+    opexK: 300.0
+    ebitdaK: -270.3
+    cashEopK: 1891.0
+  - quarter: Q2Y2
+    customersEop: 5
+    revenueK: 70.2
+    cogsK: 17.6
+    grossProfitK: 52.6
+    salesMarketingK: 105.0
+    researchDevelopmentK: 183.8
+    generalAdministrativeK: 40.0
+    salaryK: 238.7
+    opexK: 328.8
+    ebitdaK: -276.2
+    cashEopK: 1614.8
+  - quarter: Q3Y2
+    customersEop: 6
+    revenueK: 98.1
+    cogsK: 24.5
+    grossProfitK: 73.6
+    salesMarketingK: 122.1
+    researchDevelopmentK: 199.5
+    generalAdministrativeK: 42.0
+    salaryK: 261.6
+    opexK: 363.6
+    ebitdaK: -290.0
+    cashEopK: 1324.8
+  - quarter: Q4Y2
+    customersEop: 6
+    revenueK: 127.8
+    cogsK: 31.9
+    grossProfitK: 95.9
+    salesMarketingK: 122.1
+    researchDevelopmentK: 199.5
+    generalAdministrativeK: 42.0
+    salaryK: 261.6
+    opexK: 363.6
+    ebitdaK: -267.7
+    cashEopK: 1057.1
+  - quarter: Q1Y3
+    customersEop: 8
+    revenueK: 176.4
+    cogsK: 44.1
+    grossProfitK: 132.3
+    salesMarketingK: 126.0
+    researchDevelopmentK: 207.6
+    generalAdministrativeK: 42.0
+    salaryK: 261.6
+    opexK: 375.6
+    ebitdaK: -243.3
+    cashEopK: 813.8
+  - quarter: Q2Y3
+    customersEop: 10
+    revenueK: 234.6
+    cogsK: 58.6
+    grossProfitK: 176.0
+    salesMarketingK: 133.8
+    researchDevelopmentK: 223.6
+    generalAdministrativeK: 44.0
+    salaryK: 287.4
+    opexK: 401.4
+    ebitdaK: -225.4
+    cashEopK: 588.4
+  - quarter: Q3Y3
+    customersEop: 12
+    revenueK: 295.2
+    cogsK: 73.8
+    grossProfitK: 221.4
+    salesMarketingK: 151.5
+    researchDevelopmentK: 251.4
+    generalAdministrativeK: 48.0
+    salaryK: 324.9
+    opexK: 450.9
+    ebitdaK: -229.5
+    cashEopK: 358.9
+  - quarter: Q4Y3
+    customersEop: 15
+    revenueK: 390.0
+    cogsK: 97.5
+    grossProfitK: 292.5
+    salesMarketingK: 151.5
+    researchDevelopmentK: 251.4
+    generalAdministrativeK: 48.0
+    salaryK: 324.9
+    opexK: 450.9
+    ebitdaK: -158.4
+    cashEopK: 200.5
+totals:
+  y1:
+    revenueK: 72.3
+    ebitdaK: -738.7
+    cashEopK: 2161.3
+  y2:
+    revenueK: 335.7
+    ebitdaK: -1104.2
+    cashEopK: 1057.1
+  y3:
+    revenueK: 1096.2
+    ebitdaK: -856.6
+    cashEopK: 200.5
+unitEconomics:
+  arpuAnnualK: 75.6
+  grossMarginPct: 75.0
+  cacK: 65.0
+  monthlyChurnPct: 1.2
+  avgCustomerLifeMonths: 83.3
+  ltvK: 393.8
+  ltvCacRatio: 6.1
+  cacPaybackMonths: 13.8
+fundingAsk:
+  round: pre-seed
+  amountM: 2.9
+  runwayMonths: 24
+  milestone: "在种子轮融资前实现 6 家生产发卡机构、2 次付费分析模块扩展及 Galileo 支持，并预留 6 个月现金缓冲。"
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 1247000
+      percentage: 43
+    - bucket: GTM
+      amountUsd: 754000
+      percentage: 26
+    - bucket: G&A
+      amountUsd: 348000
+      percentage: 12
+    - bucket: Buffer (6 mo)
+      amountUsd: 551000
+      percentage: 19
+scenarios:
+  downside:
+    description: >-
+      处理商审批延误且分析模块追加销售落地较晚，导致 Y3 末约有 12 家发卡机构，
+      市场平台交易量也较弱。
+    y3RevenueK: 812.0
+    y3EbitdaK: -1084.0
+    cashLowPointK: -140.0
+    keyAssumptionChanges:
+      - 生产转化比 A16 慢一至两个季度。
+      - 发卡机构平均活跃用户数停滞在更接近 30k 而非 A13 的 40k。
+      - 分析模块采用在整个 Y3 期间仅停留在 1 家发卡机构。
+  base:
+    description: >-
+      基准情景遵循里程碑路径：Y1 内 3 家试点，Q4Y2 前 6 家生产发卡机构，
+      Q4Y3 前 15 家付费发卡机构。
+    y3RevenueK: 1096.2
+    y3EbitdaK: -856.6
+    cashLowPointK: 200.5
+    keyAssumptionChanges:
+      - 假设 A8 至 A16 与运营计划保持一致。
+      - 毛利率维持在 A3 设定的 75% 目标。
+      - 招聘遵循 BP 团队与里程碑中的阶段性团队扩张计划。
+  upside:
+    description: >-
+      渠道转介早期生效，持卡人基数成熟更快，分析模块在 Y3 末附加至 4 家发卡机构。
+    y3RevenueK: 1388.0
+    y3EbitdaK: -612.0
+    cashLowPointK: 470.0
+    keyAssumptionChanges:
+      - Y3 末发卡机构平均活跃用户数达到 45k，而非 A13 的 40k。
+      - Q4Y3 前分析模块附加至 4 家发卡机构，而非 A15 的 2 家。
+      - 通过处理商和发起行的转介，销售周期缩短一个季度。
+sensitivity:
+  - variable: ARPU
+    downsideCase: >-
+      基础货币化维持在 $1.89/活跃用户/年 的底线，无额外分析模块附加。
+    baseCase: 基础货币化与 A8 一致，Q4Y3 前完成 2 次分析扩展。
+    upsideCase: >-
+      持卡人密度与分析模块附加将综合发卡机构 ARPU 拉升至基准底线之上。
+    y3RevenueImpactK: -180.0
+    cashImpactK: -135.0
+  - variable: CAC
+    downsideCase: 直销为主，综合 CAC 上升至约 $85K/发卡机构。
+    baseCase: CAC 维持在 A29 水平，得益于创始人主导销售和合作伙伴转介。
+    upsideCase: 渠道合作伙伴将 CAC 压低至约 $50K/发卡机构。
+    y3RevenueImpactK: 0.0
+    cashImpactK: -160.0
+  - variable: 客户流失率
+    downsideCase: >-
+      随着发卡机构测试捆绑替代方案，月度客户流失率上升至 2.0%。
+    baseCase: 集成上线后，流失率维持在 A28 水平。
+    upsideCase: 由于数据层的强粘性，流失率降至 1.0% 以下。
+    y3RevenueImpactK: -95.0
+    cashImpactK: -90.0
+  - variable: 销售周期
+    downsideCase: 发起行审批使试点转生产周期额外延长一个季度。
+    baseCase: 试点节奏遵循 A16 和 BP 里程碑。
+    upsideCase: 技术栈合作伙伴介绍将转化周期压缩一个季度。
+    y3RevenueImpactK: -130.0
+    cashImpactK: -155.0
+  - variable: 毛利率
+    downsideCase: >-
+      奖励服务、支持及合规成本使毛利率维持在约 68%。
+    baseCase: 毛利率达到 A3 设定的 75% 目标。
+    upsideCase: 自动化和合作伙伴资金支持将毛利率推升至约 80%。
+    y3RevenueImpactK: 0.0
+    cashImpactK: -78.0
+  - variable: 招聘节奏
+    downsideCase: 合规与 GTM 招聘提前两个季度以解除上线阻碍。
+    baseCase: 招聘遵循人员编制表中的阶段性爬坡计划。
+    upsideCase: 后续招聘等待验证节点与渠道杠杆效果。
+    y3RevenueImpactK: 0.0
+    cashImpactK: -120.0
+modelDiagram:
+  title: 单位经济学流程
+  mermaid: |
+    flowchart LR
+      Issuers[发卡机构] --> ActiveCardholders[活跃持卡人]
+      ActiveCardholders[活跃持卡人] --> SubscriptionRevenue[订阅收入]
+      ActiveCardholders[活跃持卡人] --> RedemptionVolume[兑换量]
+      RedemptionVolume[兑换量] --> MarketplaceTake[市场平台抽成]
+      SubscriptionRevenue[订阅收入] --> Revenue[总收入]
+      MarketplaceTake[市场平台抽成] --> Revenue[总收入]
+      Revenue[总收入] --> GrossProfit[毛利润]
+      GrossProfit[毛利润] --> Cash[现金]
+modelSanity:
+  - checkName: 收入引擎
+    finding: 基准情景由发卡机构数量达到 15 家驱动，每家成熟发卡机构以 $1.89/用户收入基础向 40k 活跃持卡人增长。
+  - checkName: 关键成功要素
+    finding: 处理商和发起行的审批必须控制在一个季度的试点窗口内，否则销售周期敏感性将迅速消耗现金缓冲。
+  - checkName: 模型崩溃条件
+    finding: 若分析模块附加持续疲弱且发卡机构活跃用户停滞在 30k 以下，悲观情景将在种子轮里程碑前出现现金为负。
+  - checkName: 下轮融资证明
+    finding: 可信的种子轮条件为：Y2 末实现 6 家生产发卡机构、2 次付费分析扩展，以及 1 个有案例支持的可复制渠道动作。
+sanityChecks:
+  ruleOf40: >-
+    Y3 增长率 226.6% + EBITDA 利润率 -78.1% = 148.5%；增长强劲，但质量仍弱，
+    因为模型仍处于亏损状态。
+  burnMultiple: >-
+    Y3 烧钱倍数 1.1x（相较 Y2 净增收入 $760.5K，EBITDA 亏损 $856.6K）。
+  revenuePerFte: "Y3 每 FTE 收入 $109.6K，低于 SaaS 行业约 $200–400K 的参考基准。"
+  flags:
+    - 基准情景下 Y3 每 FTE 收入仍远低于典型风险投资 SaaS 效率标准，因此在首个忠诚度业务楔入后，分析/CRM 扩展必须提升货币化水平。
+    - 公司在整个 Y3 期间 EBITDA 仍为负，这意味着种子前融资必须获取足够的验证以支撑种子轮，而非自我造血至盈亏平衡。
+    - 收入集中度较高，因为模型仍依赖约 15 家发卡机构；失去任何一家大型发卡机构都会产生实质性影响。
+    - Q4Y3 收入退出要求现有发卡机构在上线后实质性增长活跃持卡人数，而非仅仅增加客户数量。
