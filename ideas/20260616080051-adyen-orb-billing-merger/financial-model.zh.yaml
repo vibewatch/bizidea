@@ -1,0 +1,580 @@
+slug: usage-margin-guard
+date: '2026-06-16'
+currency: USD
+modelStartMonth: '2026-07'
+
+assumptions:
+  - id: A1
+    name: Pre-seed 融资
+    value: "3000"
+    unit: thousandUSD
+    source: "[BP fundingAsk] $2–4M 目标区间中点；在第 1 个月计入现金"
+  - id: A2
+    name: 模型起始月份
+    value: "2026-07"
+    unit: YYYY-MM
+    source: "[BP date 2026-06-16] 报告日期的次月"
+  - id: A3
+    name: 起始生产客户数
+    value: "0"
+    unit: count
+    source: "[BP milestones] 首批试点在第 3–5 个月完成；生产转化从第 6 个月开始"
+  - id: A4
+    name: Y1 试点费均值
+    value: "37.5"
+    unit: thousandUSD
+    source: "[BP pricing] $25k–$50k 试点区间中点；Y1 共 3 个试点，分别在第 3、5、8 个月"
+  - id: A5
+    name: Y2 试点费均值
+    value: "30.0"
+    unit: thousandUSD
+    source: "[BP pricing + heuristic] 产品化使入职成本比 Y1 试点费压缩约 20%；与早期 B2B SaaS 实施费下降趋势一致"
+  - id: A6
+    name: Y3 试点费均值
+    value: "25.0"
+    unit: thousandUSD
+    source: "[BP sequencingRationale + heuristic] 进一步产品化和合作伙伴来源交易降低均值；连接器复用缩短部署时间"
+  - id: A7
+    name: Y1 年度订阅 ACV
+    value: "35"
+    unit: thousandUSD
+    source: "[research bottomUpSizingDrivers] 建模 $35,000 ARR，以现有计费/基础设施支出基准为锚；75 个客户 × $35k = $260 万 SOM"
+  - id: A8
+    name: Y2 年度订阅 ACV
+    value: "37"
+    unit: thousandUSD
+    source: "[BP expansionLevers] 40% 的客户在 12 个月内扩展至第二队列；混合 ARPU 较 Y1 初始 ACV 提升约 6%"
+  - id: A9
+    name: Y3 年度订阅 ACV
+    value: "40"
+    unit: thousandUSD
+    source: "[BP expansionLevers + heuristic] 多队列和高级模块扩展；较初始 $35k ACV 提升约 14%；与该阶段 B2B SaaS NRR >110% 一致"
+  - id: A10
+    name: 试点转生产转化率
+    value: "52"
+    unit: percent
+    source: "[BP funnelTargets] 试点转年度生产 50%+；模型使用 52% 作为略高于最低值的改进；无历史数据——若跌破 30% 则触发淘汰标准"
+  - id: A11
+    name: 月度流失率
+    value: "1.0"
+    unit: percentPerMonth
+    source: "[heuristic] 早期 B2B SaaS 共创客户；年流失约 12%；与高接触度和人工续签支持一致；Churnkey/Stripe 非自愿流失基准提供下限参考"
+  - id: A12
+    name: 目标毛利率
+    value: "70"
+    unit: percent
+    source: "[BP businessModel targetGrossMarginPct] 明确目标 70%；Y2 实现；Y1 约 69%（基础设施爬坡期），Y3 约 75%（规模化+自动化）"
+  - id: A13
+    name: Y1 COGS 构成
+    value: "35"
+    unit: percentOfRevenue
+    source: "[heuristic] 云计算 + 试点部署基础设施 + 数据 API 成本；约 $2k/月基础 + 每个试点 $5k；35% 收入对早期不稳定收入是保守估计"
+  - id: A14
+    name: Y2 COGS 构成
+    value: "30"
+    unit: percentOfRevenue
+    source: "[heuristic] 共享基础设施随增长摊薄；30% 反映约 8–12 个生产客户、每账户云成本适中的情况"
+  - id: A15
+    name: Y3 COGS 构成
+    value: "25"
+    unit: percentOfRevenue
+    source: "[heuristic] 40 个生产客户；连接器复用和评分引擎效率降低单客户基础设施成本；25% 与 75% 毛利率目标一致"
+  - id: A16
+    name: Y1 人员计划
+    value: "2 FTE Q1Y1 → 5 FTE Q4Y1"
+    unit: FTE
+    source: "[BP team] 创始人/CEO 和创始工程师从第 0 个月；解决方案工程师第 4 个月；产品/管控负责人第 7 个月；合作伙伴负责人第 10 个月"
+  - id: A17
+    name: 含附加成本的人均薪酬（均值）
+    value: "155"
+    unit: thousandUSDPerYear
+    source: "[heuristic] 美国旧金山湾区初创公司薪酬，含 20% 福利/社保负担；CEO $18 万，创始工程师 $19.2 万，解决方案工程师 $16.8 万，产品负责人 $18 万，合作伙伴负责人 $15.6 万（均为到手含税总额）"
+  - id: A18
+    name: Y2 新增人员
+    value: "+3 FTE（第二工程师 Q1Y2，客户主管 1 号 Q2Y2，客户成功 Q3Y2）"
+    unit: FTE
+    source: "[BP milestones 12-24 months] 达到 10–15 个生产客户需要专职客户主管和客户成功；第二工程师用于连接器规模化"
+  - id: A19
+    name: Y3 新增人员
+    value: "+4 FTE（客户主管 2 号 Q1Y3，第三工程师 Q2Y3，客户成功 2 号 Q3Y3，数据工程师 Q4Y3）"
+    unit: FTE
+    source: "[BP milestones 24-36 months] 规模化至 40 个以上客户需要第二客户主管、第三工程师深化策略库、第二客户成功负责入职、数据/系统工程师建立敞口曲线数据集"
+  - id: A20
+    name: 非薪酬销售与市场费用爬坡
+    value: "4 → 38"
+    unit: thousandUSDPerMonth
+    source: "[heuristic] 创始人内容 + 会议 $4k/月早期；到 Q4Y3 规模化至 $38k/月以支持两名客户主管和合作伙伴活动；与 Y3 总收入约 15–20% 的销售与市场费用率一致"
+  - id: A21
+    name: Seed 轮融资（Q1Y3 建模）
+    value: "6000"
+    unit: thousandUSD
+    source: "[heuristic + BP investorMemo] pre-seed 资金支撑至 Q4Y2（剩余约 $99.8 万）；假设 $600 万 Seed 轮在 Y3 初完成（12 个生产客户验证后）；作为 Q1Y3 现金流入建模以展示可行的三年轨迹；已在 sanityChecks.flags 中标注"
+  - id: A22
+    name: 客户增长轨迹
+    value: "0 → 3 → 12 → 40 生产客户（Y1/Y2/Y3 末）"
+    unit: count
+    source: "[BP milestones] Y1：2–3 个生产客户；Y2：10–15 个生产客户（模型：12）；Y3：向 75 客户 SOM 推进（模型：40 为保守基准）"
+  - id: A23
+    name: 无资本性支出假设
+    value: "0"
+    unit: thousandUSD
+    source: "[heuristic] 纯软件产品；云基础设施为运营支出；无硬件或办公室租约；现金消耗 = EBITDA 消耗"
+  - id: A24
+    name: 收入确认
+    value: "试点费在签约当月确认；订阅 MRR 从生产上线日起按月确认"
+    unit: policy
+    source: "[BP businessModel] 试点为付费项目（不递延）；年度订阅从生产上线日起计"
+
+headcount:
+  - role: CEO/创始人
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 创始工程师
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 解决方案/集成工程师
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 产品/管控负责人
+    q1y1: 0
+    q2y1: 0
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 合作伙伴负责人
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 第二工程师
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+  - role: 客户主管 1 号
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+  - role: 客户成功/入职
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+  - role: 第三工程师
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 0
+    q4y3: 1
+  - role: 客户主管 2 号
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 0
+    q4y3: 1
+  - role: 客户成功 2 号
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 0
+    q4y3: 1
+  - role: 数据/系统工程师
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 0
+    q4y3: 1
+
+headcountTotalsFte:
+  q1y1: 2
+  q2y1: 3
+  q3y1: 4
+  q4y1: 5
+  q4y2: 8
+  q4y3: 12
+
+headcountAnnualizedPayrollK:
+  q1y1: 372.0
+  q2y1: 540.0
+  q3y1: 720.0
+  q4y1: 876.0
+  q4y2: 1344.0
+  q4y3: 1980.0
+
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 2.0
+    grossProfitK: -2.0
+    salesMarketingK: 11.5
+    researchDevelopmentK: 21.0
+    generalAdministrativeK: 13.5
+    opexK: 46.0
+    ebitdaK: -48.0
+    cashEopK: 2952.0
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 2.0
+    grossProfitK: -2.0
+    salesMarketingK: 11.5
+    researchDevelopmentK: 21.0
+    generalAdministrativeK: 13.5
+    opexK: 46.0
+    ebitdaK: -48.0
+    cashEopK: 2904.0
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 37.5
+    cogsK: 7.0
+    grossProfitK: 30.5
+    salesMarketingK: 11.5
+    researchDevelopmentK: 21.0
+    generalAdministrativeK: 13.5
+    opexK: 46.0
+    ebitdaK: -15.5
+    cashEopK: 2888.5
+  - month: M4
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 2.0
+    grossProfitK: -2.0
+    salesMarketingK: 18.6
+    researchDevelopmentK: 31.9
+    generalAdministrativeK: 13.5
+    opexK: 64.0
+    ebitdaK: -66.0
+    cashEopK: 2822.5
+  - month: M5
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 37.5
+    cogsK: 7.0
+    grossProfitK: 30.5
+    salesMarketingK: 18.6
+    researchDevelopmentK: 31.9
+    generalAdministrativeK: 13.5
+    opexK: 64.0
+    ebitdaK: -33.5
+    cashEopK: 2789.0
+  - month: M6
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 2.9
+    cogsK: 2.5
+    grossProfitK: 0.4
+    salesMarketingK: 18.6
+    researchDevelopmentK: 31.9
+    generalAdministrativeK: 13.5
+    opexK: 64.0
+    ebitdaK: -63.6
+    cashEopK: 2725.4
+  - month: M7
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 2.9
+    cogsK: 2.5
+    grossProfitK: 0.4
+    salesMarketingK: 20.6
+    researchDevelopmentK: 44.6
+    generalAdministrativeK: 16.4
+    opexK: 81.6
+    ebitdaK: -81.2
+    cashEopK: 2644.2
+  - month: M8
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 43.3
+    cogsK: 9.0
+    grossProfitK: 34.3
+    salesMarketingK: 20.6
+    researchDevelopmentK: 44.6
+    generalAdministrativeK: 16.4
+    opexK: 81.6
+    ebitdaK: -47.3
+    cashEopK: 2596.9
+  - month: M9
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 5.8
+    cogsK: 3.0
+    grossProfitK: 2.8
+    salesMarketingK: 20.6
+    researchDevelopmentK: 44.6
+    generalAdministrativeK: 16.4
+    opexK: 81.6
+    ebitdaK: -78.8
+    cashEopK: 2518.1
+  - month: M10
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 5.8
+    cogsK: 3.0
+    grossProfitK: 2.8
+    salesMarketingK: 36.6
+    researchDevelopmentK: 45.6
+    generalAdministrativeK: 16.4
+    opexK: 98.6
+    ebitdaK: -95.8
+    cashEopK: 2422.3
+  - month: M11
+    customersEop: 3
+    newCustomers: 1
+    revenueK: 8.8
+    cogsK: 3.5
+    grossProfitK: 5.3
+    salesMarketingK: 36.6
+    researchDevelopmentK: 45.6
+    generalAdministrativeK: 16.4
+    opexK: 98.6
+    ebitdaK: -93.3
+    cashEopK: 2329.0
+  - month: M12
+    customersEop: 3
+    newCustomers: 0
+    revenueK: 8.8
+    cogsK: 3.5
+    grossProfitK: 5.3
+    salesMarketingK: 36.6
+    researchDevelopmentK: 45.6
+    generalAdministrativeK: 16.4
+    opexK: 98.6
+    ebitdaK: -93.3
+    cashEopK: 2235.7
+
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 5
+    revenueK: 127.0
+    grossProfitK: 88.9
+    opexK: 372.3
+    ebitdaK: -283.4
+    cashEopK: 1952.3
+  - quarter: Q2Y2
+    customersEop: 7
+    revenueK: 145.5
+    grossProfitK: 101.8
+    opexK: 420.3
+    ebitdaK: -318.5
+    cashEopK: 1633.8
+  - quarter: Q3Y2
+    customersEop: 10
+    revenueK: 198.6
+    grossProfitK: 139.0
+    opexK: 465.3
+    ebitdaK: -326.3
+    cashEopK: 1307.5
+  - quarter: Q4Y2
+    customersEop: 12
+    revenueK: 221.8
+    grossProfitK: 155.3
+    opexK: 465.3
+    ebitdaK: -310.0
+    cashEopK: 997.5
+  - quarter: Q1Y3
+    customersEop: 17
+    revenueK: 295.0
+    grossProfitK: 221.2
+    opexK: 534.3
+    ebitdaK: -313.1
+    cashEopK: 6684.4
+  - quarter: Q2Y3
+    customersEop: 24
+    revenueK: 380.0
+    grossProfitK: 285.0
+    opexK: 603.3
+    ebitdaK: -318.3
+    cashEopK: 6366.1
+  - quarter: Q3Y3
+    customersEop: 32
+    revenueK: 480.0
+    grossProfitK: 360.0
+    opexK: 651.3
+    ebitdaK: -291.3
+    cashEopK: 6074.8
+  - quarter: Q4Y3
+    customersEop: 40
+    revenueK: 560.0
+    grossProfitK: 420.0
+    opexK: 702.3
+    ebitdaK: -282.3
+    cashEopK: 5792.5
+
+totals:
+  y1:
+    revenueK: 153.3
+    ebitdaK: -764.3
+    cashEopK: 2235.7
+  y2:
+    revenueK: 692.9
+    ebitdaK: -1238.2
+    cashEopK: 997.5
+  y3:
+    revenueK: 1715.0
+    ebitdaK: -1205.0
+    cashEopK: 5792.5
+
+unitEconomics:
+  arpuAnnualK: 37.0
+  grossMarginPct: 70.0
+  cacK: 55.0
+  monthlyChurnPct: 1.0
+  avgCustomerLifeMonths: 100
+  ltvK: 216.0
+  ltvCacRatio: 3.93
+  cacPaybackMonths: 26
+
+fundingAsk:
+  round: pre-seed
+  amountM: 3.0
+  runwayMonths: 18
+  milestone: "完成 3–5 个付费旁路模式试点，将 2–3 个转化为年度生产合同，发布一个计费栈和一个 PSP 组合的可复用连接器，并交付至少 2 份试点 ROI 研究（显示受保护毛利 > 试点费用 2 倍）——足以支撑 Seed 轮融资"
+  useOfFunds:
+    - bucket: 工程研发
+      amountUsd: 1200000
+      percentage: 40
+    - bucket: GTM
+      amountUsd: 840000
+      percentage: 28
+    - bucket: 管理费用（G&A）
+      amountUsd: 510000
+      percentage: 17
+    - bucket: 储备资金（6 个月）
+      amountUsd: 450000
+      percentage: 15
+
+scenarios:
+  downside:
+    description: "整合型现有厂商将毛利管控功能捆绑入 Adyen+Orb 和 Stripe+Metronome，将试点转化率压至 30%、ACV 降至 $32k；公司放缓招聘以保住现金"
+    y3RevenueK: 892.0
+    y3EbitdaK: -1493.0
+    cashLowPointK: 650.0
+    keyAssumptionChanges:
+      - "试点转生产转化率从 52% 降至 30%（A10）"
+      - "受竞争压力和初始范围缩小影响，ACV 降至 $32k（A7、A8、A9）"
+      - "Y3 人员上限 10 人以控制消耗；推迟招募第二客户主管和数据工程师（A19）"
+      - "Seed 轮推迟至 Q2Y3 或未能完成；公司在 Y3 继续依靠 pre-seed 资金运营"
+  base:
+    description: "52% 试点转化率、$37k 混合 ACV、Y3 末 40 个生产客户，Q1Y3 完成 $600 万 Seed 轮融资"
+    y3RevenueK: 1715.0
+    y3EbitdaK: -1205.0
+    cashLowPointK: 997.5
+    keyAssumptionChanges: []
+  upside:
+    description: "合作伙伴渠道贡献 30% 新客户，转化率提升至 62%，ACV 扩展至 $45k；Y3 末 55 个生产客户"
+    y3RevenueK: 2200.0
+    y3EbitdaK: -900.0
+    cashLowPointK: 1300.0
+    keyAssumptionChanges:
+      - "借助更精准的资质筛选，试点转生产转化率从 52% 提升至 62%（A10）"
+      - "多队列交易和高级模块落地，ACV 扩展至 $45k（A9）"
+      - "合作伙伴渠道以更低 CAC 贡献 Y3 新客户管道的 30%（A20）"
+      - "Y3 末客户数达 55 个（vs 基准 40 个），推动订阅收入走高（A22）"
+
+sensitivity:
+  - variable: ARPU
+    downsideCase: "$32k ACV——队列扩展放缓，无可变费用接受，现有厂商定价压力"
+    baseCase: "$37k ACV——$35k 初始加第二队列交易带来 6% 扩展的混合值"
+    upsideCase: "$45k ACV——40% 基础客户采纳多队列加高级策略库模块"
+    y3RevenueImpactK: -130.0
+    cashImpactK: -91.0
+  - variable: CAC
+    downsideCase: "转化率降至 30%；每个新客户需 18 个试点；销售与市场费用上升 30%"
+    baseCase: "52% 转化率；每个新客户约 1.9 个试点；销售与市场费用参照 A20"
+    upsideCase: "62% 转化率加合作伙伴转介；有效 CAC 降至 $38k"
+    y3RevenueImpactK: -400.0
+    cashImpactK: -320.0
+  - variable: 流失率
+    downsideCase: "月流失 1.5%（年 18%）——客户迁移至预付余额工作流"
+    baseCase: "月流失 1.0%（年 12%）——共创客户高接触度维持较高留存"
+    upsideCase: "月流失 0.5%（年 6%）——跨系统审计轨迹形成切换成本"
+    y3RevenueImpactK: -58.0
+    cashImpactK: -58.0
+  - variable: 毛利率
+    downsideCase: "65% 毛利率——集成复杂性需要更多云资源和外包支持"
+    baseCase: "70% 毛利率——符合 BP 目标；Y2 规模下通过共享基础设施实现"
+    upsideCase: "75% 毛利率——连接器复用和自动化评分在 Y3 降低单客户基础设施成本"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -86.0
+  - variable: 销售周期
+    downsideCase: "平均 5 个月周期——采购审查和 PCI 边界讨论拉长交易"
+    baseCase: "平均 3 个月周期——旁路模式试点范围让初始审查保持轻量"
+    upsideCase: "2 个月周期——产品化审计加合作伙伴温热引荐压缩时间线"
+    y3RevenueImpactK: -150.0
+    cashImpactK: -120.0
+  - variable: "试点定价"
+    downsideCase: "$20k 均值——买家将试点视为免费 POC 施加价格压力"
+    baseCase: "各年 $25–38k 均值——付费项目与历史队列回放价值挂钩"
+    upsideCase: "$45k 均值——买家将回放审计视为战略毛利分析而非 IT 评估"
+    y3RevenueImpactK: -145.0
+    cashImpactK: -145.0
+
+modelDiagram:
+  title: 单位经济模型流程
+  mermaid: |
+    flowchart LR
+      Accounts[Target Accounts\nSeries B-D AI Vendors] --> Disc[Qualified Discovery\n20-30% of outreach]
+      Disc --> Pilot[Paid Shadow Pilot\n$25-38K fee]
+      Pilot --> Conv{52% Convert\nto Production}
+      Conv -->|Yes| Sub[Annual Subscription\n$35-40K ACV]
+      Conv -->|No| Lost[Lost Pipeline]
+      Sub --> MRR[Monthly Recurring\nRevenue]
+      Sub --> Expand[Cohort Expansion\n40% within 12 mo]
+      Expand --> MRR
+      MRR --> GP[Gross Profit\n70-75% GM]
+      GP --> Cash[Operating Cash]
+      Cash --> Burn[Net Burn\nfunded by pre-seed]
+
+modelSanity:
+  - checkName: 收入引擎
+    finding: "收入由一次性试点费（Y1 均值 $37.5k，Y3 降至 $25k）和 40 个生产客户订阅（Y3 末 ACV $40k）的递减混合构成，订阅在 Y3 中期超越试点费占比。"
+  - checkName: 必须做对的事
+    finding: "试点转生产转化率必须维持在 50% 以上，$25–38k 试点费必须部分抵消 CAC；若转化率跌至 30%，Y2 消耗倍数 3.7 倍将恶化，pre-seed 资金将无法顺利桥接至 Seed 轮。"
+  - checkName: 模型失效条件
+    finding: "整合型现有厂商（Adyen+Orb、Stripe+Metronome）在初创公司达到 20 个生产客户之前发布跨栈毛利管控功能，将导致转化率崩溃，现金跌破 Q4Y2 的 $99.75 万底线，且没有清晰的 Seed 轮里程碑。"
+  - checkName: 下轮融资证明
+    finding: "Q1Y3 建模的 $600 万 Seed 轮要求 pre-seed 阶段交付 12 个生产客户及至少 2 份 ROI 案例研究（显示受保护毛利 > 试点费用 2 倍），与 fundingAsk 里程碑和 BP 淘汰标准阈值一致。"
+
+sanityChecks:
+  ruleOf40: "Y2 至 Y3 收入增长 147% 减去 Y3 EBITDA 利润率 70% = 40 法则得分 77（正值；在产品市场契合前阶段增长主导；预计 Series A 后经常性收入规模扩大带动利润率改善）"
+  burnMultiple: "Y2 消耗倍数 3.7 倍（净消耗 $123.8 万 / 新 ARR $33.3 万，来自 9 个新客户 × $37k ACV）；Y2 $42 万试点费部分抵消；目标在 Y3 随订阅占比提升降至 2 倍以下"
+  revenuePerFte: "Y3 人均收入 $17.2 万（平均约 10 人；低于 $20–40 万 SaaS 基准）——在产品市场契合前阶段属于预期内；Series A 前须随连接器复用降低单客户交付成本而升至 $25 万以上"
+  flags:
+    - "Q1Y3 开始假设 $600 万 Seed 轮（A21）；若未完成，Y3 Q4 运营现金将转负约 $-20.7 万——在 Q4Y2 之前完成 Seed 轮是最重要的单一执行依赖"
+    - "Y1 收入 100% 集中在 3 个客户；任何单一客户在续签前流失，都将对 ARR 和 Seed 轮叙事造成重大稀释"
+    - "52% 试点转生产转化率尚未验证；BP 淘汰标准要求前 4 个试点中至少 2 个展示 2 倍 ROI——模型以此作为转化率下限"
+    - "$35–40k ACV 为建模值但未经证实；若买家将试点定性为咨询项目而非 SaaS 部署，实际 ACV 可能更低"
+    - "Y2 消耗倍数 3.7 倍高于资本效率早期 SaaS 的 2 倍以下基准；仅在试点费维持且 H2Y2 客户数提速的情况下改善"
+    - "Y3 人均收入 $17.2 万低于 SaaS 中位数 $20–40 万；反映高研发投入和早期市场销售——pre-Seed 前可接受，但 Series A 信用要求须升至 $25 万以上"
+    - "TAM/SAM 分别为 $5820 万/$1750 万，体量偏小；模型 Y3 收入约 $171.5 万对应 $1750 万 SAM——需扩展至邻近品类（云数据库、通信 API）才能支撑大体量风投结果"
