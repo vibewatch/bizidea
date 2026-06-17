@@ -1,0 +1,229 @@
+slug: copilot-mcp-credential-broker
+date: '2026-06-17'
+executiveSummary: Copilot MCP Credential Broker 最该先做的，不是一个泛用的智能体治理面板，而是一层运行时访问控制：帮以 Microsoft 为核心的企业，把一条 Copilot Studio 工作流从试点推进到生产。最疼的时候，是只读助手开始在 ServiceNow、SAP 或内部 API 上执行写操作，安全团队才发现可选项只剩三种：常驻密钥、宽权限服务主体，或者一坨自研中间件。首个滩头市场应锁定财富 500 强制造、分销和商业服务公司里以 ServiceNow 为中心的工作流，因为这里的写路径、买方和部署模式都比更宽的 SAP 优先或跨运行时打法更清楚。MVP 要做的很具体：接住每次工具调用，只为获批动作铸发短时凭证，写入“智能体 + 用户”上下文，并吐出能接进 Entra、Purview 和 Sentinel 的审计轨迹。GTM 能不能跑通，关键看首个客户、触发点、定价和渠道能不能咬合：把一笔付费的生产就绪部署卖进正在进行的安全评审，再把这次部署转成按受管控工作流和端点计费的年订阅。研究测算的初始 Copilot Studio 切口市场大约是 TAM $316.8M、SAM $44.4M、第 3 年 SOM $3.6M；但真要做出 VC 级空间，后面必须从 Copilot 往更广的智能体与工作负载身份控制扩。近期最强的优势，是在单条工作流上比通用 IAM、发现型工具或事后监控更快落地，也能给出更细的任务级审计证据。最大的不确定性则有三件：买家会不会单独为运行时代理付费，而不是顺手买一套带发现功能的产品；首批上线到底会覆盖多少智能体和端点；以及 Microsoft 会多快把缺口原生补上。前 12 个月必须先把这几个问题跑明白，才谈得上激进扩张。
+problem:
+- Copilot Studio 智能体现在已经能经由 MCP 往 ServiceNow、SAP 和内部 API 写数据，但大多数企业给出去的仍是常驻密钥或宽权限服务主体。
+- 安全团队证明不了每个动作到底由哪项任务触发，也分不清智能体身份和用户身份；真要撤掉高风险访问，又会把整条工作流一起打断。
+- 现有 IAM、密钥库和 PAM 栈更擅长管人和应用，不擅长管动态智能体的工具调用，所以生产上线经常卡在安全评审。
+solution:
+- 在 Copilot Studio 与 MCP/API 工具之间插一层运行时代理，让每次动作请求在放行前，都按智能体、用户、任务、目标系统和申请权限做一次策略判断。
+- 只为获批动作铸发一张短时凭证，并吐出结构化审计事件，让客户可以直接放进现有的 Microsoft 安全栈里复核。
+- 把首个部署打包成一套以 ServiceNow 为中心的上线方案：预置策略包、高影响动作审批步骤，以及贴合 Microsoft 管理流程的熔断开关。
+whyWeWin:
+- 产品卡在实时发凭证路径上，不只是事后监控或做目录盘点；因此它是上线闸门，不是报表插件。
+- 以 ServiceNow 为中心的 Copilot Studio 上线包，比泛化 NHI 平台更快拿到首个证明，因为买方、工作流和集成范围都已经被收窄。
+- 每一笔受管控动作都会长出一张可复用的策略决策图和按工作流沉淀的审计模板，而现有厂商和服务公司不会天然积累这些资产。
+strategicChoices:
+  beachhead: 以 Microsoft 为核心的财富 500 强企业，正把一条以 ServiceNow 为中心的 Copilot Studio 工作流从试点推向生产，尤其是服务升级或例外处理流程；这些流程也可能顺手读取 SAP 或内部 API。
+  wedgeRationale: 比起更宽的 SAP 优先或跨平台打法，以 ServiceNow 为中心的工作流更容易更快做出证明：写路径清晰、市场也更容易估，生产安全评审通常还有具名负责人。这样首个部署就能落在一次急迫的上线决策里，而不是拖成一个跨季度的身份现代化项目。
+  sequencingRationale: 先从 Copilot Studio、MCP、ServiceNow 和一条内部 API / SAP 只读模式下手，把部署速度和审计证据在一条工作流里打出来。等拿下 2 个生产转化后，再补审批流、更深的 SAP / ServiceNow 覆盖和伙伴渠道；不然公司很容易在切口还没跑通前，就先变成一家定制集成外包。
+  notYet:
+  - 把 SAP 优先的采购编排作为主销售动作
+  - 第一天就做跨运行时的智能体注册表和发现产品
+  - 把非 Microsoft 智能体平台当成首个滩头市场
+  - 在没有人工审批的前提下，放行完全自治的高影响写操作
+market:
+  tam: $316.8M 估算 TAM，基于约 8,800 家大型企业 ServiceNow 客户，每家约 150 个受管控、会执行动作的智能体，按每个智能体每月 $20 的基准价测算。
+  sam: $44.4M 估算 SAM，基于约 1,233 家已经达到部分或全面 AI 智能体规模的企业，仍按每家 150 个智能体、每个智能体每月 $20 的参照价计算。
+  som: $3.6M 估算第 3 年 SOM，基于约 60 个生产客户、每家约 250 个受管控智能体，按公开的每个智能体每月 $20 基准价测算。
+  segments:
+  - 正在上线以 ServiceNow 为中心的 Copilot Studio 执行动作工作流的财富 500 强、以 Microsoft 为核心的企业。
+  - 在 ServiceNow、SAP 和内部 API 之间标准化安全 MCP 访问的系统集成商与内部 AI 卓越中心。
+  buyingProcess: 销售通常从一条以 ServiceNow 为中心的 Copilot Studio 工作流准备进生产开始：安全团队卡在服务主体、权限范围或可审计性上。总监级的身份工程或 AI 平台安全负责人会和 ServiceNow / Power Platform 负责人一起评估，最终预算和生产策略则由安全工程副总裁或 CISO 拍板。
+product:
+  mvp: MVP 是一套 Copilot Studio 凭证代理：带 MCP 代理层、以 ServiceNow 为中心的策略包、一条内部 API 或 SAP 只读访问模式、短时凭证发放、智能体 + 用户审计轨迹，以及高影响动作的审批 / 熔断控制。它应该能保护一条生产工作流，而不要求客户替换 Entra、Key Vault 或现有日志系统。
+  sixMonth: 拿下 3 个共创客户，交付 Copilot Studio + ServiceNow 代理，再补 1 条内部 API 模式和 1 个 SAP 只读策略包，并在至少 1 个账户里通过真实安全评审。
+  twelveMonth: 把 2 个共创客户转成生产，补上审批流和事件回放，并把部署标准化，让首条受保护工作流能在 30 天内上线。
+  twentyFourMonth: 从单条 Copilot 工作流扩到同一客户下的多条受管控工作流，补深 SAP 与 ServiceNow 覆盖，并且只在 Copilot 切口已经跑出可复制经济性之后，再引入第二个智能体运行时。
+  keyBets:
+  - 运行时代理的部署速度足够快，能在 Microsoft 原生替代方案“够好”之前，先放行一条生产工作流。
+  - 以 ServiceNow 为中心的工作流，比更宽的 SAP 优先编排更容易拿下首单，哪怕最初的诱惑是从跨系统采购流程切。
+  - 按工作流沉淀的审计证据，对买家的吸引力会高于泛化的发现或姿态仪表盘。
+  - 首个客户一旦通过生产评审，就会从一条受保护工作流扩到更多端点。
+gtm:
+  wedge: 首条以 ServiceNow 为中心的 Copilot Studio 执行动作工作流，打包成“生产就绪方案”来卖：这是把共享服务主体替换成任务级、可审计访问的最快路径。
+  channels:
+  - 创始人主导销售，直接打进身份工程、AI 平台安全和 Copilot Studio 生产就绪评审。
+  - 与已经承接工作流现代化项目的 Microsoft、Power Platform 和 ServiceNow 实施伙伴共销。
+  - 通过身份与 NHI 咨询机构切入，把问题框成最小权限、工作负载身份现代化和审计就绪。
+  funnelTargets: 目标账户→安全评审研讨会 35%+，研讨会→付费共创客户 25%+，付费共创客户→生产工作流 60%+，首条工作流→12 个月内第二条受保护工作流 50%+
+  pricing: 先对首条工作流收一笔付费部署与策略包费用，再按受管控工作流和受保护工具端点收平台年费。这种定价正好咬合买家的上线闸门时刻，也能沿着市场测算里用到的公开“按智能体计费”基准往上延展，为更大规模上线里的审批和审计模块留出溢价空间。
+businessModel:
+  revenueStreams:
+  - 针对受管控工作流和受保护端点的平台年订阅
+  - 首次部署、策略包和连接器加固服务
+  - 审批流、事件回放和合规导出高级模块
+  - 额外工作流、区域或智能体运行时的扩张费用
+  unitOfValue: 处在策略管控下的智能体工作流和受保护工具端点。
+  targetGrossMarginPct: 70
+  expansionLevers:
+  - 在首个客户里增加更多工作流和受保护端点
+  - 从一条 Copilot Studio 工作流扩到多个业务系统
+  - 运行时代理上线后，再加卖审批和事件回放模块
+  - 在 Copilot 经济性跑顺后，把凭证代理扩到更多智能体运行时
+strategyMap:
+  northStarMetric: 付费生产账户里，按短时凭证策略执行的智能体动作年化数量。
+  inputMetrics:
+  - 从安全评审启动到首条受保护工作流的天数
+  - 从合格“准备进生产”账户里打成付费共创客户的赢单率
+  - 共创客户转生产的转化率
+  - 每个生产客户下的受保护端点数量
+  - 解释或撤销一次智能体动作的平均耗时
+  moatsToBuild:
+  - 把智能体、用户、任务、目标系统、凭证时长和结果串起来的策略决策图
+  - 面向以 Microsoft 为核心企业、以 ServiceNow 为中心的策略包与审批流
+  - 来自放行、拒绝和升级审批动作的审计证据库
+  - Copilot Studio、Entra、MCP 网关和下游企业系统的伙伴部署落地手册
+  killCriteria:
+  - 前 10 个合格的 Copilot Studio 生产上线账户里，买付费共创部署的不到 3 家。
+  - 超过一半的合格潜客在批准购买运行时代理之前，坚持要捆绑发现或注册表能力。
+  - 第 3 次部署之后，从连接器获批到首条受保护生产工作流的中位时长仍高于 30 天。
+  - 首批 3 次共创客户续约里，有 2 次是因为 Microsoft 或 ServiceNow 原生控制已足够好，从而不再需要第三方逐次发凭证代理。
+  mermaid: |
+    flowchart LR
+      Wedge[ServiceNow-centered Copilot wedge] --> MVP[Runtime broker MVP]
+      MVP --> Proof[Faster production approvals plus audit evidence]
+      Proof --> Expansion[More workflows then broader runtimes]
+investorMemo:
+  verdict:
+    call: 观望
+    conviction: 客户时点很准，但在证明买家愿意为独立代理付费、而不是直接选 Aembit 或原生控制之前，信心只能算中低。
+    whyBelieve: 它卡住的是一个真实的上线闸门问题——就在会执行动作的智能体要碰生产系统的那一刻。买方清晰，定价锚点可信，技术插点也足够精确。
+    whyDoubt: Aembit 已经把这个切口部分产品化；而一旦 Microsoft 或 ServiceNow 把原生运行时身份做得“够用”，这块空间也可能被迅速压扁。
+    nextDiligence: 确认至少两家以 Microsoft 为核心的企业愿意为首条工作流部署付费，而且这套产品确实比共享服务主体方案更快把安全评审推进到生产。
+  firstCustomer:
+    title: 负责一条以 ServiceNow 为中心的 Copilot Studio 上线项目的身份工程总监
+    profile: 财富 500 强制造、分销或商业服务企业，内部有 Microsoft AI 卓越中心，ServiceNow 已在生产环境运行，且有一条可能也会读取 SAP 或内部 API 的 Copilot 工作流。
+    trigger: 一条原本只读的 Copilot Studio 试点，准备在 ServiceNow 或相关业务系统上执行写操作，因而触发生产安全评审或审计例外项。
+    buyer: 安全工程副总裁
+    initialContract: 一笔 $25K–$50K 的付费部署与策略包项目；当工作流获准进入生产后，再转成约 $60K–$100K 的年订阅，外加按范围收取的服务费。
+  mustBeTrue:
+  - 前 10 个合格、准备进生产的潜客里，至少有 3 个会买付费的首条工作流部署，而不是继续等原生控制成熟。
+  - 一条以 ServiceNow 为中心的工作流，必须能在连接器获批后的 30 天内进入受保护的生产环境。
+  - 超过一半的付费账户，必须在 12 个月内从一条受保护工作流扩到至少 2 个额外端点或工作流。
+  - 买家需要反复把“按工作流沉淀的审计证据”当成选择产品、而不是选 Aembit、自研中间件或原生控制的理由。
+  - 在前 18 个月里，Microsoft 原生智能体身份能力还不足以抹掉第三方运行时代理的需求。
+  diligenceQuestions:
+  - 最先关单的到底是哪类工作流：ServiceNow 服务运营，还是由 SAP 支撑的例外处理？
+  - 安全评审里，到底是哪一份具体材料，能把一个卡住的 Copilot 试点推到生产批准？
+  - 首年一次企业上线，真实会覆盖多少受管控智能体和受保护端点？
+  - 买家到底多频繁地坚持要求捆绑发现能力、私有部署或客户自持审计存储？
+  - 在正面对打里，安全团队为什么会选它，而不是直接用 Aembit 或继续等 Microsoft 原生控制？
+operatingAssumptions:
+- assumption: 在买家要求更广的发现和注册表平台之前，他们就会先为一层独立的运行时代理付费。
+  basis: research.yaml
+  validationTest: 跑 10 次合格买方访谈，并在不捆绑独立发现 SKU 的前提下，至少转出 3 个付费首条工作流部署。
+  decisionImpact: 如果不成立，路线图就得把发现或注册表能力提前，或者改成通过伙伴打包，而不是先走纯软件直销。
+- assumption: 以 ServiceNow 为中心的工作流，能比 SAP 优先打法更快落地，同时又足以证明任务级凭证的必要性。
+  basis: operator judgment
+  validationTest: 比较前 6 个合格商机，确认以 ServiceNow 为中心的单子，付费部署周期低于 SAP 优先单子的 75%。
+  decisionImpact: 如果不成立，滩头市场就该切向关单更快的工作流，首批连接器顺序也要重排。
+- assumption: 公司能在客户环境里保护一条生产工作流，而不要求对整套身份栈做推倒重来。
+  basis: idea.yaml
+  validationTest: 前 3 次部署都基于 Entra、Key Vault 和现有日志接收端交付，不出现任何必须整套重做 IAM 的卡点。
+  decisionImpact: 如果不成立，部署摩擦会明显抬升，公司就必须把 ICP 收窄到那些本来就在做工作负载身份现代化的账户。
+- assumption: 按工作流沉淀的审计证据和审批控制，足以在正面竞争里和 Aembit、原生平台拉开差距。
+  basis: research.yaml
+  validationTest: 前 5 笔竞争单里，至少有 2 笔赢单、且不超过 2 笔输单，是明确因为审计或审批工作流，而不是单纯因为价格或现有厂商偏好。
+  decisionImpact: 如果不成立，产品就得靠更深的跨运行时支持、更强的伙伴打包，或换一个工作流切口来重建差异化。
+- assumption: 一旦首批部署模板和策略包标准化，业务就能逐步长出软件型毛利率。
+  basis: operator judgment
+  validationTest: 在把首条工作流上线时间压到 30 天以内的同时，第 6 个付费客户的部署工时要比第 1 个至少下降 40%。
+  decisionImpact: 如果不成立，公司就会更像一家重服务的集成商；要么继续收窄范围，要么就得按这个现实去融资。
+experimentRoadmap:
+- horizon: 0–90 天
+  experiment: ICP 与预算负责人口访
+  hypothesis: 最强的购买触发点，是一条会执行动作的 Copilot 工作流被卡在生产上线，而预算负责人坐在安全工程团队，不是泛创新预算里。
+  successMetric: 12 次目标账户访谈里，至少产出 3 个共创客户候选，并明确触发点、买方头衔和成功指标。
+  owner: 创始人 / GTM 负责人
+- horizon: 0–90 天
+  experiment: 以 ServiceNow 为中心的代理原型
+  hypothesis: Copilot Studio + MCP 代理层可以在不改客户核心 IAM 系统的前提下，铸发短时凭证并产出可用的审计证据。
+  successMetric: 拿到环境访问后 14 天内，完成一条 ServiceNow 动作路径和一次审计导出的端到端沙箱演示。
+  owner: 创始工程师
+- horizon: 90–180 天
+  experiment: 付费首条工作流部署
+  hypothesis: 围绕一次具体生产安全评审的固定范围部署，比卖一整套宽泛的智能体安全平台更容易成交。
+  successMetric: 签下 2 笔单价至少 $25K 的付费部署，并完成至少 1 套客户定制策略包。
+  owner: 创始人 / GTM 负责人
+- horizon: 90–180 天
+  experiment: 生产批准证明
+  hypothesis: 和客户当前的共享服务主体或自研中间件做法相比，这层代理能缩短从安全评审到生产的时间。
+  successMetric: 至少 1 个共创客户进入受保护生产，且有文档记录的审批周期比原方案快 25% 以上。
+  owner: 解决方案架构师
+- horizon: 180–365 天
+  experiment: 伙伴共销动作
+  hypothesis: Microsoft 和身份咨询伙伴会把这套产品带进上线评审，因为它能帮他们把项目推进成交，而不是去抢服务收入。
+  successMetric: 签下 2 个共销或转介绍伙伴，并让 30% 的合格商机来自伙伴。
+  owner: 合作负责人
+- horizon: 180–365 天
+  experiment: 第二条工作流扩张
+  hypothesis: 一旦首条工作流被保护起来，同一账户会在不重走整套销售流程的情况下，再加更多端点或第二条工作流。
+  successMetric: 50% 的生产客户在上线后 6 个月内，扩到第二条受保护工作流或新增 5 个端点。
+  owner: 身份与平台工程师
+operations:
+- 为每条支持的工作流维护带版本的策略包；生产环境任何扩 权限范围，都要先过变更评审。
+- 交付一套标准部署包，覆盖 Copilot Studio、Entra、MCP 网关和 ServiceNow，别让第一场安全评审变成一次定制架构项目。
+- 把审计事件导出到客户批准的存储和区域里，并明确保留、回放和撤销流程。
+- 每周和工作流负责人、身份团队、安全负责人一起跑共创客户复盘，盯住被拒动作、审批例外项和部署卡点。
+- 每新增一个端点，都要先跑过最小权限范围测试、审批路径测试和熔断演练，再算通过。
+team:
+- role: 创始人 / GTM 负责人
+  startTiming: 第 0 个月
+  rationale: 在公司还在验证“这条切口能不能独立拿预算”时，亲自盯住共创客户销售、买方发现和伙伴关系。
+- role: 创始工程师
+  startTiming: 第 0 个月
+  rationale: 负责 MCP 代理层、凭证铸发路径、审计管线和决定上线速度的部署工具。
+- role: 身份与平台工程师
+  startTiming: 第 1 个月
+  rationale: 负责策略语义、Entra 与日志集成，以及生产级企业部署必需的连接器加固工作。
+- role: 解决方案架构师
+  startTiming: 第 4 个月
+  rationale: 把早期共创客户沉淀成可复用部署，并把按工作流编写的审批落地手册文档化，给后续规模化铺路。
+- role: 合作负责人
+  startTiming: 第 9 个月
+  rationale: 等首个部署动作已经可复制后，再把 Microsoft、ServiceNow 和身份咨询渠道正式做起来。
+milestones:
+- horizon: 0–12 个月
+  items:
+  - 签下 3–5 个共创客户，全部绑在真实的 Copilot Studio 生产上线评审上。
+  - 交付 Copilot Studio + ServiceNow 代理，再补 1 条内部 API 模式和 1 个 SAP 只读策略包。
+  - 至少把 2 个共创客户转成受保护的生产工作流。
+  - 拿下 2 个能带来合格商机的伙伴关系。
+- horizon: 12–24 个月
+  items:
+  - 做到 6–10 个生产客户，并把首条工作流的标准部署时间压到 30 天以内。
+  - 补上审批流、事件回放，以及更深的 SAP + ServiceNow 覆盖，推动老客户内生扩张。
+  - 让至少 30% 的合格商机储备来自 Microsoft 或身份渠道伙伴。
+  - 在至少一半的生产账户里证明第二条工作流扩张可复制。
+- horizon: 24–36 个月
+  items:
+  - 走到研究里建模的第 3 年路径：约 60 个生产客户，或等值的受管控智能体覆盖。
+  - 只有在 Copilot 切口已经跑出可复制扩张和伙伴带单后，再引入第二个智能体运行时。
+  - 把审计证据和策略决策历史做成更广义非人访问控制里的差异化基准。
+risks:
+- risk: Microsoft 或 ServiceNow 在公司站稳之前，就把运行时身份缺口原生补上。
+  likelihood: High
+  impact: High
+  mitigation: 继续死磕跨系统工作流、更快部署，以及比原生控制更深的审计/审批证据。
+- risk: Aembit 或其他相邻厂商先一步用更宽的运行时 IAM 打下这块市场。
+  likelihood: High
+  impact: High
+  mitigation: 靠以 ServiceNow 为中心的上线包、更快的首条工作流部署，以及按工作流沉淀的审计证明去拉开差距，而不是比平台宽度。
+- risk: 企业首个部署需要太多定制 MCP、SAP 或内部 API 集成，结果不再轻量。
+  likelihood: Medium
+  impact: High
+  mitigation: 只接一条边界清楚的工作流，MVP 限定支持的系统，并用明确的“not yet”规则挡住集成蔓延。
+- risk: 买家延后支出，因为智能体在很长一段时间里仍停留在只读或强人工审批模式。
+  likelihood: Medium
+  impact: High
+  mitigation: 只卖进那些已经被写权限或审计例外项卡住的上线评审；如果付费部署需求迟迟不出现，就按 kill criteria 及时止损。
+- risk: 私有部署、客户自持密钥或按区域保存审计数据，过于频繁地变成首日硬需求。
+  likelihood: Medium
+  impact: Medium
+  mitigation: 把这些要求在前 20 个商机里逐项统计；一旦基础设施诉求开始主导销售周期，就立刻收窄 ICP 或重排路线图。
+fundingAsk:
+  round: pre-seed
+  targetFundingRangeUsd: $2–4M
+  runwayMonths: 18
+  useOfFundsSummary: 用 18 个月把 Copilot Studio + ServiceNow 代理做出来，招齐首批身份、工程和解决方案团队，完成 3–5 个付费共创部署，证明至少 2 个生产转化，并搭起第一条能重复扩张的伙伴带单渠道。

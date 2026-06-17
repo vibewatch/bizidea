@@ -1,0 +1,584 @@
+slug: cnc-process-memory-os
+date: '2026-06-17'
+currency: USD
+modelStartMonth: 2026-07
+assumptions:
+  - id: A1
+    name: 模型起始月份
+    value: 2026-07
+    unit: YYYY-MM
+    source: "[business-plan.yaml date] 2026-06-17 计划日期后的第一个完整运营月。"
+  - id: A2
+    name: Pre-seed 轮到账现金
+    value: '3200'
+    unit: USDK
+    source: "[business-plan.yaml fundingAsk.targetFundingRangeUsd] 取 $2—4M 区间中位数，规模设定为足够覆盖 12—24 个月里程碑加 6 个月缓冲。"
+  - id: A3
+    name: 付费试点单价
+    value: '30'
+    unit: USDK/客户
+    source: "[business-plan.yaml investorMemo.firstCustomer.initialContract] 基础案例取单一批量零件族 $25K—$50K 试点区间的中位数。"
+  - id: A4
+    name: 付费试点时长
+    value: '2'
+    unit: 个月
+    source: "[research.yaml reportMemo.validationPlan + business-plan.yaml experimentRoadmap 90—180 天] 价值预计在约 6 周内得到验证，因此 2 个月付费试点是最精简的可信商业动作。"
+  - id: A5
+    name: 每车间基础量产 ARR
+    value: '140'
+    unit: USDK/年
+    source: "[research.yaml bottomUpSizingDrivers 每台活跃机床年度支出 + business-plan.yaml market.som] 35 台活跃机床 × 每台机床每年 $4K。"
+  - id: A6
+    name: 成熟期混合量产 ARPU
+    value: '153'
+    unit: USDK/年
+    source: "[business-plan.yaml businessModel.expansionLevers + gtm.funnelTargets] 从 $140K 基础 ARR 起步，加上约 9% 的混合模块/第二工作流提升——60% 的量产账户在 6 个月内扩展。"
+  - id: A7
+    name: 客户增长节奏
+    value: 第 1 年末 3 个付费客户，第 2 年末 6 个量产加 1 个试点，第 3 年末 14 个量产
+    unit: 客户数
+    source: "[business-plan.yaml milestones + investorMemo.mustBeTrue] 与第 1 年 2—3 个付费试点加至少 1 次量产转化、12—24 个月内 5—8 个量产账户、24—36 个月内 12—15 个量产客户的里程碑一致。"
+  - id: A8
+    name: 毛利率目标
+    value: '70'
+    unit: percent
+    source: "[business-plan.yaml businessModel.targetGrossMarginPct] 建模为确认收入的 30% COGS。"
+  - id: A9
+    name: 创始人 CEO 全成本年度现金支出
+    value: '180.0'
+    unit: USDK/年
+    source: "初创财务经验值：$150K 薪资加 20% 工资税和福利，适用于 pre-seed 工业 SaaS 创始人。"
+  - id: A10
+    name: 创始工程师全成本年度现金支出
+    value: '200.4'
+    unit: USDK/年
+    source: "初创财务经验值：$167K 薪资加 20% 工资税和福利，适用于资深产品/集成工程师。"
+  - id: A11
+    name: CNC 方案负责人全成本年度现金支出
+    value: '150.0'
+    unit: USDK/年
+    source: "[business-plan.yaml team] 初创财务经验值，适用于连接验证工作流和产品的资深领域专家。"
+  - id: A12
+    name: 产品工程师全成本年度现金支出
+    value: '180.0'
+    unit: USDK/年
+    source: "初创财务经验值：$150K 薪资加 20% 工资税和福利，适用于早期产品工程师。"
+  - id: A13
+    name: 解决方案工程师全成本年度现金支出
+    value: '140.4'
+    unit: USDK/年
+    source: "[business-plan.yaml team] 初创财务经验值，适用于落地、连接器支持和安全部署工作。"
+  - id: A14
+    name: 客户负责人全成本年度现金支出
+    value: '159.6'
+    unit: USDK/年
+    source: "[business-plan.yaml team] 初创财务经验值，适用于首位含浮动薪酬的工业 SaaS 客户负责人。"
+  - id: A15
+    name: 软件工程师全成本年度现金支出
+    value: '180.0'
+    unit: USDK/年
+    source: "初创财务经验值：与产品工程师相同的全成本，适用于可重复的连接器和工作流开发。"
+  - id: A16
+    name: AE/渠道合作全成本年度现金支出
+    value: '159.6'
+    unit: USDK/年
+    source: "[business-plan.yaml gtm.channels] 初创财务经验值，适用于试点验证后的首位合作伙伴辅助销售人员。"
+  - id: A17
+    name: CNC 工作流专家全成本年度现金支出
+    value: '150.0'
+    unit: USDK/年
+    source: 初创财务经验值，仅在多个量产参考案例存在后才添加的第二位领域专家。
+  - id: A18
+    name: 集成工程师全成本年度现金支出
+    value: '180.0'
+    unit: USDK/年
+    source: 初创财务经验值，支持更广泛连接器深度的第 3 年末工程招聘。
+  - id: A19
+    name: 非薪酬运营支出
+    value: 按阶段，研发每月 10—16K，销售营销每月 6—14K，行政管理每月 7—9K
+    unit: USDK/月
+    source: 工业软件公司的云工具、差旅、法务、保险和精简后台支持的初创财务经验值。
+  - id: A20
+    name: 招聘节奏
+    value: 产品工程师第 3 月，解决方案工程师第 6 月，客户负责人第 12 月，软件工程师第 15 月，AE/渠道合作第 19 月，CNC 专家第 29 月，集成工程师第 31 月
+    unit: 计划
+    source: "[business-plan.yaml team + strategicChoices.sequencingRationale] 前六个职位与计划一致，后续招聘推迟至试点到量产转化有可引用案例后。"
+  - id: A21
+    name: 单位经济模型月流失率
+    value: '1.5'
+    unit: percent
+    source: 初创财务经验值，适用于粘性尚可但仍处于早期、落地工作量较大的企业工业工作流软件。
+  - id: A22
+    name: 每新量产客户混合 CAC
+    value: '71.6'
+    unit: USDK/客户
+    source: 由第 2—3 年销售营销支出 $858.6K 除以 12 个新量产账户计算得出。
+  - id: A23
+    name: 销售漏斗防护值
+    value: 目标账户到合格试点 25%，合格试点到付费试点 35%，付费试点到量产 55%
+    unit: 转化率
+    source: "[business-plan.yaml gtm.funnelTargets] 基础案例取漏斗目标中位值，略高于 50% 的试点到量产门槛。"
+  - id: A24
+    name: 现金转化时机
+    value: EBITDA 近似运营现金流
+    unit: 政策
+    source: "初创财务经验值：本阶段不建模债务、资本支出或重大营运资金波动；现金回收风险已在 sanityChecks.flags 中披露。"
+  - id: A25
+    name: 融资里程碑
+    value: 6 个量产账户、3 次第二工作流扩展、标准私有 VPC 包和一个合作伙伴来源管道渠道
+    unit: 里程碑
+    source: "[business-plan.yaml milestones 12—24 个月 + fundingAsk.useOfFundsSummary] 用于测算 pre-seed 融资需求和下一轮融资的验证节点。"
+headcount:
+  - role: 创始人/CEO
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 创始工程师
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: CNC 方案负责人
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 产品工程师
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 解决方案工程师
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 客户负责人
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 软件工程师
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+  - role: AE/渠道合作
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+  - role: CNC 工作流专家
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 0
+    q4y3: 1
+  - role: 集成工程师
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 0
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 4
+  q2y1: 5
+  q3y1: 5
+  q4y1: 6
+  q4y2: 8
+  q4y3: 10
+headcountAnnualizedPayrollK:
+  q1y1: 710.4
+  q2y1: 850.8
+  q3y1: 850.8
+  q4y1: 1010.4
+  q4y2: 1350.0
+  q4y3: 1680.0
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 6.0
+    researchDevelopmentK: 39.2
+    generalAdministrativeK: 22.0
+    opexK: 67.2
+    ebitdaK: -67.2
+    cashEopK: 3132.8
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 6.0
+    researchDevelopmentK: 39.2
+    generalAdministrativeK: 22.0
+    opexK: 67.2
+    ebitdaK: -67.2
+    cashEopK: 3065.6
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 6.0
+    researchDevelopmentK: 54.2
+    generalAdministrativeK: 22.0
+    opexK: 82.2
+    ebitdaK: -82.2
+    cashEopK: 2983.4
+  - month: M4
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 6.0
+    researchDevelopmentK: 54.2
+    generalAdministrativeK: 22.0
+    opexK: 82.2
+    ebitdaK: -82.2
+    cashEopK: 2901.2
+  - month: M5
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 6.0
+    researchDevelopmentK: 54.2
+    generalAdministrativeK: 22.0
+    opexK: 82.2
+    ebitdaK: -82.2
+    cashEopK: 2819.0
+  - month: M6
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 6.0
+    researchDevelopmentK: 65.9
+    generalAdministrativeK: 22.0
+    opexK: 93.9
+    ebitdaK: -93.9
+    cashEopK: 2725.1
+  - month: M7
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 15.0
+    cogsK: 4.5
+    grossProfitK: 10.5
+    salesMarketingK: 9.0
+    researchDevelopmentK: 67.9
+    generalAdministrativeK: 22.0
+    opexK: 98.9
+    ebitdaK: -88.4
+    cashEopK: 2636.7
+  - month: M8
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 15.0
+    cogsK: 4.5
+    grossProfitK: 10.5
+    salesMarketingK: 9.0
+    researchDevelopmentK: 67.9
+    generalAdministrativeK: 22.0
+    opexK: 98.9
+    ebitdaK: -88.4
+    cashEopK: 2548.3
+  - month: M9
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 27.0
+    cogsK: 8.1
+    grossProfitK: 18.9
+    salesMarketingK: 9.0
+    researchDevelopmentK: 67.9
+    generalAdministrativeK: 22.0
+    opexK: 98.9
+    ebitdaK: -80.0
+    cashEopK: 2468.3
+  - month: M10
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 27.0
+    cogsK: 8.1
+    grossProfitK: 18.9
+    salesMarketingK: 9.0
+    researchDevelopmentK: 67.9
+    generalAdministrativeK: 22.0
+    opexK: 98.9
+    ebitdaK: -80.0
+    cashEopK: 2388.3
+  - month: M11
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 24.0
+    cogsK: 7.2
+    grossProfitK: 16.8
+    salesMarketingK: 9.0
+    researchDevelopmentK: 67.9
+    generalAdministrativeK: 22.0
+    opexK: 98.9
+    ebitdaK: -82.1
+    cashEopK: 2306.2
+  - month: M12
+    customersEop: 3
+    newCustomers: 1
+    revenueK: 39.0
+    cogsK: 11.7
+    grossProfitK: 27.3
+    salesMarketingK: 22.3
+    researchDevelopmentK: 67.9
+    generalAdministrativeK: 22.0
+    opexK: 112.2
+    ebitdaK: -84.9
+    cashEopK: 2221.3
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 4
+    revenueK: 127.5
+    cogsK: 38.3
+    grossProfitK: 89.2
+    salesMarketingK: 72.9
+    researchDevelopmentK: 224.7
+    generalAdministrativeK: 69.0
+    opexK: 366.6
+    ebitdaK: -277.4
+    cashEopK: 1943.9
+  - quarter: Q2Y2
+    customersEop: 5
+    revenueK: 169.5
+    cogsK: 50.9
+    grossProfitK: 118.6
+    salesMarketingK: 72.9
+    researchDevelopmentK: 254.7
+    generalAdministrativeK: 69.0
+    opexK: 396.6
+    ebitdaK: -278.0
+    cashEopK: 1665.9
+  - quarter: Q3Y2
+    customersEop: 6
+    revenueK: 210.0
+    cogsK: 62.9
+    grossProfitK: 147.1
+    salesMarketingK: 112.8
+    researchDevelopmentK: 254.7
+    generalAdministrativeK: 69.0
+    opexK: 436.5
+    ebitdaK: -289.4
+    cashEopK: 1376.5
+  - quarter: Q4Y2
+    customersEop: 7
+    revenueK: 250.5
+    cogsK: 75.1
+    grossProfitK: 175.4
+    salesMarketingK: 112.8
+    researchDevelopmentK: 254.7
+    generalAdministrativeK: 69.0
+    opexK: 436.5
+    ebitdaK: -261.1
+    cashEopK: 1115.4
+  - quarter: Q1Y3
+    customersEop: 8
+    revenueK: 306.0
+    cogsK: 91.7
+    grossProfitK: 214.3
+    salesMarketingK: 121.8
+    researchDevelopmentK: 260.7
+    generalAdministrativeK: 72.0
+    opexK: 454.5
+    ebitdaK: -240.2
+    cashEopK: 875.2
+  - quarter: Q2Y3
+    customersEop: 10
+    revenueK: 385.5
+    cogsK: 115.6
+    grossProfitK: 269.9
+    salesMarketingK: 121.8
+    researchDevelopmentK: 285.7
+    generalAdministrativeK: 72.0
+    opexK: 479.5
+    ebitdaK: -209.6
+    cashEopK: 665.6
+  - quarter: Q3Y3
+    customersEop: 13
+    revenueK: 477.0
+    cogsK: 143.1
+    grossProfitK: 333.9
+    salesMarketingK: 121.8
+    researchDevelopmentK: 343.2
+    generalAdministrativeK: 72.0
+    opexK: 537.0
+    ebitdaK: -203.1
+    cashEopK: 462.5
+  - quarter: Q4Y3
+    customersEop: 14
+    revenueK: 550.5
+    cogsK: 165.1
+    grossProfitK: 385.4
+    salesMarketingK: 121.8
+    researchDevelopmentK: 343.2
+    generalAdministrativeK: 72.0
+    opexK: 537.0
+    ebitdaK: -151.6
+    cashEopK: 310.9
+totals:
+  y1:
+    revenueK: 147.0
+    ebitdaK: -978.7
+    cashEopK: 2221.3
+  y2:
+    revenueK: 757.5
+    ebitdaK: -1105.9
+    cashEopK: 1115.4
+  y3:
+    revenueK: 1719.0
+    ebitdaK: -804.5
+    cashEopK: 310.9
+unitEconomics:
+  arpuAnnualK: 153.0
+  grossMarginPct: 70.0
+  cacK: 71.6
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 66.7
+  ltvK: 595.0
+  ltvCacRatio: 8.3
+  cacPaybackMonths: 8.0
+fundingAsk:
+  round: pre-seed
+  amountM: 3.2
+  runwayMonths: 30
+  milestone: 在扩大销售团队之前，达到 6 个量产账户、3 次第二工作流扩展、标准私有 VPC 包和一个合作伙伴来源管道渠道。
+  useOfFunds:
+    - bucket: 工程
+      amountUsd: 1536000
+      percentage: 48
+    - bucket: GTM
+      amountUsd: 768000
+      percentage: 24
+    - bucket: 行政管理
+      amountUsd: 384000
+      percentage: 12
+    - bucket: 缓冲（6 个月）
+      amountUsd: 512000
+      percentage: 16
+scenarios:
+  downside:
+    description: 安全审查和较慢的量产推进延迟了后续批次，将模型拉至第 3 年末略低于零现金。
+    y3RevenueK: 1425.5
+    y3EbitdaK: -1050.6
+    cashLowPointK: -72.1
+    keyAssumptionChanges:
+      - 第 1 年 Q1 之后，后续批次的启动时间约晚 2 个月。
+      - 量产 ARR 比基础案例低约 8—10%，因为上线的机床和模块更少。
+      - 毛利率滑至 68%，因为安全审查和落地服务仍然依赖大量人力。
+  base:
+    description: 两个月试点按精简招聘计划转化为机床数量订阅，第 3 年末达到 14 个量产客户。
+    y3RevenueK: 1719.0
+    y3EbitdaK: -804.5
+    cashLowPointK: 310.9
+    keyAssumptionChanges:
+      - 付费试点时长 2 个月，每个约 $30K。
+      - 量产账户从约 $140K ARR 起步，通过扩展成熟至约 $153K。
+      - 毛利率在标准化导出优先或私有 VPC 交付下维持 70%。
+  upside:
+    description: 合作伙伴引入使批次提前，且第二工作流扩展提升了成熟站点收入，无需大幅扩充人员。
+    y3RevenueK: 1911.5
+    y3EbitdaK: -631.8
+    cashLowPointK: 580.5
+    keyAssumptionChanges:
+      - 从第四个客户起，试点开始时间比基础案例约提前 1 个月。
+      - 更多账户在 6 个月内增加第二工作流，量产 ARR 升至 $160K 以上。
+      - 落地和安全审查流程标准化后，毛利率提升至 72%。
+sensitivity:
+  - variable: ARPU
+    downsideCase: 每量产车间成熟期 ARR $140K
+    baseCase: 每量产车间成熟期 ARR $153K
+    upsideCase: 每量产车间成熟期 ARR $168K
+    y3RevenueImpactK: -145.6
+    cashImpactK: -150.2
+  - variable: CAC
+    downsideCase: 每新量产客户 $90K
+    baseCase: 每新量产客户 $71.6K
+    upsideCase: 每新量产客户 $60K
+    y3RevenueImpactK: 0.0
+    cashImpactK: -114.3
+  - variable: 流失率
+    downsideCase: 月流失率 2.5%，第 3 年末流失 2 个客户
+    baseCase: 月流失率 1.5%
+    upsideCase: 月流失率 1.0%
+    y3RevenueImpactK: -104.4
+    cashImpactK: -73.0
+  - variable: 销售周期
+    downsideCase: 后续批次转化时间比基础案例约慢 1 个月
+    baseCase: 量产前 2 个月付费试点
+    upsideCase: 后续批次转化时间比基础案例约快 1 个月
+    y3RevenueImpactK: -88.5
+    cashImpactK: -98.8
+  - variable: 毛利率
+    downsideCase: 部署人力较重时降至 68%
+    baseCase: 目标毛利率 70%
+    upsideCase: 落地流程标准化后升至 72%
+    y3RevenueImpactK: 0.0
+    cashImpactK: -52.1
+  - variable: 招聘节奏
+    downsideCase: 后 4 名员工提前 1 个季度入职
+    baseCase: 后半程加权的招聘计划
+    upsideCase: 后 4 名员工推迟 1 个季度入职
+    y3RevenueImpactK: 0.0
+    cashImpactK: -167.4
+modelDiagram:
+  title: 单位经济模型流程
+  mermaid: |
+    flowchart LR
+      Trigger[Retirement / machine launch] --> Pilot[Paid pilot]
+      Pilot --> Production[Production rollout]
+      Production --> Expansion[Second machine family / shift]
+      Production --> Machines[Active machines]
+      Expansion --> Revenue[Higher machine-count ARR]
+      Machines --> Revenue
+      Revenue --> GrossProfit[70% gross profit]
+      GrossProfit --> Cash[Cash runway]
+modelSanity:
+  - checkName: 收入引擎
+    finding: 基础案例收入主要来自将单零件族试点转化为全站点机床数量订阅，再在同一车间内扩展。
+  - checkName: 必须走通的路径
+    finding: 模型依赖标准化的导出优先或私有 VPC 部署，才能让付费试点持续维持在业务计划中 50% 的转化率下限之上。
+  - checkName: 模型失效条件
+    finding: 若 ARPU 下滑约 10% 或安全审查强制要求定制化部署，期末现金将过于紧张，悲观案例在第 3 年结束前将变为负数。
+  - checkName: 下一轮融资证明点
+    finding: 下一轮融资的叙事是：第 2 年末 6 个量产账户、第 3 年末 14 个账户，加上 3 次可引用的第二工作流扩展和超过 400 台活跃机床。
+sanityChecks:
+  ruleOf40: 第 3 年增长率 127% + EBITDA 利润率 -47% = 80%。
+  burnMultiple: 从第 2 年的 1.8 倍改善至第 3 年的 0.8 倍，因为站点内扩展开始超越精简招聘计划的速度。
+  revenuePerFte: 第 3 年 10 名年末 FTE 对应 $172K（低于 SaaS 典型基准 $200K—$400K，因此模型仍依赖更高 ACV 和合作伙伴杠杆，而非大规模销售招聘）。
+  flags:
+    - 基础案例第 3 年末仅剩约 $311K 现金，因此即使里程碑如期达成，下一轮融资也必须在第 3 年末之前就开始推进。
+    - 只有私有 VPC 部署保持标准化，毛利率才能维持；定制化本地部署要求会将模型推向悲观案例。
+    - 由于公司在赛道充分验证之前就需要配备领域密集型实施人才，收入效率相对于软件公司标准仍然偏低。
+    - 第 3 年 EBITDA 尚未转正，因此投资逻辑依赖可引用的扩展案例和机床密度，而非近期盈利。
