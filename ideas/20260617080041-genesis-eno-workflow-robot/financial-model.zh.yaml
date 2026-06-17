@@ -1,0 +1,497 @@
+slug: shift-reset-robot-os
+date: '2026-06-17'
+currency: USD
+modelStartMonth: 2026-07
+assumptions:
+- id: A1
+  name: 模型起始月份
+  value: 2026-07
+  unit: month
+  source: '[BP date 2026-06-17] 基础情景从计划日期后的第一个完整月份开始。'
+- id: A2
+  name: pre-seed 交割后的起始现金
+  value: '2500'
+  unit: USDK
+  source: '[BP fundingAsk $2–4M] 基础情景采用 $2.5M，作为跑到 8-12 个上线设施验证点并额外留出 6 个月缓冲所需的资本。'
+- id: A3
+  name: 单设施订阅 ACV
+  value: '180'
+  unit: USDK per facility-year
+  source: '[BP gtm.pricing] 与 [Research market.som rationale] 都把基础情景锚定在每个上线设施每年约 $180K 的软件收入。'
+- id: A4
+  name: 收入确认政策
+  value: 仅订阅收入；不计部署费
+  unit: policy
+  source: '[BP businessModel.revenueStreams] 提到了部署费，但模型为保守起见将其排除，这样收入就能干净地对上“上线设施数 × 订阅 ARPU”。'
+- id: A5
+  name: 第 1 年上线设施爬坡
+  value: 0,0,0,0,0,1,1,2,2,3,3,4
+  unit: customersEop by month
+  source: '[BP sixMonth]、[BP milestones 0-12 months] 和 [BP experimentRoadmap] 都指向：首个 正式上线 大约出现在第 6 个月，且在完成一次第二站扩张后，第 12 个月达到 4 个上线设施。'
+- id: A6
+  name: 第 2 年上线设施爬坡
+  value: Q1Y2 6; Q2Y2 7; Q3Y2 9; Q4Y2 10
+  unit: customersEop by quarter
+  source: '[BP milestones 12-24 months: 8-12 live facilities] 基础情景采用年末 10 个上线设施，增长主要来自灯塔客户内部扩张。'
+- id: A7
+  name: 第 3 年上线设施爬坡
+  value: Q1Y3 12; Q2Y3 14; Q3Y3 16; Q4Y3 18
+  unit: customersEop by quarter
+  source: '[BP market.som] 和 [BP milestones 24-36 months] 都把基础情景锚定在第 3 年末 18 个上线设施。'
+- id: A8
+  name: 毛利率爬坡
+  value: Y1 launch months 55-65%; Y2 66-69%; Y3 71-74%
+  unit: gross margin percent
+  source: '[BP businessModel.targetGrossMarginPct 70] 叠加一个创业财务经验值：早期存量设施部署支持负担更重，只有等模板和连接器复用起来后，毛利率才会明显抬升。'
+- id: A9
+  name: CEO 创始人全口径现金薪酬
+  value: '160'
+  unit: USDK annualized per FTE
+  source: '[BP team CEO founder] 采用的是 pre-seed 阶段创始人薪资经验值，低于大公司市场现金水平。'
+- id: A10
+  name: 工程团队全口径现金薪酬
+  value: '175'
+  unit: USDK annualized per FTE
+  source: '[BP team founding eng and Robotics and WMS integration engineer] 再加上早期机器人软件团队的薪资经验值，已包含工资税和福利。'
+- id: A11
+  name: 交付成功团队全口径现金薪酬
+  value: '140'
+  unit: USDK annualized per FTE
+  source: '[BP team Deployment success lead] 再加上面向客户导入和 KPI 建基的实施负责人薪资经验值。'
+- id: A12
+  name: 合作与销售全口径现金薪酬
+  value: '160'
+  unit: USDK annualized per FTE
+  source: '[BP team Partnerships lead] 叠加创始人主导 GTM 的节奏；基础情景只在首个灯塔验证之后再补商业化 人手编制。'
+- id: A13
+  name: 行政与运营全口径现金薪酬
+  value: '120'
+  unit: USDK annualized per FTE
+  source: 创业财务经验值：在灯塔部署跑起来之后，再补一位偏财务和运营的通才。
+- id: A14
+  name: 招聘爬坡
+  value: CEO plus 2 engineers at start, deployment lead from month 2, partner lead in Q4Y1, year-end Y2 at 9 FTE, year-end Y3 at 12 FTE
+  unit: timing
+  source: '[BP team]、[BP sequencingRationale] 和 [BP milestones] 都说明：相比规模化 GTM，更该优先补集成与交付人员。'
+- id: A15
+  name: 第 1 年后平滑规则
+  value: Quarterly opex uses smooth average FTE between the published Q4Y1, Q4Y2, and Q4Y3 snapshots
+  unit: policy
+  source: '[Financial Modeler 人手编制约定] 要求第 1 年之后的季度，按 Q4Y1、Q4Y2 和 Q4Y3 快照之间的平滑爬坡来填。'
+- id: A16
+  name: 非薪酬研发工具成本
+  value: 5-8
+  unit: USDK per month equivalent
+  source: 创业财务经验值：小型企业工作流软件栈在云、集成工具、日志和测试上的月度支出。
+- id: A17
+  name: 非薪酬销售与市场费用
+  value: 3-12
+  unit: USDK per month equivalent
+  source: '[BP gtm.channels] 和 [BP funnelTargets] 都指向创始人主导的企业销售动作：需要差旅、伙伴会面和少量付费获客。'
+- id: A18
+  name: 非薪酬行政与安全顾问费用
+  value: 7-16
+  unit: USDK per month equivalent
+  source: '[BP team Safety and operations advisor] 再加上企业级仓储机器人部署常见的保险、法务、会计和合规开销。'
+- id: A19
+  name: 稳态 CAC
+  value: '110'
+  unit: USDK per new live-facility customer
+  source: '[BP funnelTargets] 加上狭窄 3PL 企业销售动作，共同指向高成本的创始人主导销售：转化前需要大量差旅和集成调研。'
+- id: A20
+  name: 稳态月流失率
+  value: '1.5'
+  unit: percent
+  source: 创业财务经验值：产品粘性较强，但客户集中度高、公司仍处早期。
+- id: A21
+  name: 交付成功成本归类
+  value: Counted in operating expense until templates are repeatable
+  unit: accounting policy
+  source: '[BP sequencingRationale] 明确说重交付是近期主要风险，因此基础情景把这部分人记入 opex；毛利率则只反映第三方与支持成本。'
+- id: A22
+  name: 现金转换假设
+  value: EBITDA approximates cash movement
+  unit: policy
+  source: 创业财务经验值：对一家 pre-seed 公司来说，没有债务、没有单独 capex 行、营运资本时差也不大，因此 EBITDA 可以近似现金变动。
+- id: A23
+  name: 本轮融资里程碑
+  value: 8-12 live facilities across 2-3 lighthouse networks plus one proven second-site expansion and gross margin trending toward 70%
+  unit: milestone
+  source: '[BP milestones 12-24 months]、[BP fundingAsk] 和 [BP investorMemo.nextDiligence] 共同指向这个里程碑。'
+headcount:
+- role: CEO / 创始人
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 工程
+  q1y1: 2
+  q2y1: 2
+  q3y1: 3
+  q4y1: 4
+  q4y2: 5
+  q4y3: 6
+- role: 交付 / 客户成功
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 2
+  q4y3: 2
+- role: 合作 / 销售
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 1
+  q4y2: 1
+  q4y3: 2
+- role: 行政 / 运营
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 0
+  q4y3: 1
+headcountTotalsFte:
+  q1y1: 4
+  q2y1: 4
+  q3y1: 5
+  q4y1: 6
+  q4y2: 9
+  q4y3: 12
+headcountAnnualizedPayrollK:
+  q1y1: 650.0
+  q2y1: 650.0
+  q3y1: 825.0
+  q4y1: 985.0
+  q4y2: 1475.0
+  q4y3: 1930.0
+y1Monthly:
+- month: M1
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 3.0
+  researchDevelopmentK: 34.2
+  generalAdministrativeK: 20.3
+  opexK: 57.5
+  ebitdaK: -57.5
+  cashEopK: 2442.5
+- month: M2
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 3.0
+  researchDevelopmentK: 34.2
+  generalAdministrativeK: 32.0
+  opexK: 69.2
+  ebitdaK: -69.2
+  cashEopK: 2373.3
+- month: M3
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 3.0
+  researchDevelopmentK: 34.2
+  generalAdministrativeK: 32.0
+  opexK: 69.2
+  ebitdaK: -69.2
+  cashEopK: 2304.2
+- month: M4
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 3.0
+  researchDevelopmentK: 34.2
+  generalAdministrativeK: 37.0
+  opexK: 74.2
+  ebitdaK: -74.2
+  cashEopK: 2230.0
+- month: M5
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 3.0
+  researchDevelopmentK: 34.2
+  generalAdministrativeK: 37.0
+  opexK: 74.2
+  ebitdaK: -74.2
+  cashEopK: 2155.8
+- month: M6
+  customersEop: 1
+  newCustomers: 1
+  revenueK: 7.5
+  cogsK: 3.4
+  grossProfitK: 4.1
+  salesMarketingK: 3.0
+  researchDevelopmentK: 34.2
+  generalAdministrativeK: 37.0
+  opexK: 74.2
+  ebitdaK: -70.0
+  cashEopK: 2085.8
+- month: M7
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 15.0
+  cogsK: 6.3
+  grossProfitK: 8.7
+  salesMarketingK: 4.0
+  researchDevelopmentK: 49.8
+  generalAdministrativeK: 37.0
+  opexK: 90.8
+  ebitdaK: -82.1
+  cashEopK: 2003.7
+- month: M8
+  customersEop: 2
+  newCustomers: 1
+  revenueK: 22.5
+  cogsK: 9.0
+  grossProfitK: 13.5
+  salesMarketingK: 4.0
+  researchDevelopmentK: 49.8
+  generalAdministrativeK: 37.0
+  opexK: 90.8
+  ebitdaK: -77.3
+  cashEopK: 1926.5
+- month: M9
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 30.0
+  cogsK: 11.4
+  grossProfitK: 18.6
+  salesMarketingK: 4.0
+  researchDevelopmentK: 49.8
+  generalAdministrativeK: 37.0
+  opexK: 90.8
+  ebitdaK: -72.2
+  cashEopK: 1854.3
+- month: M10
+  customersEop: 3
+  newCustomers: 1
+  revenueK: 37.5
+  cogsK: 13.5
+  grossProfitK: 24.0
+  salesMarketingK: 21.3
+  researchDevelopmentK: 64.3
+  generalAdministrativeK: 37.0
+  opexK: 122.7
+  ebitdaK: -98.7
+  cashEopK: 1755.7
+- month: M11
+  customersEop: 3
+  newCustomers: 0
+  revenueK: 45.0
+  cogsK: 15.7
+  grossProfitK: 29.3
+  salesMarketingK: 21.3
+  researchDevelopmentK: 64.3
+  generalAdministrativeK: 37.0
+  opexK: 122.7
+  ebitdaK: -93.4
+  cashEopK: 1662.3
+- month: M12
+  customersEop: 4
+  newCustomers: 1
+  revenueK: 52.5
+  cogsK: 18.4
+  grossProfitK: 34.1
+  salesMarketingK: 21.3
+  researchDevelopmentK: 64.3
+  generalAdministrativeK: 37.0
+  opexK: 122.7
+  ebitdaK: -88.5
+  cashEopK: 1573.7
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 6
+  revenueK: 225.0
+  grossProfitK: 148.5
+  opexK: 353.0
+  ebitdaK: -204.5
+  cashEopK: 1369.2
+- quarter: Q2Y2
+  customersEop: 7
+  revenueK: 292.5
+  grossProfitK: 196.0
+  opexK: 380.9
+  ebitdaK: -184.9
+  cashEopK: 1184.3
+- quarter: Q3Y2
+  customersEop: 9
+  revenueK: 360.0
+  grossProfitK: 244.8
+  opexK: 426.3
+  ebitdaK: -181.5
+  cashEopK: 1002.9
+- quarter: Q4Y2
+  customersEop: 10
+  revenueK: 427.5
+  grossProfitK: 295.0
+  opexK: 449.8
+  ebitdaK: -154.8
+  cashEopK: 848.1
+- quarter: Q1Y3
+  customersEop: 12
+  revenueK: 495.0
+  grossProfitK: 351.5
+  opexK: 455.8
+  ebitdaK: -104.3
+  cashEopK: 743.9
+- quarter: Q2Y3
+  customersEop: 14
+  revenueK: 585.0
+  grossProfitK: 421.2
+  opexK: 521.6
+  ebitdaK: -100.4
+  cashEopK: 643.5
+- quarter: Q3Y3
+  customersEop: 16
+  revenueK: 675.0
+  grossProfitK: 492.8
+  opexK: 584.5
+  ebitdaK: -91.7
+  cashEopK: 551.8
+- quarter: Q4Y3
+  customersEop: 18
+  revenueK: 765.0
+  grossProfitK: 566.1
+  opexK: 590.5
+  ebitdaK: -24.4
+  cashEopK: 527.4
+totals:
+  y1:
+    revenueK: 210.0
+    ebitdaK: -926.5
+    cashEopK: 1573.7
+  y2:
+    revenueK: 1305.0
+    ebitdaK: -725.7
+    cashEopK: 848.1
+  y3:
+    revenueK: 2520.0
+    ebitdaK: -320.8
+    cashEopK: 527.4
+unitEconomics:
+  arpuAnnualK: 180.0
+  grossMarginPct: 70.0
+  cacK: 110.0
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 66.7
+  ltvK: 700.0
+  ltvCacRatio: 6.4
+  cacPaybackMonths: 10.5
+fundingAsk:
+  round: pre-seed
+  amountM: 2.5
+  runwayMonths: 24
+  milestone: 在 2–3 个灯塔 3PL 网络里做到 8-12 个上线设施，证明至少一个第二站部署明显快于首站，并在下一轮融资前让毛利率明确朝 70% 目标收敛。
+  useOfFunds:
+  - bucket: 工程
+    amountUsd: 1050000
+    percentage: 42.0
+  - bucket: GTM
+    amountUsd: 550000
+    percentage: 22.0
+  - bucket: 行政
+    amountUsd: 250000
+    percentage: 10.0
+  - bucket: 缓冲（6 个月）
+    amountUsd: 650000
+    percentage: 26.0
+scenarios:
+  downside:
+    description: 机器人试点扩张延后，第二站部署更慢，而且存量设施集成仍比预期更定制。
+    y3RevenueK: 1950.0
+    y3EbitdaK: -780.0
+    cashLowPointK: 40.0
+    keyAssumptionChanges:
+    - 第 2 年末上线设施只有 8 个，而不是 10 个。
+    - 第 3 年末上线设施只有 14 个，而不是 18 个。
+    - 模板和连接器复用速度不够快，毛利率最高只能到约 67%。
+    - 平均销售周期从约 6 个月拉长到 9 个月。
+  base:
+    description: 基础情景下，公司在排除部署费 收入的前提下，以研究得到的 $180K 单设施 ACV，在第 1 年做到 4 个上线设施、第 2 年做到 10 个、第 3 年做到 18 个。
+    y3RevenueK: 2520.0
+    y3EbitdaK: -320.8
+    cashLowPointK: 527.4
+    keyAssumptionChanges:
+    - 不改变 A1–A23 的基础假设。
+  upside:
+    description: 灯塔客户扩张更快、伙伴转介绍更早起量，而且可复用连接器让公司在不同比例增加 opex 的前提下持续加站点。
+    y3RevenueK: 3000.0
+    y3EbitdaK: 120.0
+    cashLowPointK: 690.0
+    keyAssumptionChanges:
+    - 第 2 年末上线设施升到 12 个，而不是 10 个。
+    - 第 3 年末上线设施升到 20 个，而不是 18 个。
+    - 随着交付支持越来越模板化，Q4Y3 毛利率达到 75%。
+    - 伙伴带来的 商机管线 把销售周期缩短到约 4 个月。
+sensitivity:
+- variable: ARPU
+  downsideCase: $160K 单设施 ACV
+  baseCase: $180K 单设施 ACV
+  upsideCase: $200K 单设施 ACV
+  y3RevenueImpactK: -280.0
+  cashImpactK: -200.0
+- variable: CAC
+  downsideCase: $130K CAC，因为每次部署都需要大量创始人和集成投入
+  baseCase: $110K CAC
+  upsideCase: $90K CAC，前提是 OEM 和集成商转介绍更强
+  y3RevenueImpactK: 0.0
+  cashImpactK: -200.0
+- variable: 流失率
+  downsideCase: 2.5% 月流失率
+  baseCase: 1.5% 月流失率
+  upsideCase: 1.0% 月流失率
+  y3RevenueImpactK: -180.0
+  cashImpactK: -130.0
+- variable: 销售周期
+  downsideCase: 从合格扩张机会到 正式上线 需要 9 个月
+  baseCase: 6 个月周期
+  upsideCase: 4 个月周期
+  y3RevenueImpactK: -450.0
+  cashImpactK: -300.0
+- variable: 毛利率
+  downsideCase: 67% 稳态毛利率
+  baseCase: 70% 稳态毛利率
+  upsideCase: 73% 稳态毛利率
+  y3RevenueImpactK: 0.0
+  cashImpactK: -135.0
+- variable: 招聘节奏
+  downsideCase: 第二位交付和第二位销售岗位都提前两个季度招聘
+  baseCase: 当前的精瘦爬坡
+  upsideCase: 把一位商业化招聘延后到设施扩张被证明之后
+  y3RevenueImpactK: -75.0
+  cashImpactK: -180.0
+modelDiagram:
+  title: 单位经济模型流转
+  mermaid: "flowchart LR\n  QualifiedAccounts --> PaidRollouts\n  PaidRollouts --> LiveFacilities\n  LiveFacilities --> SubscriptionRevenue\n  SubscriptionRevenue --> GrossProfit\n  GrossProfit --> Cash"
+modelSanity:
+- checkName: 收入引擎
+  finding: 基础情景里的收入，几乎全部来自 2–3 个灯塔 3PL 网络的内部扩张：上线设施数从第 1 年的 4 个增到 Q4Y3 的 18 个，单设施 ACV 约为 $180K。
+- checkName: 哪些事必须做对
+  finding: 灯塔客户内部的第二站扩张必须按计划发生，因为模型假设更多收入来自设施复制，而不是大规模新 logo。
+- checkName: 模型在哪种情况下会断
+  finding: 如果存量设施集成始终做不成可复用模板，且销售周期拉到 9 个月，公司就会在证明多站点经济性之前把现金几乎烧光。
+- checkName: 下一轮融资的证明点
+  finding: 只要公司在第 2 年末做出 8-12 个上线设施、至少一个明显更快的第二站部署，并让毛利率肉眼可见地向 70% 收敛，下一轮融资就有了依据。
+sanityChecks:
+  ruleOf40: 第 3 年收入增长 93.1% + EBITDA 利润率 -12.7% = 80.4%
+  burnMultiple: 按 $725.7K 的 EBITDA 亏损和 $1,095.0K 的新增收入计算，第 2 年 burn multiple 约为 0.7x；到第 3 年改善到约 0.3x。
+  revenuePerFte: 第 3 年约为每名 FTE 产出 $237K，按平均约 10.6 名 FTE 计算，落在早期 SaaS $200–400K 基准区间的低端。
+  flags:
+  - 客户集中度依然很高，因为 18 个上线设施大概率仍只落在 2–3 个灯塔 3PL 网络里。
+  - 第 1 年依旧重交付；如果到第 5–6 个设施时，连接器复用还没跑出来，通往 70% 毛利的路径就会被推迟。
+  - 基础情景为了保守起见排除了部署费 收入；这提升了收入质量，但也让公司在执行失误时更缺缓冲。
