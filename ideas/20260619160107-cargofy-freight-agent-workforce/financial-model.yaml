@@ -1,0 +1,549 @@
+slug: owner-op-dispatch-ai
+date: '2026-06-19'
+currency: USD
+modelStartMonth: 2026-07
+assumptions:
+- id: A1
+  name: Model start month
+  value: 2026-07
+  unit: YYYY-MM
+  source: '[BP date 2026-06-19] model starts the month after the business plan date.'
+- id: A2
+  name: Opening cash at M1
+  value: $3.0M
+  unit: USD
+  source: '[BP fundingAsk targetFundingRangeUsd $2-4M + model sizing] uses a mid-range pre-seed raise sized to reach the 12-24 month milestone plus roughly six months of buffer.'
+- id: A3
+  name: Starting paid trucks (M1)
+  value: '0'
+  unit: count
+  source: '[BP executiveSummary + BP milestones] the company begins pre-revenue and must first convert the pilot into paid subscriptions.'
+- id: A4
+  name: Active customer definition
+  value: One paying truck on a monthly software subscription
+  unit: definition
+  source: '[BP businessModel.unitOfValue] customersEop tracks active subscribed trucks rather than carrier logos.'
+- id: A5
+  name: Blended monthly ARPU ramp
+  value: Y1 $229, Y2 $249, Y3 $279 per truck per month
+  unit: USD/truck/month
+  source: '[BP gtm.pricing $199-$299 + BP businessModel.expansionLevers + Research bottomUpSizingDrivers ARPU benchmark $249] Y1 reflects pilot-heavy discounts, Y2 lands on the market benchmark, and Y3 assumes modest mix-up into multi-truck and payments-attached cohorts while staying inside the stated price band.'
+- id: A6
+  name: Gross paid-truck adds cadence
+  value: Y1 monthly adds 0,0,0,1,1,2,2,2,3,3,4,4; Y2 quarterly adds 30,60,105,150; Y3 quarterly adds 255,345,485,660
+  unit: trucks
+  source: '[BP milestones + BP gtm.channels + BP sequencingRationale] base case clears the 15 paid-truck year-1 proof point, lands inside the 250-500 subscribed-truck year-2 target, and stays below the illustrative 5,000-truck SOM to avoid a vanity year-3 ramp.'
+- id: A7
+  name: Monthly paid-truck churn
+  value: 2.5%
+  unit: pct/month
+  source: '[startup-finance heuristic + BP risks + BP investorMemo.mustBeTrue retention emphasis] uses conservative SMB-style retention until the workflow proves habitual.'
+- id: A8
+  name: Gross margin ramp
+  value: 50% M1-M6, 58% M7-M12, 68% Y2, 75% Y3
+  unit: pct of revenue
+  source: '[BP businessModel.targetGrossMarginPct 75 + BP operations + Research regulatoryTechnicalConstraints] launch starts onboarding- and exception-heavy, then reaches the stated software target after integrations and document QA become repeatable.'
+- id: A9
+  name: Founder / CEO loaded compensation
+  value: $180K
+  unit: USD/year
+  source: '[BP team founder-led sales and partnerships + startup-finance heuristic] modest founder cash pay plus payroll load.'
+- id: A10
+  name: Engineering loaded compensation
+  value: $185K
+  unit: USD/year/FTE
+  source: '[BP team founding eng + full-stack mobile engineer + startup-finance heuristic] senior product and integration talent at seed-stage cash compensation.'
+- id: A11
+  name: Sales / partnerships loaded compensation
+  value: $170K
+  unit: USD/year/FTE
+  source: '[BP team founder-led sales and partnerships + BP gtm.channels + startup-finance heuristic] covers partner-development and later GTM carrying cost.'
+- id: A12
+  name: Ops / compliance loaded compensation
+  value: $145K
+  unit: USD/year/FTE
+  source: '[BP team operations and compliance lead + startup-finance heuristic] domain-heavy operations hire with benefits and payroll tax load.'
+- id: A13
+  name: Customer success loaded compensation
+  value: $120K
+  unit: USD/year/FTE
+  source: '[BP team customer success and onboarding lead + startup-finance heuristic] phone-first onboarding and retention support role.'
+- id: A14
+  name: G&A loaded compensation
+  value: $110K
+  unit: USD/year/FTE
+  source: '[startup-finance heuristic] lean finance/admin support added only after partner-led volume begins to scale.'
+- id: A15
+  name: Hiring timeline
+  value: M1 founder + founding engineer; M4 mobile engineer; M7 ops/compliance lead; M10 customer success; M13 partnerships lead; M16 engineer; M19 second GTM hire; M22 second customer success; M25 integrations engineer; M28 second ops/compliance hire; M31 finance/admin; M34 data/AI engineer
+  unit: timeline
+  source: '[BP team + BP sequencingRationale] follows the product-first then partner-scale hiring order in the business plan, with later hires extending the same pattern.'
+- id: A16
+  name: Non-payroll sales and marketing spend
+  value: $4K/mo M1-6, $6K/mo M7-12, $10K/mo M13-18, $15K/mo M19-24, $22K/mo M25-30, $28K/mo M31-36
+  unit: USD/month
+  source: '[BP gtm.channels + startup-finance heuristic] assumes partner enablement, referral programs, owner-operator communities, and light field travel rather than heavy paid demand generation.'
+- id: A17
+  name: Non-payroll R&D spend
+  value: $8K/mo M1-6, $10K/mo M7-12, $14K/mo M13-24, $18K/mo M25-36
+  unit: USD/month
+  source: '[BP product + BP operations + startup-finance heuristic] covers cloud, AI tooling, document-processing vendors, and integration reliability.'
+- id: A18
+  name: Non-payroll G&A spend
+  value: $6K/mo Y1, $8K/mo Y2, $10K/mo Y3
+  unit: USD/month
+  source: '[BP operations + Research regulatoryTechnicalConstraints + startup-finance heuristic] covers legal, insurance, accounting, and compliance overhead.'
+- id: A19
+  name: Payroll allocation to P&L lines
+  value: Founder 70% S&M / 30% G&A; engineering 100% R&D; sales 100% S&M; ops/compliance 50% R&D / 50% G&A; customer success 70% S&M / 30% G&A; G&A 100% G&A
+  unit: allocation
+  source: '[BP team rationales + BP operations] maps the planned roles into the operating lines used in the model.'
+- id: A20
+  name: CAC calculation convention
+  value: $0.9K per net new active truck
+  unit: USD/truck
+  source: '[model calc + BP gtm.funnelTargets partner-led motion] uses Y2-Y3 sales and marketing spend divided by Y2-Y3 net new active trucks, reflecting a partner-heavy acquisition mix.'
+- id: A21
+  name: Cash conversion convention
+  value: Cash movement equals EBITDA
+  unit: modeling convention
+  source: '[startup-finance heuristic] assumes capex, debt service, taxes, and working-capital swings are immaterial at pre-seed scale.'
+- id: A22
+  name: Funding ask sizing
+  value: $3.0M pre-seed
+  unit: USD
+  source: '[BP fundingAsk targetFundingRangeUsd $2-4M + BP milestones + model cash trough] sized to reach 250-500 subscribed trucks, prove partner CAC, and keep about six months of buffer before the next financing.'
+headcount:
+- role: Founder / CEO
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Engineering
+  q1y1: 1
+  q2y1: 2
+  q3y1: 2
+  q4y1: 2
+  q4y2: 3
+  q4y3: 5
+- role: Sales / Partnerships
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 2
+  q4y3: 2
+- role: Ops / Compliance
+  q1y1: 0
+  q2y1: 0
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 2
+- role: Customer Success
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 1
+  q4y2: 2
+  q4y3: 2
+- role: G&A
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 0
+  q4y3: 1
+headcountTotalsFte:
+  q1y1: 2
+  q2y1: 3
+  q3y1: 4
+  q4y1: 5
+  q4y2: 9
+  q4y3: 13
+headcountAnnualizedPayrollK:
+  q1y1: 365.0
+  q2y1: 550.0
+  q3y1: 695.0
+  q4y1: 815.0
+  q4y2: 1460.0
+  q4y3: 2085.0
+y1Monthly:
+- month: M1
+  customersEop: 0.0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 14.5
+  researchDevelopmentK: 23.4
+  generalAdministrativeK: 10.5
+  opexK: 48.4
+  ebitdaK: -48.4
+  cashEopK: 2951.6
+- month: M2
+  customersEop: 0.0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 14.5
+  researchDevelopmentK: 23.4
+  generalAdministrativeK: 10.5
+  opexK: 48.4
+  ebitdaK: -48.4
+  cashEopK: 2903.2
+- month: M3
+  customersEop: 0.0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 14.5
+  researchDevelopmentK: 23.4
+  generalAdministrativeK: 10.5
+  opexK: 48.4
+  ebitdaK: -48.4
+  cashEopK: 2854.8
+- month: M4
+  customersEop: 1.0
+  newCustomers: 1
+  revenueK: 0.1
+  cogsK: 0.1
+  grossProfitK: 0.0
+  salesMarketingK: 14.5
+  researchDevelopmentK: 38.8
+  generalAdministrativeK: 10.5
+  opexK: 63.8
+  ebitdaK: -63.8
+  cashEopK: 2791.0
+- month: M5
+  customersEop: 2.0
+  newCustomers: 1
+  revenueK: 0.3
+  cogsK: 0.2
+  grossProfitK: 0.1
+  salesMarketingK: 14.5
+  researchDevelopmentK: 38.8
+  generalAdministrativeK: 10.5
+  opexK: 63.8
+  ebitdaK: -63.7
+  cashEopK: 2727.3
+- month: M6
+  customersEop: 3.9
+  newCustomers: 2
+  revenueK: 0.7
+  cogsK: 0.3
+  grossProfitK: 0.4
+  salesMarketingK: 14.5
+  researchDevelopmentK: 38.8
+  generalAdministrativeK: 10.5
+  opexK: 63.8
+  ebitdaK: -63.4
+  cashEopK: 2663.9
+- month: M7
+  customersEop: 5.8
+  newCustomers: 2
+  revenueK: 1.1
+  cogsK: 0.5
+  grossProfitK: 0.6
+  salesMarketingK: 16.5
+  researchDevelopmentK: 46.9
+  generalAdministrativeK: 16.5
+  opexK: 79.9
+  ebitdaK: -79.3
+  cashEopK: 2584.6
+- month: M8
+  customersEop: 7.7
+  newCustomers: 2
+  revenueK: 1.5
+  cogsK: 0.6
+  grossProfitK: 0.9
+  salesMarketingK: 16.5
+  researchDevelopmentK: 46.9
+  generalAdministrativeK: 16.5
+  opexK: 79.9
+  ebitdaK: -79.0
+  cashEopK: 2505.6
+- month: M9
+  customersEop: 10.5
+  newCustomers: 3
+  revenueK: 2.1
+  cogsK: 0.9
+  grossProfitK: 1.2
+  salesMarketingK: 16.5
+  researchDevelopmentK: 46.9
+  generalAdministrativeK: 16.5
+  opexK: 79.9
+  ebitdaK: -78.7
+  cashEopK: 2426.9
+- month: M10
+  customersEop: 13.2
+  newCustomers: 3
+  revenueK: 2.7
+  cogsK: 1.1
+  grossProfitK: 1.6
+  salesMarketingK: 23.5
+  researchDevelopmentK: 46.9
+  generalAdministrativeK: 19.5
+  opexK: 89.9
+  ebitdaK: -88.3
+  cashEopK: 2338.6
+- month: M11
+  customersEop: 16.9
+  newCustomers: 4
+  revenueK: 3.4
+  cogsK: 1.4
+  grossProfitK: 2.0
+  salesMarketingK: 23.5
+  researchDevelopmentK: 46.9
+  generalAdministrativeK: 19.5
+  opexK: 89.9
+  ebitdaK: -87.9
+  cashEopK: 2250.7
+- month: M12
+  customersEop: 20.5
+  newCustomers: 4
+  revenueK: 4.3
+  cogsK: 1.8
+  grossProfitK: 2.5
+  salesMarketingK: 23.5
+  researchDevelopmentK: 46.9
+  generalAdministrativeK: 19.5
+  opexK: 89.9
+  ebitdaK: -87.4
+  cashEopK: 2163.3
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 48.3
+  newCustomers: 30
+  revenueK: 24.8
+  cogsK: 7.9
+  grossProfitK: 16.9
+  salesMarketingK: 125.1
+  researchDevelopmentK: 152.7
+  generalAdministrativeK: 64.5
+  opexK: 342.3
+  ebitdaK: -325.4
+  cashEopK: 1837.9
+- quarter: Q2Y2
+  customersEop: 103.5
+  newCustomers: 60
+  revenueK: 54.9
+  cogsK: 17.6
+  grossProfitK: 37.3
+  salesMarketingK: 125.1
+  researchDevelopmentK: 198.9
+  generalAdministrativeK: 64.5
+  opexK: 388.5
+  ebitdaK: -351.2
+  cashEopK: 1486.7
+- quarter: Q3Y2
+  customersEop: 198.6
+  newCustomers: 105
+  revenueK: 110.7
+  cogsK: 35.4
+  grossProfitK: 75.3
+  salesMarketingK: 182.4
+  researchDevelopmentK: 198.9
+  generalAdministrativeK: 64.5
+  opexK: 445.8
+  ebitdaK: -370.5
+  cashEopK: 1116.2
+- quarter: Q4Y2
+  customersEop: 330.6
+  newCustomers: 150
+  revenueK: 195.6
+  cogsK: 62.6
+  grossProfitK: 133.0
+  salesMarketingK: 203.4
+  researchDevelopmentK: 198.9
+  generalAdministrativeK: 73.5
+  opexK: 475.8
+  ebitdaK: -342.8
+  cashEopK: 773.4
+- quarter: Q1Y3
+  customersEop: 555.3
+  newCustomers: 255
+  revenueK: 368.9
+  cogsK: 92.3
+  grossProfitK: 276.6
+  salesMarketingK: 224.4
+  researchDevelopmentK: 257.1
+  generalAdministrativeK: 79.5
+  opexK: 561.0
+  ebitdaK: -284.4
+  cashEopK: 489.0
+- quarter: Q2Y3
+  customersEop: 851.9
+  newCustomers: 345
+  revenueK: 581.9
+  cogsK: 145.4
+  grossProfitK: 436.5
+  salesMarketingK: 224.4
+  researchDevelopmentK: 275.4
+  generalAdministrativeK: 97.8
+  opexK: 597.6
+  ebitdaK: -161.1
+  cashEopK: 327.9
+- quarter: Q3Y3
+  customersEop: 1263.4
+  newCustomers: 485
+  revenueK: 877.3
+  cogsK: 219.3
+  grossProfitK: 658.0
+  salesMarketingK: 242.4
+  researchDevelopmentK: 275.4
+  generalAdministrativeK: 125.4
+  opexK: 643.2
+  ebitdaK: 14.8
+  cashEopK: 342.7
+- quarter: Q4Y3
+  customersEop: 1815.6
+  newCustomers: 660
+  revenueK: 1279.9
+  cogsK: 320.0
+  grossProfitK: 959.9
+  salesMarketingK: 242.4
+  researchDevelopmentK: 321.6
+  generalAdministrativeK: 125.4
+  opexK: 689.4
+  ebitdaK: 270.5
+  cashEopK: 613.2
+totals:
+  y1:
+    revenueK: 16.2
+    ebitdaK: -836.7
+    cashEopK: 2163.3
+  y2:
+    revenueK: 386.0
+    ebitdaK: -1389.9
+    cashEopK: 773.4
+  y3:
+    revenueK: 3108.0
+    ebitdaK: -160.2
+    cashEopK: 613.2
+unitEconomics:
+  arpuAnnualK: 3.3
+  grossMarginPct: 75.0
+  cacK: 0.9
+  monthlyChurnPct: 2.5
+  avgCustomerLifeMonths: 40.0
+  ltvK: 8.3
+  ltvCacRatio: 9.2
+  cacPaybackMonths: 4.4
+fundingAsk:
+  round: pre-seed
+  amountM: 3.0
+  runwayMonths: 30
+  milestone: Reach 250-500 subscribed trucks, prove one repeatable partner acquisition channel with sub-12-month payback, and expand into 2-5 truck carriers while keeping roughly six months of cash buffer before the seed raise.
+  useOfFunds:
+  - bucket: Engineering
+    amountUsd: 1250000
+    percentage: 41.7
+  - bucket: GTM
+    amountUsd: 900000
+    percentage: 30.0
+  - bucket: G&A
+    amountUsd: 350000
+    percentage: 11.7
+  - bucket: Buffer (6 mo)
+    amountUsd: 500000
+    percentage: 16.6
+scenarios:
+  downside:
+    description: Partner conversion is slower, pricing stays near the low end of the range, and churn remains elevated because the workflow never becomes weekly habit.
+    y3RevenueK: 1892.7
+    y3EbitdaK: -1128.2
+    cashLowPointK: -435.9
+    keyAssumptionChanges:
+    - Y2 adds cut to 75% of base and Y3 adds cut to 70% of base
+    - ARPU stays at $239 in Y2 and $249 in Y3
+    - Monthly churn rises to 3.5%
+    - Gross margin tops out at 72% in Y3
+  base:
+    description: Partner-led acquisition works, paid-truck growth reaches the year-2 proof window, and the company nearly reaches break-even in year 3 without assuming the full 5,000-truck SOM case.
+    y3RevenueK: 3108.0
+    y3EbitdaK: -160.2
+    cashLowPointK: 304.2
+    keyAssumptionChanges:
+    - ARPU ramps from $229 to $279 as pricing normalizes and higher-tier cohorts mix in
+    - Monthly churn stabilizes at 2.5%
+    - Y2 exits at 330.6 active trucks and Y3 exits at 1815.6 active trucks
+    - Gross margin reaches the 75% target in Y3
+  upside:
+    description: One scaled load-board or factoring partner accelerates adoption, attach revenue lifts ARPU, and the company turns clearly EBITDA positive in year 3.
+    y3RevenueK: 3793.2
+    y3EbitdaK: 429.7
+    cashLowPointK: 485.9
+    keyAssumptionChanges:
+    - Y3 adds run at 120% of base after partner traction proves out
+    - ARPU lifts to $259 in Y2 and $289 in Y3
+    - Monthly churn improves to 1.8%
+    - Gross margin reaches 77% in Y3
+sensitivity:
+- variable: ARPU
+  downsideCase: $249 blended Y3 monthly ARPU
+  baseCase: $279 blended Y3 monthly ARPU
+  upsideCase: $299 blended Y3 monthly ARPU
+  y3RevenueImpactK: -334.2
+  cashImpactK: -250.6
+- variable: CAC
+  downsideCase: $1.3K CAC if partner referrals underperform and direct outreach rises
+  baseCase: $0.9K CAC with partner-led acquisition
+  upsideCase: $0.6K CAC with stronger partner conversion
+  y3RevenueImpactK: -310.0
+  cashImpactK: -260.0
+- variable: churn
+  downsideCase: 3.5% monthly churn
+  baseCase: 2.5% monthly churn
+  upsideCase: 1.8% monthly churn
+  y3RevenueImpactK: -151.5
+  cashImpactK: -122.5
+- variable: sales cycle
+  downsideCase: 120-day partner and pilot conversion cycle
+  baseCase: 90-day conversion cycle
+  upsideCase: 60-day conversion cycle
+  y3RevenueImpactK: -430.7
+  cashImpactK: -323.0
+- variable: gross margin
+  downsideCase: 70% Y3 gross margin
+  baseCase: 75% Y3 gross margin
+  upsideCase: 78% Y3 gross margin
+  y3RevenueImpactK: 0.0
+  cashImpactK: -155.4
+- variable: hiring pace
+  downsideCase: Pull two support hires into Y2 before partner proof is established
+  baseCase: Hire against the milestone plan in A15
+  upsideCase: Defer one back-office hire until post-seed
+  y3RevenueImpactK: 0.0
+  cashImpactK: -220.0
+modelDiagram:
+  title: unit economics flow
+  mermaid: |-
+    flowchart LR
+      PartnerLeads --> Trials
+      Trials --> PaidTrucks
+      PaidTrucks --> Revenue
+      Revenue --> GrossProfit
+      GrossProfit --> Cash
+modelSanity:
+- checkName: Revenue engine
+  finding: Base-case revenue is driven by partner-led growth from 20.5 paid trucks at Y1 exit to 330.6 at Y2 exit and 1815.6 at Y3 exit, with ARPU normalizing from pilot pricing to $279 per truck per month.
+- checkName: Must go right
+  finding: The company must actually secure a repeatable factoring or load-board channel, because the model assumes CAC stays near $0.9K and year-2 truck adds land inside the 250-500 target window.
+- checkName: Model breaks if
+  finding: If partner conversion slips and churn rises to 3.5%, downside Y3 revenue falls to $1.9M and cash bottoms at -$435.9K before the company reaches scale.
+- checkName: Next-round proof
+  finding: The next financing is justified by proving 250-500 subscribed trucks, sub-12-month CAC payback, and positive quarterly EBITDA in the back half of year 3.
+sanityChecks:
+  ruleOf40: Y3 growth 705.2% + EBITDA margin -5.2% = 700.0%
+  burnMultiple: Y2 burn multiple ~1.5x on new ARR, improving to ~0.0x in Y3 as Q4 turns cash generative.
+  revenuePerFte: $239.1K Y3 revenue per Q4Y3 FTE (benchmark $200-400K SaaS).
+  flags:
+  - Base case still ends Y3 at 1815.6 trucks, well below the illustrative 5000-truck SOM; the full SOM case belongs in upside, not in the operating plan.
+  - Rule-of-40 looks artificially high because the Y2 revenue base is tiny, so it is not a reliable maturity benchmark yet.
+  - The model assumes one or two partner channels unlock most Y3 adds; if load-board or factoring distribution stalls, revenue slips quickly.
+  - Full-year Y3 EBITDA is still slightly negative, so another round is likely before aggressive upmarket expansion or major fintech build-out.
