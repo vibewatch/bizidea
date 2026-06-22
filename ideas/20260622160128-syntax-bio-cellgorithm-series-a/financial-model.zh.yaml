@@ -1,0 +1,600 @@
+slug: beta-cell-recipe-foundry
+date: '2026-06-22'
+currency: USD
+modelStartMonth: 2026-07
+assumptions:
+- id: A1
+  name: 模型起始月份
+  value: 2026-07
+  unit: YYYY-MM
+  source: '[BP date 2026-06-22] 财务模型从商业计划书标注日期后的第一个完整月份开始。'
+- id: A2
+  name: pre-seed 轮融资开局现金
+  value: $4.0M
+  unit: USD
+  source: '[BP fundingAsk targetFundingRangeUsd $4–6M + BP fundingAsk runwayMonths 18] 基准情景取所述区间下限，因为在技术转让复用得到验证之前，招聘保持精简。'
+- id: A3
+  name: 起始活跃付费客户数
+  value: '0'
+  unit: count
+  source: '[BP product.sixMonth + BP milestones 0–12 months] 公司以零营收起步，须先签约共创客户，才能确认任何付费工作。'
+- id: A4
+  name: 客户计算口径
+  value: 处于任何付费可行性、配方许可、技术转让或 QC 文件范围下的一个治疗项目
+  unit: definition
+  source: '[BP businessModel.unitOfValue + BP gtm.pricing] customersEop 按付费项目计算而非按公司数，因为商业单元是客户项目。'
+- id: A5
+  name: 付费可行性研究经济模型
+  value: 首项研究 $250K–$500K；基准情景约 $300K，分约 3 个月确认（约 $100K/月）
+  unit: USD/program
+  source: '[BP investorMemo.firstCustomer.initialContract + BP market.buyingProcess 6–12 week paid feasibility] 模型使用偏低的中间研究价值，对首客户定价保持保守。'
+- id: A6
+  name: 完整项目经济模型
+  value: 可行性后约 $1.0M–$1.5M 的配方许可加转让里程碑；基准情景混合偏向每个项目约 $1.2M
+  unit: USD/program
+  source: '[BP investorMemo.firstCustomer.initialContract + BP market.som + Research market.som] 完整项目价值以计划书所述里程碑定价和研究支持的 $1.5M 滩头合作价值为锚点。'
+- id: A7
+  name: 客户增长节奏
+  value: M7 前 1 个付费项目，M12 前 3 个，Y2 Q3 前 4 个，之后全程维持 4 个活跃项目
+  unit: customersEop
+  source: '[BP milestones 0–12, 12–24, and 24–36 months + BP operatingAssumptions first 4 of 10 beachhead teams buy within 36 months] 模型达到计划书第三年四个项目 SOM 路径，但不假设超出研究支持范围的滩头广度。'
+- id: A8
+  name: 营收确认口径
+  value: 营收等于期末活跃项目数乘以该期每活跃项目的综合实现营收
+  unit: formula
+  source: '[BP gtm.pricing + BP businessModel.revenueStreams] 使每条营收线可直接通过 customersEop 乘以综合 ARPU 对账。'
+- id: A9
+  name: 每活跃项目综合实现营收爬坡
+  value: 首批付费研究约 $100K/月，Y2 Q3 混合试点和转让阶段约 $80K/月，Y3 Q4 四个项目达到完整里程碑节奏时约 $130K/月
+  unit: USD/program/month
+  source: '[A5 + A6 + BP businessModel.revenueStreams + Research market.som] 基准情景与计划书付费可行性转完整项目结构吻合，仅在 Y3 Q4 订阅和里程碑时机叠加时略高于研究支持的 $1.5M 年化项目价值。'
+- id: A10
+  name: 毛利率爬坡
+  value: 营收前 0%，Y1 付费研究月 40%–50%，Y2 60%–70%，Y3 71%–73%
+  unit: gross margin percent
+  source: '[BP businessModel.targetGrossMarginPct 70 + BP strategicChoices.sequencingRationale + Research regulatoryTechnicalConstraints] 早期工作以检测为主且定制化程度高，只有 QC 和转让栈可复用后才逐步接近目标毛利率。'
+- id: A11
+  name: 招聘时间表
+  value: M1 创始人 CEO、科学联创、平台工程师；M4 转化生物学负责人；M7 CMC/QA 负责人；M10 实验室科学家；Y2 Q1 项目/QA 运营；Y2 Q2 首位合作销售；Y2 Q3 第二位工程师；Y3 Q2 邻近谱系科学家；Y3 Q3 第二位合作销售；Y3 Q4 运营/G&A
+  unit: timeline
+  source: '[BP team + BP strategicChoices.sequencingRationale + BP product.twentyFourMonth] 人员仅在外部转让验证和邻近谱系工作有望达成时才扩张。'
+- id: A12
+  name: 创始人 CEO 全成本薪酬
+  value: $180K
+  unit: USD/year
+  source: '[BP team Founder CEO + startup-finance heuristic] 精简的创始人现金工资加税费和福利，适用于风险投资支持的技术服务初创公司。'
+- id: A13
+  name: 科学联创全成本薪酬
+  value: $220K
+  unit: USD/year
+  source: '[BP team Scientific founder + startup-finance heuristic] 技术联创薪酬最高，因为科学公信力同时驱动交付和销售。'
+- id: A14
+  name: 平台工程全成本薪酬
+  value: $180K
+  unit: USD/year
+  source: '[BP team Founding eng + startup-finance heuristic] 反映一位负责方案版本控制、数据采集和配方图谱的资深软件构建者。'
+- id: A15
+  name: 转化生物学负责人全成本薪酬
+  value: $190K
+  unit: USD/year
+  source: '[BP team Translational biology lead + startup-finance heuristic] 假设为能独立运行外部可行性研究的资深湿实验室操作人员。'
+- id: A16
+  name: CMC 和 QA 负责人全成本薪酬
+  value: $200K
+  unit: USD/year
+  source: '[BP team CMC and QA lead + Research regulatoryTechnicalConstraints] 模型为高级 QA 和转让责任人支付高薪，因为可交付成果须可审计，而非仅停留在实验层面。'
+- id: A17
+  name: 实验室和邻近谱系科学家全成本薪酬
+  value: $170K
+  unit: USD/year
+  source: '[BP product.twentyFourMonth + startup-finance heuristic] 涵盖一位β细胞执行科学家和在复用验证后追加的邻近谱系招聘。'
+- id: A18
+  name: 项目和 QA 运营全成本薪酬
+  value: $160K
+  unit: USD/year
+  source: '[BP operations + startup-finance heuristic] 在多个外部项目和文件包并行推进时追加跨职能项目运营人员。'
+- id: A19
+  name: 合作销售全成本薪酬
+  value: $170K
+  unit: USD/year
+  source: '[BP gtm.channels + startup-finance heuristic] 含差旅和浮动薪酬，适用于创始人辅助的利基企业销售模式。'
+- id: A20
+  name: 运营和 G&A 全成本薪酬
+  value: $120K
+  unit: USD/year
+  source: '[BP operations + startup-finance heuristic] 涵盖财务、供应商管理、保险和基础行政支持。'
+- id: A21
+  name: 薪酬分配至损益科目
+  value: CEO 60% 销售&营销 + 40% G&A；科学联创和工程师 100% 研发；转化生物学 100% 研发；CMC/QA 70% 研发 + 30% G&A；实验室和邻近谱系科学家 100% 研发；项目/QA 运营 50% 研发 + 50% G&A；合作销售 100% 销售&营销；运营/G&A 100% G&A
+  unit: allocation
+  source: '[BP team role rationales + BP operations] 薪酬按每个角色在计划书中实际驱动的职能分配。'
+- id: A22
+  name: 非薪酬运营支出爬坡
+  value: Y1 月度功能性支出从约 $72K 增至 $127K，Y2 季度功能性支出从约 $410K 增至 $513K，Y3 季度功能性支出从约 $423K 增至 $478K
+  unit: USD/non-payroll spend
+  source: '[BP operations + BP product + BP fundingAsk.useOfFundsSummary + startup-finance heuristic] 涵盖湿实验室耗材、检测工作、软件工具、法务、差旅、保险和洁净室数据共享开销。'
+- id: A23
+  name: 现金转换口径
+  value: 现金变动等于 EBITDA
+  unit: formula
+  source: '[startup-finance heuristic] 在本阶段，资本支出、融资费用、税款和营运资本时序差异相对运营亏损可忽略不计。'
+- id: A24
+  name: CAC 口径
+  value: Y1 加 Y2 销售与营销支出除以前 4 个活跃客户项目
+  unit: formula
+  source: '[model calc + BP gtm.funnelTargets] 市场规模太小，不适合用量销 CAC 指标；模型采用赢得初始四个滩头项目的成本。'
+- id: A25
+  name: 月度流失率
+  value: 6.0%
+  unit: percent per month
+  source: '[startup-finance heuristic for milestone-driven biotech services] 采用高于软件的流失率，因为部分项目在转让后完成、并非每位客户都续签第二个合作范围。'
+- id: A26
+  name: 下一轮里程碑用于确定融资规模
+  value: 以 4 个活跃滩头项目、2 次可重复外部转让和 1 个准备商业化的邻近谱系试点结束 Y3
+  unit: milestone
+  source: '[BP milestones 24–36 months + BP product.twentyFourMonth + BP strategicChoices.sequencingRationale] 下一轮融资应在公司证明工厂能在一次性β细胞服务之外形成积累后才进行。'
+headcount:
+- role: 创始人/CEO
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 科学联创
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 平台工程
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 2
+  q4y3: 2
+- role: 转化生物学
+  q1y1: 0
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: CMC/QA
+  q1y1: 0
+  q2y1: 0
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 实验室/谱系科学家
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 1
+  q4y2: 1
+  q4y3: 2
+- role: 项目/QA 运营
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: 合作销售
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 2
+- role: G&A/运营
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 0
+  q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 5
+  q4y1: 6
+  q4y2: 9
+  q4y3: 12
+headcountAnnualizedPayrollK:
+  q1y1: 580.0
+  q2y1: 770.0
+  q3y1: 970.0
+  q4y1: 1120.0
+  q4y2: 1630.0
+  q4y3: 2090.0
+y1Monthly:
+- month: M1
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 48.3
+  salesMarketingK: 19.0
+  researchDevelopmentK: 79.0
+  generalAdministrativeK: 22.0
+  opexK: 120.0
+  ebitdaK: -120.0
+  cashEopK: 3880.0
+- month: M2
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 48.3
+  salesMarketingK: 19.0
+  researchDevelopmentK: 79.0
+  generalAdministrativeK: 22.0
+  opexK: 120.0
+  ebitdaK: -120.0
+  cashEopK: 3760.0
+- month: M3
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 48.3
+  salesMarketingK: 19.0
+  researchDevelopmentK: 79.0
+  generalAdministrativeK: 22.0
+  opexK: 120.0
+  ebitdaK: -120.0
+  cashEopK: 3640.0
+- month: M4
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 64.2
+  salesMarketingK: 21.0
+  researchDevelopmentK: 109.0
+  generalAdministrativeK: 25.0
+  opexK: 155.0
+  ebitdaK: -155.0
+  cashEopK: 3485.0
+- month: M5
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 64.2
+  salesMarketingK: 21.0
+  researchDevelopmentK: 109.0
+  generalAdministrativeK: 25.0
+  opexK: 155.0
+  ebitdaK: -155.0
+  cashEopK: 3330.0
+- month: M6
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 64.2
+  salesMarketingK: 21.0
+  researchDevelopmentK: 109.0
+  generalAdministrativeK: 25.0
+  opexK: 155.0
+  ebitdaK: -155.0
+  cashEopK: 3175.0
+- month: M7
+  customersEop: 1
+  newCustomers: 1
+  revenueK: 100.0
+  cogsK: 60.0
+  grossProfitK: 40.0
+  salaryK: 80.8
+  salesMarketingK: 23.0
+  researchDevelopmentK: 136.0
+  generalAdministrativeK: 31.0
+  opexK: 190.0
+  ebitdaK: -150.0
+  cashEopK: 3025.0
+- month: M8
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 100.0
+  cogsK: 60.0
+  grossProfitK: 40.0
+  salaryK: 80.8
+  salesMarketingK: 23.0
+  researchDevelopmentK: 136.0
+  generalAdministrativeK: 31.0
+  opexK: 190.0
+  ebitdaK: -150.0
+  cashEopK: 2875.0
+- month: M9
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 100.0
+  cogsK: 58.0
+  grossProfitK: 42.0
+  salaryK: 80.8
+  salesMarketingK: 23.0
+  researchDevelopmentK: 136.0
+  generalAdministrativeK: 31.0
+  opexK: 190.0
+  ebitdaK: -148.0
+  cashEopK: 2727.0
+- month: M10
+  customersEop: 2
+  newCustomers: 1
+  revenueK: 190.0
+  cogsK: 104.5
+  grossProfitK: 85.5
+  salaryK: 93.3
+  salesMarketingK: 27.0
+  researchDevelopmentK: 159.0
+  generalAdministrativeK: 34.0
+  opexK: 220.0
+  ebitdaK: -134.5
+  cashEopK: 2592.5
+- month: M11
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 190.0
+  cogsK: 98.8
+  grossProfitK: 91.2
+  salaryK: 93.3
+  salesMarketingK: 27.0
+  researchDevelopmentK: 159.0
+  generalAdministrativeK: 34.0
+  opexK: 220.0
+  ebitdaK: -128.8
+  cashEopK: 2463.7
+- month: M12
+  customersEop: 3
+  newCustomers: 1
+  revenueK: 270.0
+  cogsK: 135.0
+  grossProfitK: 135.0
+  salaryK: 93.3
+  salesMarketingK: 27.0
+  researchDevelopmentK: 159.0
+  generalAdministrativeK: 34.0
+  opexK: 220.0
+  ebitdaK: -85.0
+  cashEopK: 2378.7
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 3
+  revenueK: 540.0
+  cogsK: 216.0
+  grossProfitK: 324.0
+  salaryK: 320.0
+  salesMarketingK: 110.0
+  researchDevelopmentK: 510.0
+  generalAdministrativeK: 110.0
+  opexK: 730.0
+  ebitdaK: -406.0
+  cashEopK: 1972.7
+- quarter: Q2Y2
+  customersEop: 3
+  revenueK: 630.0
+  cogsK: 239.4
+  grossProfitK: 390.6
+  salaryK: 362.5
+  salesMarketingK: 138.0
+  researchDevelopmentK: 555.0
+  generalAdministrativeK: 127.0
+  opexK: 820.0
+  ebitdaK: -429.4
+  cashEopK: 1543.3
+- quarter: Q3Y2
+  customersEop: 4
+  revenueK: 840.0
+  cogsK: 277.2
+  grossProfitK: 562.8
+  salaryK: 407.5
+  salesMarketingK: 146.0
+  researchDevelopmentK: 620.0
+  generalAdministrativeK: 124.0
+  opexK: 890.0
+  ebitdaK: -327.2
+  cashEopK: 1216.1
+- quarter: Q4Y2
+  customersEop: 4
+  revenueK: 960.0
+  cogsK: 288.0
+  grossProfitK: 672.0
+  salaryK: 407.5
+  salesMarketingK: 152.0
+  researchDevelopmentK: 640.0
+  generalAdministrativeK: 128.0
+  opexK: 920.0
+  ebitdaK: -248.0
+  cashEopK: 968.1
+- quarter: Q1Y3
+  customersEop: 4
+  revenueK: 1080.0
+  cogsK: 313.2
+  grossProfitK: 766.8
+  salaryK: 407.5
+  salesMarketingK: 158.0
+  researchDevelopmentK: 550.0
+  generalAdministrativeK: 122.0
+  opexK: 830.0
+  ebitdaK: -63.2
+  cashEopK: 904.9
+- quarter: Q2Y3
+  customersEop: 4
+  revenueK: 1200.0
+  cogsK: 336.0
+  grossProfitK: 864.0
+  salaryK: 450.0
+  salesMarketingK: 174.0
+  researchDevelopmentK: 585.0
+  generalAdministrativeK: 131.0
+  opexK: 890.0
+  ebitdaK: -26.0
+  cashEopK: 878.9
+- quarter: Q3Y3
+  customersEop: 4
+  revenueK: 1320.0
+  cogsK: 369.6
+  grossProfitK: 950.4
+  salaryK: 492.5
+  salesMarketingK: 188.0
+  researchDevelopmentK: 625.0
+  generalAdministrativeK: 137.0
+  opexK: 950.0
+  ebitdaK: 0.4
+  cashEopK: 879.3
+- quarter: Q4Y3
+  customersEop: 4
+  revenueK: 1560.0
+  cogsK: 421.2
+  grossProfitK: 1138.8
+  salaryK: 522.5
+  salesMarketingK: 204.0
+  researchDevelopmentK: 655.0
+  generalAdministrativeK: 141.0
+  opexK: 1000.0
+  ebitdaK: 138.8
+  cashEopK: 1018.1
+totals:
+  y1:
+    revenueK: 950.0
+    ebitdaK: -1621.3
+    cashEopK: 2378.7
+  y2:
+    revenueK: 2970.0
+    ebitdaK: -1410.6
+    cashEopK: 968.1
+  y3:
+    revenueK: 5160.0
+    ebitdaK: 50.0
+    cashEopK: 1018.1
+unitEconomics:
+  arpuAnnualK: 1290.0
+  grossMarginPct: 72.1
+  cacK: 204.0
+  monthlyChurnPct: 6.0
+  avgCustomerLifeMonths: 16.7
+  ltvK: 1294.4
+  ltvCacRatio: 6.3
+  cacPaybackMonths: 2.6
+fundingAsk:
+  round: pre-seed
+  amountM: 4.0
+  runwayMonths: 24
+  milestone: 以 4 个活跃滩头项目、2 次可重复外部转让和 1 个邻近谱系试点达到商业化就绪、账上仍保留至少六个月现金缓冲的状态结束 Y3。
+  useOfFunds:
+  - bucket: 工程
+    amountUsd: 1800000
+    percentage: 45
+  - bucket: GTM
+    amountUsd: 720000
+    percentage: 18
+  - bucket: G&A
+    amountUsd: 920000
+    percentage: 23
+  - bucket: 缓冲（6 个月）
+    amountUsd: 560000
+    percentage: 14
+scenarios:
+  downside:
+    description: 仅 3 个滩头项目转化，定价偏向可行性研究导向，毛利率因转让工作仍属定制化而在 60% 中段见顶。
+    y3RevenueK: 3720.0
+    y3EbitdaK: -620.0
+    cashLowPointK: 180.0
+    keyAssumptionChanges:
+    - Y3 Q4 期末客户数为 3 而非 4。
+    - Y3 每活跃项目综合实现营收较基准低约 15%。
+    - 毛利率以约 66% 而非 73% 退出，因为 QA 和转让工作未能按时标准化。
+  base:
+    description: 3 项付费研究转化为 4 个活跃滩头项目，转让文件在 Y2 形成复用，Y3 末营收接近研究支持的每项目 $1.5M 节奏。
+    y3RevenueK: 5160.0
+    y3EbitdaK: 50.0
+    cashLowPointK: 878.9
+    keyAssumptionChanges:
+    - M12 前 3 个活跃客户项目，Y2 Q3 前 4 个。
+    - 每活跃项目综合实现营收从首批付费研究的约 $100K/月增至 Y3 Q4 的约 $130K/月。
+    - 毛利率仅在 QC 和转让层可复用后的 Y3 才突破 70% 目标。
+  upside:
+    description: Y3 末到来第五个项目，转让复用提前验证，QC 订阅早于计划附加。
+    y3RevenueK: 6480.0
+    y3EbitdaK: 620.0
+    cashLowPointK: 930.0
+    keyAssumptionChanges:
+    - Y3 Q4 期末客户数达到 5 而非 4。
+    - Y3 中期至少一个现有客户追加第二个项目或 QC 订阅。
+    - 毛利率以约 76% 退出，因为检测和文件复用超预期。
+sensitivity:
+- variable: ARPU
+  downsideCase: 完整项目里程碑时机滑期，Y3 每活跃项目实现营收较计划低约 10%。
+  baseCase: Y3 综合年化每活跃项目营收约 $1.29M。
+  upsideCase: 里程碑和 QC 订阅将 Y3 项目实现营收较计划提升约 10%。
+  y3RevenueImpactK: -516.0
+  cashImpactK: -380.0
+- variable: CAC
+  downsideCase: 创始人主导销售周期延长，每个赢得项目的有效成本约为 $260K。
+  baseCase: 前四个项目每个赢取成本约 $204K。
+  upsideCase: CDMO 和基金会转介将有效 CAC 压缩至约 $160K。
+  y3RevenueImpactK: -150.0
+  cashImpactK: -420.0
+- variable: churn
+  downsideCase: 月度流失率升至 8%，因为客户完成首次转让后未续签下一个合作范围。
+  baseCase: 月度流失率在小型滩头市场维持在 6%。
+  upsideCase: 文件层让客户在首次转让后保持参与，月度流失率降至 4%。
+  y3RevenueImpactK: -260.0
+  cashImpactK: -210.0
+- variable: sales cycle
+  downsideCase: 融资或 IND 时间窗口移动，付费研究滑期一至两个季度。
+  baseCase: 里程碑驱动销售在 M7 完成首项研究，Y2 Q3 前填满第四个项目。
+  upsideCase: 转介渠道压缩尽调周期，第四个项目在 Y2 Q1 前到来。
+  y3RevenueImpactK: -780.0
+  cashImpactK: -520.0
+- variable: gross margin
+  downsideCase: 检测和 QA 工作仍属定制化，毛利率以 66% 退出。
+  baseCase: 转让栈标准化后，毛利率在 Y3 Q4 以 73% 退出。
+  upsideCase: 复用和合作方交付比计划更快，毛利率以 76% 退出。
+  y3RevenueImpactK: 0.0
+  cashImpactK: -330.0
+- variable: hiring pace
+  downsideCase: 公司在没有匹配营收拉动的情况下提前一至两个季度招聘邻近谱系和 GTM 岗位。
+  baseCase: 招聘按商业计划书中的精简排序执行。
+  upsideCase: 转让工具复用性超预期，两个后期岗位推迟一个季度。
+  y3RevenueImpactK: 0.0
+  cashImpactK: -460.0
+modelDiagram:
+  title: 单位经济模型流程
+  mermaid: |
+    flowchart LR
+      TargetAccounts --> PaidFeasibility
+      PaidFeasibility --> FullProgram
+      FullProgram --> TransferMilestones
+      TransferMilestones --> QCSubscription
+      QCSubscription --> Revenue
+      Revenue --> GrossProfit
+      GrossProfit --> Cash
+modelSanity:
+- checkName: 营收引擎
+  finding: 基准情景营收来自将三项早期付费研究转化为四个活跃滩头项目，Y3 末以接近研究支持的每项目 $1.5M 运行率退出。
+- checkName: 必须走对的事
+  finding: 首批转让包必须足够好，让客户用后续里程碑工作持续买单，而不是将每次合作视为一次性救援项目。
+- checkName: 模型破裂点
+  finding: 若公司在三个项目上停滞或毛利率维持在 60% 中段，悲观情景将在邻近谱系验证出现前把现金逼近底线。
+- checkName: 下一轮证明
+  finding: 下一次融资的依据是四个活跃项目、两次可重复转让和一个邻近谱系试点，共同显示工厂在积累数据而非仅靠定制实验室工作。
+sanityChecks:
+  ruleOf40: Y3 增速 73.7% + EBITDA 利润率 1.0% = 74.7%
+  burnMultiple: Y2 亏损倍数约 0.7x（用 EBITDA 亏损除以同比营收增长）；因营收以里程碑为主而非纯 ARR，仅供方向性参考。
+  revenuePerFte: Y3 年末每 FTE 营收 $430.0K（对专业化生物服务加软件模式属健康水平，但不可直接与 SaaS 对比）。
+  flags:
+    - 可见滩头仅约 10 个团队，基准情景已假设占据一个窄口市场的较高份额。
+    - CAC、流失率和平均客户生命周期仍属启发式估计，因为中立β细胞配方工厂尚无队列数据。
+    - 毛利率直到 Y3 才达到 70% 目标，若再多一年的定制化转让工作，可能迫使下一轮融资规模加大。
