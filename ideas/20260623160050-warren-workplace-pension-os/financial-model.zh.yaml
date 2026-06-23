@@ -1,0 +1,562 @@
+slug: belgian-pension-switch-os
+date: '2026-06-23'
+currency: USD
+modelStartMonth: 2026-07
+assumptions:
+  - id: A1
+    name: 模型起始月份
+    value: 2026-07
+    unit: YYYY-MM
+    source: '[BP date 2026-06-23] 运营模型从业务计划日期后的第一个完整月开始。'
+  - id: A2
+    name: 期初现金 / 种子前融资
+    value: $2.4M
+    unit: USD
+    source: '[BP fundingAsk targetFundingRangeUsd $2-4M + BP runwayMonths 18] 基准情景采用接近区间下中值的种子前融资，确保有六个月缓冲金额足以支撑至下一里程碑。'
+  - id: A3
+    name: 起始付费雇主数
+    value: '0'
+    unit: count
+    source: '[BP milestones 0-12 months + BP experimentRoadmap] 公司从零收入起步，必须先将共创客户工作转化为付费迁移。'
+  - id: A4
+    name: 活跃付费雇主定义
+    value: 一家雇主的付费迁移项目或实时经常性行政管理订阅
+    unit: definition
+    source: '[BP gtm wedge + BP businessModel revenueStreams] customersEop 含任何已为迁移或上线后行政管理付费的雇主。'
+  - id: A5
+    name: 迁移项目经济模型
+    value: 约 3 个月合计 $27.5K（约 $9.2K/月）
+    unit: USD / employer
+    source: '[BP investorMemo.firstCustomer.initialContract $20k-$35k paid migration project] 模型取区间中值。'
+  - id: A6
+    name: 经常性订阅经济模型
+    value: 成熟期每家在役雇主 ARR $24K
+    unit: USD / employer / year
+    source: '[BP investorMemo.firstCustomer.initialContract $12k-$30k annual software subscription + Research market.som 700 members × $26/member-year ≈ $18.2K] 基准情景假设适度的最低平台费和超出纯按人数底价的附加项。'
+  - id: A7
+    name: 客户增长节奏
+    value: M12 达 3 家活跃付费雇主，Y2 Q4 达 12 家，Y3 Q4 达 34 家
+    unit: customersEop
+    source: '[BP milestones + BP gtm.funnelTargets + Research validationSignals around 100 Belgian employer migrations in market] 节奏与第一年三个付费试点及经纪人辅助扩张路径匹配，低于研究中 60 家雇主 SOM 框架。'
+  - id: A8
+    name: 每家活跃雇主混合实现收入
+    value: 第一年迁移期间每家活跃雇主月收入约 $8K-$9.2K；第二年季末运行率暗示每季约 $15.0K、$15.0K、$16.0K、$16.5K；第三年约 $16.0K、$15.5K、$15.4K、$15.0K，随经常性比例上升而趋稳
+    unit: USDK / active employer / period
+    source: '[A5 + A6 + BP sequencingRationale] 混合每客户收入以迁移为主起步，随着向较低但更黏性的经常性行政管理收入迁移而逐步调整。'
+  - id: A9
+    name: 毛利率爬坡
+    value: 第一年 45%-52%，第二年 58%-65%，第三年 69%-72%
+    unit: gross margin percent
+    source: '[BP businessModel.targetGrossMarginPct 70 + BP operatingAssumptions on template reuse + Research sensitivityCases data-cleanup drag] 映射和手册标准化之前早期部署服务密集。'
+  - id: A10
+    name: 招聘时间线
+    value: M1 创始人/CEO 和创始工程师；M2 养老金运营负责人；M5 解决方案工程师；M9 渠道合作负责人；M16 实施/成功负责人；M25 第二工程师
+    unit: timeline
+    source: '[BP team startTiming + BP sequencingRationale] 计划只增加将迁移转化为经常性软件收入所需的交付和产品化岗位。'
+  - id: A11
+    name: 创始人含税薪酬
+    value: $150K
+    unit: USD / year
+    source: '[BP team Founder CEO + startup-finance heuristic] 种子前企业级公司的精简创始人现金薪酬加薪资税。'
+  - id: A12
+    name: 创始工程师含税薪酬
+    value: $180K
+    unit: USD / year
+    source: '[BP team Founding eng + startup-finance heuristic] 反映高级集成与工作流工程人才。'
+  - id: A13
+    name: 养老金运营负责人含税薪酬
+    value: $140K
+    unit: USD / year
+    source: '[BP team Pension operations lead + startup-finance heuristic] 该角色承担领域实施知识和合规边缘情形所有权。'
+  - id: A14
+    name: 解决方案工程师含税薪酬
+    value: $130K
+    unit: USD / year
+    source: '[BP team Solutions engineer + startup-finance heuristic] 涵盖实施所有权，但不假设配备大型服务团队。'
+  - id: A15
+    name: 渠道合作负责人含税薪酬
+    value: $150K
+    unit: USD / year
+    source: '[BP team Channel partnerships lead + BP gtm.channels + startup-finance heuristic] 含创始人辅助的企业销售和合作伙伴差旅。'
+  - id: A16
+    name: 实施/成功负责人含税薪酬
+    value: $120K
+    unit: USD / year
+    source: '[BP product.twelveMonth + BP milestones 12-24 months + startup-finance heuristic] 经常性行政管理工作流开始重要时加入。'
+  - id: A17
+    name: 第二工程师含税薪酬
+    value: $170K
+    unit: USD / year
+    source: '[BP product.twentyFourMonth + startup-finance heuristic] 第二工程师招聘用于扩展可复用工作流和模板深度，而非定制服务。'
+  - id: A18
+    name: 薪资分配至职能 P&L 线
+    value: 创始人 60% S&M / 40% G&A；工程 100% R&D；养老金运营 70% R&D / 30% G&A；解决方案 30% S&M / 70% R&D；渠道负责人 100% S&M；实施 30% S&M / 70% R&D
+    unit: allocation
+    source: '[BP team rationales + BP operations] 薪资按实际拥有销售、交付和行政管理工作的职能分配。'
+  - id: A19
+    name: 非薪资运营支出爬坡
+    value: 每月非薪资支出起始接近 S&M/R&D/G&A 各约 $4K/$4K/$3K，渠道动作启动后升至约 $6.5K/$5.5K/$4K，第三年末约 $13K/$9.5K/$6.5K
+    unit: USDK / month
+    source: '[BP operations + startup-finance heuristic] 涵盖云服务、差旅、法务、保险、翻译和雇主支持工具，不假设大规模付费流量获取。'
+  - id: A20
+    name: 现金转换惯例
+    value: 现金变动等于 EBITDA
+    unit: formula
+    source: '[startup-finance heuristic] 种子前软件阶段假设资本支出、税务、债务服务和营运资金时序可忽略不计。'
+  - id: A21
+    name: 稳态月度流失率
+    value: 1.3%
+    unit: percent / month
+    source: '[startup-finance heuristic for early workflow SaaS] 合同上线后应具粘性，但事件驱动的买家行为使流失率高于成熟企业软件水平。'
+  - id: A22
+    name: CAC 惯例
+    value: 第二至三年销售与营销支出除以 31 家净新增活跃付费雇主
+    unit: formula
+    source: '[model calc + BP gtm.funnelTargets] 涵盖创始人主导的直接销售及经纪人和薪资渠道在规模扩张期的投入。'
+  - id: A23
+    name: 下一轮融资里程碑
+    value: 第三年 Q2 约 20 家活跃付费雇主，至少一半已完成迁移转为经常性行政管理，且剩余现金超过 $0.6M（六个月缓冲）
+    unit: milestone
+    source: '[BP milestones 12-24 months + BP fundingAsk runwayMonths 18 + model cash curve] 种子前融资设计为在更广泛扩张招聘之前取得订阅转化证明。'
+headcount:
+  - role: 创始人/CEO
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 工程
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 2
+  - role: 养老金运营
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 解决方案工程师
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 渠道合作
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 实施/成功
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 4
+  q4y1: 5
+  q4y2: 6
+  q4y3: 7
+headcountAnnualizedPayrollK:
+  q1y1: 470.0
+  q2y1: 600.0
+  q3y1: 600.0
+  q4y1: 750.0
+  q4y2: 870.0
+  q4y3: 1040.0
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    salaryK: 27.5
+    salesMarketingK: 11.5
+    researchDevelopmentK: 19.0
+    generalAdministrativeK: 8.0
+    grossProfitK: 0.0
+    opexK: 38.5
+    ebitdaK: -38.5
+    cashEopK: 2361.5
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    salaryK: 39.2
+    salesMarketingK: 11.5
+    researchDevelopmentK: 27.7
+    generalAdministrativeK: 12.0
+    grossProfitK: 0.0
+    opexK: 51.2
+    ebitdaK: -51.2
+    cashEopK: 2310.3
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    salaryK: 39.2
+    salesMarketingK: 11.5
+    researchDevelopmentK: 27.7
+    generalAdministrativeK: 12.0
+    grossProfitK: 0.0
+    opexK: 51.2
+    ebitdaK: -51.2
+    cashEopK: 2259.1
+  - month: M4
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    salaryK: 39.2
+    salesMarketingK: 11.5
+    researchDevelopmentK: 27.7
+    generalAdministrativeK: 12.0
+    grossProfitK: 0.0
+    opexK: 51.2
+    ebitdaK: -51.2
+    cashEopK: 2207.9
+  - month: M5
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 9.2
+    cogsK: 5.1
+    salaryK: 50.0
+    salesMarketingK: 15.8
+    researchDevelopmentK: 35.8
+    generalAdministrativeK: 11.9
+    grossProfitK: 4.1
+    opexK: 63.5
+    ebitdaK: -59.4
+    cashEopK: 2148.5
+  - month: M6
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 9.2
+    cogsK: 5.1
+    salaryK: 50.0
+    salesMarketingK: 15.8
+    researchDevelopmentK: 35.8
+    generalAdministrativeK: 11.9
+    grossProfitK: 4.1
+    opexK: 63.5
+    ebitdaK: -59.4
+    cashEopK: 2089.1
+  - month: M7
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 9.2
+    cogsK: 5.0
+    salaryK: 50.0
+    salesMarketingK: 15.8
+    researchDevelopmentK: 35.8
+    generalAdministrativeK: 11.9
+    grossProfitK: 4.2
+    opexK: 63.5
+    ebitdaK: -59.3
+    cashEopK: 2029.8
+  - month: M8
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 9.2
+    cogsK: 5.0
+    salaryK: 50.0
+    salesMarketingK: 15.8
+    researchDevelopmentK: 35.8
+    generalAdministrativeK: 11.9
+    grossProfitK: 4.2
+    opexK: 63.5
+    ebitdaK: -59.3
+    cashEopK: 1970.5
+  - month: M9
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 18.4
+    cogsK: 9.6
+    salaryK: 62.5
+    salesMarketingK: 29.8
+    researchDevelopmentK: 36.2
+    generalAdministrativeK: 12.5
+    grossProfitK: 8.8
+    opexK: 78.5
+    ebitdaK: -69.7
+    cashEopK: 1900.8
+  - month: M10
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 18.4
+    cogsK: 9.6
+    salaryK: 62.5
+    salesMarketingK: 29.8
+    researchDevelopmentK: 36.2
+    generalAdministrativeK: 12.5
+    grossProfitK: 8.8
+    opexK: 78.5
+    ebitdaK: -69.7
+    cashEopK: 1831.1
+  - month: M11
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 18.4
+    cogsK: 9.2
+    salaryK: 62.5
+    salesMarketingK: 29.8
+    researchDevelopmentK: 36.2
+    generalAdministrativeK: 12.5
+    grossProfitK: 9.2
+    opexK: 78.5
+    ebitdaK: -69.3
+    cashEopK: 1761.8
+  - month: M12
+    customersEop: 3
+    newCustomers: 1
+    revenueK: 24.0
+    cogsK: 11.5
+    salaryK: 62.5
+    salesMarketingK: 29.8
+    researchDevelopmentK: 36.2
+    generalAdministrativeK: 12.5
+    grossProfitK: 12.5
+    opexK: 78.5
+    ebitdaK: -66.0
+    cashEopK: 1695.8
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 4
+    revenueK: 60.0
+    cogsK: 25.2
+    salaryK: 187.5
+    salesMarketingK: 90.8
+    researchDevelopmentK: 110.3
+    generalAdministrativeK: 40.4
+    grossProfitK: 34.8
+    opexK: 241.5
+    ebitdaK: -206.7
+    cashEopK: 1489.1
+  - quarter: Q2Y2
+    customersEop: 6
+    revenueK: 90.0
+    cogsK: 36.0
+    salaryK: 217.5
+    salesMarketingK: 102.8
+    researchDevelopmentK: 134.3
+    generalAdministrativeK: 40.4
+    grossProfitK: 54.0
+    opexK: 277.5
+    ebitdaK: -223.5
+    cashEopK: 1265.6
+  - quarter: Q3Y2
+    customersEop: 8
+    revenueK: 128.0
+    cogsK: 48.6
+    salaryK: 217.5
+    salesMarketingK: 105.8
+    researchDevelopmentK: 134.3
+    generalAdministrativeK: 40.4
+    grossProfitK: 79.4
+    opexK: 280.5
+    ebitdaK: -201.1
+    cashEopK: 1064.5
+  - quarter: Q4Y2
+    customersEop: 12
+    revenueK: 198.0
+    cogsK: 69.3
+    salaryK: 217.5
+    salesMarketingK: 108.8
+    researchDevelopmentK: 137.3
+    generalAdministrativeK: 43.4
+    grossProfitK: 128.7
+    opexK: 289.5
+    ebitdaK: -160.8
+    cashEopK: 903.7
+  - quarter: Q1Y3
+    customersEop: 15
+    revenueK: 240.0
+    cogsK: 74.4
+    salaryK: 260.0
+    salesMarketingK: 108.8
+    researchDevelopmentK: 179.8
+    generalAdministrativeK: 43.4
+    grossProfitK: 165.6
+    opexK: 332.0
+    ebitdaK: -166.4
+    cashEopK: 737.3
+  - quarter: Q2Y3
+    customersEop: 20
+    revenueK: 310.0
+    cogsK: 93.0
+    salaryK: 260.0
+    salesMarketingK: 111.8
+    researchDevelopmentK: 181.3
+    generalAdministrativeK: 43.4
+    grossProfitK: 217.0
+    opexK: 336.5
+    ebitdaK: -119.5
+    cashEopK: 617.8
+  - quarter: Q3Y3
+    customersEop: 26
+    revenueK: 400.0
+    cogsK: 116.0
+    salaryK: 260.0
+    salesMarketingK: 114.8
+    researchDevelopmentK: 183.3
+    generalAdministrativeK: 44.4
+    grossProfitK: 284.0
+    opexK: 342.5
+    ebitdaK: -58.5
+    cashEopK: 559.3
+  - quarter: Q4Y3
+    customersEop: 34
+    revenueK: 510.0
+    cogsK: 142.8
+    salaryK: 260.0
+    salesMarketingK: 117.8
+    researchDevelopmentK: 184.8
+    generalAdministrativeK: 44.4
+    grossProfitK: 367.2
+    opexK: 347.0
+    ebitdaK: 20.2
+    cashEopK: 579.5
+totals:
+  y1:
+    revenueK: 116.0
+    ebitdaK: -704.2
+    cashEopK: 1695.8
+  y2:
+    revenueK: 476.0
+    ebitdaK: -792.1
+    cashEopK: 903.7
+  y3:
+    revenueK: 1460.0
+    ebitdaK: -324.2
+    cashEopK: 579.5
+unitEconomics:
+  arpuAnnualK: 24.0
+  grossMarginPct: 72.0
+  cacK: 27.8
+  monthlyChurnPct: 1.3
+  avgCustomerLifeMonths: 76.9
+  ltvK: 110.8
+  ltvCacRatio: 4.0
+  cacPaybackMonths: 19.3
+fundingAsk:
+  round: pre-seed
+  amountM: 2.4
+  runwayMonths: 24
+  milestone: 第三年 Q2 约 20 家活跃付费雇主，迁移转订阅转化率 50% 以上，且融资前仍持有至少六个月现金缓冲。
+  useOfFunds:
+    - bucket: 工程研发
+      amountUsd: 1104000
+      percentage: 46
+    - bucket: GTM
+      amountUsd: 600000
+      percentage: 25
+    - bucket: G&A
+      amountUsd: 216000
+      percentage: 9
+    - bucket: 预备金（6 个月）
+      amountUsd: 480000
+      percentage: 20
+scenarios:
+  downside:
+    description: 经纪人渠道爬坡滞后，迁移转订阅转化率接近业务计划退出标准下限，更多薪资清理工作仍需人工处理。
+    y3RevenueK: 1050.0
+    y3EbitdaK: -610.0
+    cashLowPointK: 140.0
+    keyAssumptionChanges:
+      - 第三年 Q4 活跃付费雇主约 24 家，而非 34 家。
+      - 经常性订阅定价接近 $12K-$30K 区间的低端。
+      - 模板复用慢于计划，毛利率停滞在 60% 中段。
+  base:
+    description: 第一年三个付费试点形成经纪人辅助的扩张路径，第三年末经常性行政管理收入开始超越一次性迁移收入。
+    y3RevenueK: 1460.0
+    y3EbitdaK: -324.2
+    cashLowPointK: 559.3
+    keyAssumptionChanges:
+      - 活跃付费雇主 M12 达 3 家，Y2 Q4 达 12 家，Y3 Q4 达 34 家。
+      - 经常性订阅 ARPU 成熟至每家在役雇主约 $24K ARR。
+      - 薪资和供应商映射标准化后，毛利率在 Y3 Q4 达约 72%。
+  upside:
+    description: 经纪人和薪资转介更早见效，经常性转化更强，实施人工下降快于预期。
+    y3RevenueK: 1820.0
+    y3EbitdaK: -120.0
+    cashLowPointK: 720.0
+    keyAssumptionChanges:
+      - 第三年 Q4 活跃付费雇主约 40 家，而非 34 家。
+      - 更大比例的雇主在上线后一个季度内转为经常性行政管理。
+      - 定制迁移工作下降更快，毛利率在第三年末达 70% 中段。
+sensitivity:
+  - variable: ARPU
+    downsideCase: 经常性订阅价值稳定在每家雇主约 $20K ARR。
+    baseCase: 经常性订阅价值成熟至每家雇主约 $24K ARR。
+    upsideCase: 经纪人席位和合规模块将成熟 ARR 推高至每家雇主约 $28K。
+    y3RevenueImpactK: -190.0
+    cashImpactK: -150.0
+  - variable: CAC
+    downsideCase: 合作伙伴来源管道表现不佳，CAC 升至约 $35K。
+    baseCase: 创始人主导和渠道主导动作分担压力，CAC 维持在约 $27.8K。
+    upsideCase: 经纪人转介占更大管道份额，CAC 降至约 $22K。
+    y3RevenueImpactK: -80.0
+    cashImpactK: -220.0
+  - variable: 客户流失率
+    downsideCase: 迁移事件结束后月度流失率升至约 2.0%。
+    baseCase: 雇主采用经常性行政管理工作流后月度流失率维持在约 1.3%。
+    upsideCase: 薪资和合规工作流嵌入后月度流失率降至约 0.8%。
+    y3RevenueImpactK: -110.0
+    cashImpactK: -90.0
+  - variable: 销售周期
+    downsideCase: 付费迁移项目关单和转化超过 150 天。
+    baseCase: 首个企业销售周期约为一个续约季加实施规划时间。
+    upsideCase: 经纪人背书交易随模板和参考客户积累压缩至约 90 天。
+    y3RevenueImpactK: -240.0
+    cashImpactK: -180.0
+  - variable: 毛利率
+    downsideCase: 人工薪资清理持续，第三年末毛利率约 66%。
+    baseCase: 首批模板可复用后，第三年末毛利率约 72%。
+    upsideCase: 迁移进一步标准化，第三年末毛利率约 75%。
+    y3RevenueImpactK: 0.0
+    cashImpactK: -130.0
+  - variable: 招聘节奏
+    downsideCase: 第二工程师提前招入，并在转化证明前增加一名运营岗位。
+    baseCase: 招聘与业务计划中的交付和模板里程碑挂钩。
+    upsideCase: 第二工程师推迟一个季度，不影响客户交付。
+    y3RevenueImpactK: 40.0
+    cashImpactK: -160.0
+modelDiagram:
+  title: 单位经济模型流程
+  mermaid: |-
+    flowchart LR
+      RenewalEvents[Renewal and harmonization events] --> PaidMigrations[Paid migration projects]
+      PaidMigrations --> LiveEmployers[Live employer admin subscriptions]
+      LiveEmployers --> Revenue[Recurring + migration revenue]
+      Revenue --> GrossProfit[Gross profit]
+      GrossProfit --> Cash[Cash and runway]
+modelSanity:
+  - checkName: 收入引擎
+    finding: 基准收入由活跃付费雇主从第一年末 3 家增长至第三年 Q4 34 家驱动，组合从一次性迁移向经常性行政管理订阅迁移。
+  - checkName: 必须成真的前提
+    finding: 公司必须足够快地标准化首批薪资和供应商模板，才能在不增设大型服务团队的情况下将毛利率从第一年中 40% 推至第三年 Q4 约 72%。
+  - checkName: 模型失效条件
+    finding: 若经纪人渠道停滞且迁移转订阅转化率接近 40% 退出标准底线，悲观情景将把现金底线压至下一轮融资前约 $0.1M。
+  - checkName: 下一轮证明
+    finding: 下一轮融资故事是第三年 Q2 约 20 家活跃付费雇主、50% 以上经常性转化、合作伙伴来源交易已跑通，且手头仍有六个月以上现金。
+sanityChecks:
+  ruleOf40: Y3 growth 206.7% + EBITDA margin -22.2% = 184.5%
+  burnMultiple: 第二年燃烧乘数约 1.6x——约 $0.8M EBITDA 亏损对应约 $0.5M 新增年化运行率收入；在获得更好转化和利润率之前，模型难以支撑高溢价的下一轮。
+  revenuePerFte: 第三年 7 名 FTE 产出 $209K（基准 $200-400K SaaS）
+  flags:
+    - 混合每家活跃雇主收入偏高，因为 customersEop 同时包含迁移项目和经常性订阅；真实纯订阅 ARR 在第三年末之前低于总报告收入。
+    - 基准情景依赖经纪人和薪资渠道在第二年实质性贡献；若主要为直接销售模式，则可能需要降低增长预期或扩大融资规模。
+    - 即使团队精简，模型在第三年内仍未达到全年 EBITDA 盈亏平衡，利润率爬坡放缓或提前招聘将推高融资需求。
