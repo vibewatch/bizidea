@@ -1,0 +1,567 @@
+slug: contested-link-inference-router
+date: '2026-06-27'
+currency: USD
+modelStartMonth: 2026-07
+assumptions:
+- id: A1
+  name: Model start month
+  value: 2026-07
+  unit: YYYY-MM
+  source: '[business-plan.yaml date] first full operating month after the 2026-06-27 plan date.'
+- id: A2
+  name: Opening cash after pre-seed close
+  value: '2200'
+  unit: USDK
+  source: '[business-plan.yaml fundingAsk.targetFundingRangeUsd + runwayMonths] modeled at the lower-middle of the stated $2-4M range because the plan stays narrow at 4 paying programs and 7 FTE by Y2 exit.'
+- id: A3
+  name: Revenue unit
+  value: Active paying maritime program
+  unit: definition
+  source: '[business-plan.yaml businessModel.unitOfValue; investorMemo.firstCustomer] each customer represents one funded mission program buying the module as a paid pilot or production deployment.'
+- id: A4
+  name: Blended annual ARPU per paying program
+  value: '820'
+  unit: USDK/program-year
+  source: '[business-plan.yaml investorMemo.firstCustomer.initialContract; research.yaml market.som] production pricing midpoint is $700-900K and research SOM implies ~$800K per program at 4 wins; model uses $820K to include modest support and node-usage revenue.'
+- id: A5
+  name: Revenue recognition timing
+  value: Midpoint active-program count within each month or quarter
+  unit: policy
+  source: '[startup-finance heuristic] assumes new program revenue starts halfway through the period on average rather than on day one.'
+- id: A6
+  name: Y1 month-end customer path
+  value: 0,0,0,0,0,0,0,0,1,1,1,1
+  unit: active paying programs
+  source: '[business-plan.yaml experimentRoadmap + milestones 0-12 months] no paying account before the pilot closes; the first paid pilot lands in M9 and remains the only active paid program by Y1 exit.'
+- id: A7
+  name: Y2 quarter-end customers
+  value: Q1Y2 2; Q2Y2 2; Q3Y2 3; Q4Y2 3
+  unit: active paying programs
+  source: '[business-plan.yaml milestones 12-24 months] converts the first pilot to production and reuses the reference architecture into 1-2 additional maritime programs by Y2 exit.'
+- id: A8
+  name: Y3 quarter-end customers
+  value: Q1Y3 3; Q2Y3 4; Q3Y3 4; Q4Y3 4
+  unit: active paying programs
+  source: '[business-plan.yaml milestones 24-36 months; research.yaml market.som] reaches the stated 4 paying programs inside 36 months and matches the researched $3.2M SOM ceiling.'
+- id: A9
+  name: COGS ramp
+  value: Y1 40%; Y2 31%; Y3 28% of revenue
+  unit: percent of revenue
+  source: '[business-plan.yaml businessModel.targetGrossMarginPct; operations] early periods carry accreditation, integration, and field-validation drag; Y3 reaches a 72% realized gross margin once adapters and evidence packs are reusable.'
+- id: A10
+  name: Steady-state gross margin target
+  value: '70'
+  unit: percent
+  source: '[business-plan.yaml businessModel.targetGrossMarginPct] unit economics are benchmarked to the plan''s 70% target rather than the lower pilot-heavy Y1 mix.'
+- id: A11
+  name: Monthly logo churn for unit economics
+  value: '1.0'
+  unit: percent
+  source: '[startup-finance heuristic] mission-critical public-sector software should be sticky after deployment, but annual renewals and program funding still justify a non-zero churn assumption.'
+- id: A12
+  name: Founder/CEO loaded cash compensation
+  value: '156'
+  unit: USDK/year
+  source: '[business-plan.yaml team Founder/CEO] startup-finance heuristic for below-market founder cash pay plus payroll taxes and benefits.'
+- id: A13
+  name: Founding engineer loaded cash compensation
+  value: '192'
+  unit: USDK/year
+  source: '[business-plan.yaml team Founding eng] startup-finance heuristic for a senior technical founder cash package plus payroll burden.'
+- id: A14
+  name: Applied ML/DDIL systems engineer loaded cash compensation
+  value: '180'
+  unit: USDK/year
+  source: '[business-plan.yaml team Applied ML/DDIL systems engineer] startup-finance heuristic for a scarce edge-ML and denied-link engineer in Europe/US defense-tech hiring markets.'
+- id: A15
+  name: Field integration and security engineer loaded cash compensation
+  value: '168'
+  unit: USDK/year
+  source: '[business-plan.yaml team Field integration and security engineer] startup-finance heuristic for deployment, logging, and security-acceptance ownership.'
+- id: A16
+  name: Program capture / defense sales lead loaded cash compensation
+  value: '180'
+  unit: USDK/year
+  source: '[business-plan.yaml team Program capture or defense sales lead] startup-finance heuristic for a program-led defense seller added after the first pilot exists.'
+- id: A17
+  name: Platform engineer loaded cash compensation
+  value: '174'
+  unit: USDK/year
+  source: '[business-plan.yaml strategicChoices.sequencingRationale] startup-finance heuristic for the first post-pilot engineering hire needed to productize reusable adapters across multiple programs.'
+- id: A18
+  name: Customer success / mission ops lead loaded cash compensation
+  value: '138'
+  unit: USDK/year
+  source: '[business-plan.yaml milestones 12-24 months] startup-finance heuristic for post-sale onboarding and operator support once the customer base reaches 3 programs.'
+- id: A19
+  name: Security / compliance engineer loaded cash compensation
+  value: '174'
+  unit: USDK/year
+  source: '[business-plan.yaml risks + operations] startup-finance heuristic for export-control, audit-pack, and secure-deployment depth after the second reusable production program.'
+- id: A20
+  name: Hiring cadence
+  value: Founder/CEO and founding eng in M1; applied ML/DDIL engineer M3; field integration/security engineer M7; program capture lead M10; platform engineer M16; customer success/mission ops lead M22; security/compliance engineer M28
+  unit: timing
+  source: '[business-plan.yaml team; strategicChoices.sequencingRationale] the plan hires technical proof roles before commercial scale roles, then adds support/compliance only after production reuse is visible.'
+- id: A21
+  name: Functional payroll allocation
+  value: Founder/CEO 70% S&M / 30% G&A; founding engineer and platform engineer 100% R&D; applied ML/DDIL 100% R&D; field integration/security 50% R&D / 50% G&A; program capture lead 100% S&M; customer success/mission ops 40% S&M / 60% G&A; security/compliance 70% R&D / 30% G&A
+  unit: allocation
+  source: '[business-plan.yaml team rationales; operations] allocation follows who wins design partners, who builds reusable software, and who carries deployment/compliance overhead.'
+- id: A22
+  name: Non-payroll operating spend
+  value: Y1 S&M 10K + 4% of revenue monthly, R&D 17K monthly, G&A 12K monthly; Y2 S&M 12K + 4% of revenue, R&D 19K, G&A 14K; Y3 S&M 14K + 4% of revenue, R&D 20K, G&A 16K
+  unit: USDK/month
+  source: '[startup-finance heuristic] reflects travel-heavy integrator selling, simulation/test infrastructure, accreditation evidence, insurance, and legal/compliance overhead for a defense-adjacent software startup.'
+- id: A23
+  name: Cash conversion policy
+  value: EBITDA approximates operating cash movement
+  unit: policy
+  source: '[startup-finance heuristic] no debt, capex, taxes, or material working-capital swings are modeled at this stage.'
+- id: A24
+  name: Funding milestone
+  value: Reach 3 paying maritime programs, convert the first pilot to production, and prove the reference architecture reuses into additional programs before the seed round
+  unit: milestone
+  source: '[business-plan.yaml milestones 12-24 months; fundingAsk.useOfFundsSummary] used to size the current pre-seed round plus a 6-month buffer.'
+- id: A25
+  name: Blended CAC methodology
+  value: '384.0'
+  unit: USDK/new paying program
+  source: Calculated from modeled Y2-Y3 sales and marketing spend of 1151.9K divided by 3 net new paying programs from Y1 exit to Y3 exit.
+headcount:
+- role: Founder/CEO
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Founding eng
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Applied ML/DDIL systems engineer
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Field integration and security engineer
+  q1y1: 0
+  q2y1: 0
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Program capture / defense sales lead
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Platform engineer
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: Customer success / mission ops lead
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: Security / compliance engineer
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 0
+  q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 3
+  q3y1: 4
+  q4y1: 5
+  q4y2: 7
+  q4y3: 8
+headcountAnnualizedPayrollK:
+  q1y1: 528.0
+  q2y1: 528.0
+  q3y1: 696.0
+  q4y1: 876.0
+  q4y2: 1188.0
+  q4y3: 1362.0
+y1Monthly:
+- month: M1
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 19.1
+  researchDevelopmentK: 33.0
+  generalAdministrativeK: 15.9
+  opexK: 68.0
+  ebitdaK: -68.0
+  cashEopK: 2132.0
+- month: M2
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 19.1
+  researchDevelopmentK: 33.0
+  generalAdministrativeK: 15.9
+  opexK: 68.0
+  ebitdaK: -68.0
+  cashEopK: 2064.0
+- month: M3
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 19.1
+  researchDevelopmentK: 48.0
+  generalAdministrativeK: 15.9
+  opexK: 83.0
+  ebitdaK: -83.0
+  cashEopK: 1981.0
+- month: M4
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 19.1
+  researchDevelopmentK: 48.0
+  generalAdministrativeK: 15.9
+  opexK: 83.0
+  ebitdaK: -83.0
+  cashEopK: 1898.0
+- month: M5
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 19.1
+  researchDevelopmentK: 48.0
+  generalAdministrativeK: 15.9
+  opexK: 83.0
+  ebitdaK: -83.0
+  cashEopK: 1815.0
+- month: M6
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 19.1
+  researchDevelopmentK: 48.0
+  generalAdministrativeK: 15.9
+  opexK: 83.0
+  ebitdaK: -83.0
+  cashEopK: 1732.0
+- month: M7
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 19.1
+  researchDevelopmentK: 55.0
+  generalAdministrativeK: 22.9
+  opexK: 97.0
+  ebitdaK: -97.0
+  cashEopK: 1635.0
+- month: M8
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 19.1
+  researchDevelopmentK: 55.0
+  generalAdministrativeK: 22.9
+  opexK: 97.0
+  ebitdaK: -97.0
+  cashEopK: 1538.0
+- month: M9
+  customersEop: 1
+  newCustomers: 1
+  revenueK: 34.2
+  cogsK: 13.7
+  grossProfitK: 20.5
+  salesMarketingK: 20.5
+  researchDevelopmentK: 55.0
+  generalAdministrativeK: 22.9
+  opexK: 98.4
+  ebitdaK: -77.9
+  cashEopK: 1460.1
+- month: M10
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 68.3
+  cogsK: 27.3
+  grossProfitK: 41.0
+  salesMarketingK: 36.8
+  researchDevelopmentK: 55.0
+  generalAdministrativeK: 22.9
+  opexK: 114.7
+  ebitdaK: -73.7
+  cashEopK: 1386.4
+- month: M11
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 68.3
+  cogsK: 27.3
+  grossProfitK: 41.0
+  salesMarketingK: 36.8
+  researchDevelopmentK: 55.0
+  generalAdministrativeK: 22.9
+  opexK: 114.7
+  ebitdaK: -73.7
+  cashEopK: 1312.7
+- month: M12
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 68.3
+  cogsK: 27.3
+  grossProfitK: 41.0
+  salesMarketingK: 36.8
+  researchDevelopmentK: 55.0
+  generalAdministrativeK: 22.9
+  opexK: 114.7
+  ebitdaK: -73.7
+  cashEopK: 1239.0
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 2
+  revenueK: 239.1
+  cogsK: 74.2
+  grossProfitK: 164.9
+  salesMarketingK: 117.8
+  researchDevelopmentK: 171.0
+  generalAdministrativeK: 74.7
+  opexK: 363.5
+  ebitdaK: -198.6
+  cashEopK: 1040.4
+- quarter: Q2Y2
+  customersEop: 2
+  revenueK: 410.1
+  cogsK: 127.2
+  grossProfitK: 282.9
+  salesMarketingK: 124.8
+  researchDevelopmentK: 214.5
+  generalAdministrativeK: 74.7
+  opexK: 414.0
+  ebitdaK: -131.1
+  cashEopK: 909.3
+- quarter: Q3Y2
+  customersEop: 3
+  revenueK: 512.5
+  cogsK: 158.8
+  grossProfitK: 353.7
+  salesMarketingK: 128.8
+  researchDevelopmentK: 214.5
+  generalAdministrativeK: 74.7
+  opexK: 418.0
+  ebitdaK: -64.3
+  cashEopK: 845.0
+- quarter: Q4Y2
+  customersEop: 3
+  revenueK: 615.0
+  cogsK: 190.5
+  grossProfitK: 424.5
+  salesMarketingK: 146.7
+  researchDevelopmentK: 214.5
+  generalAdministrativeK: 95.4
+  opexK: 456.6
+  ebitdaK: -32.1
+  cashEopK: 812.9
+- quarter: Q1Y3
+  customersEop: 3
+  revenueK: 615.0
+  cogsK: 172.2
+  grossProfitK: 442.8
+  salesMarketingK: 152.7
+  researchDevelopmentK: 217.5
+  generalAdministrativeK: 101.4
+  opexK: 471.6
+  ebitdaK: -28.8
+  cashEopK: 784.1
+- quarter: Q2Y3
+  customersEop: 4
+  revenueK: 785.8
+  cogsK: 220.0
+  grossProfitK: 565.8
+  salesMarketingK: 159.5
+  researchDevelopmentK: 248.1
+  generalAdministrativeK: 114.3
+  opexK: 521.9
+  ebitdaK: 43.9
+  cashEopK: 828.0
+- quarter: Q3Y3
+  customersEop: 4
+  revenueK: 819.9
+  cogsK: 229.5
+  grossProfitK: 590.4
+  salesMarketingK: 160.8
+  researchDevelopmentK: 248.1
+  generalAdministrativeK: 114.3
+  opexK: 523.2
+  ebitdaK: 67.2
+  cashEopK: 895.2
+- quarter: Q4Y3
+  customersEop: 4
+  revenueK: 819.9
+  cogsK: 229.5
+  grossProfitK: 590.4
+  salesMarketingK: 160.8
+  researchDevelopmentK: 248.1
+  generalAdministrativeK: 114.3
+  opexK: 523.2
+  ebitdaK: 67.2
+  cashEopK: 962.4
+totals:
+  y1:
+    revenueK: 239.1
+    ebitdaK: -961.0
+    cashEopK: 1239.0
+  y2:
+    revenueK: 1776.7
+    ebitdaK: -426.1
+    cashEopK: 812.9
+  y3:
+    revenueK: 3040.6
+    ebitdaK: 149.5
+    cashEopK: 962.4
+unitEconomics:
+  arpuAnnualK: 820.0
+  grossMarginPct: 70.0
+  cacK: 384.0
+  monthlyChurnPct: 1.0
+  avgCustomerLifeMonths: 100.0
+  ltvK: 4783.3
+  ltvCacRatio: 12.5
+  cacPaybackMonths: 8.0
+fundingAsk:
+  round: pre-seed
+  amountM: 2.2
+  runwayMonths: 24
+  milestone: Convert the first pilot into a production annual license, reuse the reference architecture in at least 2 additional maritime programs, and reach 3 paying programs with reusable accreditation evidence before raising the seed round.
+  useOfFunds:
+  - bucket: Engineering
+    amountUsd: 970000
+    percentage: 44.1
+  - bucket: GTM
+    amountUsd: 470000
+    percentage: 21.4
+  - bucket: G&A
+    amountUsd: 330000
+    percentage: 15.0
+  - bucket: Buffer (6 mo)
+    amountUsd: 430000
+    percentage: 19.5
+scenarios:
+  downside:
+    description: Integrator procurement slips, the first pilot converts later, and the company exits Y3 with only 3 paying programs on lower-value scopes and more manual delivery work.
+    y3RevenueK: 2112.5
+    y3EbitdaK: -673.8
+    cashLowPointK: -348.8
+    keyAssumptionChanges:
+    - The first paid pilot lands about one quarter later and the company reaches only 2 paying programs by Y2 exit and 3 by Y3 exit.
+    - Blended annual ARPU falls from $820K to $780K as production scope stays narrower and usage revenue arrives later.
+    - Gross margin stays closer to 66% as integration, accreditation, and evidence-pack work remain less reusable.
+  base:
+    description: The company wins one integrator-led pilot in Y1, converts it to production in Y2, and reuses the same architecture to reach 4 paying maritime programs by Y3 exit.
+    y3RevenueK: 3040.6
+    y3EbitdaK: 149.5
+    cashLowPointK: 783.2
+    keyAssumptionChanges:
+    - Customer counts follow A6-A8, reaching 1 paying program by Y1 exit, 3 by Y2 exit, and 4 by Y3 exit.
+    - Blended annual ARPU stays at $820K while gross margin normalizes to the 70% business-plan target as reusable adapters accumulate.
+    - The team reaches 8 end-of-Y3 FTE and adds post-pilot hires only after additional production reuse is visible.
+  upside:
+    description: A strong lighthouse pilot plus partner referrals pull programs forward enough for the company to reach 5 paying programs by Y3 exit at higher ARPU and cleaner implementation margins.
+    y3RevenueK: 4120.6
+    y3EbitdaK: 965.8
+    cashLowPointK: 1068.7
+    keyAssumptionChanges:
+    - The company reaches 4 paying programs by Y2 exit and 5 by Y3 exit because the first reference deployment becomes a repeatable integrator add-on faster than planned.
+    - Blended annual ARPU rises from $820K to $860K as full production licenses and node-usage revenue attach earlier.
+    - Gross margin improves toward 74% realized in Y3 because accreditation evidence and adapter work become mostly templated.
+sensitivity:
+- variable: ARPU
+  downsideCase: Blended annual ARPU settles at $780K because customers buy narrower program scope and defer usage-based expansion.
+  baseCase: Blended annual ARPU stays at $820K as modeled.
+  upsideCase: Blended annual ARPU reaches $860K once more programs convert to full production and endpoint counts expand.
+  y3RevenueImpactK: -148.1
+  cashImpactK: -164.2
+- variable: CAC
+  downsideCase: Effective CAC rises because integrator workshops, travel, and accreditation hand-holding push S&M intensity from 4% to roughly 5% of revenue.
+  baseCase: Modeled CAC stays near $384K per new paying program.
+  upsideCase: Partner-led referrals let S&M intensity drift toward 3% of revenue.
+  y3RevenueImpactK: 0.0
+  cashImpactK: -48.2
+- variable: churn
+  downsideCase: Retention behaves like the company exits Y3 with 1 fewer paying program because renewals or program budgets do not all carry forward.
+  baseCase: The base path assumes 1.0% monthly churn for unit economics while the modeled customer path already bakes in a concentrated public-sector account base.
+  upsideCase: Retention behaves like the company keeps every production program and adds intra-program expansion without logo loss.
+  y3RevenueImpactK: -580.6
+  cashImpactK: -395.2
+- variable: sales cycle
+  downsideCase: Each new program closes about one quarter later because integrator procurement and security review take longer than planned.
+  baseCase: The base case assumes the first paid pilot arrives in M9 and later program wins follow the milestone cadence in A6-A8.
+  upsideCase: Reference-account credibility compresses security review and lets one program close about a quarter earlier.
+  y3RevenueImpactK: -68.3
+  cashImpactK: -218.2
+- variable: gross margin
+  downsideCase: Gross margin stays near 66% because too much field integration and evidence-pack work remains manual.
+  baseCase: The model benchmarks mature unit economics to the 70% gross-margin target in the business plan.
+  upsideCase: Gross margin moves toward 74% as adapters, audit packs, and deployment playbooks become reusable.
+  y3RevenueImpactK: 0.0
+  cashImpactK: -218.1
+- variable: hiring pace
+  downsideCase: Platform, customer-success, and compliance hires must be pulled forward by 1-2 quarters to handle bespoke delivery and security overhead.
+  baseCase: The base case waits to add post-pilot hires until additional production reuse is visible.
+  upsideCase: The company can hold the base hiring plan because integrations stay standardized enough to support 4 programs with 8 FTE.
+  y3RevenueImpactK: 0.0
+  cashImpactK: -121.5
+modelDiagram:
+  title: unit economics flow
+  mermaid: |
+    flowchart LR
+      IntegratorLeads[Integrator design partners] --> PaidPilots
+      PaidPilots --> ProductionPrograms
+      ProductionPrograms --> Revenue
+      Revenue --> GrossProfit
+      GrossProfit --> Cash
+modelSanity:
+- checkName: Revenue engine
+  finding: Base-case revenue comes from moving from 1 paid pilot at Y1 exit to 4 paying maritime programs at roughly $820K of blended annual value each by Y3 exit.
+- checkName: Must go right
+  finding: The first pilot has to land by M9 and prove enough adapter reuse that two more maritime programs can close by Y2 exit without turning the company into a services shop.
+- checkName: Model breaks if
+  finding: If procurement or operator trust slips toward the downside case, the business exits Y3 about $0.35M below zero cash before it has enough scale to self-fund.
+- checkName: Next-round proof
+  finding: A credible seed story appears once the first pilot converts to production and 3 paying programs show reusable accreditation evidence plus a visible path to the fourth program.
+sanityChecks:
+  ruleOf40: Y3 growth 71.1% + EBITDA margin 4.9% = 76.0% (healthy for a narrow defense-adjacent software wedge, though the comparison still benefits from a small Y2 base).
+  burnMultiple: About 0.3x in Y2 on roughly $1640.0K of net new ARR, then EBITDA turns positive in Y3 while ARR expands another $820.0K.
+  revenuePerFte: $380K Y3 revenue per end-of-year FTE (within the rough $250K-$500K early enterprise-software benchmark).
+  flags:
+  - The model assumes one named integrator can attach the software to an existing maritime program without a net-new standalone procurement.
+  - ARPU is anchored to research SOM math and the business-plan price range rather than to observed contract data from this exact category.
+  - With only 4 paying programs in the base case, a single slipped conversion or non-renewal has an outsized effect on runway and next-round timing.
+  - Gross margin only holds if the company keeps integrations reusable and avoids drifting into bespoke systems-integration work.
