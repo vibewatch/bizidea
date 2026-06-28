@@ -1,0 +1,465 @@
+slug: revops-app-guardrail
+date: '2026-06-28'
+executiveSummary: >-
+  Revenue operations teams at mid-market B2B SaaS companies are generating AI-built deal-desk,
+  commission, and renewal apps faster than any existing QA or release process can safely validate.
+  Broken CRM field joins, overbroad permissions, and payout-logic regressions go undetected until
+  they disrupt bookings or seller trust—often within hours of a workflow going live. This company
+  builds a release gate that sits between an AI app builder and production: it snapshots schemas,
+  permissions, and formula logic, runs sandbox-based pre-deploy tests, and issues a plain-language
+  risk diff plus approval flow before any change goes live. The beachhead is narrowly scoped to
+  Salesforce- and HubSpot-heavy RevOps teams at Series B–D SaaS companies (300–2,000 employees),
+  where the consequence of a bad release is immediate and measurable in bookings or seller pay. No
+  funded product currently simulates cross-system RevOps logic across multiple builders and CRMs;
+  adjacent tooling (Retool, Gearset, Salto) validates that budget exists but serves single-stack
+  or builder-scoped use cases only. The go-to-market attaches to concrete change events—comp-plan
+  resets, CRM migrations, deal-desk redesigns—rather than abstract AI governance. The primary risk
+  is that buyers delay dedicated budget until after an incident; mitigation is pricing the pilot
+  below the average cost of one commission error and anchoring outreach to upcoming change events.
+  Target funding of $2–4M pre-seed funds connectors, the diff engine, and 8–10 design-partner
+  pilots to reach $500k ARR as the seed fundraise milestone.
+
+problem:
+  - >-
+    AI app builders let RevOps teams generate deal-desk, commission, and renewal workflows in
+    natural language, but the resulting apps can silently mismap CRM fields, expose wrong records,
+    or break payout logic when underlying schemas or policies change—with no pre-deploy test or
+    approval gate standing between the generated app and production.
+  - >-
+    Existing substitutes—spreadsheet QA, manual spot checks, Salesforce sandboxes, and builder-native
+    governance like Retool RBAC—are each scoped to a single system and cannot certify cross-system
+    join, permission, and formula correctness before a workflow goes live.
+  - >-
+    RevOps failure modes hit revenue directly: a broken commission calculator mis-pays sellers, a
+    mis-permissioned deal-desk app exposes pricing to the wrong reps, and a flawed renewal flow
+    stalls bookings; the incident is visible within days but rollback and remediation consume hours
+    of engineering and RevOps manager time.
+
+solution:
+  - >-
+    A release gate that sits between the AI app builder and production: it ingests each generated
+    app's schema snapshot, permission set, formula logic, and approval rules, then runs pre-deploy
+    regression tests against sandbox CRM and spreadsheet data before any workflow goes live.
+  - >-
+    Managers receive a plain-language diff, a risk score, a required approval step, and one-click
+    rollback if a live workflow degrades; every action is logged for audit and compliance evidence.
+  - >-
+    Over time the system accumulates a governed catalog of approved field mappings, permission
+    templates, and RevOps-specific regression test cases, turning ad hoc vibe-coded apps into a
+    trackable internal app inventory with full change history.
+
+whyWeWin:
+  - >-
+    Builder-agnostic architecture lets a single control plane govern apps from Retool, Superblocks,
+    and native CRM automations simultaneously; Retool and Superblocks only govern their own apps.
+  - >-
+    RevOps-specific regression library (commission logic, deal-desk approval paths, renewal
+    eligibility) grows with each governed workflow and becomes progressively harder to replicate
+    from a generic CI/CD or DevOps background.
+  - >-
+    Attaching to concrete change events (comp-plan resets, CRM migrations) creates a distinct
+    buying trigger that does not require educating buyers on AI governance in the abstract.
+  - >-
+    Permission graphs spanning Salesforce, HubSpot, and builder-native RBAC are the hardest
+    integration layer to build; doing that early creates a cross-system access-risk moat that
+    neither CRM vendors nor builder platforms close cheaply.
+
+strategicChoices:
+  beachhead: >-
+    RevOps teams at 300–2,000 employee B2B SaaS companies running Salesforce plus HubSpot with a
+    3–10 person ops team that has already deployed or is near-launching at least one AI-built or
+    low-code deal-desk or commission workflow.
+  wedgeRationale: >-
+    Commission and deal-desk workflows are the highest-consequence AI-built app category in RevOps:
+    mistakes hit seller pay or deal throughput within days, producing an undeniable ROI story for
+    pre-release testing that abstract governance arguments cannot produce. This entry point also
+    requires the hardest integrations—Salesforce permission sets, HubSpot workflow history,
+    spreadsheet formula diffing—which deters builder-native copycats who would need to replicate
+    both the connector work and the domain test library.
+  sequencingRationale: >-
+    Build Salesforce and HubSpot connectors before broader builder integrations because those two
+    CRMs are present in nearly every target account; hire a sales engineer before a pure AE
+    because the first 10 deals require deep onboarding and schema discovery rather than volume
+    sales; partner with RevOps consultancies before investing in self-serve because the first
+    proof points require guided pilots, not PLG.
+  notYet:
+    - FinanceOps and HR workflow governance (adjacent but requires different schema connectors and buyers)
+    - Generic AI agent safety or LLM output validation (different buyer profile and motion)
+    - Non-Salesforce and non-HubSpot CRMs such as Dynamics or Pipedrive (broadens scope before product is proven)
+    - Self-serve or product-led growth motion (requires mature docs, onboarding, and test templates not yet built)
+    - International expansion outside North America and Europe (regulatory and sales complexity before Series A)
+
+market:
+  tam: "$0.9B (est. 18,000 global fit accounts × ~$50k ACV)"
+  sam: "$220M (est. 4,000 NA/EU Salesforce/HubSpot-heavy mid-market SaaS accounts at ~$55k ACV)"
+  som: "$7.2M year-3 (est. 120 customers at ~$60k ARR via founder-led and ecosystem referrals)"
+  segments:
+    - "Primary: RevOps and Business Systems teams at 300–2,000 employee B2B SaaS companies on Salesforce + HubSpot"
+    - "Secondary: FinanceOps and SupportOps teams at the same accounts once the RevOps wedge is proven"
+  buyingProcess: >-
+    VP RevOps or Director of Business Systems initiates; IT or Security reviews the data-access
+    and permission model; procurement runs a short vendor assessment; typical cycle is 30–60 days
+    for a pilot and 60–90 days to an annual contract.
+
+product:
+  mvp: >-
+    Salesforce and HubSpot connectors that snapshot permission sets, object joins, and formula
+    fields; a diff engine that compares a new app version against the last approved version; a
+    risk score with plain-language summary; and a one-click approval-or-rollback workflow for
+    the RevOps manager.
+  sixMonth: >-
+    Commission-logic regression test suite (payout simulation against masked sandbox data),
+    multi-approver workflow, and an audit log exportable for SOC 2 or internal compliance review;
+    HubSpot workflow-history connector live.
+  twelveMonth: >-
+    Retool and Superblocks builder source integrations alongside native CRM automations; governed
+    app catalog UI surfacing every live workflow with owner, last-approved version, and open risks.
+  twentyFourMonth: >-
+    FinanceOps and SupportOps workflow categories in beta; integration with at least one Salesforce
+    DevOps partner (Gearset or Copado) to attract business-systems teams already in that ecosystem.
+  keyBets:
+    - >-
+      Salesforce permission simulation is technically feasible using sandbox plus
+      profile/permission-set APIs without moving production PII into the vendor environment.
+    - >-
+      A RevOps-specific regression library built from 10–20 design-partner accounts provides
+      a measurable accuracy advantage over generic diff tools on commission and deal-desk logic.
+    - >-
+      Design-partner pilots with 3–5 accounts can validate approval-cycle ROI within 90 days
+      of MVP, creating the case-study evidence needed to close the next 5–7 accounts.
+
+gtm:
+  wedge: >-
+    Attach to comp-plan resets, CRM field migrations, and deal-desk redesigns as the concrete
+    buying event; position as "release assurance for your AI-built RevOps workflows" rather than
+    "AI governance platform."
+  channels:
+    - Direct outbound to Heads of RevOps and Directors of Business Systems at Series B–D SaaS accounts
+    - Salesforce and HubSpot consultancy partnerships for implementation referrals and co-sell
+    - RevOps operator communities (RevGenius, Pavilion, RevOps Co-op) for design-partner sourcing
+    - Builder vendor ecosystem (Retool, Superblocks) as a governance story for their enterprise deals
+  funnelTargets: "Outbound → qualified discovery 20–30%; discovery → active pilot 30–40%; pilot → annual contract 50%+"
+  pricing: >-
+    Annual platform fee of $25k–$50k covering connectors, diff engine, audit log, and up to 5
+    governed workflows; plus $5k–$10k per additional governed workflow bundle. Pricing anchors to
+    the cost of one post-launch commission or deal-desk incident, not to seat count, making ROI
+    calculable before the first pilot signature.
+
+businessModel:
+  revenueStreams:
+    - Annual platform subscription (connector access, diff engine, audit log, up to 5 governed workflows)
+    - Per governed workflow bundle fee (expansion motion as each account's AI-built app inventory grows)
+    - Time-boxed implementation services for policy setup and schema discovery (non-recurring)
+  unitOfValue: Number of revenue-critical workflows actively governed under policy
+  targetGrossMarginPct: 72
+  expansionLevers:
+    - Add FinanceOps and SupportOps workflow categories within existing accounts
+    - Increase governed workflow count as each account's vibe-coded app inventory grows
+    - Upsell cross-builder connector packages as accounts adopt multiple AI builder tools
+
+strategyMap:
+  northStarMetric: Revenue-critical workflows governed to zero post-launch incidents per quarter
+  inputMetrics:
+    - Design-partner pilots onboarded (target 10 in first 12 months)
+    - Approval cycle time reduction versus manual QA baseline (target >50%)
+    - Pilot-to-annual contract conversion rate (target 50%+)
+    - New governed workflows added per account per quarter (net expansion signal)
+    - Cross-system permission-graph templates in shared library (data moat signal)
+  moatsToBuild:
+    - Cross-account library of approved RevOps field mappings and regression test cases
+    - Permission-graph templates spanning Salesforce, HubSpot, and builder-native RBAC
+    - Deployment telemetry linking change events, approvals, and rollback decisions per account
+  killCriteria:
+    - Fewer than 3 design partners sign annual contracts after a 90-day pilot by month 9
+    - "Builder-native governance (Retool or Superblocks) satisfies >50% of target accounts in discovery calls by month 12"
+    - Pilot-to-production conversion rate stays below 30% after 6 months of active outbound sales
+  mermaid: |
+    flowchart LR
+      Beachhead[RevOps deal-desk and commission wedge] --> MVP[Salesforce plus HubSpot connector MVP]
+      MVP --> Pilots[3-10 design-partner pilots]
+      Pilots --> Proof[Approval-cycle and incident ROI data]
+      Proof --> Expansion[Builder integrations and FinanceOps expansion]
+
+investorMemo:
+  verdict:
+    call: "Meet / investigate further"
+    conviction: >-
+      Moderate conviction: the wedge is narrow and falsifiable, the pain is high-consequence, and
+      adjacent tooling validates that governance budget already exists; primary caveat is the
+      evidence base rests on one funding-talk article rather than a closed round or named enterprise
+      customers, so first-customer proof is the critical next gate.
+    whyBelieve: >-
+      No funded product currently simulates cross-system RevOps logic across multiple builders and
+      CRMs; existing governance tools are builder-scoped or metadata-centric, leaving a concrete gap
+      that attaches to urgent, recurring change events present in every B2B SaaS RevOps team.
+    whyDoubt: >-
+      Builder platforms (Retool, Superblocks) are actively shipping governance features and may
+      close the single-stack gap before this company can sign enough annual contracts to de-risk
+      the standalone market position.
+    nextDiligence: >-
+      Interview 5 Heads of RevOps who have already run an AI-built commission or deal-desk workflow
+      and ask whether they would have paid $25k–$50k for a pre-release gate before launch, and
+      what alternative they actually used.
+  firstCustomer:
+    title: "Head of RevOps, Series B–D B2B SaaS"
+    profile: >-
+      300–1,000 employee B2B SaaS company with 100–500 sellers on Salesforce and HubSpot, a 3–10
+      person RevOps team, and at least one AI-built or Retool-built deal-desk or commission
+      workflow already in production or in near-launch staging.
+    trigger: >-
+      A comp-plan reset, CRM field migration, or mandate to automate deal-desk approvals without
+      hiring more engineers creates an immediate need for a safe release path before the new
+      workflow goes live.
+    buyer: VP Revenue Operations or Director of Business Systems
+    initialContract: >-
+      $25k–$40k annual pilot contract covering Salesforce plus HubSpot connectors and up to 3
+      governed workflows; converts to $50k–$75k annual contract if pilot prevents at least one
+      incident or reduces approval cycle time by more than 50%.
+  mustBeTrue:
+    - >-
+      At least 30% of Series B–D B2B SaaS RevOps teams have deployed at least one AI-built or
+      low-code internal workflow in the past 12 months and experienced a post-launch schema,
+      permission, or logic error that required manual remediation.
+    - >-
+      RevOps leaders will allocate $25k–$50k annually for a pre-release control layer before an
+      incident (not only after) when the sales conversation is anchored to a concrete upcoming
+      change event such as a comp-plan reset or CRM migration.
+    - >-
+      Salesforce and HubSpot sandbox and permission-set APIs provide sufficient fidelity to
+      simulate cross-system payout and access outcomes without moving production PII into the
+      vendor environment.
+    - >-
+      No builder platform ships cross-system (multi-CRM plus spreadsheet) RevOps-specific
+      pre-release simulation within 18 months of this company's MVP launch.
+    - >-
+      A RevOps-specific regression library built from 10–20 design-partner accounts is sufficient
+      to outscore generic CI/CD diff tools on commission and deal-desk logic accuracy within 18
+      months, producing a measurable moat signal before Series A.
+  diligenceQuestions:
+    - >-
+      Have you deployed an AI-built or Retool-built workflow for deal-desk or commissions, and
+      what QA or release process did you use before it went live?
+    - >-
+      How much engineering or RevOps manager time did your last commission or approval-workflow
+      incident consume, and who owned the fix?
+    - >-
+      Would a $25k–$50k annual tool that pre-validates permission and formula logic be a RevOps
+      budget line or require engineering or IT approval?
+    - >-
+      Which builders, CRMs, or automation layers does your RevOps team use alongside Salesforce
+      and HubSpot for deal-desk or compensation workflows?
+    - >-
+      Have Retool, Salesforce, or HubSpot account teams discussed built-in governance roadmap
+      features with you in the last 6 months?
+    - >-
+      What level of simulation accuracy would be required before you trusted this tool as an
+      approval gate rather than a secondary advisory check?
+
+operatingAssumptions:
+  - assumption: >-
+      Target buyers will pay before a commission or permissions incident when the sales conversation
+      attaches to a concrete upcoming change event (comp-plan reset, CRM migration) rather than
+      abstract AI governance.
+    basis: research.yaml
+    validationTest: >-
+      Run 15 discovery calls with Heads of RevOps who have an active change event in the next 90
+      days; measure whether $25k–$50k budget surfaces without needing a prior incident as
+      justification for at least 8 of 15 interviewees.
+    decisionImpact: >-
+      If false, the GTM motion must shift to post-incident remediation sales (slower cycles,
+      reactive positioning) or requires a lower price point to reduce the budget-approval threshold.
+  - assumption: >-
+      Salesforce and HubSpot sandbox and permission-set APIs provide enough fidelity to simulate
+      payout and access outcomes without moving production PII into the vendor environment.
+    basis: research.yaml
+    validationTest: >-
+      Build a prototype Salesforce sandbox connector in months 1–2, run a masked commission
+      simulation against a design partner's sandbox, and compare simulated versus actual payout
+      outcomes across 50 representative transactions; target 80%+ match rate.
+    decisionImpact: >-
+      If false, the MVP requires either a secure data-residency architecture (adds 2–3 months) or
+      a narrower scope limited to permission and schema checks only, deferring formula simulation
+      and lengthening the path to first paid pilot.
+  - assumption: >-
+      The RevOps-specific regression library built from 10–20 design-partner accounts will provide
+      a measurable accuracy advantage over generic schema diff tools on commission and deal-desk
+      logic within 18 months of launch.
+    basis: idea.yaml
+    validationTest: >-
+      At month 12, run a head-to-head accuracy test on 3 real RevOps workflow changes using the
+      regression library versus a generic diff tool; measure false-negative rate on logic
+      regressions and target at least 3 unique catch types the generic tool misses.
+    decisionImpact: >-
+      If false, defensibility rests on integrations alone rather than the test corpus, which
+      lowers the switching cost and increases vulnerability to builder-native feature additions
+      from well-funded platforms.
+  - assumption: >-
+      Builder platforms (Retool, Superblocks) will not ship cross-system RevOps-specific
+      pre-release simulation across multiple CRMs and spreadsheet logic within the first 18 months.
+    basis: research.yaml
+    validationTest: >-
+      Monitor Retool and Superblocks product changelogs and enterprise release notes quarterly;
+      flag any cross-CRM pre-release simulation feature announcement as a kill-criteria trigger
+      requiring immediate strategy review.
+    decisionImpact: >-
+      If false, the company must accelerate cross-builder portability and the data moat
+      (permission graphs, regression library) to stay ahead of well-funded builder-native
+      governance additions—likely requiring an earlier Series A to fund engineering velocity.
+  - assumption: >-
+      A founder-led outbound motion targeting Heads of RevOps at Series B–D SaaS companies can
+      close 10 design-partner pilots in 12 months without a dedicated AE, relying on direct
+      outreach plus RevOps community referrals and consultancy co-sell.
+    basis: idea.yaml
+    validationTest: >-
+      Track outbound-to-discovery and discovery-to-pilot conversion monthly; if
+      discovery-to-pilot drops below 20% after 60 outbound conversations by month 6, activate
+      a consultancy co-sell channel before month 9 rather than waiting for month 12.
+    decisionImpact: >-
+      If false, the GTM requires an earlier AE hire or consultancy channel-first motion,
+      increasing burn rate by $150k–$200k annually and compressing the effective runway.
+
+experimentRoadmap:
+  - horizon: 0–90 days
+    experiment: Buying-before-incident discovery interviews
+    hypothesis: >-
+      RevOps leaders with an active comp-plan or CRM change event will express willingness to pay
+      $25k–$50k for a pre-release gate without needing a prior incident as justification.
+    successMetric: "8 of 15 interviewees say they would allocate budget now for an active change event"
+    owner: Founding CEO
+  - horizon: 0–90 days
+    experiment: Salesforce sandbox connector prototype
+    hypothesis: >-
+      Salesforce sandbox and permission-set APIs provide enough fidelity to produce a meaningful
+      pre-deploy risk diff without touching production PII.
+    successMetric: Diff output matches human expert review on 80%+ of test cases in one design-partner sandbox
+    owner: Founding engineer
+  - horizon: 90–180 days
+    experiment: Deal-desk pilot with 3 design partners
+    hypothesis: >-
+      A 90-day pilot covering 2–3 governed deal-desk or commission workflows will prevent at least
+      one post-launch incident or reduce approval cycle time by more than 50%, creating a concrete
+      ROI story for the next wave of outbound.
+    successMetric: "2 of 3 pilots convert to a $25k+ annual contract within 90 days of pilot start"
+    owner: Founding CEO and sales engineer
+  - horizon: 90–180 days
+    experiment: HubSpot workflow-history connector
+    hypothesis: >-
+      HubSpot workflow revision and sandbox APIs can be integrated in 4–6 weeks, extending the
+      diff engine to HubSpot-native automations without rebuilding the core architecture.
+    successMetric: HubSpot diffs live in at least 2 design-partner environments by month 6
+    owner: Founding engineer
+  - horizon: 180–365 days
+    experiment: Commission regression test library v1
+    hypothesis: >-
+      Aggregating masked test cases from 10 design partners produces a commission-logic test suite
+      that catches formula regressions generic diff tools miss.
+    successMetric: Library detects 3+ unique regression types not caught by a generic schema diff in a blind test
+    owner: Engineering team
+  - horizon: 180–365 days
+    experiment: RevOps consultancy co-sell pilot
+    hypothesis: >-
+      At least one Salesforce or HubSpot implementation partner will refer 2+ qualified accounts
+      per quarter in exchange for white-label reporting or a referral fee structure.
+    successMetric: 2+ qualified referrals received from partner within 90 days of signing co-sell agreement
+    owner: Founding CEO
+  - horizon: 365–540 days
+    experiment: Retool or Superblocks builder integration
+    hypothesis: >-
+      Adding a native connector for a top builder accelerates deal sourcing from that vendor's
+      enterprise sales team and increases per-account deal size by expanding the governed app
+      inventory visible through the control plane.
+    successMetric: "3+ net new enterprise conversations sourced from builder partner within 180 days of integration launch"
+    owner: Partnerships lead
+
+operations:
+  - "CRM connectors: Salesforce sandbox and permission-set APIs, HubSpot workflow and sandbox APIs (no production PII ingested)"
+  - "Test execution: isolated per-customer sandbox compute; cross-tenant data isolation enforced at infrastructure layer"
+  - "Approval workflow: Slack and email integration for manager approval triggers and one-click rollback"
+  - "Audit log: append-only ledger per governed workflow with CSV and JSON export for SOC 2 and internal compliance"
+  - "Schema snapshots: versioned per governed workflow with diff-on-write and retention policy"
+  - "Key partners: Salesforce ISV program, HubSpot developer program, RevOps consultancy referral network"
+
+team:
+  - role: Founding CEO and GTM lead
+    startTiming: Month 0
+    rationale: >-
+      Owns design-partner discovery, pricing validation, and early enterprise sales; requires deep
+      RevOps domain fluency and enterprise sales-engineering experience to run schema-level
+      discovery calls.
+  - role: Founding backend engineer
+    startTiming: Month 0
+    rationale: >-
+      Builds Salesforce and HubSpot connectors, diff engine, and sandbox test execution layer;
+      must have prior experience with CRM APIs and multi-tenant data isolation patterns.
+  - role: Sales engineer and RevOps solutions consultant
+    startTiming: Month 3
+    rationale: >-
+      Drives pilot onboarding, schema discovery, and customer success for the first 10 design
+      partners; earlier than a pure AE because onboarding is high-touch and schema-specific.
+  - role: Second backend engineer
+    startTiming: Month 9
+    rationale: >-
+      Accelerates builder integrations (Retool, Superblocks) and commission-simulation accuracy;
+      timing follows first closed pilots providing real schema and test-case data to build on.
+
+milestones:
+  - horizon: 0–12 months
+    items:
+      - "Month 2: Salesforce connector MVP with permission diff and risk score live in 1 design-partner sandbox"
+      - "Month 4: HubSpot connector added; 3 design partners in active pilot"
+      - "Month 6: 2 of 3 pilots convert to $25k–$40k annual contracts; commission regression library v0 seeded"
+      - "Month 9: 5 paid customers; approval-cycle ROI documented in at least 2 publishable case studies"
+      - "Month 12: 8–10 paid customers; ~$500k ARR; Retool connector beta with first enterprise design partner"
+  - horizon: 12–24 months
+    items:
+      - "Month 15: Superblocks connector live; governed app catalog UI shipped to all customers"
+      - "Month 18: 20+ paid customers; ~$1.2M ARR; at least 1 RevOps consultancy co-sell agreement signed"
+      - "Month 21: Commission regression library covers deal-desk and renewal workflows; 3+ documented regression catches"
+      - "Month 24: 35 paid customers; ~$2.2M ARR; FinanceOps workflow category in beta with 3 accounts"
+  - horizon: 24–36 months
+    items:
+      - "Month 30: 60 customers; ~$3.5M ARR; Gearset or Copado integration in market"
+      - "Month 36: 100+ customers; ~$6M ARR; Series A to fund enterprise sales team and international expansion"
+
+risks:
+  - risk: Buyers wait for a post-incident budget rather than buying proactively
+    likelihood: High
+    impact: High
+    mitigation: >-
+      Attach every sales conversation to a concrete upcoming change event and price the pilot
+      below the average cost of one commission incident; offer a 30-day money-back pilot to
+      reduce the activation energy for first-time buyers.
+  - risk: Builder platforms ship cross-system RevOps pre-release simulation features
+    likelihood: Medium
+    impact: High
+    mitigation: >-
+      Accelerate cross-builder portability, deepen Salesforce and HubSpot permission-graph
+      integration, and grow the regression test library faster than any single builder can for
+      its own platform; position as the neutral control plane that spans all builders.
+  - risk: Salesforce or HubSpot API changes break sandbox simulation fidelity
+    likelihood: Medium
+    impact: Medium
+    mitigation: >-
+      Monitor platform changelogs; maintain a versioned API compatibility layer; join Salesforce
+      ISV and HubSpot developer programs for advance notice of breaking changes.
+  - risk: Customer schemas are too heavily customized for automated test generation
+    likelihood: Medium
+    impact: Medium
+    mitigation: >-
+      Start with guided config scanners and narrow high-frequency templates; expand automated
+      coverage as the system learns each account's schema fingerprint over the first 90 days.
+  - risk: Sales cycles extend beyond 90 days due to security and data-access review
+    likelihood: Medium
+    impact: Medium
+    mitigation: >-
+      Prepare a security FAQ, data-flow diagram, and SOC 2 roadmap at launch; prioritize early
+      accounts where security review is owned by the RevOps leader rather than central IT.
+
+fundingAsk:
+  round: pre-seed
+  targetFundingRangeUsd: "$2–4M"
+  runwayMonths: 20
+  useOfFundsSummary: >-
+    20 months of runway to build Salesforce and HubSpot connectors, the diff engine, and
+    commission regression test library; hire founding engineer and sales engineer; close 8–10
+    paid design-partner accounts; and reach ~$500k ARR as the milestone for a seed fundraise.
