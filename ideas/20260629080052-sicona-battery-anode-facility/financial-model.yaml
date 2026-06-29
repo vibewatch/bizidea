@@ -1,0 +1,544 @@
+slug: silicon-anode-integration-platform
+date: '2026-06-29'
+currency: USD
+modelStartMonth: '2026-07'
+
+assumptions:
+  - id: A1
+    name: Starting customers (M1)
+    value: "0"
+    unit: count
+    source: "[BP executiveSummary] No customers at model start; product is pre-launch July 2026"
+  - id: A2
+    name: First design-partner pilot launch month
+    value: "M4 (October 2026)"
+    unit: month
+    source: "[BP milestones] 'Month 4: First design-partner qualification pilot launched (1 cell manufacturer, 1 SiCx lot)'"
+  - id: A3
+    name: Pilot contract value
+    value: "50"
+    unit: "$K total for 6-month engagement"
+    source: "[BP investorMemo.firstCustomer] 'Paid pilot at $40K-$60K for one qualification program'; midpoint $50K; recognized evenly over 6 months at ~$8.3K/mo"
+  - id: A4
+    name: Second design-partner pilot start
+    value: "M8 (February 2027)"
+    unit: month
+    source: "[BP experimentRoadmap 90-180 days] second design-partner experiment horizon implies second pilot running by M8-M9"
+  - id: A5
+    name: First paid annual SaaS subscription close
+    value: "M12 (June 2027)"
+    unit: month
+    source: "[BP milestones] 'Month 12: First paid annual SaaS subscription closed ($80K-$150K ACV); 2 active paying customers'"
+  - id: A6
+    name: Launch ACV per customer
+    value: "100"
+    unit: "$K/year at launch, blended $145K by Y3"
+    source: "[BP pricing] '$80K-$150K/year per active qualification program'; $100K used at launch growing to blended $145K by Y3 as multi-program expansion (1.4 programs avg) kicks in per research SOM calc"
+  - id: A7
+    name: Monthly customer churn rate
+    value: "0.67"
+    unit: "% per month (approx 8% annual)"
+    source: "[startup-finance heuristic] ~8% annual churn for sticky enterprise compliance SaaS; lower than typical SaaS because cycler-data integration and OEM-report library create structural switching costs consistent with BP moatsToBuild"
+  - id: A8
+    name: Target gross margin
+    value: "75"
+    unit: "%"
+    source: "[BP businessModel.targetGrossMarginPct] explicitly 75%; achieved by Y3 as infrastructure cost grows slower than revenue"
+  - id: A9
+    name: Minimum monthly COGS (infrastructure floor)
+    value: "2"
+    unit: "$K/month"
+    source: "[BP operations] 'Cloud infrastructure: AWS or GCP for test data ingestion, storage'; minimum baseline regardless of customer count; COGS scales to 25% of revenue from M8 onward"
+  - id: A10
+    name: Customers at M24 (end Y2)
+    value: "10"
+    unit: count
+    source: "[BP milestones] 'Month 24: 10 paying manufacturers; $1.5-1.8M ARR'"
+  - id: A11
+    name: Customers at M36 (end Y3)
+    value: "14"
+    unit: count
+    source: "[BP milestones + research SOM] 10 at M24 plus 4 new in Y3 via Group14/Sila/Nexeon referrals; consistent with $3M+ ARR trajectory at approx $214K blended ACV; research SOM assumes 10 customers at $182K ACV = $1.82M steady-state"
+  - id: A12
+    name: Blended ARPU at Y3
+    value: "145"
+    unit: "$K/year per customer"
+    source: "[research SOM calc + BP pricing] research SOM: 10 customers x 1.4 programs x $0.13M = $1.82M; this model uses 14 customers x $145K avg = $2.03M Y3; $145K reflects mix of single-program ($100K) and multi-program ($180K) accounts consistent with land-and-expand in BP expansionLevers"
+  - id: A13
+    name: COGS rate at scale
+    value: "25"
+    unit: "% of revenue"
+    source: "[startup-finance heuristic + BP businessModel.targetGrossMarginPct] 25% COGS implies 75% GM target; covers AWS/GCP hosting, customer-success overhead, and data-ingestion compute; consistent with B2B SaaS with light implementation"
+  - id: A14
+    name: Seed raise amount
+    value: "4.0"
+    unit: "$M"
+    source: "[BP fundingAsk] '$3-5M'; $4.0M computed from M1-M20 operating burn (~$2.3M) plus 6-month runway buffer (~$1.0M) plus contingency ($0.7M); deposited at M1 opening; within stated BP range"
+  - id: A15
+    name: Anticipated Series A inflow (cash-model assumption only)
+    value: "7.0"
+    unit: "$M added to cashEopK at Q2Y2"
+    source: "[BP milestones] 'Series A raise at Month 18-20'; $7M based on $1.5M ARR x 5-7x forward ARR multiple (startup-finance heuristic for enterprise deep-tech SaaS Series A in 2027-2028); reflected in cashEopK from Q2Y2 onward but NOT in ebitdaK or fundingAsk; without this raise cash depletes in Q2Y3"
+  - id: A16
+    name: CEO annual salary (base)
+    value: "240"
+    unit: "$K/year"
+    source: "[startup-finance heuristic] Deep-tech technical co-founder with silicon electrochemistry domain expertise; 2026 Sydney/international market mid-range founder comp for specialized hardware-adjacent SaaS"
+  - id: A17
+    name: CTO annual salary (base)
+    value: "240"
+    unit: "$K/year"
+    source: "[startup-finance heuristic] Senior battery-software/data-pipeline engineer co-founder; co-founder parity with CEO; consistent with 2026 Sydney tech market"
+  - id: A18
+    name: Electrochemistry Lead annual salary
+    value: "215"
+    unit: "$K/year"
+    source: "[startup-finance heuristic] PhD silicon-anode specialist; premium for rare expertise flagged in BP team section as critical M1 hire; below co-founder comp but above standard SWE"
+  - id: A19
+    name: Enterprise Sales/BD Lead annual OTE
+    value: "215"
+    unit: "$K/year ($185K base + $30K variable)"
+    source: "[startup-finance heuristic] Senior enterprise SaaS BD with battery-industry network; $185K base plus $30K variable on-target; BP team startTiming Month 4"
+  - id: A20
+    name: Software Engineer 2 annual salary
+    value: "200"
+    unit: "$K/year"
+    source: "[startup-finance heuristic] Full-stack data engineer for OEM report pipeline and Maccor connector; BP team startTiming Month 6"
+  - id: A21
+    name: Payroll tax and benefits burden rate
+    value: "20"
+    unit: "% of base salary"
+    source: "[startup-finance heuristic] Combined employer contributions: AU superannuation ~11%, payroll tax ~5%, health/other ~4%; 20% used as blended estimate for AU/US hiring context"
+  - id: A22
+    name: Non-salary OPEX monthly range
+    value: "15-28"
+    unit: "$K/month"
+    source: "[startup-finance heuristic + BP operations] Scientific advisory board retainer $3K, conference/travel $5K (spikes to $10K at Battery Show EU and EV Tech Expo), legal/IP $5-8K early stage, dev tools and databases $3K, office/coworking $3K, admin/insurance $2K; spikes in M4 and M10"
+  - id: A23
+    name: CAC blended (Y2 acquisition)
+    value: "90"
+    unit: "$K per new customer"
+    source: "[calc] Y2 S&M spend ~$755K / 8 new customers = ~$94K; rounded to $90K; BP funnelTargets 30-40% supplier-referral to qualified pilot and 50%+ pilot-to-paid; heuristic: enterprise SaaS CAC typically 0.6-1.0x ACV for co-marketing-heavy GTM channel"
+  - id: A24
+    name: Y2 headcount additions
+    value: "Sr Eng M13, PM M15, CS Manager M16, Sales Exec 2 M18"
+    unit: "FTE schedule"
+    source: "[BP fundingAsk.useOfFundsSummary + BP sequencingRationale] Series A (A15) funds scale to 9 FTE by M18; sales hires trail revenue validation; product/CS added to manage growing multi-customer base per BP sequencingRationale"
+  - id: A25
+    name: Y3 headcount additions
+    value: "2x Eng M25, Data Scientist M28, Sales Exec 3 M30, G&A Controller M33"
+    unit: "FTE schedule"
+    source: "[BP milestones M28-M36] Lot-to-lot QA module (M28), BMS calibration module in design-partner phase (M30), lithium-metal anode library (M36) require additional engineering; Series A enables 14 FTE scale"
+  - id: A26
+    name: Average life of customer
+    value: "149"
+    unit: months
+    source: "[calc from A7] avgCustomerLifeMonths = 1 / 0.0067 monthly churn = 149 months; standard exponential-decay LTV formula for enterprise SaaS"
+  - id: A27
+    name: OEM report add-on fee
+    value: "8"
+    unit: "$K per report"
+    source: "[BP businessModel] '$5K-$15K per-report OEM submission package export'; $8K midpoint; contributes to M12+ ACV incremental uplift above base SaaS subscription"
+
+headcount:
+  - role: Eng
+    q1y1: 2
+    q2y1: 3
+    q3y1: 3
+    q4y1: 3
+    q4y2: 4
+    q4y3: 6
+  - role: Science
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 2
+  - role: GTM-Sales
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 2
+    q4y3: 3
+  - role: Product-CS
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 2
+    q4y3: 2
+  - role: G-and-A
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 0
+    q4y3: 1
+
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 5
+  q3y1: 5
+  q4y1: 5
+  q4y2: 9
+  q4y3: 14
+
+headcountAnnualizedPayrollK:
+  q1y1: 834.0
+  q2y1: 1332.0
+  q3y1: 1332.0
+  q4y1: 1332.0
+  q4y2: 2292.0
+  q4y3: 3504.0
+
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 2.0
+    grossProfitK: -2.0
+    salesMarketingK: 21.0
+    researchDevelopmentK: 55.0
+    generalAdministrativeK: 14.0
+    opexK: 90.0
+    ebitdaK: -92.0
+    cashEopK: 3908.0
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 2.0
+    grossProfitK: -2.0
+    salesMarketingK: 21.0
+    researchDevelopmentK: 55.0
+    generalAdministrativeK: 14.0
+    opexK: 90.0
+    ebitdaK: -92.0
+    cashEopK: 3816.0
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 2.0
+    grossProfitK: -2.0
+    salesMarketingK: 21.0
+    researchDevelopmentK: 55.0
+    generalAdministrativeK: 14.0
+    opexK: 90.0
+    ebitdaK: -92.0
+    cashEopK: 3724.0
+  - month: M4
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 8.0
+    cogsK: 2.0
+    grossProfitK: 6.0
+    salesMarketingK: 48.0
+    researchDevelopmentK: 55.0
+    generalAdministrativeK: 16.0
+    opexK: 119.0
+    ebitdaK: -113.0
+    cashEopK: 3611.0
+  - month: M5
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 8.0
+    cogsK: 2.0
+    grossProfitK: 6.0
+    salesMarketingK: 39.0
+    researchDevelopmentK: 53.0
+    generalAdministrativeK: 17.0
+    opexK: 109.0
+    ebitdaK: -103.0
+    cashEopK: 3508.0
+  - month: M6
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 8.0
+    cogsK: 2.0
+    grossProfitK: 6.0
+    salesMarketingK: 43.0
+    researchDevelopmentK: 72.0
+    generalAdministrativeK: 14.0
+    opexK: 129.0
+    ebitdaK: -123.0
+    cashEopK: 3385.0
+  - month: M7
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 8.0
+    cogsK: 2.0
+    grossProfitK: 6.0
+    salesMarketingK: 43.0
+    researchDevelopmentK: 72.0
+    generalAdministrativeK: 14.0
+    opexK: 129.0
+    ebitdaK: -123.0
+    cashEopK: 3262.0
+  - month: M8
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 16.0
+    cogsK: 4.0
+    grossProfitK: 12.0
+    salesMarketingK: 43.0
+    researchDevelopmentK: 72.0
+    generalAdministrativeK: 14.0
+    opexK: 129.0
+    ebitdaK: -117.0
+    cashEopK: 3145.0
+  - month: M9
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 16.0
+    cogsK: 4.0
+    grossProfitK: 12.0
+    salesMarketingK: 43.0
+    researchDevelopmentK: 72.0
+    generalAdministrativeK: 14.0
+    opexK: 129.0
+    ebitdaK: -117.0
+    cashEopK: 3028.0
+  - month: M10
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 16.0
+    cogsK: 4.0
+    grossProfitK: 12.0
+    salesMarketingK: 48.0
+    researchDevelopmentK: 70.0
+    generalAdministrativeK: 15.0
+    opexK: 133.0
+    ebitdaK: -121.0
+    cashEopK: 2907.0
+  - month: M11
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 16.0
+    cogsK: 4.0
+    grossProfitK: 12.0
+    salesMarketingK: 40.0
+    researchDevelopmentK: 72.0
+    generalAdministrativeK: 14.0
+    opexK: 126.0
+    ebitdaK: -114.0
+    cashEopK: 2793.0
+  - month: M12
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 19.0
+    cogsK: 5.0
+    grossProfitK: 14.0
+    salesMarketingK: 40.0
+    researchDevelopmentK: 72.0
+    generalAdministrativeK: 14.0
+    opexK: 126.0
+    ebitdaK: -112.0
+    cashEopK: 2681.0
+
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 4
+    revenueK: 96.0
+    grossProfitK: 72.0
+    opexK: 494.0
+    ebitdaK: -422.0
+    cashEopK: 2259.0
+  - quarter: Q2Y2
+    customersEop: 7
+    revenueK: 204.0
+    grossProfitK: 153.0
+    opexK: 615.0
+    ebitdaK: -462.0
+    cashEopK: 8797.0
+  - quarter: Q3Y2
+    customersEop: 9
+    revenueK: 308.0
+    grossProfitK: 231.0
+    opexK: 663.0
+    ebitdaK: -432.0
+    cashEopK: 8365.0
+  - quarter: Q4Y2
+    customersEop: 10
+    revenueK: 372.0
+    grossProfitK: 279.0
+    opexK: 663.0
+    ebitdaK: -384.0
+    cashEopK: 7981.0
+  - quarter: Q1Y3
+    customersEop: 11
+    revenueK: 440.0
+    grossProfitK: 330.0
+    opexK: 807.0
+    ebitdaK: -477.0
+    cashEopK: 7504.0
+  - quarter: Q2Y3
+    customersEop: 12
+    revenueK: 480.0
+    grossProfitK: 360.0
+    opexK: 899.0
+    ebitdaK: -539.0
+    cashEopK: 6965.0
+  - quarter: Q3Y3
+    customersEop: 13
+    revenueK: 520.0
+    grossProfitK: 390.0
+    opexK: 963.0
+    ebitdaK: -573.0
+    cashEopK: 6392.0
+  - quarter: Q4Y3
+    customersEop: 14
+    revenueK: 560.0
+    grossProfitK: 420.0
+    opexK: 996.0
+    ebitdaK: -576.0
+    cashEopK: 5816.0
+
+totals:
+  y1:
+    revenueK: 115.0
+    ebitdaK: -1319.0
+    cashEopK: 2681.0
+  y2:
+    revenueK: 980.0
+    ebitdaK: -1700.0
+    cashEopK: 7981.0
+  y3:
+    revenueK: 2000.0
+    ebitdaK: -2165.0
+    cashEopK: 5816.0
+
+unitEconomics:
+  arpuAnnualK: 145.0
+  grossMarginPct: 75.0
+  cacK: 90.0
+  monthlyChurnPct: 0.67
+  avgCustomerLifeMonths: 149.0
+  ltvK: 1354.0
+  ltvCacRatio: 15.0
+  cacPaybackMonths: 10.0
+
+fundingAsk:
+  round: seed
+  amountM: 4.0
+  runwayMonths: 20
+  milestone: "Close 2 paying customers at $80K+ ACV each by M12; build Series A evidence package (formation-protocol library accuracy <15% prediction error, 2+ silicon-anode supplier partnerships active) by M18-20"
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 1520000
+      percentage: 38
+    - bucket: GTM
+      amountUsd: 1000000
+      percentage: 25
+    - bucket: "G&A"
+      amountUsd: 560000
+      percentage: 14
+    - bucket: "Buffer (6 mo)"
+      amountUsd: 920000
+      percentage: 23
+
+scenarios:
+  downside:
+    description: "Supplier referral channels fail to materialize; direct-outreach pivot required; only 6 paying customers by M24 at $95K ACV with 1.2% monthly churn; Series A delayed to M26"
+    y3RevenueK: 800.0
+    y3EbitdaK: -2450.0
+    cashLowPointK: 350.0
+    keyAssumptionChanges:
+      - "customersByM24: 6 not 10"
+      - "arpuAnnualK: 95 not 145"
+      - "monthlyChurnPct: 1.2 not 0.67"
+      - "Series A delayed to M26 or not raised; emergency cost-cut to 7 FTE"
+  base:
+    description: "10 paying customers by M24 at $145K blended ACV; Sicona and Group14/Sila referrals active by M14; Series A $7M at M18; 75% gross margin achieved Y3"
+    y3RevenueK: 2000.0
+    y3EbitdaK: -2165.0
+    cashLowPointK: 1951.0
+    keyAssumptionChanges:
+      - "Base case; all assumptions as modeled"
+  upside:
+    description: "All 4 silicon-anode supplier referral channels active by M12; 14 paying customers by M24 at $180K ACV; monthly churn 0.3%; Series A $10M at M15"
+    y3RevenueK: 3500.0
+    y3EbitdaK: -1040.0
+    cashLowPointK: 2800.0
+    keyAssumptionChanges:
+      - "customersByM24: 14 not 10"
+      - "arpuAnnualK: 180 not 145"
+      - "monthlyChurnPct: 0.30 not 0.67"
+      - "Series A closes M15 at $10M not M18 at $7M"
+
+sensitivity:
+  - variable: ARPU
+    downsideCase: "$80K ACV (pricing hypothesis fails; buyers cap spend at minimum tier or extend existing cycler software)"
+    baseCase: "$145K ACV (1.4 programs per customer at mid-range pricing; validated in first two design-partner programs per BP operatingAssumptions)"
+    upsideCase: "$180K ACV (1.5 programs per customer plus OEM report add-on fees; EU compliance urgency drives premium)"
+    y3RevenueImpactK: -897.0
+    cashImpactK: -673.0
+  - variable: churn
+    downsideCase: "1.2% monthly (14.4% annual): buyers cancel after qualification wave peaks; IP-sharing friction blocks formation-protocol library flywheel"
+    baseCase: "0.67% monthly (8% annual): sticky due to normalized cycler-data integration layer and OEM-report compliance artifacts per BP moatsToBuild"
+    upsideCase: "0.25% monthly (3% annual): protocol library becomes industry reference; customers expand programs rather than churn"
+    y3RevenueImpactK: -450.0
+    cashImpactK: -338.0
+  - variable: CAC
+    downsideCase: "$180K per customer (all 4 supplier referrals fail; full direct outreach with 9-month enterprise sales cycles)"
+    baseCase: "$90K per customer (Sicona plus Group14/Sila co-marketing: 35% referral conversion, 50%+ pilot-to-paid per BP funnelTargets)"
+    upsideCase: "$40K per customer (all 4 supplier partnerships active; inbound demand from timed qualification deadlines)"
+    y3RevenueImpactK: -290.0
+    cashImpactK: -720.0
+  - variable: sales cycle
+    downsideCase: "9 months average (battery-industry procurement slows; VP approval requires multi-quarter budget cycle; no pre-qualified referrals)"
+    baseCase: "4.5 months (pilot triggered at SiCx sample receipt; VP pre-approval via Sicona co-marketing relationship per BP wedgeRationale)"
+    upsideCase: "2 months (supplier referral creates pre-qualified inbound; pilot waived for compliance-urgent EU customers under EU Battery Regulation 2023/1542)"
+    y3RevenueImpactK: -620.0
+    cashImpactK: -465.0
+  - variable: gross margin
+    downsideCase: "58% (heavy per-customer implementation services required for mixed Arbin/Neware/Maccor cycler-fleet normalization; BP risk: connector integration deeper than expected)"
+    baseCase: "75% (target; cloud-infra scale and auto-onboarding absorbs new customers with minimal incremental CS cost per BP businessModel.targetGrossMarginPct)"
+    upsideCase: "82% (pure-SaaS automated onboarding; protocol-library self-serve reduces CS headcount requirement in Y3)"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -340.0
+  - variable: hiring pace
+    downsideCase: "Electrochemistry Lead hire delayed 4 months (PhD silicon-anode talent scarce outside Wollongong and Stanford; BP team flags this as first post-founder hire)"
+    baseCase: "All hires per BP team plan: Electrochemistry Lead M1, BD Lead M4, Eng2 M6; advisory board onboarded by M3"
+    upsideCase: "Full founding team of 4 hired by M1 via University of Wollongong silicon-anode research network and Sicona introduction"
+    y3RevenueImpactK: -350.0
+    cashImpactK: -200.0
+
+modelDiagram:
+  title: Silicon-anode qualification platform unit-economics flow
+  mermaid: |
+    flowchart LR
+      SiconaEvent["Sicona SiCx\nSupply 2026"] --> NPI["NPI Program\nTrigger"]
+      NPI --> Pilot["Paid Pilot\n50K per 6 mo"]
+      Pilot --> SaaS["Annual SaaS\n80K-150K ACV"]
+      SaaS --> Revenue["Revenue\nY1 115K to Y3 2.0M"]
+      Revenue --> GP["Gross Profit\n75pct by Y3"]
+      GP --> EBITDA["EBITDA\nneg 2.2M Y3"]
+      EBITDA --> Cash["Cash\n5.8M EoP Y3"]
+      SaaS --> Library["Formation-Protocol\nLibrary Moat"]
+      Library --> Expansion["Multi-program\nExpansion 1.4x"]
+      Expansion --> SaaS
+
+modelSanity:
+  - checkName: Revenue engine
+    finding: "Revenue compounds as each new silicon-anode supplier triggers a dated NPI qualification wave, growing from 2 pilot customers at $50K each in Y1 to 14 paying manufacturers at $145K blended ACV by Y3 end, delivering $2.0M Y3 revenue driven by Sicona-then-Group14/Sila supplier referral stacking."
+  - checkName: Must go right
+    finding: "At least one silicon-anode supplier (Sicona, Group14, or Sila) must activate a paying customer referral channel within 6 months of seed close; without supplier co-marketing, CAC rises from $90K to $180K, stretching payback to 22 months and eroding the Series A milestone timeline by 8+ months per the CAC sensitivity row."
+  - checkName: Model breaks if
+    finding: "If the $80K-$150K ACV pricing hypothesis fails validation and buyers cap spend at $30-50K, Y3 revenue collapses below $700K, the seed runway math breaks, and the $1.5M ARR Series A narrative disintegrates as shown in the ARPU sensitivity row (-$897K Y3 revenue impact)."
+  - checkName: Next-round proof
+    finding: "The Series A milestone is 10 paying customers generating $1.5-1.8M ARR by M24 with greater than 70% gross margin and less than 15% formation-protocol prediction error demonstrated - metrics grounded in BP milestones and scenarios.base - that together justify a $7M+ Series A at 5-8x forward ARR."
+
+sanityChecks:
+  ruleOf40: "Y3 revenue growth 104% (($2.0M-$0.98M)/$0.98M) + EBITDA margin -108% (-$2.165M/$2.0M) = -4% (fails; acceptable for seed-to-Series-A growth-investing phase with $7M Series A deployed into team scale-up ahead of $3M+ ARR)"
+  burnMultiple: "3.3x in Y3 (net burn $2.165M / net new ARR $660K = Y3-exit ARR $2.24M minus Y2-exit ARR $1.58M); above the 2.0x SaaS benchmark; must compress toward 1.5x in Y4 as $3M+ ARR matures with stable 14-FTE headcount"
+  revenuePerFte: "$157K in Y3 (12.7 avg FTE; benchmark $200-400K SaaS); below benchmark during investment phase while team is scaled ahead of revenue; improves toward $230K+ when Y4 ARR reaches $3M on the same headcount base"
+  flags:
+    - "ACV pricing hypothesis ($80K-$150K/yr per program) is unvalidated at model date; a miss to $30-50K collapses Y3 revenue below $700K, invalidates the seed runway math, and eliminates the Series A case - the single largest model risk per BP operatingAssumptions."
+    - "Series A ($7.0M assumed at M18, reflected in cashEopK from Q2Y2 onward) is not committed; if delayed 6+ months cash depletes in Q4Y2 and a $60K/mo cost reduction (1-2 FTE deferred) is required within 30 days of miss signal."
+    - "Burn multiple 3.3x in Y3 exceeds the 2.0x SaaS benchmark; acceptable while deploying Series A into growth but a Series B conversation will require demonstrated improvement in net new ARR per dollar burned."
+    - "Cell manufacturer IP sensitivity is a HIGH-likelihood risk per BP risks section; refusal to share anonymized qualification data blocks the formation-protocol library flywheel, reducing product stickiness, cutting LTV below the modeled $1,354K, and weakening the data-moat Series A narrative."
+    - "cashEopK for Q2Y2 onward includes a +$7.0M Series A inflow (assumption A15); without this raise, cash depletes in Q2Y3 and the Y3 model does not hold - seed-only cash turns negative by Q2Y3 at base-case burn."
