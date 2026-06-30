@@ -1,0 +1,552 @@
+slug: construction-field-ai-scribe
+date: '2026-06-30'
+currency: USD
+modelStartMonth: 2026-07
+assumptions:
+- id: A1
+  name: 模型起始月份
+  value: 2026-07
+  unit: YYYY-MM
+  source: '[BP date 2026-06-30] 模型从商业计划书日期之后的第一个完整月份开始。'
+- id: A2
+  name: 期初现金/种子融资
+  value: $3.0M
+  unit: USD
+  source: '[BP fundingAsk targetFundingRangeUsd $2–4M + BP fundingAsk runwayMonths 18] 基础情景使用中位种子额度，规模设计为达到 25 家客户验证点，同时保留六个月缓冲。'
+- id: A3
+  name: 初始付费客户数
+  value: '0'
+  unit: count
+  source: '[BP milestones 0–12 months] 公司从零营收起步，必须赢得首批付费试点后才会有生产营收。'
+- id: A4
+  name: 付费客户定义
+  value: 付费试点或生产总承包商账户
+  unit: definition
+  source: '[BP gtm.pricing + BP businessModel.revenueStreams] customersEop 包括已为试点、订阅或打包部署付费的所有总承包商。'
+- id: A5
+  name: 席位价格
+  value: $199 per device per month
+  unit: USD/device/month
+  source: '[BP gtm.pricing + BP businessModel.revenueStreams] 这是打包硬件、软件和 Procore 同步的标价。'
+- id: A6
+  name: 平均账户部署爬坡
+  value: 试点账户起始约 5–8 台设备，到 Q4Y2 成熟至约 25 台，到 Q4Y3 约 26 台
+  unit: devices/account
+  source: '[BP market.segments 50–250 名现场人员 + BP milestones 25 家客户 $1.5M ARR 和 100 家客户 $6M ARR + Research market.som] ARR 里程碑意味着每家付费总承包商的计费现场主管席位约为 20 多台。'
+- id: A7
+  name: 客户爬坡
+  value: M12 时 3 家付费账户，Q4Y2 时 25 家，Q4Y3 时 100 家
+  unit: customersEop
+  source: '[BP milestones 0–12、12–24 和 24–36 个月 + Research market.som] 模型与 25 家客户的第 2 年验证点和 100 家客户的第 3 年目标相匹配。'
+- id: A8
+  name: 营收确认惯例
+  value: 期末客户数乘以该期内每个活跃账户的混合已实现营收
+  unit: formula
+  source: '[BP gtm.pricing + BP businessModel.unitOfValue] 着陆月因包含上线/配置费和试点定价而每账户混合数字较高。'
+- id: A9
+  name: 毛利率爬坡
+  value: 第 1 年 45–55%，第 2 年 60–68%，第 3 年 70–72%
+  unit: gross margin percent
+  source: '[BP businessModel.targetGrossMarginPct 70 + Research reportMemo.willingnessToPay + startup-finance heuristic] 早期硬件、支持和模型推理成本压缩毛利率，直到部署标准化。'
+- id: A10
+  name: 销售周期/转化
+  value: 外呼合格到试点转化率 25–35%，试点到生产转化率 50%+，争议后周期约 4–6 周
+  unit: funnel
+  source: '[BP gtm.funnelTargets + BP operatingAssumptions] 客户爬坡假设争议触发切口确实能缩短企业时间线。'
+- id: A11
+  name: 招聘时间线
+  value: 创始人 CEO + CTO + 软件工程师在 M1；首位 AE 在 M4；首位 CS/解决方案工程师在 M7；运营/合规和第三名工程师在 M13；第二位 AE 在 M16；第二位 CS 在 M19；第四名工程师在 M25；第三位 AE 在 M28；第三位 CS 在 M31
+  unit: timeline
+  source: '[BP team + BP fundingAsk.useOfFundsSummary + BP milestones] 第 1 年以产品优先，试点转化后再增加部署和销售产能。'
+- id: A12
+  name: 创始人总薪酬（含税）
+  value: $140K
+  unit: USD/year
+  source: '[startup-finance heuristic] 早期种子期公司创始人精简现金薪酬，含工资税和福利。'
+- id: A13
+  name: 工程人员总薪酬（含税）
+  value: CTO $200K；其他工程师 $180K
+  unit: USD/year
+  source: '[BP team 关键路径硬件 + Procore 集成范围 + startup-finance heuristic] 从第一天起就需要高级嵌入式、ML 和集成人才。'
+- id: A14
+  name: 销售人员总薪酬（含税）
+  value: $180K
+  unit: USD/year
+  source: '[BP team 销售负责人/创始 AE + startup-finance heuristic] 含底薪、浮动薪酬和早期企业销售的建筑出差费用。'
+- id: A15
+  name: 客户成功/解决方案工程师总薪酬（含税）
+  value: $145K
+  unit: USD/year
+  source: '[BP team 客户成功/解决方案工程师 + startup-finance heuristic] 假设技术上线和部署所有权，而非大规模服务团队。'
+- id: A16
+  name: 运营/管理总薪酬（含税）
+  value: $125K
+  unit: USD/year
+  source: '[BP fundingAsk.useOfFundsSummary 首次生产运行 + SOC 2 + startup-finance heuristic] 涵盖精简硬件运营、供应商管理和合规协调。'
+- id: A17
+  name: 薪资 P&L 分摊
+  value: 创始人 60% S&M 和 40% G&A；工程 100% R&D；销售 100% S&M；客户成功 60% S&M 和 40% R&D；运营 100% G&A
+  unit: allocation
+  source: '[BP team 角色理由 + BP operations] 将人员成本映射到功能性 P&L 科目。'
+- id: A18
+  name: 非薪资运营支出爬坡
+  value: 月度非薪资支出从早期第 1 年 S&M/R&D/G&A 约 $4K/$12K/$6K 爬升至 Q4Y3 的 $25K/$31K/$15K
+  unit: USD/month
+  source: '[BP operations + BP fundingAsk.useOfFundsSummary + startup-finance heuristic] 涵盖出差、云/模型推理、保险、法务、认证和 Marketplace 支持费用。'
+- id: A19
+  name: 现金转换惯例
+  value: 现金变动等于 EBITDA
+  unit: formula
+  source: '[startup-finance heuristic] 阶段模型中税项、债务、折旧和营运资本时序均视为不重要，但硬件库存可能使实际现金略微提前移动。'
+- id: A20
+  name: 稳态月度流失率
+  value: 1.8%
+  unit: percent per month
+  source: '[startup-finance heuristic for early vertical workflow SaaS] 建筑工作流的粘性支持低流失率，但模型比成熟企业 SaaS 更为保守。'
+- id: A21
+  name: CAC 计算惯例
+  value: 第 2 年销售与营销支出除以 22 个净新增付费客户
+  unit: formula
+  source: '[model calc 基于基础情景 S&M 支出 + BP milestones 12–24 个月 25 家客户] CAC 基于公司证明可复制 GTM 的年份，而非创始人主导的试点前期。'
+- id: A22
+  name: 融资规模里程碑
+  value: 达到 25 家付费总承包商客户、约 625 台活跃设备、Procore Marketplace 认证，以及约 $1.5M 退出 ARR，同时保留六个月现金缓冲
+  unit: milestone
+  source: '[BP milestones 12–24 months + BP fundingAsk.useOfFundsSummary + model cash curve] 这是用于确定融资规模的种子轮验证点。'
+headcount:
+- role: Founder / CEO
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Engineering
+  q1y1: 2
+  q2y1: 2
+  q3y1: 2
+  q4y1: 2
+  q4y2: 3
+  q4y3: 4
+- role: Sales
+  q1y1: 0
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 2
+  q4y3: 3
+- role: Customer Success / Solutions
+  q1y1: 0
+  q2y1: 0
+  q3y1: 1
+  q4y1: 1
+  q4y2: 2
+  q4y3: 3
+- role: Operations / G&A
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 5
+  q4y1: 5
+  q4y2: 9
+  q4y3: 12
+headcountAnnualizedPayrollK:
+  q1y1: 520.0
+  q2y1: 700.0
+  q3y1: 845.0
+  q4y1: 845.0
+  q4y2: 1475.0
+  q4y3: 1980.0
+y1Monthly:
+- month: M1
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 43.3
+  salesMarketingK: 11.0
+  researchDevelopmentK: 43.7
+  generalAdministrativeK: 10.7
+  opexK: 65.4
+  ebitdaK: -65.4
+  cashEopK: 2934.6
+- month: M2
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 43.3
+  salesMarketingK: 11.0
+  researchDevelopmentK: 43.7
+  generalAdministrativeK: 10.7
+  opexK: 65.4
+  ebitdaK: -65.4
+  cashEopK: 2869.2
+- month: M3
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 43.3
+  salesMarketingK: 11.0
+  researchDevelopmentK: 43.7
+  generalAdministrativeK: 10.7
+  opexK: 65.4
+  ebitdaK: -65.4
+  cashEopK: 2803.8
+- month: M4
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 58.3
+  salesMarketingK: 28.0
+  researchDevelopmentK: 43.7
+  generalAdministrativeK: 10.7
+  opexK: 82.4
+  ebitdaK: -82.4
+  cashEopK: 2721.4
+- month: M5
+  customersEop: 1
+  newCustomers: 1
+  revenueK: 6.0
+  cogsK: 3.3
+  grossProfitK: 2.7
+  salaryK: 58.3
+  salesMarketingK: 28.0
+  researchDevelopmentK: 43.7
+  generalAdministrativeK: 10.7
+  opexK: 82.4
+  ebitdaK: -79.7
+  cashEopK: 2641.7
+- month: M6
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 4.0
+  cogsK: 2.2
+  grossProfitK: 1.8
+  salaryK: 58.3
+  salesMarketingK: 28.0
+  researchDevelopmentK: 43.7
+  generalAdministrativeK: 10.7
+  opexK: 82.4
+  ebitdaK: -80.6
+  cashEopK: 2561.1
+- month: M7
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 4.0
+  cogsK: 2.1
+  grossProfitK: 1.9
+  salaryK: 70.4
+  salesMarketingK: 37.3
+  researchDevelopmentK: 50.5
+  generalAdministrativeK: 11.7
+  opexK: 99.5
+  ebitdaK: -97.6
+  cashEopK: 2463.5
+- month: M8
+  customersEop: 2
+  newCustomers: 1
+  revenueK: 11.0
+  cogsK: 5.5
+  grossProfitK: 5.5
+  salaryK: 70.4
+  salesMarketingK: 37.3
+  researchDevelopmentK: 50.5
+  generalAdministrativeK: 11.7
+  opexK: 99.5
+  ebitdaK: -94.0
+  cashEopK: 2369.5
+- month: M9
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 8.4
+  cogsK: 4.2
+  grossProfitK: 4.2
+  salaryK: 70.4
+  salesMarketingK: 37.3
+  researchDevelopmentK: 50.5
+  generalAdministrativeK: 11.7
+  opexK: 99.5
+  ebitdaK: -95.3
+  cashEopK: 2274.2
+- month: M10
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 8.8
+  cogsK: 4.2
+  grossProfitK: 4.6
+  salaryK: 70.4
+  salesMarketingK: 38.3
+  researchDevelopmentK: 51.5
+  generalAdministrativeK: 12.7
+  opexK: 102.5
+  ebitdaK: -97.9
+  cashEopK: 2176.3
+- month: M11
+  customersEop: 3
+  newCustomers: 1
+  revenueK: 15.0
+  cogsK: 6.7
+  grossProfitK: 8.3
+  salaryK: 70.4
+  salesMarketingK: 38.3
+  researchDevelopmentK: 51.5
+  generalAdministrativeK: 12.7
+  opexK: 102.5
+  ebitdaK: -94.2
+  cashEopK: 2082.1
+- month: M12
+  customersEop: 3
+  newCustomers: 0
+  revenueK: 13.5
+  cogsK: 6.1
+  grossProfitK: 7.4
+  salaryK: 70.4
+  salesMarketingK: 38.3
+  researchDevelopmentK: 51.5
+  generalAdministrativeK: 12.7
+  opexK: 102.5
+  ebitdaK: -95.1
+  cashEopK: 1987.0
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 7
+  revenueK: 96.6
+  cogsK: 38.6
+  grossProfitK: 58.0
+  salaryK: 287.4
+  salesMarketingK: 120.9
+  researchDevelopmentK: 208.5
+  generalAdministrativeK: 75.3
+  opexK: 404.7
+  ebitdaK: -346.7
+  cashEopK: 1640.3
+- quarter: Q2Y2
+  customersEop: 12
+  revenueK: 172.8
+  cogsK: 63.9
+  grossProfitK: 108.9
+  salaryK: 332.4
+  salesMarketingK: 171.9
+  researchDevelopmentK: 214.5
+  generalAdministrativeK: 75.3
+  opexK: 461.7
+  ebitdaK: -352.8
+  cashEopK: 1287.5
+- quarter: Q3Y2
+  customersEop: 18
+  revenueK: 270.0
+  cogsK: 91.8
+  grossProfitK: 178.2
+  salaryK: 368.7
+  salesMarketingK: 199.5
+  researchDevelopmentK: 234.9
+  generalAdministrativeK: 78.3
+  opexK: 512.7
+  ebitdaK: -334.5
+  cashEopK: 953.0
+- quarter: Q4Y2
+  customersEop: 25
+  revenueK: 375.0
+  cogsK: 120.0
+  grossProfitK: 255.0
+  salaryK: 368.7
+  salesMarketingK: 205.5
+  researchDevelopmentK: 240.9
+  generalAdministrativeK: 81.3
+  opexK: 527.7
+  ebitdaK: -272.7
+  cashEopK: 680.3
+- quarter: Q1Y3
+  customersEop: 40
+  revenueK: 600.0
+  cogsK: 180.0
+  grossProfitK: 420.0
+  salaryK: 413.7
+  salesMarketingK: 211.5
+  researchDevelopmentK: 288.9
+  generalAdministrativeK: 84.3
+  opexK: 584.7
+  ebitdaK: -164.7
+  cashEopK: 515.6
+- quarter: Q2Y3
+  customersEop: 60
+  revenueK: 900.0
+  cogsK: 270.0
+  grossProfitK: 630.0
+  salaryK: 458.7
+  salesMarketingK: 262.5
+  researchDevelopmentK: 294.9
+  generalAdministrativeK: 84.3
+  opexK: 641.7
+  ebitdaK: -11.7
+  cashEopK: 503.9
+- quarter: Q3Y3
+  customersEop: 80
+  revenueK: 1224.0
+  cogsK: 355.0
+  grossProfitK: 869.0
+  salaryK: 495.0
+  salesMarketingK: 290.4
+  researchDevelopmentK: 315.6
+  generalAdministrativeK: 87.3
+  opexK: 693.3
+  ebitdaK: 175.7
+  cashEopK: 679.6
+- quarter: Q4Y3
+  customersEop: 100
+  revenueK: 1560.0
+  cogsK: 436.8
+  grossProfitK: 1123.2
+  salaryK: 495.0
+  salesMarketingK: 296.4
+  researchDevelopmentK: 321.6
+  generalAdministrativeK: 90.3
+  opexK: 708.3
+  ebitdaK: 414.9
+  cashEopK: 1094.5
+totals:
+  y1:
+    revenueK: 70.7
+    ebitdaK: -1013.0
+    cashEopK: 1987.0
+  y2:
+    revenueK: 914.4
+    ebitdaK: -1306.7
+    cashEopK: 680.3
+  y3:
+    revenueK: 4284.0
+    ebitdaK: 414.2
+    cashEopK: 1094.5
+unitEconomics:
+  arpuAnnualK: 62.4
+  grossMarginPct: 72.0
+  cacK: 31.7
+  monthlyChurnPct: 1.8
+  avgCustomerLifeMonths: 55.6
+  ltvK: 208.2
+  ltvCacRatio: 6.6
+  cacPaybackMonths: 8.5
+fundingAsk:
+  round: seed
+  amountM: 3.0
+  runwayMonths: 24
+  milestone: 达到 25 家付费总承包商客户、约 625 台活跃设备、Procore Marketplace 认证，以及约 $1.5M 退出 ARR，同时保留第 3 年爬坡的六个月缓冲。
+  useOfFunds:
+  - bucket: Engineering
+    amountUsd: 1260000
+    percentage: 42
+  - bucket: GTM
+    amountUsd: 900000
+    percentage: 30
+  - bucket: G&A
+    amountUsd: 330000
+    percentage: 11
+  - bucket: Buffer (6 mo)
+    amountUsd: 510000
+    percentage: 17
+scenarios:
+  downside:
+    description: 销售周期回归接近正常建筑软件时长，平均部署席位低于计划，繁重支持的硬件上线延缓毛利率改善。
+    y3RevenueK: 3080.0
+    y3EbitdaK: -240.0
+    cashLowPointK: 220.0
+    keyAssumptionChanges:
+    - Q4Y3 期末客户数约 70 家，而非 100 家。
+    - 平均账户部署稳定在约 20 台设备，而非基础情景的 20 多台。
+    - 毛利率因现场支持和替换硬件居高不下，仅达到 60% 高区间。
+  base:
+    description: 争议后切口让销售周期足够短，在第 2 年末达到 25 家付费总承包商，平均部署扩展到每账户 20 多台设备，毛利率在第 3 年超过 70%。
+    y3RevenueK: 4284.0
+    y3EbitdaK: 414.2
+    cashLowPointK: 503.9
+    keyAssumptionChanges:
+    - M12 时 3 家付费账户，Q4Y2 时 25 家，Q4Y3 时 100 家。
+    - 平均部署到 Q4Y2 达到约每家总承包商 25 台，到 Q4Y3 约 26 台。
+    - 毛利率从试点年中 40% 中段爬升至 Q4Y3 约 72%。
+  upside:
+    description: Marketplace 可信度和可参考试点加速新客户增长，每家总承包商设备数更快扩展，标准化安装让毛利率超出计划。
+    y3RevenueK: 5250.0
+    y3EbitdaK: 930.0
+    cashLowPointK: 650.0
+    keyAssumptionChanges:
+    - Q4Y3 期末客户数约 115 家，而非 100 家。
+    - 平均部署随多项目铺开提前，扩展至每家总承包商约 28 台设备。
+    - 毛利率达到 70% 中段，因支持和替换成本下降快于预期。
+sensitivity:
+- variable: ARPU
+  downsideCase: 每家总承包商平均部署席位稳定在约 20 台，已实现账户 ARPU 低于计划约 12%。
+  baseCase: 退出账户 ARPU 随部署达到每家总承包商 20 多台，年化约 $62.4K。
+  upsideCase: 扩展和多项目部署将已实现账户 ARPU 提升至计划以上约 10%。
+  y3RevenueImpactK: -514.0
+  cashImpactK: -360.0
+- variable: CAC
+  downsideCase: 可参考性来得较晚，每家付费总承包商 CAC 上升至 $40K 低区间。
+  baseCase: 使用第 2 年销售与营销支出除以 22 个净新增账户，CAC 维持约 $31.7K。
+  upsideCase: Procore 推荐和争议后锁定将 CAC 压至 $20K 中段。
+  y3RevenueImpactK: -120.0
+  cashImpactK: -250.0
+- variable: churn
+  downsideCase: 若买家试用设备但未在项目间标准化，月度流失率漂移至 3.0%。
+  baseCase: 一旦工作流成为日志和 RFI 创建的日常习惯，月度流失率维持约 1.8%。
+  upsideCase: 经审批记录数据和集成工作流形成粘性后，月度流失率维持约 1.0%。
+  y3RevenueImpactK: -230.0
+  cashImpactK: -170.0
+- variable: sales cycle
+  downsideCase: 采购周期延长至 10–12 周，将试点启动推过季度边界。
+  baseCase: 争议后紧迫感将中位周期维持在商业计划书 4–6 周切口附近。
+  upsideCase: 参考试点和 Marketplace 信任将周期压缩至 3–4 周。
+  y3RevenueImpactK: -620.0
+  cashImpactK: -430.0
+- variable: gross margin
+  downsideCase: 毛利率因支持、推理和硬件替换居高不下，停滞在约 68%。
+  baseCase: 毛利率到 Q4Y3 达到约 72%。
+  upsideCase: 随安装和支持工具标准化，毛利率达到 75% 以上。
+  y3RevenueImpactK: 0.0
+  cashImpactK: -260.0
+- variable: hiring pace
+  downsideCase: 第二位 AE、第二位 CS 和第四名工程师均提前一到两个季度入职，早于验证可见之前。
+  baseCase: 招聘遵循商业计划书团队和融资备注中的产品优先再扩展产能顺序。
+  upsideCase: 最后两个扩展招聘等到 Q2Y3 之后，不影响执行。
+  y3RevenueImpactK: 90.0
+  cashImpactK: -310.0
+modelDiagram:
+  title: unit economics flow
+  mermaid: |-
+    flowchart LR
+      Trigger[Post-dispute trigger] --> Pilot[Paid pilot]
+      Pilot --> Account[Production GC account]
+      Account --> Seats[Active devices per GC]
+      Seats --> Revenue[Subscription + onboarding revenue]
+      Revenue --> GrossProfit[Gross profit]
+      GrossProfit --> Cash[Cash and runway]
+modelSanity:
+- checkName: 营收引擎
+  finding: 基础营收来自第 1 年 3 家付费账户扩展到第 2 年末 25 家、第 3 年末 100 家，同时每家总承包商将约 25–26 台计费现场主管设备标准化。
+- checkName: 必须走对的事
+  finding: Procore 原生工作流和解决方案上线必须保持足够可复制性，才能让毛利率随部署从试点转向批量部署后突破 70%。
+- checkName: 模型失效条件
+  finding: 若销售周期回归正常 6–12 个月的建筑软件时长，或每家总承包商平均部署停滞在约 20 台以下，悲观情景现金将跌至 $20K 低区间。
+- checkName: 下一轮融资故事
+  finding: 下一轮融资的叙事是 25 家付费总承包商、约 625 台活跃设备、Marketplace 可信度，以及从 Q4Y2 $1.5M ARR 验证点到 H2Y3 EBITDA 转正的清晰路径。
+sanityChecks:
+  ruleOf40: 第 3 年增长率 368.5% + EBITDA 利润率 9.7% = 378.2%
+  burnMultiple: 第 2 年消耗倍数约 1.0x（约 $1.3M EBITDA 消耗对应约 $1.34M 净新增 ARR）；H2Y3 转为现金正流。
+  revenuePerFte: 第 3 年 12 名期末 FTE 对应 $357K（基准 SaaS $200–400K）
+  flags:
+  - 商业计划书 24–36 个月里程碑将 $6M ARR 与 1,000+ 台活跃设备结合，但以每台设备每月 $199 计算，该 ARR 水平实际上需要约 2,500 台计费设备，除非账户扩展或附加项定价显著更高。
+  - customersEop 在整个第 1 年包含付费试点和生产订阅，因此早期客户数领先于真实生产客户数。
+  - 现金以 EBITDA 代理，可能低估了计划中首次生产批量硬件和替换库存所需的营运资本。
+  - 基础情景假设争议后触发机制确实能压缩企业采购周期；若不然，种子融资需求可能需要向商业计划书所述范围上限移动。
