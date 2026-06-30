@@ -1,0 +1,658 @@
+slug: wallet-auth-cutover-os
+date: '2026-06-30'
+currency: USD
+modelStartMonth: 2026-07
+assumptions:
+- id: A1
+  name: Model start month
+  value: 2026-07
+  unit: YYYY-MM
+  source: '[business-plan.yaml date] first full operating month after the 2026-06-30 plan date.'
+- id: A2
+  name: Opening cash after pre-seed close
+  value: '2500'
+  unit: USDK
+  source: '[business-plan.yaml fundingAsk.targetFundingRangeUsd; business-plan.yaml fundingAsk.runwayMonths]
+    modeled at the low end of the stated $2.5-3.5M range so the company can fund a full proof window and
+    still hold a procurement buffer.'
+- id: A3
+  name: Revenue unit
+  value: Active paying bank logo/program
+  unit: definition
+  source: '[business-plan.yaml businessModel.unitOfValue; business-plan.yaml milestones] customer count
+    tracks active paying bank logos, while second-journey expansion is reflected in ARPU rather than a
+    second customer count.'
+- id: A4
+  name: Blended annual revenue per active bank-year
+  value: '720'
+  unit: USDK/account-year
+  source: '[business-plan.yaml gtm.pricing; research.yaml bottomUpSizingDrivers] midpoint pricing implies
+    about $700K per bank-year; base case lifts to $720K once at least half of production banks add payment
+    step-up or monitoring by Y3, while still staying below the researched $750K bank-year.'
+- id: A5
+  name: Revenue recognition timing
+  value: Midpoint customer count within each month or quarter
+  unit: policy
+  source: '[startup-finance heuristic] new bank programs are assumed to land halfway through the period
+    on average, so recognized revenue uses midpoint active-customer count.'
+- id: A6
+  name: Y1 month-end customer path
+  value: 0,0,0,1,1,1,1,2,2,2,3,3
+  unit: active paying bank logos
+  source: '[business-plan.yaml milestones 0-12 months; experimentRoadmap Paid cutover packaging test]
+    reaches 3 paid bank programs by Y1 exit after landing logos around months 4, 8, and 11.'
+- id: A7
+  name: Y2 quarter-end customers
+  value: Q1Y2 3; Q2Y2 4; Q3Y2 4; Q4Y2 5
+  unit: active paying bank logos
+  source: '[business-plan.yaml milestones 12-24 months] base case reaches 5 production bank logos by Y2
+    exit, with Q1 held flat while the first paid cutovers convert and partner-sourced demand starts.'
+- id: A8
+  name: Y3 quarter-end customers
+  value: Q1Y3 5; Q2Y3 6; Q3Y3 6; Q4Y3 6
+  unit: active paying bank logos
+  source: '[business-plan.yaml milestones 24-36 months; business-plan.yaml market.som; research.yaml market.som]
+    reaches 6 live bank customers by Y3 exit, consistent with the plan''s modeled SOM.'
+- id: A9
+  name: Gross margin target
+  value: '70'
+  unit: percent
+  source: '[business-plan.yaml businessModel.targetGrossMarginPct] modeled as 30% COGS on recognized revenue.'
+- id: A10
+  name: Monthly churn for unit economics
+  value: '1.5'
+  unit: percent
+  source: '[startup-finance heuristic] sticky bank infrastructure should churn slowly, but a narrow ICP
+    and long deployment cycles justify a conservative enterprise-infrastructure churn assumption rather
+    than near-zero churn.'
+- id: A11
+  name: Founder CEO loaded cash compensation
+  value: '150'
+  unit: USDK/year
+  source: '[business-plan.yaml team Founder CEO] startup-finance heuristic for below-market founder cash
+    plus payroll taxes and benefits.'
+- id: A12
+  name: Founding eng loaded cash compensation
+  value: '210'
+  unit: USDK/year
+  source: '[business-plan.yaml team Founding eng] startup-finance heuristic for early security-infrastructure
+    technical founder cash comp.'
+- id: A13
+  name: Identity security solutions architect loaded cash compensation
+  value: '190'
+  unit: USDK/year
+  source: '[business-plan.yaml team Identity security solutions architect] startup-finance heuristic for
+    a senior bank-identity specialist with customer-facing security credibility.'
+- id: A14
+  name: Integrations engineer loaded cash compensation
+  value: '175'
+  unit: USDK/year
+  source: '[business-plan.yaml team Integrations engineer] startup-finance heuristic for connector-heavy
+    enterprise integration talent.'
+- id: A15
+  name: Second platform engineer loaded cash compensation
+  value: '185'
+  unit: USDK/year
+  source: '[business-plan.yaml team Second platform engineer] startup-finance heuristic for an experienced
+    platform engineer supporting rules libraries, monitoring, and telemetry.'
+- id: A16
+  name: Partnerships lead loaded cash compensation
+  value: '155'
+  unit: USDK/year
+  source: '[business-plan.yaml team Partnerships lead] startup-finance heuristic for an early channel
+    and alliances operator in enterprise security software.'
+- id: A17
+  name: Product engineer loaded cash compensation
+  value: '180'
+  unit: USDK/year
+  source: '[business-plan.yaml product twelveMonth; milestones 12-24 months] startup-finance heuristic
+    for the additional engineer needed to ship payment step-up and monitoring modules after recovery proof.'
+- id: A18
+  name: Deployment success engineer loaded cash compensation
+  value: '160'
+  unit: USDK/year
+  source: '[business-plan.yaml operations; milestones 12-24 months] startup-finance heuristic for a technical
+    delivery hire that keeps implementations inside the 60-day target.'
+- id: A19
+  name: Compliance / program ops loaded cash compensation
+  value: '145'
+  unit: USDK/year
+  source: '[business-plan.yaml risks; investorMemo] startup-finance heuristic for governance, documentation,
+    and bank-program coordination capacity once pilots scale.'
+- id: A20
+  name: Account executive loaded cash compensation
+  value: '185'
+  unit: USDK/year
+  source: '[business-plan.yaml gtm channels; milestones 12-24 months] startup-finance heuristic for one
+    enterprise seller added only after partner-sourced demand starts to repeat.'
+- id: A21
+  name: Hiring cadence
+  value: Founder CEO and founding eng M1; architect M3; integrations M5; second platform M8; partnerships
+    M11; product engineer M13; deployment success M14; compliance/program ops M18; account executive M25
+  unit: timing
+  source: '[business-plan.yaml team; strategicChoices.sequencingRationale; product twelveMonth] GTM hires
+    lag technical proof, with the first true sales hire added only after partner motion and repeatable
+    delivery are in place.'
+- id: A22
+  name: Functional payroll allocation
+  value: Founder CEO 70% S&M / 30% G&A; founding eng 100% R&D; architect 65% R&D / 35% G&A; integrations
+    100% R&D; second platform 100% R&D; partnerships 80% S&M / 20% G&A; product engineer 100% R&D; deployment
+    success 50% R&D / 50% G&A; compliance/program ops 100% G&A; account executive 100% S&M
+  unit: allocation
+  source: '[business-plan.yaml team rationales; operations] allocation follows who sells the wedge, who
+    productizes the common stack, and who carries governance or deployment load.'
+- id: A23
+  name: Non-payroll operating spend
+  value: Y1 S&M 12K + 4% of revenue monthly, R&D 22K + 1.4K per average customer monthly, G&A 15K + 0.8K
+    per average customer monthly; Y2 S&M 14K + 4.5% of revenue, R&D 26K + 1.6K per average customer, G&A
+    17K + 0.9K per average customer; Y3 S&M 16K + 4.5% of revenue, R&D 27K + 1.8K per average customer,
+    G&A 18K + 1.0K per average customer
+  unit: USDK/month
+  source: '[startup-finance heuristic] covers bank travel, cloud test environments, security tooling,
+    legal, audit, and procurement overhead for a narrow but high-friction enterprise motion.'
+- id: A24
+  name: Cash conversion policy
+  value: EBITDA approximates operating cash movement
+  unit: policy
+  source: '[startup-finance heuristic] no debt, capex, taxes, or material working-capital swings are modeled
+    separately at this stage.'
+- id: A25
+  name: Blended CAC per new production bank logo
+  value: '438.3'
+  unit: USDK/new logo
+  source: Calculated from modeled Y2-Y3 sales and marketing spend of 1314.9K divided by 3 net new production
+    bank logos.
+- id: A26
+  name: Next-round milestone
+  value: 5 production bank logos, 2 partner-sourced deployments, repeatable 60-day approval packets on
+    one common stack, and the first payment step-up expansion
+  unit: milestone
+  source: '[business-plan.yaml milestones 12-24 months; business-plan.yaml fundingAsk.useOfFundsSummary]
+    used to size the current round plus a six-month operating buffer.'
+headcount:
+- role: Founder CEO
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Founding eng
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Identity security solutions architect
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Integrations engineer
+  q1y1: 0
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Second platform engineer
+  q1y1: 0
+  q2y1: 0
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Partnerships lead
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Product engineer
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: Deployment success engineer
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: Compliance / program ops
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: Account executive
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 0
+  q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 5
+  q4y1: 6
+  q4y2: 9
+  q4y3: 10
+headcountAnnualizedPayrollK:
+  q1y1: 550.0
+  q2y1: 725.0
+  q3y1: 910.0
+  q4y1: 1065.0
+  q4y2: 1550.0
+  q4y3: 1735.0
+y1Monthly:
+- month: M1
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 20.75
+  researchDevelopmentK: 39.5
+  generalAdministrativeK: 18.75
+  opexK: 79.0
+  ebitdaK: -79.0
+  cashEopK: 2421.0
+- month: M2
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 20.75
+  researchDevelopmentK: 39.5
+  generalAdministrativeK: 18.75
+  opexK: 79.0
+  ebitdaK: -79.0
+  cashEopK: 2342.0
+- month: M3
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 20.75
+  researchDevelopmentK: 49.79
+  generalAdministrativeK: 24.29
+  opexK: 94.83
+  ebitdaK: -94.83
+  cashEopK: 2247.17
+- month: M4
+  customersEop: 1
+  newCustomers: 1
+  revenueK: 30.0
+  cogsK: 9.0
+  grossProfitK: 21.0
+  salesMarketingK: 21.95
+  researchDevelopmentK: 50.49
+  generalAdministrativeK: 24.69
+  opexK: 97.13
+  ebitdaK: -76.13
+  cashEopK: 2171.03
+- month: M5
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 60.0
+  cogsK: 18.0
+  grossProfitK: 42.0
+  salesMarketingK: 23.15
+  researchDevelopmentK: 65.78
+  generalAdministrativeK: 25.09
+  opexK: 114.02
+  ebitdaK: -72.02
+  cashEopK: 2099.02
+- month: M6
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 60.0
+  cogsK: 18.0
+  grossProfitK: 42.0
+  salesMarketingK: 23.15
+  researchDevelopmentK: 65.78
+  generalAdministrativeK: 25.09
+  opexK: 114.02
+  ebitdaK: -72.02
+  cashEopK: 2027.0
+- month: M7
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 60.0
+  cogsK: 18.0
+  grossProfitK: 42.0
+  salesMarketingK: 23.15
+  researchDevelopmentK: 65.78
+  generalAdministrativeK: 25.09
+  opexK: 114.02
+  ebitdaK: -72.02
+  cashEopK: 1954.98
+- month: M8
+  customersEop: 2
+  newCustomers: 1
+  revenueK: 90.0
+  cogsK: 27.0
+  grossProfitK: 63.0
+  salesMarketingK: 24.35
+  researchDevelopmentK: 81.89
+  generalAdministrativeK: 25.49
+  opexK: 131.73
+  ebitdaK: -68.73
+  cashEopK: 1886.25
+- month: M9
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 120.0
+  cogsK: 36.0
+  grossProfitK: 84.0
+  salesMarketingK: 25.55
+  researchDevelopmentK: 82.59
+  generalAdministrativeK: 25.89
+  opexK: 134.03
+  ebitdaK: -50.03
+  cashEopK: 1836.22
+- month: M10
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 120.0
+  cogsK: 36.0
+  grossProfitK: 84.0
+  salesMarketingK: 25.55
+  researchDevelopmentK: 82.59
+  generalAdministrativeK: 25.89
+  opexK: 134.03
+  ebitdaK: -50.03
+  cashEopK: 1786.18
+- month: M11
+  customersEop: 3
+  newCustomers: 1
+  revenueK: 150.0
+  cogsK: 45.0
+  grossProfitK: 105.0
+  salesMarketingK: 37.08
+  researchDevelopmentK: 83.29
+  generalAdministrativeK: 28.88
+  opexK: 149.25
+  ebitdaK: -44.25
+  cashEopK: 1741.93
+- month: M12
+  customersEop: 3
+  newCustomers: 0
+  revenueK: 180.0
+  cogsK: 54.0
+  grossProfitK: 126.0
+  salesMarketingK: 38.28
+  researchDevelopmentK: 83.99
+  generalAdministrativeK: 29.28
+  opexK: 151.55
+  ebitdaK: -25.55
+  cashEopK: 1716.38
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 3
+  revenueK: 540.0
+  cogsK: 162.0
+  grossProfitK: 378.0
+  salesMarketingK: 123.54
+  researchDevelopmentK: 324.11
+  generalAdministrativeK: 108.06
+  opexK: 555.71
+  ebitdaK: -177.71
+  cashEopK: 1538.67
+- quarter: Q2Y2
+  customersEop: 4
+  revenueK: 690.0
+  cogsK: 207.0
+  grossProfitK: 483.0
+  salesMarketingK: 130.29
+  researchDevelopmentK: 334.78
+  generalAdministrativeK: 129.06
+  opexK: 594.13
+  ebitdaK: -111.13
+  cashEopK: 1427.53
+- quarter: Q3Y2
+  customersEop: 4
+  revenueK: 720.0
+  cogsK: 216.0
+  grossProfitK: 504.0
+  salesMarketingK: 131.64
+  researchDevelopmentK: 335.58
+  generalAdministrativeK: 153.69
+  opexK: 620.91
+  ebitdaK: -116.91
+  cashEopK: 1310.63
+- quarter: Q4Y2
+  customersEop: 5
+  revenueK: 870.0
+  cogsK: 261.0
+  grossProfitK: 609.0
+  salesMarketingK: 138.39
+  researchDevelopmentK: 339.58
+  generalAdministrativeK: 155.94
+  opexK: 633.91
+  ebitdaK: -24.91
+  cashEopK: 1285.73
+- quarter: Q1Y3
+  customersEop: 5
+  revenueK: 900.0
+  cogsK: 270.0
+  grossProfitK: 630.0
+  salesMarketingK: 192.0
+  researchDevelopmentK: 346.38
+  generalAdministrativeK: 160.89
+  opexK: 699.24
+  ebitdaK: -69.24
+  cashEopK: 1216.48
+- quarter: Q2Y3
+  customersEop: 6
+  revenueK: 1050.0
+  cogsK: 315.0
+  grossProfitK: 735.0
+  salesMarketingK: 198.75
+  researchDevelopmentK: 350.88
+  generalAdministrativeK: 163.39
+  opexK: 712.99
+  ebitdaK: 22.01
+  cashEopK: 1238.48
+- quarter: Q3Y3
+  customersEop: 6
+  revenueK: 1080.0
+  cogsK: 324.0
+  grossProfitK: 756.0
+  salesMarketingK: 200.1
+  researchDevelopmentK: 351.78
+  generalAdministrativeK: 163.89
+  opexK: 715.74
+  ebitdaK: 40.26
+  cashEopK: 1278.73
+- quarter: Q4Y3
+  customersEop: 6
+  revenueK: 1080.0
+  cogsK: 324.0
+  grossProfitK: 756.0
+  salesMarketingK: 200.1
+  researchDevelopmentK: 351.78
+  generalAdministrativeK: 163.89
+  opexK: 715.74
+  ebitdaK: 40.26
+  cashEopK: 1318.98
+totals:
+  y1:
+    revenueK: 870.0
+    ebitdaK: -783.61
+    cashEopK: 1716.38
+  y2:
+    revenueK: 2820.0
+    ebitdaK: -430.66
+    cashEopK: 1285.73
+  y3:
+    revenueK: 4110.0
+    ebitdaK: 33.29
+    cashEopK: 1318.98
+unitEconomics:
+  arpuAnnualK: 720.0
+  grossMarginPct: 70.0
+  cacK: 438.27
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 66.67
+  ltvK: 2800.0
+  ltvCacRatio: 6.39
+  cacPaybackMonths: 10.44
+fundingAsk:
+  round: pre-seed
+  amountM: 2.5
+  runwayMonths: 24
+  milestone: Reach 5 production bank logos, 2 partner-sourced deployments, repeatable <=60-day approval
+    packets on one common stack, and the first payment step-up expansion before the seed round.
+  useOfFunds:
+  - bucket: Engineering
+    amountUsd: 1050000
+    percentage: 42
+  - bucket: GTM
+    amountUsd: 600000
+    percentage: 24
+  - bucket: G&A
+    amountUsd: 350000
+    percentage: 14
+  - bucket: Buffer (6 mo)
+    amountUsd: 500000
+    percentage: 20
+scenarios:
+  downside:
+    description: Wallet-auth programs convert more slowly and banks stay longer in recovery-only scope,
+      leaving the company at 5 live banks by Y3 exit with lower ARPU and weaker delivery leverage.
+    y3RevenueK: 3201.65
+    y3EbitdaK: -592.17
+    cashLowPointK: -65.72
+    keyAssumptionChanges:
+    - Y1 exits with 2 paid banks, Y2 with 4 production logos, and Y3 with 5 live banks instead of 6.
+    - Blended annual revenue per bank-year falls from $720K to $680K because fewer banks expand beyond
+      account recovery.
+    - Gross margin slips from 70% to 68% because connector and evidence-packet work stays more manual.
+  base:
+    description: The base case converts the first paid cutovers into a 5-logo production footprint by
+      Y2 exit, then adds a sixth live bank and first meaningful second-journey expansion in Y3.
+    y3RevenueK: 4110.0
+    y3EbitdaK: 33.29
+    cashLowPointK: 1211.65
+    keyAssumptionChanges:
+    - Customer counts follow A6-A8, reaching 3 paid banks by Y1 exit, 5 production logos by Y2 exit, and
+      6 live banks by Y3 exit.
+    - Blended annual revenue per active bank-year stays at A4's $720K while gross margin stays at A9's
+      70% target.
+    - Hiring follows A21, keeping the team at 10 FTE by Y3 exit and delaying the first true sales hire
+      until after the partner motion is established.
+  upside:
+    description: Reference customers and partner referrals pull one extra bank forward, lift blended scope
+      per bank, and let the company reuse more of the common stack.
+    y3RevenueK: 5098.31
+    y3EbitdaK: 697.98
+    cashLowPointK: 1729.38
+    keyAssumptionChanges:
+    - Y2 exits with 6 production logos and Y3 exits with 7 live banks as partner referrals pull deals
+      forward.
+    - Blended annual revenue per bank-year rises from $720K to $760K as payment step-up and monitoring
+      attach faster.
+    - Gross margin improves from 70% to 71% because common-stack connectors and rules libraries are reused
+      more often.
+sensitivity:
+- variable: ARPU
+  downsideCase: Blended annual bank-year revenue settles at $680K because buyers hold the company at recovery-only
+    scope for longer.
+  baseCase: Blended annual bank-year revenue stays at $720K as half of production banks add a second journey
+    or monitoring by Y3.
+  upsideCase: Blended annual bank-year revenue reaches about $760K as step-up and monitoring attach earlier.
+  y3RevenueImpactK: -228.34
+  cashImpactK: -284.07
+- variable: CAC
+  downsideCase: Effective CAC rises as S&M intensity climbs about 1.5 points of revenue from heavier bank
+    travel, workshops, and risk-review handholding.
+  baseCase: Modeled CAC stays near $438K per new production logo in a founder-led plus partner-assisted
+    motion.
+  upsideCase: S&M intensity falls about 1 point of revenue as partner introductions warm up the pipeline.
+  y3RevenueImpactK: 0.0
+  cashImpactK: -117.0
+- variable: churn
+  downsideCase: Retention behaves like the company exits Y3 with 5 live banks instead of 6 because one
+    early logo stalls before broader expansion.
+  baseCase: The base path assumes 1.5% monthly churn while still reaching 6 live banks by Y3 exit.
+  upsideCase: Retention and expansion behave like the company exits Y3 with 7 live banks because the first
+    logos embed the workflow into launch governance.
+  y3RevenueImpactK: -510.0
+  cashImpactK: -310.25
+- variable: sales cycle
+  downsideCase: A quarter of extra security review and procurement slippage pushes each major logo inflection
+    back by roughly one quarter.
+  baseCase: Paid cutovers still convert on the plan's timeline once the first common stack is proven and
+    the approval packet lands inside 60 days.
+  upsideCase: Reference accounts and partner intros pull one bank forward by roughly a quarter in both
+    Y2 and Y3.
+  y3RevenueImpactK: -60.0
+  cashImpactK: -222.3
+- variable: gross margin
+  downsideCase: Gross margin stays at 68% because approval packets, integrations, and governance work
+    remain too manual.
+  baseCase: Gross margin stays at the 70% business-plan target.
+  upsideCase: Gross margin reaches 72% as more of the connector and rules-library work is reused across
+    banks.
+  y3RevenueImpactK: 0.0
+  cashImpactK: -156.0
+- variable: hiring pace
+  downsideCase: Product, deployment, compliance, and AE hiring all pull forward by about 6 months because
+    delivery stays too bespoke.
+  baseCase: Hiring follows A21 and waits for evidence that the common stack and partner motion are repeatable.
+  upsideCase: Compliance and AE hiring can both slip about one quarter without hurting delivery because
+    the first stack stays templated.
+  y3RevenueImpactK: 0.0
+  cashImpactK: -335.0
+modelDiagram:
+  title: unit economics flow
+  mermaid: |
+    flowchart LR
+      TargetBanks --> PaidCutovers
+      PaidCutovers --> ProductionBanks
+      ProductionBanks --> ExpansionJourneys
+      ProductionBanks --> Revenue
+      ExpansionJourneys --> Revenue
+      Revenue --> GrossProfit
+      GrossProfit --> Cash
+modelSanity:
+- checkName: Revenue engine
+  finding: Base-case revenue comes from moving from 3 paid banks at Y1 exit to 5 production logos at Y2
+    exit and 6 live banks at Y3 exit at about $720K of blended annual spend per bank-year.
+- checkName: Must go right
+  finding: The company has to keep the first common-stack deployments near the 60-day target so it can
+    reach 5 production logos before adding much more delivery headcount.
+- checkName: Model breaks if
+  finding: If the business slips toward the downside case of 5 Y3 banks, $680K ARPU, and 68% gross margin,
+    cash turns slightly negative before the next round.
+- checkName: Next-round proof
+  finding: The seed narrative is credible once 5 production logos, 2 partner-sourced deployments, and
+    the first payment step-up expansion are live with a visible cash buffer still on the balance sheet.
+sanityChecks:
+  ruleOf40: Y3 growth 45.74% + EBITDA margin 0.81% = 46.55%.
+  burnMultiple: About 0.3x in Y2 on roughly $1440.0K of net new ARR; Y3 burn multiple turns slightly negative
+    as EBITDA turns positive while adding about $720.0K of net new ARR.
+  revenuePerFte: $411.0K Y3 revenue per end-of-year FTE (roughly on the high end of a $200-400K early
+    enterprise SaaS benchmark).
+  flags:
+  - The base case still concentrates more than $4.1M of Y3 revenue into only 6 bank customers, so one
+    delayed expansion or non-renewal matters a lot.
+  - CAC is high at about $438K per new production logo because founder-led bank sales, partner enablement,
+    and procurement overhead remain heavy.
+  - Gross margin only holds at 70% if connector reuse and approval-packet templating prevent the company
+    from drifting into bespoke services work.
+  - The funding ask is only at the low end of the business-plan range, and the downside case still turns
+    cash slightly negative before the next round.

@@ -1,0 +1,563 @@
+slug: coolant-reliability-control-plane
+date: '2026-06-30'
+currency: USD
+modelStartMonth: 2026-07
+assumptions:
+- id: A1
+  name: Model start month
+  value: 2026-07
+  unit: month
+  source: '[business-plan.date 2026-06-30; model starts the following month]'
+- id: A2
+  name: Blended annual revenue per contracted hall
+  value: '250'
+  unit: USDK ARR per hall
+  source: '[business-plan.gtm.pricing $180k-$300k annual subscription plus onboarding] [research.market.som uses about $250k ARR per hall]'
+- id: A3
+  name: Pilot treatment in revenue model
+  value: Paid pilots count as contracted halls from go-live because pilot fees are credited toward annual production contracts
+  unit: policy
+  source: '[business-plan.gtm.pricing] [business-plan.investorMemo.firstCustomer.initialContract]'
+- id: A4
+  name: Year 1 contracted-hall ramp
+  value: M5 1 hall; M8 2 halls; M11 3 halls
+  unit: customersEop
+  source: '[business-plan.product.sixMonth 2-3 paid pilots] [business-plan.milestones 0-12 months 2-3 paid one-hall pilots and 2 conversions]'
+- id: A5
+  name: Year 2 contracted-hall ramp
+  value: Q1Y2 4 halls; Q2Y2 5 halls; Q3Y2 7 halls; Q4Y2 8 halls
+  unit: customersEop
+  source: '[business-plan.milestones 12-24 months roughly 8 contracted halls across 5-6 operators]'
+- id: A6
+  name: Year 3 contracted-hall ramp
+  value: Q1Y3 9 halls; Q2Y3 11 halls; Q3Y3 12 halls; Q4Y3 12 halls
+  unit: customersEop
+  source: '[business-plan.milestones 24-36 months approximately 12 contracted halls] [research.market.som 12 halls at about $250k ARR]'
+- id: A7
+  name: Gross margin ramp
+  value: 65% Y1 / 70% Y2 / 72% Y3
+  unit: percent
+  source: '[business-plan.businessModel.targetGrossMarginPct 70] plus startup-finance heuristic that software-first integrations lift margin after playbooks are reusable'
+- id: A8
+  name: Average enterprise sales cycle
+  value: 8-9 months from qualified discovery to annual contract
+  unit: months
+  source: '[business-plan.investorMemo.mustBeTrue 6-9 month cycle after pilot evidence] plus conservative startup-finance heuristic for first mixed-vendor infrastructure deals'
+- id: A9
+  name: Monthly logo churn for unit economics
+  value: '1.0'
+  unit: percent
+  source: Startup-finance heuristic for sticky but still-early enterprise infrastructure software; production hall ramp is modeled net of churn
+- id: A10
+  name: Founder / CEO loaded cash compensation
+  value: '160'
+  unit: USDK annual per FTE
+  source: '[business-plan.team Founder/CEO] plus startup-finance heuristic for below-market founder cash comp including payroll taxes and benefits'
+- id: A11
+  name: Engineering loaded cash compensation
+  value: '200'
+  unit: USDK annual per FTE
+  source: '[business-plan.team Founding eng and Product/eng lead] plus startup-finance heuristic for senior infrastructure engineers'
+- id: A12
+  name: Reliability / implementation loaded cash compensation
+  value: '175'
+  unit: USDK annual per FTE
+  source: '[business-plan.team Reliability solutions engineer] plus startup-finance heuristic for field-facing technical reliability talent'
+- id: A13
+  name: GTM / partnerships loaded cash compensation
+  value: '185'
+  unit: USDK annual per FTE
+  source: '[business-plan.team Partnerships lead] plus startup-finance heuristic for early enterprise partnerships / AE talent'
+- id: A14
+  name: Ops / finance loaded cash compensation
+  value: '120'
+  unit: USDK annual per FTE
+  source: Startup-finance heuristic for one early operations hire covering finance, insurance, and procurement support
+- id: A15
+  name: Hiring timing
+  value: Founder M1; Eng M1/M7/M13/M28; Reliability M3/M16/M31; GTM M10/M22; Ops M16
+  unit: hire months
+  source: '[business-plan.team] [business-plan.strategicChoices.sequencingRationale] [business-plan.milestones]'
+- id: A16
+  name: Sales and marketing non-payroll spend
+  value: 8K/mo M1-M6; 12K/mo M7-M12; 16K/mo M13-M18; 20K/mo M19-M24; 24K/mo M25-M30; 28K/mo M31-M36
+  unit: USDK per month
+  source: '[business-plan.gtm channels and founder-led motion] plus startup-finance heuristic for travel, events, and partner-development spend in enterprise infrastructure sales'
+- id: A17
+  name: R&D tooling and cloud spend
+  value: 10K/mo M1-M6; 12K/mo M7-M12; 14K/mo M13-M18; 16K/mo M19-M24; 18K/mo M25-M30; 20K/mo M31-M36
+  unit: USDK per month
+  source: '[business-plan.product MVP and integrations] [business-plan.operations reference integration stack] [research.regulatoryTechnicalConstraints]'
+- id: A18
+  name: G&A non-payroll spend
+  value: 6K/mo M1-M6; 8K/mo M7-M12; 10K/mo M13-M18; 12K/mo M19-M24; 13K/mo M25-M30; 15K/mo M31-M36
+  unit: USDK per month
+  source: '[business-plan.operations] plus startup-finance heuristic for insurance, legal, accounting, security review, and admin software'
+- id: A19
+  name: Revenue recognition convention
+  value: Active contracted halls × $20.8K monthly revenue per hall
+  unit: formula
+  source: '[A2] and standard SaaS ratable-recognition heuristic'
+- id: A20
+  name: Starting cash in operating model
+  value: '0'
+  unit: USDK
+  source: 'Modeling convention: funding need is shown in fundingAsk rather than assumed as opening cash in the cash roll-forward'
+- id: A21
+  name: Cash conversion convention
+  value: Cash movement approximated by EBITDA with no debt, capex, or working-capital benefit assumed
+  unit: formula
+  source: Conservative startup-finance heuristic for an asset-light software company
+- id: A22
+  name: Steady-state CAC
+  value: '150'
+  unit: USDK per contracted hall
+  source: '[business-plan.gtm.funnelTargets] plus modeled founder-led enterprise sales and partner-development spend at the late-Y2 / early-Y3 stage'
+- id: A23
+  name: Seed round milestone
+  value: 'By month 18: 5 contracted halls, 2 annual conversions, standard integrations, and one live partner channel before broader fleet expansion'
+  unit: milestone
+  source: '[business-plan.fundingAsk.useOfFundsSummary] [business-plan.product.twelveMonth] [business-plan.milestones 12-24 months]'
+- id: A24
+  name: Seed round sizing
+  value: 3.0M seed with 24 months of intended runway
+  unit: USDM
+  source: '[business-plan.fundingAsk targetFundingRangeUsd $3-5M and runwayMonths 18] plus 6-month buffer and reserve for brownfield integration / procurement slippage from [business-plan.risks] and [research.openQuestions]'
+headcount:
+- role: Founder/CEO
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: Engineering
+  q1y1: 1
+  q2y1: 1
+  q3y1: 2
+  q4y1: 2
+  q4y2: 3
+  q4y3: 4
+- role: Reliability / Implementation
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 2
+  q4y3: 3
+- role: GTM / Partnerships
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 1
+  q4y2: 2
+  q4y3: 2
+- role: G&A / Ops
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 3
+  q3y1: 4
+  q4y1: 5
+  q4y2: 9
+  q4y3: 11
+headcountAnnualizedPayrollK:
+  q1y1: 535.0
+  q2y1: 535.0
+  q3y1: 735.0
+  q4y1: 920.0
+  q4y2: 1600.0
+  q4y3: 1975.0
+y1Monthly:
+- month: M1
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 30.0
+  salesMarketingK: 8.0
+  researchDevelopmentK: 10.0
+  generalAdministrativeK: 6.0
+  opexK: 24.0
+  ebitdaK: -54.0
+  cashEopK: -54.0
+- month: M2
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 30.0
+  salesMarketingK: 8.0
+  researchDevelopmentK: 10.0
+  generalAdministrativeK: 6.0
+  opexK: 24.0
+  ebitdaK: -54.0
+  cashEopK: -108.0
+- month: M3
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 44.6
+  salesMarketingK: 8.0
+  researchDevelopmentK: 10.0
+  generalAdministrativeK: 6.0
+  opexK: 24.0
+  ebitdaK: -68.6
+  cashEopK: -176.6
+- month: M4
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 44.6
+  salesMarketingK: 8.0
+  researchDevelopmentK: 10.0
+  generalAdministrativeK: 6.0
+  opexK: 24.0
+  ebitdaK: -68.6
+  cashEopK: -245.2
+- month: M5
+  customersEop: 1
+  newCustomers: 1
+  revenueK: 20.8
+  cogsK: 7.3
+  grossProfitK: 13.5
+  salaryK: 44.6
+  salesMarketingK: 8.0
+  researchDevelopmentK: 10.0
+  generalAdministrativeK: 6.0
+  opexK: 24.0
+  ebitdaK: -55.0
+  cashEopK: -300.2
+- month: M6
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 20.8
+  cogsK: 7.3
+  grossProfitK: 13.5
+  salaryK: 44.6
+  salesMarketingK: 8.0
+  researchDevelopmentK: 10.0
+  generalAdministrativeK: 6.0
+  opexK: 24.0
+  ebitdaK: -55.0
+  cashEopK: -355.2
+- month: M7
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 20.8
+  cogsK: 7.3
+  grossProfitK: 13.5
+  salaryK: 61.3
+  salesMarketingK: 12.0
+  researchDevelopmentK: 12.0
+  generalAdministrativeK: 8.0
+  opexK: 32.0
+  ebitdaK: -79.7
+  cashEopK: -434.9
+- month: M8
+  customersEop: 2
+  newCustomers: 1
+  revenueK: 41.7
+  cogsK: 14.6
+  grossProfitK: 27.1
+  salaryK: 61.3
+  salesMarketingK: 12.0
+  researchDevelopmentK: 12.0
+  generalAdministrativeK: 8.0
+  opexK: 32.0
+  ebitdaK: -66.2
+  cashEopK: -501.1
+- month: M9
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 41.7
+  cogsK: 14.6
+  grossProfitK: 27.1
+  salaryK: 61.3
+  salesMarketingK: 12.0
+  researchDevelopmentK: 12.0
+  generalAdministrativeK: 8.0
+  opexK: 32.0
+  ebitdaK: -66.2
+  cashEopK: -567.3
+- month: M10
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 41.7
+  cogsK: 14.6
+  grossProfitK: 27.1
+  salaryK: 76.7
+  salesMarketingK: 12.0
+  researchDevelopmentK: 12.0
+  generalAdministrativeK: 8.0
+  opexK: 32.0
+  ebitdaK: -81.6
+  cashEopK: -648.9
+- month: M11
+  customersEop: 3
+  newCustomers: 1
+  revenueK: 62.5
+  cogsK: 21.9
+  grossProfitK: 40.6
+  salaryK: 76.7
+  salesMarketingK: 12.0
+  researchDevelopmentK: 12.0
+  generalAdministrativeK: 8.0
+  opexK: 32.0
+  ebitdaK: -68.0
+  cashEopK: -716.9
+- month: M12
+  customersEop: 3
+  newCustomers: 0
+  revenueK: 62.5
+  cogsK: 21.9
+  grossProfitK: 40.6
+  salaryK: 76.7
+  salesMarketingK: 12.0
+  researchDevelopmentK: 12.0
+  generalAdministrativeK: 8.0
+  opexK: 32.0
+  ebitdaK: -68.0
+  cashEopK: -784.9
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 4
+  revenueK: 249.9
+  cogsK: 75.0
+  grossProfitK: 174.9
+  salaryK: 279.9
+  salesMarketingK: 48.0
+  researchDevelopmentK: 42.0
+  generalAdministrativeK: 30.0
+  opexK: 120.0
+  ebitdaK: -225.0
+  cashEopK: -1009.9
+- quarter: Q2Y2
+  customersEop: 5
+  revenueK: 312.6
+  cogsK: 93.9
+  grossProfitK: 218.7
+  salaryK: 353.7
+  salesMarketingK: 48.0
+  researchDevelopmentK: 42.0
+  generalAdministrativeK: 30.0
+  opexK: 120.0
+  ebitdaK: -255.0
+  cashEopK: -1264.9
+- quarter: Q3Y2
+  customersEop: 7
+  revenueK: 416.6
+  cogsK: 125.1
+  grossProfitK: 291.7
+  salaryK: 353.7
+  salesMarketingK: 60.0
+  researchDevelopmentK: 48.0
+  generalAdministrativeK: 36.0
+  opexK: 144.0
+  ebitdaK: -206.0
+  cashEopK: -1470.9
+- quarter: Q4Y2
+  customersEop: 8
+  revenueK: 500.1
+  cogsK: 150.0
+  grossProfitK: 350.1
+  salaryK: 399.9
+  salesMarketingK: 60.0
+  researchDevelopmentK: 48.0
+  generalAdministrativeK: 36.0
+  opexK: 144.0
+  ebitdaK: -194.1
+  cashEopK: -1665.0
+- quarter: Q1Y3
+  customersEop: 9
+  revenueK: 562.5
+  cogsK: 157.5
+  grossProfitK: 405.0
+  salaryK: 399.9
+  salesMarketingK: 72.0
+  researchDevelopmentK: 54.0
+  generalAdministrativeK: 39.0
+  opexK: 165.0
+  ebitdaK: -159.9
+  cashEopK: -1824.9
+- quarter: Q2Y3
+  customersEop: 11
+  revenueK: 666.7
+  cogsK: 186.7
+  grossProfitK: 480.0
+  salaryK: 450.0
+  salesMarketingK: 72.0
+  researchDevelopmentK: 54.0
+  generalAdministrativeK: 39.0
+  opexK: 165.0
+  ebitdaK: -135.0
+  cashEopK: -1959.9
+- quarter: Q3Y3
+  customersEop: 12
+  revenueK: 750.0
+  cogsK: 210.0
+  grossProfitK: 540.0
+  salaryK: 493.8
+  salesMarketingK: 84.0
+  researchDevelopmentK: 60.0
+  generalAdministrativeK: 45.0
+  opexK: 189.0
+  ebitdaK: -142.8
+  cashEopK: -2102.7
+- quarter: Q4Y3
+  customersEop: 12
+  revenueK: 750.0
+  cogsK: 210.0
+  grossProfitK: 540.0
+  salaryK: 493.8
+  salesMarketingK: 84.0
+  researchDevelopmentK: 60.0
+  generalAdministrativeK: 45.0
+  opexK: 189.0
+  ebitdaK: -142.8
+  cashEopK: -2245.5
+totals:
+  y1:
+    revenueK: 312.5
+    ebitdaK: -784.9
+    cashEopK: -784.9
+  y2:
+    revenueK: 1479.2
+    ebitdaK: -880.1
+    cashEopK: -1665.0
+  y3:
+    revenueK: 2729.2
+    ebitdaK: -580.5
+    cashEopK: -2245.5
+unitEconomics:
+  arpuAnnualK: 250.0
+  grossMarginPct: 72.0
+  cacK: 150.0
+  monthlyChurnPct: 1.0
+  avgCustomerLifeMonths: 100.0
+  ltvK: 1500.0
+  ltvCacRatio: 10.0
+  cacPaybackMonths: 10.0
+fundingAsk:
+  round: seed
+  amountM: 3.0
+  runwayMonths: 24
+  milestone: Reach 5 contracted halls, 2 annual pilot conversions, repeatable integrations, and one live partner channel before broader fleet expansion.
+  useOfFunds:
+  - bucket: Engineering
+    amountUsd: 1350000
+    percentage: 45.0
+  - bucket: GTM
+    amountUsd: 750000
+    percentage: 25.0
+  - bucket: G&A
+    amountUsd: 360000
+    percentage: 12.0
+  - bucket: Buffer (6 mo)
+    amountUsd: 540000
+    percentage: 18.0
+scenarios:
+  downside:
+    description: Pilot conversions slip, mixed-vendor integrations stay more bespoke, and second-hall expansion starts later than planned.
+    y3RevenueK: 2080.0
+    y3EbitdaK: -1040.0
+    cashLowPointK: -2980.0
+    keyAssumptionChanges:
+    - End-Y2 contracted halls fall from 8 to 6.
+    - End-Y3 contracted halls fall from 12 to 10.
+    - Blended annual revenue per hall lands near $230K instead of $250K.
+    - Steady-state gross margin only reaches 68% because field work stays service-heavy.
+  base:
+    description: Three paid pilot halls in Y1 become 8 contracted halls by Q4Y2 and 12 halls by Y3 as software-first deployments and second-hall expansions prove repeatable.
+    y3RevenueK: 2729.2
+    y3EbitdaK: -580.5
+    cashLowPointK: -2245.5
+    keyAssumptionChanges:
+    - No change from A1-A24 base assumptions.
+  upside:
+    description: Paid pilots convert faster, one partner channel starts contributing in Y2, and benchmarking modules lift both expansion pace and blended revenue per hall.
+    y3RevenueK: 3100.0
+    y3EbitdaK: -150.0
+    cashLowPointK: -1900.0
+    keyAssumptionChanges:
+    - End-Y2 contracted halls rise from 8 to 9.
+    - End-Y3 contracted halls rise from 12 to 13.
+    - Blended annual revenue per hall reaches about $265K as benchmarking modules attach earlier.
+    - Steady-state gross margin reaches 74% as integration playbooks standardize sooner.
+sensitivity:
+- variable: ARPU
+  downsideCase: $225K blended annual revenue per contracted hall
+  baseCase: $250K blended annual revenue per contracted hall
+  upsideCase: $275K blended annual revenue per contracted hall
+  y3RevenueImpactK: -272.9
+  cashImpactK: -320.0
+- variable: CAC
+  downsideCase: $190K CAC because each win still needs heavy founder and field-implementation effort
+  baseCase: $150K CAC
+  upsideCase: $120K CAC through tighter referrals and partner-sourced intros
+  y3RevenueImpactK: 0.0
+  cashImpactK: -260.0
+- variable: churn
+  downsideCase: 2.0% monthly churn if the product behaves like one-off commissioning tooling
+  baseCase: 1.0% monthly churn
+  upsideCase: 0.5% monthly churn with strong benchmark lock-in and second-hall expansion
+  y3RevenueImpactK: -210.0
+  cashImpactK: -230.0
+- variable: sales cycle
+  downsideCase: 12-month average cycle from discovery to annual contract
+  baseCase: 8-9 month average cycle
+  upsideCase: 6-month average cycle once reference customers exist
+  y3RevenueImpactK: -375.0
+  cashImpactK: -420.0
+- variable: gross margin
+  downsideCase: 68% steady-state gross margin because deployment work stays bespoke
+  baseCase: 72% steady-state gross margin
+  upsideCase: 74% steady-state gross margin
+  y3RevenueImpactK: 0.0
+  cashImpactK: -190.0
+- variable: hiring pace
+  downsideCase: Pull forward Eng4 and Reliability3 before second-hall expansion is repeatable
+  baseCase: Current milestone-linked hiring ramp
+  upsideCase: Delay one non-core field hire until partner-led pipeline is proven
+  y3RevenueImpactK: -60.0
+  cashImpactK: -220.0
+modelDiagram:
+  title: unit economics flow
+  mermaid: |
+    flowchart LR
+      CommissioningTrigger --> PaidPilot
+      PaidPilot --> ContractedHall
+      ContractedHall --> Revenue
+      Revenue --> GrossProfit
+      GrossProfit --> Cash
+      ContractedHall --> BenchmarkingExpansion
+      BenchmarkingExpansion --> Revenue
+modelSanity:
+- checkName: Revenue engine
+  finding: Base-case revenue comes from growing contracted halls from 3 at Y1 exit to 8 by Q4Y2 and 12 by Y3 at roughly $250K annual revenue per hall.
+- checkName: Must go right
+  finding: The plan needs paid pilots to convert on schedule and to trigger second-hall expansion because the Y2 ramp does most of the work in the funding model.
+- checkName: Model breaks if
+  finding: A 12-month sales cycle or hardware-heavy deployments would push the downside case toward a deeper cash trough and a larger follow-on need.
+- checkName: Next-round proof
+  finding: The seed round is meant to reach 5 contracted halls, 2 annual conversions, repeatable integrations, and one live partner channel within roughly 18 months.
+sanityChecks:
+  ruleOf40: Y3 growth 84.5% + EBITDA margin -21.3% = 63.2%
+  burnMultiple: Y3 burn multiple is about 0.6x based on roughly $580K EBITDA burn against about $1.0M of exit-ARR expansion from 8 to 12 halls.
+  revenuePerFte: $248K Y3 recognized revenue per 11 q4 FTE (benchmark roughly $200K-$400K for infrastructure SaaS).
+  flags:
+  - The model only works if software-first deployment holds; mandatory hardware or lab-heavy service work would pressure both gross margin and funding need.
+  - Revenue concentration stays high because 12 halls likely still means only 8-10 operators, so one delayed expansion can move the year materially.
+  - LTV/CAC looks strong, but churn is still a heuristic because the category is new and there is no public retention dataset for coolant-reliability software.
+  - The funding ask is intentionally at the low end of the business-plan range and assumes pilots remain paid rather than turning into unpaid design work.
