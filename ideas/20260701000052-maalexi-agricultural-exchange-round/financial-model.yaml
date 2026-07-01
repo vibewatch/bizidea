@@ -1,0 +1,642 @@
+slug: agri-export-collateral-risk-oracle
+date: '2026-07-01'
+currency: USD
+modelStartMonth: 2026-07
+assumptions:
+  - id: A1
+    name: Model start month
+    value: 2026-07
+    unit: month
+    source: '[BP date 2026-07-01]; heuristic: the plan is dated on the first day of the month, so the financial model starts immediately rather than waiting for the next accounting period.'
+  - id: A2
+    name: Opening cash from pre-seed raise
+    value: '2500'
+    unit: USD K
+    source: '[BP fundingAsk.targetFundingRangeUsd $2-4M]; model uses a $2.5M opening cash balance near the low end because the beachhead is narrow and the BP argues for proving one corridor before overcapitalizing.'
+  - id: A3
+    name: Customer unit definition
+    value: active paid insurer or ECA corridor account
+    unit: unit
+    source: '[BP gtm.pricing paid corridor pilot followed by production contract]; [BP businessModel.unitOfValue verified insured shipment]; model counts a paid corridor account rather than individual shipments so contract revenue reconciles cleanly to customers × ARPU.'
+  - id: A4
+    name: Starting customers (M1)
+    value: '0'
+    unit: count
+    source: '[BP milestones first paid pilot occurs in the first 6 months, so the model starts with no paying accounts.]'
+  - id: A5
+    name: Initial paid pilot contract value
+    value: '75'
+    unit: USD K per pilot
+    source: '[BP investorMemo.firstCustomer initialContract $50k-$100k paid corridor pilot]; model uses the midpoint.'
+  - id: A6
+    name: Steady-state annual revenue per production corridor account
+    value: '390'
+    unit: USD K per account-year
+    source: '[BP investorMemo.firstCustomer production contract $200k-$400k annual]; [BP gtm.pricing adds per-shipment and volume-linked fees]; model uses an upper-midpoint steady-state account value once one corridor is live.'
+  - id: A7
+    name: Y1 blended monthly revenue per active account
+    value: M6-M12 = 20,20,22,24,25,27,28
+    unit: USD K per account-month
+    source: '[A5-A6]; [BP milestones 1-2 paid pilots and at least 1 production conversion by month 12]; operator judgment that Y1 stays pilot-heavy.'
+  - id: A8
+    name: Y2 blended monthly revenue per active account
+    value: Q1-Q4 = 28,30,32,34
+    unit: USD K per account-month
+    source: '[A6]; [BP milestones 4-5 insurer or ECA logos by months 12-24]; model assumes corridor accounts convert from pilot pricing toward production plus shipment fees through Y2.'
+  - id: A9
+    name: Y3 blended monthly revenue per active account
+    value: Q1-Q4 = 34,35,36,37
+    unit: USD K per account-month
+    source: '[A6]; [BP milestones 24-36 months add benchmark and claims-analytics products]; [Research market.som $2.0M year-3]; model assumes one or two second-corridor or analytics expansions by Y3.'
+  - id: A10
+    name: Y1 end-of-month active paid corridor accounts
+    value: 0,0,0,0,0,1,1,1,2,2,2,2
+    unit: accounts
+    source: '[BP experimentRoadmap first paid pilot in months 3-6 and one production contract in months 6-12]; [BP milestones sign 1-2 paid pilots by month 12].'
+  - id: A11
+    name: Y2 quarter-end active paid corridor accounts
+    value: 2,3,3,4
+    unit: accounts
+    source: '[BP milestones reach 4-5 insurer or ECA logos across cocoa and adjacent cashew corridors by month 24]; model uses 4 paid corridor accounts by Q4Y2 as the conservative end of that range.'
+  - id: A12
+    name: Y3 quarter-end active paid corridor accounts
+    value: 4,5,5,6
+    unit: accounts
+    source: '[BP milestones 24-36 months expand to a new geography or commodity family and launch analytics products]; model assumes 6 active corridor accounts by Q4Y3, including second-corridor expansion inside existing logos rather than only new logos.'
+  - id: A13
+    name: Gross margin ramp
+    value: Y1 50-58%; Y2 61-69%; Y3 70-72%
+    unit: percent
+    source: '[BP businessModel.targetGrossMarginPct 70]; [BP operatingAssumptions partner and data costs must stay below 30% by the third pilot]; startup-finance heuristic: pilots are services-heavier before the corridor template is reusable.'
+  - id: A14
+    name: Founder loaded annual cash compensation
+    value: '150'
+    unit: USD K
+    source: Startup-finance heuristic for a pre-seed founder taking below-market but full-cash compensation while covering payroll tax and benefits.
+  - id: A15
+    name: Engineering loaded annual compensation
+    value: '180'
+    unit: USD K per FTE
+    source: '[BP team needs founding engineering plus later corridor integrations]; startup-finance heuristic for cross-border B2B data and API talent.'
+  - id: A16
+    name: Risk product loaded annual compensation
+    value: '190'
+    unit: USD K per FTE
+    source: '[BP team risk product lead calibrates scoring logic against shipment and claims data]; startup-finance heuristic for underwriting-model talent.'
+  - id: A17
+    name: Solutions and partner-ops loaded annual compensation
+    value: '140'
+    unit: USD K per FTE
+    source: '[BP team solutions and partner operations lead standardizes surveyor, warehouse, and document onboarding]; startup-finance heuristic for deployment plus partner-operations scope.'
+  - id: A18
+    name: Partnerships and GTM loaded annual compensation
+    value: '160'
+    unit: USD K per FTE
+    source: '[BP team partnerships lead starts after first proof point]; startup-finance heuristic for one enterprise seller or partnerships operator with travel-heavy corridor coverage.'
+  - id: A19
+    name: Hiring schedule
+    value: M3 risk lead; M5 solutions/partner ops; M10 partnerships lead; M16 engineer2; M22 partner-ops2; M29 GTM2; M34 engineer3
+    unit: hires
+    source: '[BP team startTiming]; [BP strategicChoices.sequencingRationale integration and risk-model talent before scaled sales]; model adds only the minimum extra hires needed to support 4-6 corridor accounts.'
+  - id: A20
+    name: Non-salary sales and marketing spend
+    value: 8-24
+    unit: USD K per month
+    source: '[BP gtm channels are founder-led direct sales, broker and reinsurer introductions, and partner deployment]; startup-finance heuristic for travel, conferences, broker development, and CRM in a narrow enterprise market.'
+  - id: A21
+    name: Non-salary R&D and data-feed spend
+    value: 10-22
+    unit: USD K per month
+    source: '[BP product requires surveyor, customs or eBL, telemetry, and audit-trail integrations]; startup-finance heuristic for cloud, data normalization, and API usage costs before scale efficiencies.'
+  - id: A22
+    name: Non-salary G&A and compliance spend
+    value: 7-17
+    unit: USD K per month
+    source: '[BP operations require compliance maps, legal review, insurance, and auditability]; startup-finance heuristic for pre-seed legal, accounting, and trade-compliance overhead.'
+  - id: A23
+    name: Blended CAC
+    value: '160'
+    unit: USD K per new corridor account
+    source: Model-derived from about $1.0M of cumulative sales and marketing spend through Y3 over 6 active corridor-account wins; rounded to reflect concentrated enterprise selling and some same-logo expansions.
+  - id: A24
+    name: Steady-state annual ARPU for unit economics
+    value: '390'
+    unit: USD K per active corridor account
+    source: '[A6]; unit economics use the steady-state production account value rather than the pilot-heavy early-year blend.'
+  - id: A25
+    name: Monthly customer churn
+    value: '2.0'
+    unit: percent
+    source: Startup-finance heuristic for high-ACV insurance infrastructure contracts where logo churn is low but corridor programs can roll off if proof or partner quality weakens.
+  - id: A26
+    name: Next-round milestone plus buffer
+    value: 3 paid or production corridor accounts by Month 18 and 4 by Month 24
+    unit: milestone
+    source: '[BP experimentRoadmap one production contract by months 6-12 and second logo replication by months 9-18]; [BP milestones 4-5 logos by months 12-24]; funding ask includes a six-month cash buffer beyond the Month-18 proof point.'
+headcount:
+  - role: Founder/CEO
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Engineering
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 2
+    q4y3: 3
+  - role: Risk Product
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Solutions/Partner Ops
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 2
+    q4y3: 2
+  - role: Partnerships/GTM
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 1
+    q4y3: 2
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 4
+  q4y1: 5
+  q4y2: 7
+  q4y3: 9
+headcountAnnualizedPayrollK:
+  q1y1: 520.0
+  q2y1: 660.0
+  q3y1: 660.0
+  q4y1: 820.0
+  q4y2: 1140.0
+  q4y3: 1480.0
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    averageCustomers: 0.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 27.5
+    nonSalaryOpexK: 25.0
+    salesMarketingK: 14.9
+    researchDevelopmentK: 25.0
+    generalAdministrativeK: 12.6
+    opexK: 52.5
+    ebitdaK: -52.5
+    cashEopK: 2447.5
+  - month: M2
+    customersEop: 0
+    averageCustomers: 0.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 27.5
+    nonSalaryOpexK: 25.0
+    salesMarketingK: 14.9
+    researchDevelopmentK: 25.0
+    generalAdministrativeK: 12.6
+    opexK: 52.5
+    ebitdaK: -52.5
+    cashEopK: 2395.0
+  - month: M3
+    customersEop: 0
+    averageCustomers: 0.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 43.3
+    nonSalaryOpexK: 25.0
+    salesMarketingK: 14.9
+    researchDevelopmentK: 40.8
+    generalAdministrativeK: 12.6
+    opexK: 68.3
+    ebitdaK: -68.3
+    cashEopK: 2326.7
+  - month: M4
+    customersEop: 0
+    averageCustomers: 0.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 43.3
+    nonSalaryOpexK: 25.0
+    salesMarketingK: 14.9
+    researchDevelopmentK: 40.8
+    generalAdministrativeK: 12.6
+    opexK: 68.3
+    ebitdaK: -68.3
+    cashEopK: 2258.4
+  - month: M5
+    customersEop: 0
+    averageCustomers: 0.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 55.0
+    nonSalaryOpexK: 30.0
+    salesMarketingK: 16.9
+    researchDevelopmentK: 52.2
+    generalAdministrativeK: 15.9
+    opexK: 85.0
+    ebitdaK: -85.0
+    cashEopK: 2173.4
+  - month: M6
+    customersEop: 1
+    averageCustomers: 0.5
+    newCustomers: 1
+    blendedArpuMonthlyK: 20.0
+    revenueK: 10.0
+    cogsK: 5.0
+    grossProfitK: 5.0
+    salaryK: 55.0
+    nonSalaryOpexK: 30.0
+    salesMarketingK: 16.9
+    researchDevelopmentK: 52.2
+    generalAdministrativeK: 15.9
+    opexK: 85.0
+    ebitdaK: -80.0
+    cashEopK: 2093.4
+  - month: M7
+    customersEop: 1
+    averageCustomers: 1.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 20.0
+    revenueK: 20.0
+    cogsK: 10.0
+    grossProfitK: 10.0
+    salaryK: 55.0
+    nonSalaryOpexK: 30.0
+    salesMarketingK: 16.9
+    researchDevelopmentK: 52.2
+    generalAdministrativeK: 15.9
+    opexK: 85.0
+    ebitdaK: -75.0
+    cashEopK: 2018.4
+  - month: M8
+    customersEop: 1
+    averageCustomers: 1.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 22.0
+    revenueK: 22.0
+    cogsK: 10.6
+    grossProfitK: 11.4
+    salaryK: 55.0
+    nonSalaryOpexK: 30.0
+    salesMarketingK: 16.9
+    researchDevelopmentK: 52.2
+    generalAdministrativeK: 15.9
+    opexK: 85.0
+    ebitdaK: -73.6
+    cashEopK: 1944.8
+  - month: M9
+    customersEop: 2
+    averageCustomers: 1.5
+    newCustomers: 1
+    blendedArpuMonthlyK: 24.0
+    revenueK: 36.0
+    cogsK: 16.6
+    grossProfitK: 19.4
+    salaryK: 55.0
+    nonSalaryOpexK: 30.0
+    salesMarketingK: 16.9
+    researchDevelopmentK: 52.2
+    generalAdministrativeK: 15.9
+    opexK: 85.0
+    ebitdaK: -65.6
+    cashEopK: 1879.2
+  - month: M10
+    customersEop: 2
+    averageCustomers: 2.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 25.0
+    revenueK: 50.0
+    cogsK: 22.0
+    grossProfitK: 28.0
+    salaryK: 68.3
+    nonSalaryOpexK: 35.0
+    salesMarketingK: 32.2
+    researchDevelopmentK: 54.2
+    generalAdministrativeK: 16.9
+    opexK: 103.3
+    ebitdaK: -75.3
+    cashEopK: 1803.9
+  - month: M11
+    customersEop: 2
+    averageCustomers: 2.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 27.0
+    revenueK: 54.0
+    cogsK: 23.2
+    grossProfitK: 30.8
+    salaryK: 68.3
+    nonSalaryOpexK: 35.0
+    salesMarketingK: 32.2
+    researchDevelopmentK: 54.2
+    generalAdministrativeK: 16.9
+    opexK: 103.3
+    ebitdaK: -72.5
+    cashEopK: 1731.4
+  - month: M12
+    customersEop: 2
+    averageCustomers: 2.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 28.0
+    revenueK: 56.0
+    cogsK: 23.5
+    grossProfitK: 32.5
+    salaryK: 68.3
+    nonSalaryOpexK: 35.0
+    salesMarketingK: 32.2
+    researchDevelopmentK: 54.2
+    generalAdministrativeK: 16.9
+    opexK: 103.3
+    ebitdaK: -70.8
+    cashEopK: 1660.6
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 2
+    averageCustomers: 2.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 28.0
+    revenueK: 168.0
+    cogsK: 65.4
+    grossProfitK: 102.6
+    salaryK: 204.9
+    nonSalaryOpexK: 114.0
+    salesMarketingK: 99.6
+    researchDevelopmentK: 165.6
+    generalAdministrativeK: 53.7
+    opexK: 318.9
+    ebitdaK: -216.3
+    cashEopK: 1444.3
+  - quarter: Q2Y2
+    customersEop: 3
+    averageCustomers: 2.8
+    newCustomers: 1
+    blendedArpuMonthlyK: 30.4
+    revenueK: 255.0
+    cogsK: 91.8
+    grossProfitK: 163.2
+    salaryK: 249.9
+    nonSalaryOpexK: 126.0
+    salesMarketingK: 105.6
+    researchDevelopmentK: 213.6
+    generalAdministrativeK: 56.7
+    opexK: 375.9
+    ebitdaK: -212.7
+    cashEopK: 1231.6
+  - quarter: Q3Y2
+    customersEop: 3
+    averageCustomers: 3.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 32.0
+    revenueK: 288.0
+    cogsK: 95.1
+    grossProfitK: 192.9
+    salaryK: 249.9
+    nonSalaryOpexK: 138.0
+    salesMarketingK: 111.6
+    researchDevelopmentK: 216.6
+    generalAdministrativeK: 59.7
+    opexK: 387.9
+    ebitdaK: -195.0
+    cashEopK: 1036.6
+  - quarter: Q4Y2
+    customersEop: 4
+    averageCustomers: 3.8
+    newCustomers: 1
+    blendedArpuMonthlyK: 34.3
+    revenueK: 391.0
+    cogsK: 121.3
+    grossProfitK: 269.7
+    salaryK: 285.0
+    nonSalaryOpexK: 147.0
+    salesMarketingK: 114.6
+    researchDevelopmentK: 247.5
+    generalAdministrativeK: 69.9
+    opexK: 432.0
+    ebitdaK: -162.3
+    cashEopK: 874.3
+  - quarter: Q1Y3
+    customersEop: 4
+    averageCustomers: 4.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 34.0
+    revenueK: 408.0
+    cogsK: 122.4
+    grossProfitK: 285.6
+    salaryK: 285.0
+    nonSalaryOpexK: 159.0
+    salesMarketingK: 120.6
+    researchDevelopmentK: 250.5
+    generalAdministrativeK: 72.9
+    opexK: 444.0
+    ebitdaK: -158.4
+    cashEopK: 715.9
+  - quarter: Q2Y3
+    customersEop: 5
+    averageCustomers: 4.8
+    newCustomers: 1
+    blendedArpuMonthlyK: 35.2
+    revenueK: 507.5
+    cogsK: 147.3
+    grossProfitK: 360.2
+    salaryK: 311.6
+    nonSalaryOpexK: 168.0
+    salesMarketingK: 150.2
+    researchDevelopmentK: 253.5
+    generalAdministrativeK: 75.9
+    opexK: 479.6
+    ebitdaK: -119.4
+    cashEopK: 596.5
+  - quarter: Q3Y3
+    customersEop: 5
+    averageCustomers: 5.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 36.0
+    revenueK: 540.0
+    cogsK: 151.2
+    grossProfitK: 388.8
+    salaryK: 324.9
+    nonSalaryOpexK: 177.0
+    salesMarketingK: 166.5
+    researchDevelopmentK: 256.5
+    generalAdministrativeK: 78.9
+    opexK: 501.9
+    ebitdaK: -113.1
+    cashEopK: 483.4
+  - quarter: Q4Y3
+    customersEop: 6
+    averageCustomers: 5.8
+    newCustomers: 1
+    blendedArpuMonthlyK: 37.2
+    revenueK: 647.5
+    cogsK: 181.4
+    grossProfitK: 466.1
+    salaryK: 369.9
+    nonSalaryOpexK: 189.0
+    salesMarketingK: 172.5
+    researchDevelopmentK: 304.5
+    generalAdministrativeK: 81.9
+    opexK: 558.9
+    ebitdaK: -92.8
+    cashEopK: 390.6
+totals:
+  y1:
+    revenueK: 248.0
+    ebitdaK: -839.4
+    cashEopK: 1660.6
+  y2:
+    revenueK: 1102.0
+    ebitdaK: -786.3
+    cashEopK: 874.3
+  y3:
+    revenueK: 2103.0
+    ebitdaK: -483.7
+    cashEopK: 390.6
+unitEconomics:
+  arpuAnnualK: 390.0
+  grossMarginPct: 71.4
+  cacK: 160.0
+  monthlyChurnPct: 2.0
+  avgCustomerLifeMonths: 50.0
+  ltvK: 1160.3
+  ltvCacRatio: 7.3
+  cacPaybackMonths: 6.9
+fundingAsk:
+  round: pre-seed
+  amountM: 2.5
+  runwayMonths: 18
+  milestone: Reach 3 paid or production corridor accounts, one referenceable underwriting ROI case, and 70%+ pre-bind data completeness by Month 18; the included six-month buffer carries the company to 4 active corridor accounts by Month 24.
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 1100000
+      percentage: 44
+    - bucket: GTM
+      amountUsd: 600000
+      percentage: 24
+    - bucket: G&A
+      amountUsd: 350000
+      percentage: 14
+    - bucket: Buffer (6 mo)
+      amountUsd: 450000
+      percentage: 18
+scenarios:
+  downside:
+    description: Paid-pilot conversion slows, one anchor logo slips, and partner data quality keeps production pricing near the low end of the BP range, so the company exits Y3 with only 4 active corridor accounts and would need an extension round.
+    y3RevenueK: 1497.0
+    y3EbitdaK: -977.0
+    cashLowPointK: -399.5
+    keyAssumptionChanges:
+      - First paid pilot slips from M6 to M8 and Y3 exits at 4 active corridor accounts instead of 6.
+      - Blended monthly revenue per account tops out at $33K by Q4Y3 instead of $37K.
+      - Gross margin tops out at 68% because partner monitoring remains more manual than planned.
+  base:
+    description: 'The base case follows the BP path: first paid pilot in month 6, 4 active corridor accounts by Month 24, and 6 by Y3 exit through modest second-corridor expansion and analytics upsell inside existing insurer relationships.'
+    y3RevenueK: 2103.0
+    y3EbitdaK: -483.7
+    cashLowPointK: 390.6
+    keyAssumptionChanges:
+      - Customer ramp moves from 2 active paid accounts at Y1 exit to 4 at Y2 exit and 6 at Y3 exit.
+      - Gross margin expands from 50% in the first pilot months to 72% in Q4Y3 as partner workflows become reusable.
+      - Only two incremental GTM hires are added through Y3 because the market stays concentrated and expansion comes mostly from existing logos.
+  upside:
+    description: One broker or reinsurer channel works early, the first corridor becomes repeatable faster than planned, and the company exits Y3 with 7 active corridor accounts plus better analytics attach, putting EBITDA near breakeven to slightly positive.
+    y3RevenueK: 2953.5
+    y3EbitdaK: 181.6
+    cashLowPointK: 1241.5
+    keyAssumptionChanges:
+      - Q4Y3 active corridor accounts rise to 7 instead of 6 because one partner channel accelerates second-logo wins.
+      - Blended monthly revenue per account reaches $40K by Q4Y3 through richer shipment-fee volume and analytics attach.
+      - Gross margin reaches 74% as onboarding playbooks and partner SLAs reduce manual exception handling.
+sensitivity:
+  - variable: ARPU
+    downsideCase: $300K production account-year with weaker shipment-fee capture
+    baseCase: $390K steady-state account-year
+    upsideCase: $430K+ account-year with analytics and higher monitored shipment volume
+    y3RevenueImpactK: -420.0
+    cashImpactK: -300.0
+  - variable: CAC
+    downsideCase: $200K CAC if founder-led selling stays primary and referrals are weak
+    baseCase: $160K CAC with concentrated direct sales and some same-logo expansion
+    upsideCase: $120K CAC if broker and reinsurer introductions supply most qualified pilots
+    y3RevenueImpactK: -120.0
+    cashImpactK: -240.0
+  - variable: churn
+    downsideCase: 3.0% monthly if early corridor proof is inconsistent
+    baseCase: 2.0% monthly account churn
+    upsideCase: 1.0% monthly if production accounts expand before renewal
+    y3RevenueImpactK: -170.0
+    cashImpactK: -150.0
+  - variable: sales cycle
+    downsideCase: 8-9 months end-to-end; first paid pilot lands in M8
+    baseCase: ~6 months; first paid pilot lands in M6
+    upsideCase: 4-5 months; partner-introduced pilot lands in M5
+    y3RevenueImpactK: -606.0
+    cashImpactK: -790.0
+  - variable: gross margin
+    downsideCase: 68% Y3 gross margin because partner monitoring stays labor-heavy
+    baseCase: 71% Y3 gross margin
+    upsideCase: 74% Y3 gross margin with cleaner SLAs and less exception work
+    y3RevenueImpactK: 0.0
+    cashImpactK: -170.0
+  - variable: hiring pace
+    downsideCase: Two scale hires are pulled forward before repeatability is proven
+    baseCase: 7 FTE by Q4Y2 and 9 FTE by Q4Y3
+    upsideCase: One back-half GTM hire is delayed until after the second corridor proves itself
+    y3RevenueImpactK: 0.0
+    cashImpactK: -220.0
+modelDiagram:
+  title: corridor account economics
+  mermaid: |
+    flowchart LR
+      TargetAccounts --> PaidPilots
+      PaidPilots --> CorridorAccounts
+      CorridorAccounts --> MonitoredShipments
+      MonitoredShipments --> Revenue
+      CorridorAccounts --> BenchmarkData
+      BenchmarkData --> Revenue
+      Revenue --> GrossProfit
+      GrossProfit --> Cash
+modelSanity:
+  - checkName: Revenue engine
+    finding: Base-case revenue comes from growing active paid corridor accounts from 2 at Y1 exit to 6 at Y3 exit while blended account ARPU rises from pilot-heavy ~$28K months to ~$37K months.
+  - checkName: Must go right
+    finding: The company must land a first paid pilot by M6 and keep partner and data costs below the BP's 30% ceiling so gross margin can clear 70% by Y3.
+  - checkName: Model breaks if
+    finding: If the sales cycle stretches toward 8-9 months or partner data quality delays production pricing, downside revenue falls to about $1.5M and cash dips roughly $0.4M below zero.
+  - checkName: Next-round proof
+    finding: A seed story exists once the pre-seed gets the company to 3 paid or production accounts by Month 18 and 4 active corridor accounts by Month 24 with a referenceable underwriting ROI case.
+sanityChecks:
+  ruleOf40: Y3 growth 91% + EBITDA margin -23% = 68%
+  burnMultiple: Y2 burn multiple 0.9x (burn $786K on $854K incremental revenue), improving to 0.5x in Y3.
+  revenuePerFte: $234K Y3 using 9 Q4Y3 FTE (benchmark $200–400K vertical SaaS)
+  flags:
+    - Y3 still runs at a negative EBITDA margin, so the next round depends on corridor repeatability and underwriting ROI proof rather than profitability.
+    - Four to six active corridor accounts likely represent only 4-5 insurer logos, so one delayed anchor logo can move annual revenue by roughly $0.3-0.4M.
+    - Gross margin only clears 70% if partner and data-feed costs stay below the BP's 30% ceiling by the third pilot.
+    - The model assumes 70%+ pre-bind data completeness and a first paid pilot in M6; if either slips, the downside case goes cash negative.

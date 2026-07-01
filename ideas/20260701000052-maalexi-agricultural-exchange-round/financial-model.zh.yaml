@@ -1,0 +1,642 @@
+slug: agri-export-collateral-risk-oracle
+date: '2026-07-01'
+currency: USD
+modelStartMonth: 2026-07
+assumptions:
+- id: A1
+  name: 模型起始月份
+  value: 2026-07
+  unit: month
+  source: '[BP date 2026-07-01]；经验法则：商业计划书的日期是当月第一天，因此财务模型直接从这个月起算，不必等到下一个会计期。'
+- id: A2
+  name: 预种子轮融资到账现金
+  value: '2500'
+  unit: USD K
+  source: '[BP fundingAsk.targetFundingRangeUsd $2-4M]；模型采用 250 万美元的期初现金余额，接近区间下限，因为滩头市场狭窄，商业计划书也主张先验证一条走廊，再考虑融资过量。'
+- id: A3
+  name: 客户单位定义
+  value: 活跃付费保险公司或出口信用机构走廊账户
+  unit: unit
+  source: '[BP gtm.pricing 付费走廊试点后转正式生产合同]；[BP businessModel.unitOfValue 已验证的已投保货物]；模型按付费走廊账户计数，而非按单批货物计数，这样合同收入能干净地对应到客户数 × ARPU。'
+- id: A4
+  name: 起始客户数(第 1 个月)
+  value: '0'
+  unit: count
+  source: '[BP milestones 首个付费试点发生在前 6 个月内，因此模型从零付费账户起算。]'
+- id: A5
+  name: 首个付费试点合同金额
+  value: '75'
+  unit: USD K per pilot
+  source: '[BP investorMemo.firstCustomer initialContract 5 万至 10 万美元的付费走廊试点]；模型取区间中点。'
+- id: A6
+  name: 生产阶段走廊账户的稳态年收入
+  value: '390'
+  unit: USD K per account-year
+  source: '[BP investorMemo.firstCustomer production contract 年度 20 万至 40 万美元]；[BP gtm.pricing 叠加按批次和按量计费]；一旦某条走廊跑通，模型采用偏上区间中点的稳态账户价值。'
+- id: A7
+  name: 第 1 年活跃账户月均混合收入
+  value: M6-M12 = 20,20,22,24,25,27,28
+  unit: USD K per account-month
+  source: '[A5-A6]；[BP milestones 到第 12 个月签下 1-2 个付费试点并至少转化 1 个正式生产]；运营判断：第 1 年仍以试点为主。'
+- id: A8
+  name: 第 2 年活跃账户月均混合收入
+  value: Q1-Q4 = 28,30,32,34
+  unit: USD K per account-month
+  source: '[A6]；[BP milestones 第 12-24 个月拿下 4-5 家保险公司或出口信用机构客户]；模型假设走廊账户在第 2 年内逐步从试点定价转向生产定价加批次费。'
+- id: A9
+  name: 第 3 年活跃账户月均混合收入
+  value: Q1-Q4 = 34,35,36,37
+  unit: USD K per account-month
+  source: '[A6]；[BP milestones 第 24-36 个月新增基准和理赔分析产品]；[Research market.som 第 3 年 200 万美元]；模型假设到第 3 年会有一到两次第二走廊或分析产品的扩张。'
+- id: A10
+  name: 第 1 年各月末活跃付费走廊账户数
+  value: 0,0,0,0,0,1,1,1,2,2,2,2
+  unit: accounts
+  source: '[BP experimentRoadmap 第 3-6 个月签下首个付费试点，第 6-12 个月签下一份生产合同]；[BP milestones 到第 12 个月签下 1-2 个付费试点]。'
+- id: A11
+  name: 第 2 年各季末活跃付费走廊账户数
+  value: 2,3,3,4
+  unit: accounts
+  source: '[BP milestones 到第 24 个月在可可及相邻腰果走廊拿下 4-5 家保险公司或出口信用机构客户]；模型取该区间保守端，假设第 2 年第 4 季度末有 4 个付费走廊账户。'
+- id: A12
+  name: 第 3 年各季末活跃付费走廊账户数
+  value: 4,5,5,6
+  unit: accounts
+  source: '[BP milestones 第 24-36 个月拓展到新地域或新品类并推出分析产品]；模型假设第 3 年第 4 季度末有 6 个活跃走廊账户，其中包含现有客户内部的第二走廊扩张，而不仅仅是新客户。'
+- id: A13
+  name: 毛利率爬坡
+  value: Y1 50-58%; Y2 61-69%; Y3 70-72%
+  unit: percent
+  source: '[BP businessModel.targetGrossMarginPct 70]；[BP operatingAssumptions 到第三个试点时合作方和数据成本须低于 30%]；创业财务经验法则：在走廊模板变得可复用之前，试点阶段的服务属性更重。'
+- id: A14
+  name: 创始人年度现金薪酬(含负担成本)
+  value: '150'
+  unit: USD K
+  source: 创业财务经验法则：预种子期创始人拿低于市场水平但全额现金的薪酬，同时覆盖工资税和福利成本。
+- id: A15
+  name: 工程岗年度薪酬(含负担成本)
+  value: '180'
+  unit: USD K per FTE
+  source: '[BP team 需要创始工程师，后续还要做走廊对接]；针对跨境 B2B 数据和 API 人才的创业财务经验法则。'
+- id: A16
+  name: 风险产品岗年度薪酬(含负担成本)
+  value: '190'
+  unit: USD K per FTE
+  source: '[BP team 风险产品负责人需要用货运和理赔数据校准评分逻辑]；针对承保建模人才的创业财务经验法则。'
+- id: A17
+  name: 解决方案与合作运营岗年度薪酬(含负担成本)
+  value: '140'
+  unit: USD K per FTE
+  source: '[BP team 解决方案与合作运营负责人需要把验货机构、仓库和单据的上线流程标准化]；针对部署加合作运营范畴的创业财务经验法则。'
+- id: A18
+  name: 合作伙伴与 GTM 岗年度薪酬(含负担成本)
+  value: '160'
+  unit: USD K per FTE
+  source: '[BP team 合作伙伴负责人在第一个验证点跑出来后才入职]；针对一名企业销售或合作运营人员、需要频繁差旅覆盖走廊的创业财务经验法则。'
+- id: A19
+  name: 招聘计划
+  value: 第 3 个月风险负责人；第 5 个月解决方案/合作运营；第 10 个月合作伙伴负责人；第 16 个月工程师 2；第 22 个月合作运营 2；第 29 个月 GTM2；第 34 个月工程师 3
+  unit: hires
+  source: '[BP team startTiming]；[BP strategicChoices.sequencingRationale 先招对接和风险建模人才，再扩大销售规模]；模型只新增支撑 4-6 个走廊账户所需的最少额外招聘。'
+- id: A20
+  name: 非薪资类销售与市场支出
+  value: 8-24
+  unit: USD K per month
+  source: '[BP gtm 渠道为创始人直销、经纪商与再保险公司引荐，以及合作方部署]；针对狭窄企业市场中差旅、会议、经纪商拓展和 CRM 支出的创业财务经验法则。'
+- id: A21
+  name: 非薪资类研发与数据接入支出
+  value: 10-22
+  unit: USD K per month
+  source: '[BP product 需要验货机构、海关或电子提单、遥测数据和审计轨迹的对接]；针对规模化效应显现之前云服务、数据标准化和 API 调用成本的创业财务经验法则。'
+- id: A22
+  name: 非薪资类行政管理与合规支出
+  value: 7-17
+  unit: USD K per month
+  source: '[BP operations 需要合规地图、法律复核、保险和可审计性]；针对预种子期法务、会计和贸易合规开销的创业财务经验法则。'
+- id: A23
+  name: 混合获客成本(CAC)
+  value: '160'
+  unit: USD K per new corridor account
+  source: 由模型推导：到第 3 年累计约 100 万美元的销售与市场支出，拿下 6 个活跃走廊账户；取整以反映集中式企业销售外加部分同客户内部扩张的特点。
+- id: A24
+  name: 单位经济模型用的稳态年 ARPU
+  value: '390'
+  unit: USD K per active corridor account
+  source: '[A6]；单位经济模型采用稳态生产账户价值，而非试点占比高的早期混合值。'
+- id: A25
+  name: 月度客户流失率
+  value: '2.0'
+  unit: percent
+  source: 针对高客单价保险基础设施合同的创业财务经验法则：客户流失率低，但如果验证效果或合作方质量变弱，走廊项目也可能被砍掉。
+- id: A26
+  name: 下一轮融资的里程碑加缓冲
+  value: 到第 18 个月拿下 3 个付费或生产走廊账户，到第 24 个月拿下 4 个
+  unit: milestone
+  source: '[BP experimentRoadmap 第 6-12 个月签下一份生产合同，第 9-18 个月复制出第二个客户]；[BP milestones 第 12-24 个月拿下 4-5 家客户]；融资需求在第 18 个月的验证点之外，额外包含六个月的现金缓冲。'
+headcount:
+- role: 创始人/CEO
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 工程
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 2
+  q4y3: 3
+- role: 风险产品
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 解决方案/合作运营
+  q1y1: 0
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 2
+  q4y3: 2
+- role: 合作伙伴/GTM
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 1
+  q4y2: 1
+  q4y3: 2
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 4
+  q4y1: 5
+  q4y2: 7
+  q4y3: 9
+headcountAnnualizedPayrollK:
+  q1y1: 520.0
+  q2y1: 660.0
+  q3y1: 660.0
+  q4y1: 820.0
+  q4y2: 1140.0
+  q4y3: 1480.0
+y1Monthly:
+- month: M1
+  customersEop: 0
+  averageCustomers: 0.0
+  newCustomers: 0
+  blendedArpuMonthlyK: 0.0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 27.5
+  nonSalaryOpexK: 25.0
+  salesMarketingK: 14.9
+  researchDevelopmentK: 25.0
+  generalAdministrativeK: 12.6
+  opexK: 52.5
+  ebitdaK: -52.5
+  cashEopK: 2447.5
+- month: M2
+  customersEop: 0
+  averageCustomers: 0.0
+  newCustomers: 0
+  blendedArpuMonthlyK: 0.0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 27.5
+  nonSalaryOpexK: 25.0
+  salesMarketingK: 14.9
+  researchDevelopmentK: 25.0
+  generalAdministrativeK: 12.6
+  opexK: 52.5
+  ebitdaK: -52.5
+  cashEopK: 2395.0
+- month: M3
+  customersEop: 0
+  averageCustomers: 0.0
+  newCustomers: 0
+  blendedArpuMonthlyK: 0.0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 43.3
+  nonSalaryOpexK: 25.0
+  salesMarketingK: 14.9
+  researchDevelopmentK: 40.8
+  generalAdministrativeK: 12.6
+  opexK: 68.3
+  ebitdaK: -68.3
+  cashEopK: 2326.7
+- month: M4
+  customersEop: 0
+  averageCustomers: 0.0
+  newCustomers: 0
+  blendedArpuMonthlyK: 0.0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 43.3
+  nonSalaryOpexK: 25.0
+  salesMarketingK: 14.9
+  researchDevelopmentK: 40.8
+  generalAdministrativeK: 12.6
+  opexK: 68.3
+  ebitdaK: -68.3
+  cashEopK: 2258.4
+- month: M5
+  customersEop: 0
+  averageCustomers: 0.0
+  newCustomers: 0
+  blendedArpuMonthlyK: 0.0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 55.0
+  nonSalaryOpexK: 30.0
+  salesMarketingK: 16.9
+  researchDevelopmentK: 52.2
+  generalAdministrativeK: 15.9
+  opexK: 85.0
+  ebitdaK: -85.0
+  cashEopK: 2173.4
+- month: M6
+  customersEop: 1
+  averageCustomers: 0.5
+  newCustomers: 1
+  blendedArpuMonthlyK: 20.0
+  revenueK: 10.0
+  cogsK: 5.0
+  grossProfitK: 5.0
+  salaryK: 55.0
+  nonSalaryOpexK: 30.0
+  salesMarketingK: 16.9
+  researchDevelopmentK: 52.2
+  generalAdministrativeK: 15.9
+  opexK: 85.0
+  ebitdaK: -80.0
+  cashEopK: 2093.4
+- month: M7
+  customersEop: 1
+  averageCustomers: 1.0
+  newCustomers: 0
+  blendedArpuMonthlyK: 20.0
+  revenueK: 20.0
+  cogsK: 10.0
+  grossProfitK: 10.0
+  salaryK: 55.0
+  nonSalaryOpexK: 30.0
+  salesMarketingK: 16.9
+  researchDevelopmentK: 52.2
+  generalAdministrativeK: 15.9
+  opexK: 85.0
+  ebitdaK: -75.0
+  cashEopK: 2018.4
+- month: M8
+  customersEop: 1
+  averageCustomers: 1.0
+  newCustomers: 0
+  blendedArpuMonthlyK: 22.0
+  revenueK: 22.0
+  cogsK: 10.6
+  grossProfitK: 11.4
+  salaryK: 55.0
+  nonSalaryOpexK: 30.0
+  salesMarketingK: 16.9
+  researchDevelopmentK: 52.2
+  generalAdministrativeK: 15.9
+  opexK: 85.0
+  ebitdaK: -73.6
+  cashEopK: 1944.8
+- month: M9
+  customersEop: 2
+  averageCustomers: 1.5
+  newCustomers: 1
+  blendedArpuMonthlyK: 24.0
+  revenueK: 36.0
+  cogsK: 16.6
+  grossProfitK: 19.4
+  salaryK: 55.0
+  nonSalaryOpexK: 30.0
+  salesMarketingK: 16.9
+  researchDevelopmentK: 52.2
+  generalAdministrativeK: 15.9
+  opexK: 85.0
+  ebitdaK: -65.6
+  cashEopK: 1879.2
+- month: M10
+  customersEop: 2
+  averageCustomers: 2.0
+  newCustomers: 0
+  blendedArpuMonthlyK: 25.0
+  revenueK: 50.0
+  cogsK: 22.0
+  grossProfitK: 28.0
+  salaryK: 68.3
+  nonSalaryOpexK: 35.0
+  salesMarketingK: 32.2
+  researchDevelopmentK: 54.2
+  generalAdministrativeK: 16.9
+  opexK: 103.3
+  ebitdaK: -75.3
+  cashEopK: 1803.9
+- month: M11
+  customersEop: 2
+  averageCustomers: 2.0
+  newCustomers: 0
+  blendedArpuMonthlyK: 27.0
+  revenueK: 54.0
+  cogsK: 23.2
+  grossProfitK: 30.8
+  salaryK: 68.3
+  nonSalaryOpexK: 35.0
+  salesMarketingK: 32.2
+  researchDevelopmentK: 54.2
+  generalAdministrativeK: 16.9
+  opexK: 103.3
+  ebitdaK: -72.5
+  cashEopK: 1731.4
+- month: M12
+  customersEop: 2
+  averageCustomers: 2.0
+  newCustomers: 0
+  blendedArpuMonthlyK: 28.0
+  revenueK: 56.0
+  cogsK: 23.5
+  grossProfitK: 32.5
+  salaryK: 68.3
+  nonSalaryOpexK: 35.0
+  salesMarketingK: 32.2
+  researchDevelopmentK: 54.2
+  generalAdministrativeK: 16.9
+  opexK: 103.3
+  ebitdaK: -70.8
+  cashEopK: 1660.6
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 2
+  averageCustomers: 2.0
+  newCustomers: 0
+  blendedArpuMonthlyK: 28.0
+  revenueK: 168.0
+  cogsK: 65.4
+  grossProfitK: 102.6
+  salaryK: 204.9
+  nonSalaryOpexK: 114.0
+  salesMarketingK: 99.6
+  researchDevelopmentK: 165.6
+  generalAdministrativeK: 53.7
+  opexK: 318.9
+  ebitdaK: -216.3
+  cashEopK: 1444.3
+- quarter: Q2Y2
+  customersEop: 3
+  averageCustomers: 2.8
+  newCustomers: 1
+  blendedArpuMonthlyK: 30.4
+  revenueK: 255.0
+  cogsK: 91.8
+  grossProfitK: 163.2
+  salaryK: 249.9
+  nonSalaryOpexK: 126.0
+  salesMarketingK: 105.6
+  researchDevelopmentK: 213.6
+  generalAdministrativeK: 56.7
+  opexK: 375.9
+  ebitdaK: -212.7
+  cashEopK: 1231.6
+- quarter: Q3Y2
+  customersEop: 3
+  averageCustomers: 3.0
+  newCustomers: 0
+  blendedArpuMonthlyK: 32.0
+  revenueK: 288.0
+  cogsK: 95.1
+  grossProfitK: 192.9
+  salaryK: 249.9
+  nonSalaryOpexK: 138.0
+  salesMarketingK: 111.6
+  researchDevelopmentK: 216.6
+  generalAdministrativeK: 59.7
+  opexK: 387.9
+  ebitdaK: -195.0
+  cashEopK: 1036.6
+- quarter: Q4Y2
+  customersEop: 4
+  averageCustomers: 3.8
+  newCustomers: 1
+  blendedArpuMonthlyK: 34.3
+  revenueK: 391.0
+  cogsK: 121.3
+  grossProfitK: 269.7
+  salaryK: 285.0
+  nonSalaryOpexK: 147.0
+  salesMarketingK: 114.6
+  researchDevelopmentK: 247.5
+  generalAdministrativeK: 69.9
+  opexK: 432.0
+  ebitdaK: -162.3
+  cashEopK: 874.3
+- quarter: Q1Y3
+  customersEop: 4
+  averageCustomers: 4.0
+  newCustomers: 0
+  blendedArpuMonthlyK: 34.0
+  revenueK: 408.0
+  cogsK: 122.4
+  grossProfitK: 285.6
+  salaryK: 285.0
+  nonSalaryOpexK: 159.0
+  salesMarketingK: 120.6
+  researchDevelopmentK: 250.5
+  generalAdministrativeK: 72.9
+  opexK: 444.0
+  ebitdaK: -158.4
+  cashEopK: 715.9
+- quarter: Q2Y3
+  customersEop: 5
+  averageCustomers: 4.8
+  newCustomers: 1
+  blendedArpuMonthlyK: 35.2
+  revenueK: 507.5
+  cogsK: 147.3
+  grossProfitK: 360.2
+  salaryK: 311.6
+  nonSalaryOpexK: 168.0
+  salesMarketingK: 150.2
+  researchDevelopmentK: 253.5
+  generalAdministrativeK: 75.9
+  opexK: 479.6
+  ebitdaK: -119.4
+  cashEopK: 596.5
+- quarter: Q3Y3
+  customersEop: 5
+  averageCustomers: 5.0
+  newCustomers: 0
+  blendedArpuMonthlyK: 36.0
+  revenueK: 540.0
+  cogsK: 151.2
+  grossProfitK: 388.8
+  salaryK: 324.9
+  nonSalaryOpexK: 177.0
+  salesMarketingK: 166.5
+  researchDevelopmentK: 256.5
+  generalAdministrativeK: 78.9
+  opexK: 501.9
+  ebitdaK: -113.1
+  cashEopK: 483.4
+- quarter: Q4Y3
+  customersEop: 6
+  averageCustomers: 5.8
+  newCustomers: 1
+  blendedArpuMonthlyK: 37.2
+  revenueK: 647.5
+  cogsK: 181.4
+  grossProfitK: 466.1
+  salaryK: 369.9
+  nonSalaryOpexK: 189.0
+  salesMarketingK: 172.5
+  researchDevelopmentK: 304.5
+  generalAdministrativeK: 81.9
+  opexK: 558.9
+  ebitdaK: -92.8
+  cashEopK: 390.6
+totals:
+  y1:
+    revenueK: 248.0
+    ebitdaK: -839.4
+    cashEopK: 1660.6
+  y2:
+    revenueK: 1102.0
+    ebitdaK: -786.3
+    cashEopK: 874.3
+  y3:
+    revenueK: 2103.0
+    ebitdaK: -483.7
+    cashEopK: 390.6
+unitEconomics:
+  arpuAnnualK: 390.0
+  grossMarginPct: 71.4
+  cacK: 160.0
+  monthlyChurnPct: 2.0
+  avgCustomerLifeMonths: 50.0
+  ltvK: 1160.3
+  ltvCacRatio: 7.3
+  cacPaybackMonths: 6.9
+fundingAsk:
+  round: pre-seed
+  amountM: 2.5
+  runwayMonths: 18
+  milestone: 到第 18 个月拿下 3 个付费或生产走廊账户、1 个可对外引用的承保投资回报案例，并把承保前数据完整度做到 70% 以上；附带的六个月缓冲能把公司撑到第 24 个月的 4 个活跃走廊账户。
+  useOfFunds:
+  - bucket: 工程
+    amountUsd: 1100000
+    percentage: 44
+  - bucket: GTM
+    amountUsd: 600000
+    percentage: 24
+  - bucket: 行政管理(G&A)
+    amountUsd: 350000
+    percentage: 14
+  - bucket: 缓冲金(6 个月)
+    amountUsd: 450000
+    percentage: 18
+scenarios:
+  downside:
+    description: 付费试点转化放缓，一个锚点客户延迟落地，合作方数据质量又把生产定价压在商业计划书区间的低端，公司到第 3 年结束时只有 4 个活跃走廊账户，需要一轮过桥融资。
+    y3RevenueK: 1497.0
+    y3EbitdaK: -977.0
+    cashLowPointK: -399.5
+    keyAssumptionChanges:
+    - 首个付费试点从第 6 个月推迟到第 8 个月，第 3 年结束时活跃走廊账户为 4 个，而不是 6 个。
+    - 到第 3 年第 4 季度，单账户月均混合收入最高只到 3.3 万美元，而不是 3.7 万美元。
+    - 毛利率最高只到 68%，因为合作方监控仍比计划中更依赖人工。
+  base:
+    description: '基准情形沿着商业计划书的路径走：第 6 个月拿下首个付费试点，第 24 个月拿到 4 个活跃走廊账户，靠既有保险公司客户内部的适度第二走廊扩张和分析产品追加销售，到第 3 年结束时达到 6 个。'
+    y3RevenueK: 2103.0
+    y3EbitdaK: -483.7
+    cashLowPointK: 390.6
+    keyAssumptionChanges:
+    - 客户数从第 1 年结束时的 2 个活跃付费账户，增长到第 2 年结束时的 4 个，再到第 3 年结束时的 6 个。
+    - 毛利率从首批试点月份的 50% 扩大到第 3 年第 4 季度的 72%，因为合作方工作流变得可复用。
+    - 到第 3 年只新增两个 GTM 岗位，因为市场依然集中，扩张主要来自现有客户。
+  upside:
+    description: 一条经纪商或再保险渠道提前跑通，第一条走廊比计划更快变得可复制，公司到第 3 年结束时拿到 7 个活跃走廊账户，分析产品的搭售也更好，EBITDA 逼近盈亏平衡甚至略转正。
+    y3RevenueK: 2953.5
+    y3EbitdaK: 181.6
+    cashLowPointK: 1241.5
+    keyAssumptionChanges:
+    - 到第 3 年第 4 季度，活跃走廊账户增至 7 个而非 6 个，因为一条合作渠道加速了第二个客户的拿下。
+    - 到第 3 年第 4 季度，单账户月均混合收入达到 4 万美元，得益于更丰厚的批次费和分析产品搭售。
+    - 毛利率达到 74%，因为上线打法手册和合作方 SLA 减少了人工异常处理工作量。
+sensitivity:
+- variable: ARPU
+  downsideCase: 生产账户年值降到 30 万美元，批次费捕获能力偏弱
+  baseCase: 稳态账户年值 39 万美元
+  upsideCase: 账户年值 43 万美元以上，叠加分析产品和更高的已监控货量
+  y3RevenueImpactK: -420.0
+  cashImpactK: -300.0
+- variable: CAC
+  downsideCase: 如果创始人直销仍是主渠道、引荐不足，CAC 升到 20 万美元
+  baseCase: CAC 16 万美元，以集中式直销加部分同客户内扩张为主
+  upsideCase: 如果经纪商和再保险公司引荐贡献了大部分合格试点，CAC 降到 12 万美元
+  y3RevenueImpactK: -120.0
+  cashImpactK: -240.0
+- variable: 客户流失率
+  downsideCase: 如果早期走廊验证效果不稳定，月流失率升到 3.0%
+  baseCase: 月度账户流失率 2.0%
+  upsideCase: 如果生产账户在续约前就已扩容，月流失率降到 1.0%
+  y3RevenueImpactK: -170.0
+  cashImpactK: -150.0
+- variable: 销售周期
+  downsideCase: 端到端 8-9 个月，首个付费试点在第 8 个月落地
+  baseCase: 约 6 个月，首个付费试点在第 6 个月落地
+  upsideCase: 4-5 个月，由合作方引荐的试点在第 5 个月落地
+  y3RevenueImpactK: -606.0
+  cashImpactK: -790.0
+- variable: 毛利率
+  downsideCase: 因合作方监控仍偏人工，第 3 年毛利率为 68%
+  baseCase: 第 3 年毛利率 71%
+  upsideCase: SLA 更干净、异常处理更少，第 3 年毛利率达 74%
+  y3RevenueImpactK: 0.0
+  cashImpactK: -170.0
+- variable: 招聘节奏
+  downsideCase: 在可复制性得到验证之前，提前招入两个规模化岗位
+  baseCase: 第 2 年第 4 季度 7 个全职岗位，第 3 年第 4 季度 9 个
+  upsideCase: 一个后期 GTM 岗位延迟到第二条走廊验证跑通之后再招
+  y3RevenueImpactK: 0.0
+  cashImpactK: -220.0
+modelDiagram:
+  title: 走廊账户经济模型
+  mermaid: |
+    flowchart LR
+      TargetAccounts --> PaidPilots
+      PaidPilots --> CorridorAccounts
+      CorridorAccounts --> MonitoredShipments
+      MonitoredShipments --> Revenue
+      CorridorAccounts --> BenchmarkData
+      BenchmarkData --> Revenue
+      Revenue --> GrossProfit
+      GrossProfit --> Cash
+modelSanity:
+- checkName: 收入引擎
+  finding: 基准情形的收入来自活跃付费走廊账户从第 1 年结束时的 2 个增长到第 3 年结束时的 6 个，同时单账户混合 ARPU 从试点为主的约 2.8 万美元/月升到约 3.7 万美元/月。
+- checkName: 必须成立的前提
+  finding: 公司必须在第 6 个月前拿下首个付费试点，并把合作方和数据成本控制在商业计划书 30% 的上限之内，毛利率才能在第 3 年冲过 70%。
+- checkName: 模型崩溃的临界点
+  finding: 如果销售周期拉长到 8-9 个月，或者合作方数据质量拖慢了生产定价，下行情形的收入会跌到约 150 万美元，现金会跌破零约 40 万美元。
+- checkName: 下一轮融资的证明点
+  finding: 只要预种子轮资金能让公司在第 18 个月拿到 3 个付费或生产账户，并在第 24 个月拿到 4 个活跃走廊账户，再加上一个可对外引用的承保投资回报案例，种子轮的故事就成立。
+sanityChecks:
+  ruleOf40: 第 3 年增长率 91% + EBITDA 利润率 -23% = 68%
+  burnMultiple: 第 2 年烧钱倍数 0.9 倍(在 85.4 万美元增量收入上烧掉 78.6 万美元)，第 3 年改善到 0.5 倍。
+  revenuePerFte: 按第 3 年第 4 季度 9 名全职员工计算，人均年收入 23.4 万美元(对标垂直 SaaS 基准 20 万至 40 万美元)
+  flags:
+  - 第 3 年 EBITDA 利润率仍为负，所以下一轮融资要靠走廊可复制性和承保投资回报证明，而不是靠盈利本身。
+  - 四到六个活跃走廊账户很可能只对应 4-5 家保险公司客户，所以一个锚点客户的延迟就可能让年收入摆动约 30 万至 40 万美元。
+  - 毛利率只有在合作方和数据接入成本于第三个试点前保持在商业计划书 30% 上限以下时，才能冲过 70%。
+  - 模型假设承保前数据完整度达到 70% 以上，且首个付费试点在第 6 个月落地；只要有一项落空，下行情形的现金就会转负。
