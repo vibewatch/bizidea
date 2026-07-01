@@ -1,0 +1,675 @@
+slug: variable-stiffness-cell-kit
+date: '2026-07-01'
+currency: USD
+modelStartMonth: '2026-07'
+assumptions:
+  - id: A1
+    name: Model start month
+    value: '2026-07'
+    unit: month
+    source: "[BP date 2026-07-01]; because the plan date lands on the first day of the month, the financial model starts immediately in July 2026."
+  - id: A2
+    name: Opening cash from planned pre-seed raise
+    value: '3200'
+    unit: USD K
+    source: "[BP fundingAsk.targetFundingRangeUsd $2-4M + BP fundingAsk.runwayMonths 18]; model uses $3.2M so the company can fund the pilot program, stay inside the stated range, and still carry a 6-month buffer beyond the first hard proof point."
+  - id: A3
+    name: Customer unit definition
+    value: "active revenue-generating station program"
+    unit: definition
+    source: "[BP businessModel.unitOfValue live shared station + BP investorMemo.firstCustomer.initialContract]; the model counts one paid pilot station or one live production station as the revenue unit, then converges to live stations by Y3."
+  - id: A4
+    name: Paid pilot price
+    value: '45'
+    unit: USD K per blocked station
+    source: "[BP investorMemo.firstCustomer.initialContract $30K-$60K]; model uses the midpoint for a paid validation pilot."
+  - id: A5
+    name: First-year production station revenue
+    value: '50'
+    unit: USD K per live station-year
+    source: "[BP executiveSummary + BP gtm.pricing + Research market.sam/som rationale]; the plan repeatedly anchors first-year revenue at about $50K per live station."
+  - id: A6
+    name: Steady-state recurring software and support revenue
+    value: '24'
+    unit: USD K per live station-year
+    source: "[BP gtm.pricing hardware plus recurring software/support]; startup-finance heuristic splits the $50K first-year station value into roughly half hardware/implementation and roughly half recurring software, support, and maintenance."
+  - id: A7
+    name: Y1 end-of-month active station ramp
+    value: "M1-M12 = 0,0,0,0,1,1,1,2,2,3,4,5"
+    unit: active stations
+    source: "[BP milestones 0-12 months + BP investorMemo.mustBeTrue first pilot account expands to 3 stations within 12 months]; model assumes 2-3 paid pilots and early second-station reuse create 5 revenue-generating stations by Y1 exit."
+  - id: A8
+    name: Y2 quarter-end active station ramp
+    value: "Q1-Q4 = 7,9,11,13"
+    unit: active stations
+    source: "[BP milestones 12-24 months]; aligns to 4 production customers and 12-plus live stations by the end of Y2."
+  - id: A9
+    name: Y3 quarter-end active station ramp
+    value: "Q1-Q4 = 22,32,42,50"
+    unit: active stations
+    source: "[BP market.som + BP milestones 24-36 months]; the base case reaches the researched SOM of about 50 live stations across 8-10 accounts."
+  - id: A10
+    name: Y1 blended monthly revenue per active station
+    value: "M1-M12 = 0,0,0,0,15,15,15,18,18,20,20,22"
+    unit: USD K per active station-month
+    source: "[A4-A6 + BP gtm.pricing]; early months are pilot and launch-fee heavy, so blended station revenue is well above steady-state recurring ARPU."
+  - id: A11
+    name: Y2 blended monthly revenue per active station
+    value: "Q1-Q4 = 7.0,6.8,6.6,6.4"
+    unit: USD K per active station-month
+    source: "[A5-A6 + BP operatingAssumptions task-pack reuse]; one-time launch fees dilute as the installed base grows, but new stations still carry hardware and validation revenue."
+  - id: A12
+    name: Y3 blended monthly revenue per active station
+    value: "Q1-Q4 = 6.0,6.3,6.5,6.8"
+    unit: USD K per active station-month
+    source: "[A5-A6 + BP market.som]; late-Y3 blended revenue rises modestly because partner-led rollout creates more new-station hardware, adapter, and task-pack attach inside a larger base."
+  - id: A13
+    name: Gross margin ramp
+    value: "Y1 35-50%, Y2 55-62%, Y3 64-70%"
+    unit: percent
+    source: "[BP businessModel.targetGrossMarginPct 70]; startup-finance heuristic assumes early pilot deployments are services and validation heavy, then supplier learning and station reuse move the model toward the 70% target by Q4Y3."
+  - id: A14
+    name: Founder CEO loaded annual cash compensation
+    value: '150'
+    unit: USD K per year
+    source: "Startup-finance heuristic: about $125K founder cash pay plus payroll tax and benefits for a pre-seed industrial-automation CEO."
+  - id: A15
+    name: Engineering loaded annual cash compensation
+    value: '185'
+    unit: USD K per FTE-year
+    source: "[BP team founding eng + mechatronics and controls engineer]; startup-finance heuristic for senior robotics, controls, and simulation talent."
+  - id: A16
+    name: Field applications and safety loaded compensation
+    value: '165'
+    unit: USD K per FTE-year
+    source: "[BP team field applications and safety engineer]; startup-finance heuristic for an on-site deployment and safety-signoff specialist."
+  - id: A17
+    name: Manufacturing and supply chain loaded compensation
+    value: '160'
+    unit: USD K per FTE-year
+    source: "[BP team manufacturing and supply chain lead]; startup-finance heuristic for an early hardware operations lead."
+  - id: A18
+    name: Partner and GTM loaded compensation
+    value: '160'
+    unit: USD K per FTE-year
+    source: "[BP team partner account lead]; startup-finance heuristic for a partner-led industrial enterprise seller with modest variable pay."
+  - id: A19
+    name: Ops and finance loaded compensation
+    value: '125'
+    unit: USD K per FTE-year
+    source: "Startup-finance heuristic for a late-stage operations and finance generalist added only after deployment volume rises."
+  - id: A20
+    name: Hiring schedule
+    value: "M1 CEO plus founding engineer in place; M2 mechatronics; M4 field safety; M7 manufacturing; M10 partner lead; M13 engineer 3; M16 field 2; M25 partner 2; M28 engineer 4; M31 ops/finance"
+    unit: hires
+    source: "[BP team startTiming + BP strategicChoices.sequencingRationale]; BP Month 0 maps to model M1, so the named BP hires land in M2/M4/M7/M10, and later hires are lean startup-finance additions only after repeatability is partly proven."
+  - id: A21
+    name: Non-salary sales and marketing spend
+    value: "Y1 $6K/mo, Y2 $8K/mo, Y3 $10K/mo plus $0.25K per average active station-month"
+    unit: USD K per month
+    source: "Startup-finance heuristic for travel, plant visits, partner enablement, demo hardware logistics, and light commissions in a narrow industrial market."
+  - id: A22
+    name: Non-salary R&D and validation spend
+    value: "Y1 $12K/mo, Y2 $14K/mo, Y3 $16K/mo plus $0.20K per average active station-month"
+    unit: USD K per month
+    source: "[BP operations + BP experimentRoadmap safety and durability validation]; startup-finance heuristic for simulation tooling, test materials, supplier samples, and durability work."
+  - id: A23
+    name: Non-salary G&A spend
+    value: "Y1 $5K/mo, Y2 $6K/mo, Y3 $8K/mo plus $0.10K per average active station-month"
+    unit: USD K per month
+    source: "Startup-finance heuristic for insurance, legal, accounting, audit, and safety-packet administration in an early hardware company."
+  - id: A24
+    name: Salary allocation policy
+    value: "CEO 50% S&M and 50% G&A; engineering 100% R&D; field 80% R&D and 20% G&A; manufacturing 70% R&D and 30% G&A; partner roles 100% S&M; ops 100% G&A"
+    unit: allocation
+    source: "Startup-finance heuristic to turn role-level payroll into functional P&L lines while the company is still too small for departmental accounting."
+  - id: A25
+    name: Site-level CAC
+    value: '21.5'
+    unit: USD K per new active station
+    source: "Model-derived from rounded Y2-Y3 sales and marketing spend of $968.9K divided by 45 net new active stations; CAC is lower at the station level than at the logo level because BP assumes multi-station expansion inside each account."
+  - id: A26
+    name: Unit-economics recurring ARPU
+    value: '24'
+    unit: USD K per active station-year
+    source: "[A6]; unit economics use steady-state recurring software, support, and maintenance revenue rather than temporary pilot or hardware launch fees."
+  - id: A27
+    name: Monthly churn for live stations
+    value: '0.8'
+    unit: percent
+    source: "Startup-finance heuristic for sticky industrial automation deployments that are hard to rip out once safety-approved and running in production."
+  - id: A28
+    name: Cash conversion timing
+    value: "EBITDA approximates operating cash flow"
+    unit: policy
+    source: "Startup-finance heuristic: the model excludes debt, capex, working-capital swings, and inventory financing; this simplification is surfaced again in sanityChecks.flags because hardware cash needs can be lumpier in reality."
+  - id: A29
+    name: Funding milestone plus buffer
+    value: "Reach the Month-18 proof point of pilot conversion and second-station reuse, with enough cash to carry through the Month-24 target of 12-plus live stations across 4 production customers"
+    unit: milestone
+    source: "[BP milestones 0-12 and 12-24 months + BP fundingAsk.runwayMonths 18]; the funding ask is sized to that proof point and then buffered by six additional months."
+headcount:
+  - role: "Founder/CEO"
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Engineering
+    q1y1: 2
+    q2y1: 2
+    q3y1: 2
+    q4y1: 2
+    q4y2: 3
+    q4y3: 4
+  - role: "Field Applications/Safety"
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 2
+    q4y3: 2
+  - role: "Manufacturing/Supply Chain"
+    q1y1: 0
+    q2y1: 0
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: "Partner/GTM"
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 1
+    q4y3: 2
+  - role: "Ops/G&A"
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 0
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 5
+  q4y1: 6
+  q4y2: 8
+  q4y3: 11
+headcountAnnualizedPayrollK:
+  q1y1: 520.0
+  q2y1: 685.0
+  q3y1: 845.0
+  q4y1: 1005.0
+  q4y2: 1355.0
+  q4y3: 1825.0
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    averageCustomers: 0.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 27.9
+    nonSalaryOpexK: 23.0
+    salesMarketingK: 12.3
+    researchDevelopmentK: 27.4
+    generalAdministrativeK: 11.2
+    opexK: 50.9
+    ebitdaK: -50.9
+    cashEopK: 3149.1
+  - month: M2
+    customersEop: 0
+    averageCustomers: 0.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 43.3
+    nonSalaryOpexK: 23.0
+    salesMarketingK: 12.3
+    researchDevelopmentK: 42.8
+    generalAdministrativeK: 11.2
+    opexK: 66.3
+    ebitdaK: -66.3
+    cashEopK: 3082.8
+  - month: M3
+    customersEop: 0
+    averageCustomers: 0.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 43.3
+    nonSalaryOpexK: 23.0
+    salesMarketingK: 12.3
+    researchDevelopmentK: 42.8
+    generalAdministrativeK: 11.2
+    opexK: 66.3
+    ebitdaK: -66.3
+    cashEopK: 3016.5
+  - month: M4
+    customersEop: 0
+    averageCustomers: 0.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 57.1
+    nonSalaryOpexK: 23.0
+    salesMarketingK: 12.3
+    researchDevelopmentK: 53.8
+    generalAdministrativeK: 14.0
+    opexK: 80.1
+    ebitdaK: -80.1
+    cashEopK: 2936.4
+  - month: M5
+    customersEop: 1
+    averageCustomers: 0.5
+    newCustomers: 1
+    blendedArpuMonthlyK: 15.0
+    revenueK: 7.5
+    cogsK: 4.9
+    grossProfitK: 2.6
+    salaryK: 57.1
+    nonSalaryOpexK: 23.3
+    salesMarketingK: 12.4
+    researchDevelopmentK: 53.9
+    generalAdministrativeK: 14.1
+    opexK: 80.4
+    ebitdaK: -77.8
+    cashEopK: 2858.6
+  - month: M6
+    customersEop: 1
+    averageCustomers: 1.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 15.0
+    revenueK: 15.0
+    cogsK: 9.7
+    grossProfitK: 5.3
+    salaryK: 57.1
+    nonSalaryOpexK: 23.5
+    salesMarketingK: 12.5
+    researchDevelopmentK: 54.0
+    generalAdministrativeK: 14.1
+    opexK: 80.6
+    ebitdaK: -75.3
+    cashEopK: 2783.3
+  - month: M7
+    customersEop: 1
+    averageCustomers: 1.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 15.0
+    revenueK: 15.0
+    cogsK: 9.7
+    grossProfitK: 5.3
+    salaryK: 70.4
+    nonSalaryOpexK: 23.5
+    salesMarketingK: 12.5
+    researchDevelopmentK: 63.4
+    generalAdministrativeK: 18.0
+    opexK: 93.9
+    ebitdaK: -88.6
+    cashEopK: 2694.7
+  - month: M8
+    customersEop: 2
+    averageCustomers: 1.5
+    newCustomers: 1
+    blendedArpuMonthlyK: 18.0
+    revenueK: 27.0
+    cogsK: 16.2
+    grossProfitK: 10.8
+    salaryK: 70.4
+    nonSalaryOpexK: 23.8
+    salesMarketingK: 12.6
+    researchDevelopmentK: 63.5
+    generalAdministrativeK: 18.1
+    opexK: 94.2
+    ebitdaK: -83.4
+    cashEopK: 2611.3
+  - month: M9
+    customersEop: 2
+    averageCustomers: 2.0
+    newCustomers: 0
+    blendedArpuMonthlyK: 18.0
+    revenueK: 36.0
+    cogsK: 21.6
+    grossProfitK: 14.4
+    salaryK: 70.4
+    nonSalaryOpexK: 24.1
+    salesMarketingK: 12.8
+    researchDevelopmentK: 63.6
+    generalAdministrativeK: 18.1
+    opexK: 94.5
+    ebitdaK: -80.1
+    cashEopK: 2531.2
+  - month: M10
+    customersEop: 3
+    averageCustomers: 2.5
+    newCustomers: 1
+    blendedArpuMonthlyK: 20.0
+    revenueK: 50.0
+    cogsK: 29.0
+    grossProfitK: 21.0
+    salaryK: 83.8
+    nonSalaryOpexK: 24.4
+    salesMarketingK: 26.2
+    researchDevelopmentK: 63.7
+    generalAdministrativeK: 18.3
+    opexK: 108.2
+    ebitdaK: -87.2
+    cashEopK: 2444.0
+  - month: M11
+    customersEop: 4
+    averageCustomers: 3.5
+    newCustomers: 1
+    blendedArpuMonthlyK: 20.0
+    revenueK: 70.0
+    cogsK: 38.5
+    grossProfitK: 31.5
+    salaryK: 83.8
+    nonSalaryOpexK: 24.9
+    salesMarketingK: 26.5
+    researchDevelopmentK: 63.9
+    generalAdministrativeK: 18.3
+    opexK: 108.7
+    ebitdaK: -77.2
+    cashEopK: 2366.8
+  - month: M12
+    customersEop: 5
+    averageCustomers: 4.5
+    newCustomers: 1
+    blendedArpuMonthlyK: 22.0
+    revenueK: 99.0
+    cogsK: 49.5
+    grossProfitK: 49.5
+    salaryK: 83.8
+    nonSalaryOpexK: 25.5
+    salesMarketingK: 26.7
+    researchDevelopmentK: 64.1
+    generalAdministrativeK: 18.5
+    opexK: 109.3
+    ebitdaK: -59.8
+    cashEopK: 2307.0
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 7
+    averageCustomers: 6.0
+    newCustomers: 2
+    blendedArpuMonthlyK: 7.0
+    revenueK: 126.0
+    cogsK: 56.7
+    grossProfitK: 69.3
+    salaryK: 297.5
+    nonSalaryOpexK: 93.9
+    salesMarketingK: 87.3
+    researchDevelopmentK: 245.4
+    generalAdministrativeK: 58.7
+    opexK: 391.4
+    ebitdaK: -322.1
+    cashEopK: 1984.9
+  - quarter: Q2Y2
+    customersEop: 9
+    averageCustomers: 8.0
+    newCustomers: 2
+    blendedArpuMonthlyK: 6.8
+    revenueK: 163.2
+    cogsK: 68.5
+    grossProfitK: 94.7
+    salaryK: 338.8
+    nonSalaryOpexK: 97.2
+    salesMarketingK: 88.8
+    researchDevelopmentK: 279.6
+    generalAdministrativeK: 67.6
+    opexK: 436.0
+    ebitdaK: -341.3
+    cashEopK: 1643.6
+  - quarter: Q3Y2
+    customersEop: 11
+    averageCustomers: 10.0
+    newCustomers: 2
+    blendedArpuMonthlyK: 6.6
+    revenueK: 198.0
+    cogsK: 79.2
+    grossProfitK: 118.8
+    salaryK: 338.8
+    nonSalaryOpexK: 100.5
+    salesMarketingK: 90.3
+    researchDevelopmentK: 280.8
+    generalAdministrativeK: 68.2
+    opexK: 439.3
+    ebitdaK: -320.5
+    cashEopK: 1323.1
+  - quarter: Q4Y2
+    customersEop: 13
+    averageCustomers: 12.0
+    newCustomers: 2
+    blendedArpuMonthlyK: 6.4
+    revenueK: 230.4
+    cogsK: 87.6
+    grossProfitK: 142.8
+    salaryK: 338.8
+    nonSalaryOpexK: 103.8
+    salesMarketingK: 91.8
+    researchDevelopmentK: 282.0
+    generalAdministrativeK: 68.8
+    opexK: 442.6
+    ebitdaK: -299.8
+    cashEopK: 1023.3
+  - quarter: Q1Y3
+    customersEop: 22
+    averageCustomers: 17.5
+    newCustomers: 9
+    blendedArpuMonthlyK: 6.0
+    revenueK: 315.0
+    cogsK: 113.4
+    grossProfitK: 201.6
+    salaryK: 378.8
+    nonSalaryOpexK: 130.9
+    salesMarketingK: 141.9
+    researchDevelopmentK: 291.3
+    generalAdministrativeK: 76.5
+    opexK: 509.7
+    ebitdaK: -308.1
+    cashEopK: 715.2
+  - quarter: Q2Y3
+    customersEop: 32
+    averageCustomers: 27.0
+    newCustomers: 10
+    blendedArpuMonthlyK: 6.3
+    revenueK: 510.3
+    cogsK: 173.5
+    grossProfitK: 336.8
+    salaryK: 425.0
+    nonSalaryOpexK: 146.5
+    salesMarketingK: 149.0
+    researchDevelopmentK: 343.2
+    generalAdministrativeK: 79.3
+    opexK: 571.5
+    ebitdaK: -234.7
+    cashEopK: 480.5
+  - quarter: Q3Y3
+    customersEop: 42
+    averageCustomers: 37.0
+    newCustomers: 10
+    blendedArpuMonthlyK: 6.5
+    revenueK: 721.5
+    cogsK: 230.9
+    grossProfitK: 490.6
+    salaryK: 456.3
+    nonSalaryOpexK: 163.0
+    salesMarketingK: 156.5
+    researchDevelopmentK: 349.2
+    generalAdministrativeK: 113.6
+    opexK: 619.3
+    ebitdaK: -128.7
+    cashEopK: 351.8
+  - quarter: Q4Y3
+    customersEop: 50
+    averageCustomers: 46.0
+    newCustomers: 8
+    blendedArpuMonthlyK: 6.8
+    revenueK: 938.4
+    cogsK: 281.5
+    grossProfitK: 656.9
+    salaryK: 456.3
+    nonSalaryOpexK: 177.9
+    salesMarketingK: 163.3
+    researchDevelopmentK: 354.6
+    generalAdministrativeK: 116.3
+    opexK: 634.2
+    ebitdaK: 22.7
+    cashEopK: 374.5
+totals:
+  y1:
+    revenueK: 319.5
+    ebitdaK: -893.0
+    cashEopK: 2307.0
+  y2:
+    revenueK: 717.6
+    ebitdaK: -1283.7
+    cashEopK: 1023.3
+  y3:
+    revenueK: 2485.2
+    ebitdaK: -648.8
+    cashEopK: 374.5
+unitEconomics:
+  arpuAnnualK: 24.0
+  grossMarginPct: 70.0
+  cacK: 21.5
+  monthlyChurnPct: 0.8
+  avgCustomerLifeMonths: 125.0
+  ltvK: 175.0
+  ltvCacRatio: 8.1
+  cacPaybackMonths: 15.4
+fundingAsk:
+  round: pre-seed
+  amountM: 3.2
+  runwayMonths: 18
+  milestone: >-
+    Reach the Month-18 proof point of 2-3 converted paid pilots and second-
+    station reuse, with the included six-month buffer carrying the company to
+    the Month-24 target of 12-plus live stations across 4 production customers.
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 1120000
+      percentage: 35
+    - bucket: GTM
+      amountUsd: 800000
+      percentage: 25
+    - bucket: "G&A"
+      amountUsd: 480000
+      percentage: 15
+    - bucket: "Buffer (6 mo)"
+      amountUsd: 800000
+      percentage: 25
+scenarios:
+  downside:
+    description: >-
+      Safety review, durability tuning, and partner onboarding each slip by one
+      to two quarters, so the company exits Y3 at only 38 live stations and has
+      to add field capacity before true rollout reuse is proven.
+    y3RevenueK: 1577.7
+    y3EbitdaK: -1431.8
+    cashLowPointK: -576.2
+    keyAssumptionChanges:
+      - "Y1 exits at 4 active stations, Y2 at 10, and Y3 at 38 instead of 50."
+      - "Blended monthly revenue per active station is 8-12% lower because plants buy fewer task-pack and adapter add-ons."
+      - "Gross margin tops out at 66% and one extra field hire is pulled forward because safety work stays bespoke."
+  base:
+    description: >-
+      The base case follows the BP path from 2-3 paid pilots to 13 active
+      stations by Y2 exit and 50 live stations by Y3 exit, with hardware launch
+      fees and recurring software/support both contributing materially.
+    y3RevenueK: 2485.2
+    y3EbitdaK: -648.8
+    cashLowPointK: 351.8
+    keyAssumptionChanges:
+      - "Customer ramp reaches 5 active stations at Y1 exit, 13 at Y2 exit, and 50 at Y3 exit."
+      - "Gross margin ramps from 35-50% in Y1 to the 70% target by Q4Y3 as supplier yield and second-station reuse improve."
+      - "Headcount grows only to 11 FTE by Q4Y3 because partner-led rollout absorbs much of the deployment load."
+  upside:
+    description: >-
+      The first pilot converts early, one OEM or integrator channel works in Y2,
+      and the company reaches 55 live stations by Y3 exit while keeping the team
+      roughly the same size.
+    y3RevenueK: 2873.0
+    y3EbitdaK: -354.2
+    cashLowPointK: 716.0
+    keyAssumptionChanges:
+      - "Y1 exits at 6 active stations, Y2 at 16, and Y3 at 55."
+      - "Blended monthly revenue per active station stays 3-7% above base because more rollout kits include paid adapters and maintenance plans."
+      - "Gross margin reaches 72% by Q4Y3 as repeat stations require less on-site engineering."
+sensitivity:
+  - variable: ARPU
+    downsideCase: "$21K steady-state recurring station-year and lighter launch-fee attach"
+    baseCase: "$24K recurring station-year plus the base launch-fee schedule"
+    upsideCase: "$27K recurring station-year with stronger maintenance and task-pack attach"
+    y3RevenueImpactK: -248.5
+    cashImpactK: -174.0
+  - variable: CAC
+    downsideCase: "$30K per new active station because channel partners do not lower logo-acquisition cost"
+    baseCase: "$21.5K per new active station"
+    upsideCase: "$18K per new active station with faster second-station expansion inside each account"
+    y3RevenueImpactK: -150.0
+    cashImpactK: -382.5
+  - variable: churn
+    downsideCase: "1.5% monthly churn if one task family proves too narrow and replacement cycles disappoint"
+    baseCase: "0.8% monthly churn"
+    upsideCase: "0.5% monthly churn once stations are safety-approved and embedded"
+    y3RevenueImpactK: -140.0
+    cashImpactK: -110.0
+  - variable: sales cycle
+    downsideCase: "9 months because EHS sign-off and plant scheduling slip"
+    baseCase: "6 months from qualified pilot to production PO"
+    upsideCase: "4-5 months with an integrator or OEM champion"
+    y3RevenueImpactK: -620.0
+    cashImpactK: -700.0
+  - variable: gross margin
+    downsideCase: "63% exit gross margin because replacements and on-site validation stay manual"
+    baseCase: "70% exit gross margin"
+    upsideCase: "73% exit gross margin with better supplier yield and faster second-station reuse"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -174.0
+  - variable: hiring pace
+    downsideCase: "Pull one extra field or GTM hire forward before rollout kits are truly repeatable"
+    baseCase: "11 FTE at Q4Y3"
+    upsideCase: "Delay one scale hire until partner-led reuse is proven"
+    y3RevenueImpactK: 60.0
+    cashImpactK: -210.0
+modelDiagram:
+  title: unit economics flow
+  mermaid: |
+    flowchart LR
+      LaunchPrograms --> PaidPilots
+      PaidPilots --> LiveStations
+      LiveStations --> Revenue
+      TaskPackReuse --> GrossProfit
+      Revenue --> GrossProfit
+      GrossProfit --> Cash
+modelSanity:
+  - checkName: Revenue engine
+    finding: "Base-case revenue is driven by turning 2-3 paid pilots into 13 active stations by Y2 exit and 50 live stations by Y3 exit while still collecting launch-fee revenue on new rollouts."
+  - checkName: Must go right
+    finding: "At least one Y1 pilot must expand to second and third stations quickly, because the sales-cycle and CAC sensitivities assume multi-station account expansion rather than one-off projects."
+  - checkName: Model breaks if
+    finding: "If EHS sign-off drifts toward a 9-month cycle or gross margin stalls in the low 60s, downside cash turns negative before the company reaches the Y3 station target."
+  - checkName: Next-round proof
+    finding: "The next financing is easiest once the company shows 12-plus live stations across 4 production customers, second-station deployments using less than 25% of the original engineering effort, and CAC still near the modeled $21.5K site level."
+sanityChecks:
+  ruleOf40: "Y3 growth 246.3% + EBITDA margin -26.1% = 220.2%."
+  burnMultiple: "Y2 burn multiple 3.2x on year-over-year revenue expansion, improving to 0.4x in Y3 as task-pack reuse lifts gross profit faster than opex."
+  revenuePerFte: "$242.5K Y3 revenue per average FTE (benchmark $200-400K for capital-efficient industrial software and automation vendors)."
+  flags:
+    - "Early customer counts include paid pilot stations, so a production-only definition would make Y1 revenue and CAC look worse than shown."
+    - "Cash is modeled from EBITDA; inventory, demo hardware, and customer payment timing could make actual cash needs higher than the model."
+    - "The base case still requires only 11 FTE to support 50 live stations by Y3, so partner-certified rollouts and second-station reuse must work on schedule."
+    - "Gross margin only reaches the 70% target in Q4Y3; if safety work stays bespoke or replacement rates run high, the model moves toward the downside case quickly."
+    - "The downside case turns cash negative, which means the company has limited room for a 9-month sales cycle or a failed first expansion account."
