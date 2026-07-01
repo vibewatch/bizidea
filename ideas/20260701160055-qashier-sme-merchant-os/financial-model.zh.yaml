@@ -1,0 +1,601 @@
+slug: franchise-cashflow-waterfall
+date: '2026-07-01'
+currency: USD
+modelStartMonth: 2026-07
+assumptions:
+- id: A1
+  name: 模型起始月份
+  value: 2026-07
+  unit: YYYY-MM
+  source: '[business-plan.yaml date] 商业计划日期为 2026-07-01，因此财务模型从同一个首个运营月份开始。'
+- id: A2
+  name: pre-seed 关闭后的期初现金
+  value: '1900'
+  unit: USDK
+  source: '[business-plan.yaml fundingAsk.targetFundingRangeUsd] 按所述 $2-3M 区间的下限，测算一笔 $2.0M 的 pre-seed 融资，扣除约 $100K 的 M1 之前法务、设立和合规费用。'
+- id: A3
+  name: 收入单位
+  value: 受管理的每日现金瀑布流上的活跃运营门店
+  unit: definition
+  source: '[business-plan.yaml businessModel.unitOfValue] 计划按每个运营中的门店而非泛泛的中小商户 logo 来变现。'
+- id: A4
+  name: 每个运营门店的基础订阅费
+  value: '225'
+  unit: USD/outlet-month
+  source: '[business-plan.yaml gtm.pricing] 使用所述每门店每月 $150 到 $300 定价区间的中位数。'
+- id: A5
+  name: 每个运营门店的年度用量费附加
+  value: '525'
+  unit: USD/outlet-year
+  source: '[research.yaml market.tam rationale] 采用研究模型中对约 $350K 年度结算门店流水收取 15 个基点的测算。'
+- id: A6
+  name: 每个运营门店的混合年收入
+  value: '3225'
+  unit: USD/outlet-year
+  source: '[基于 A4 和 A5 推导；research.yaml market.bottomUpSizingDrivers] $2,700 订阅费加 $525 用量收入，与市场测算模型吻合。'
+- id: A7
+  name: 第一年月末运营门店数路径
+  value: 'M1-M4: 0; M5: 25; M6: 50; M7: 50; M8: 75; M9: 75; M10-M12: 100'
+  unit: outlets
+  source: '[business-plan.yaml product.sixMonth；milestones 0-12 months；investorMemo.firstCustomer.initialContract] 从一个 20 到 30 家门店的试点，逐步爬升到第 12 个月约 100 家运营门店。'
+- id: A8
+  name: 第二年季末运营门店数路径
+  value: Q1Y2 150; Q2Y2 200; Q3Y2 250; Q4Y2 300
+  unit: outlets
+  source: '[business-plan.yaml milestones 12-24 months] 与第 24 个月约 300 家运营门店的既定目标一致。'
+- id: A9
+  name: 第三年季末运营门店数路径
+  value: Q1Y3 380; Q2Y3 460; Q3Y3 530; Q4Y3 600
+  unit: outlets
+  source: '[business-plan.yaml milestones 24-36 months；market.som；research.yaml market.som] 与研究测算的第三年 600 家门店 SOM 情形一致。'
+- id: A10
+  name: 收入确认时点
+  value: 按每个月或每个季度中点的运营门店数确认
+  unit: policy
+  source: '[创业财务经验法则] 假设新门店上线分布在整个周期内，而不是全部集中在第一天。'
+- id: A11
+  name: 长期目标毛利率
+  value: '70'
+  unit: percent
+  source: '[business-plan.yaml businessModel.targetGrossMarginPct] 商业计划明确以 70% 的软件毛利率为目标。'
+- id: A12
+  name: 直接服务成本政策
+  value: 收入的 19% 加固定交付/合规成本；试点上线后每月从 $5K 起，第二到第三年升至 $6K
+  unit: policy
+  source: '[锚定 business-plan.yaml operations 和 research.yaml regulatoryTechnicalConstraints 的创业财务经验法则] 涵盖伙伴支持、审计日志基础设施、对账运营和打款控制合规开销；按收入的 19% 加固定交付/合规成本计算，试点上线后从每月 $5K 起步，第二到第三年升至 $6K。'
+- id: A13
+  name: 实施类薪酬分摊
+  value: 50% COGS / 20% S&M / 30% G&A
+  unit: allocation
+  source: '[business-plan.yaml team Implementation and finance ops lead；operations] 交付团队既运营实时工作流，也支持续约和财务报表工作，按 50% COGS / 20% 销售与市场 / 30% 管理费用分摊。'
+- id: A14
+  name: 每月门店流失率
+  value: '1.5'
+  unit: percent
+  source: '[创业财务经验法则] 一套带审批和审计留痕的财务主管工作流，上线后应该有较强的粘性，但伙伴依赖和早期产品风险仍然让非零流失率合理，取 1.5%。'
+- id: A15
+  name: 创始人 CEO 满载薪酬
+  value: '110'
+  unit: USDK/year
+  source: '[business-plan.yaml team Founding CEO / merchant fintech GTM] 采用低于市场行情的新加坡金融科技创始人薪资，含薪资相关负担。'
+- id: A16
+  name: 工程满载薪酬
+  value: '125'
+  unit: USDK/year/FTE
+  source: '[business-plan.yaml team Founding eng；Integrations engineer] 新马两地资深产品与集成工程师的创业财务经验法则。'
+- id: A17
+  name: 实施与财务运营满载薪酬
+  value: '80'
+  unit: USDK/year/FTE
+  source: '[business-plan.yaml team Implementation and finance ops lead] 部署和运营密集型商户金融科技人才的创业财务经验法则。'
+- id: A18
+  name: 合作伙伴关系与风险满载薪酬
+  value: '100'
+  unit: USDK/year/FTE
+  source: '[business-plan.yaml team Partnerships and risk lead] 新加坡地区伙伴管理和合规边界负责人的经验法则。'
+- id: A19
+  name: 销售满载薪酬
+  value: '110'
+  unit: USDK/year/FTE
+  source: '[business-plan.yaml strategicChoices.sequencingRationale] 第一批背负配额的 GTM 招聘只在试点证明 ROI 之后才到岗，按精简型企业级 AE 目标年薪计算。'
+- id: A20
+  name: 行政与运营满载薪酬
+  value: '70'
+  unit: USDK/year/FTE
+  source: '[锚定 business-plan.yaml operations 的创业财务经验法则] 只有当运营账户覆盖新马两地工作流之后，才会加入精简的合规与财务支持人手。'
+- id: A21
+  name: 招聘节奏
+  value: M1 CEO 和创始工程师；M2 实施负责人；M4 集成工程师；M8 合作伙伴关系与风险负责人；M11 第二位实施人员；M15 第三位工程师；M16 第一位销售；M18 运营/合规；M20 第三位实施人员；M26 第二位销售；M28 第四位工程师
+  unit: timing
+  source: '[business-plan.yaml team；strategicChoices.sequencingRationale；milestones] 遵循明确的第一年团队计划，之后的招聘继续按里程碑门槛推进，而不是提前堆人。第 1 个月 CEO 和创始工程师，第 2 个月实施负责人，第 4 个月集成工程师，第 8 个月合作伙伴关系与风险负责人，第 11 个月第二位实施人员，第 15 个月第三位工程师，第 16 个月第一位销售，第 18 个月运营/合规，第 20 个月第三位实施人员，第 26 个月第二位销售，第 28 个月第四位工程师。'
+- id: A22
+  name: 职能薪酬分摊
+  value: CEO 75% 销售与市场 / 25% G&A；工程 100% 研发；实施 50% COGS / 20% 销售与市场 / 30% G&A；合作伙伴关系 60% 销售与市场 / 40% G&A；销售 100% 销售与市场；运营 100% G&A
+  unit: allocation
+  source: '[business-plan.yaml team rationales；operations] 把每个角色映射到其在交付、GTM 或行政管理中直接承担的工作：CEO 75% 销售与市场 / 25% 管理费用；工程 100% 研发；实施 50% COGS / 20% 销售与市场 / 30% 管理费用；合作伙伴关系 60% 销售与市场 / 40% 管理费用；销售 100% 销售与市场；运营 100% 管理费用。'
+- id: A23
+  name: 非薪酬运营支出政策
+  value: Y1 销售与市场 $6K/mo + 5% 收入，研发 $4.5K/mo，G&A $6K/mo；Y2 销售与市场 $7K/mo + 5% 收入，研发 $5.5K/mo，G&A $7K/mo；Y3 销售与市场 $9K/mo + 5.5% 收入，研发 $6K/mo，G&A $8K/mo
+  unit: USDK/month
+  source: '[锚定 business-plan.yaml operations、risks 和 fundingAsk.useOfFundsSummary 的创业财务经验法则] 涵盖差旅、云服务、沙箱工具、法务和税务/合规开销。第一年销售与市场每月 $6K 加收入的 5%，研发每月 $4.5K，管理费用每月 $6K；第二年销售与市场每月 $7K 加收入的 5%，研发每月 $5.5K，管理费用每月 $7K；第三年销售与市场每月 $9K 加收入的 5.5%，研发每月 $6K，管理费用每月 $8K。'
+- id: A24
+  name: 现金转化政策
+  value: 扣除 A2 所述 M1 之前设立支出后，EBITDA 近似代表经营性现金变动
+  unit: policy
+  source: '[创业财务经验法则] 在 A2 所述的 M1 之前设立支出之后，EBITDA 近似等同于经营性现金变动；本阶段模型不考虑债务、资本支出、税项和重大营运资金波动。'
+- id: A25
+  name: 融资现金跑道目标
+  value: '24'
+  unit: months
+  source: '[business-plan.yaml fundingAsk.runwayMonths] 计划要求 18 个月的执行期，本阶段再加上所需的六个月缓冲。'
+- id: A26
+  name: 下一轮里程碑
+  value: 到第 24 个月达到约 300 家运营门店、5 到 8 个生产环境集团、第二套商户技术栈或打款伙伴，以及一个融资模块验证
+  unit: milestone
+  source: '[business-plan.yaml milestones 12-24 months；fundingAsk.useOfFundsSummary] 这是本轮 pre-seed 资金要打出的验证包：第 24 个月达到约 300 家运营门店、5 到 8 个生产环境集团、第二套商户技术栈或打款伙伴，以及一个融资模块的验证。'
+- id: A27
+  name: 每个成熟连锁的平均运营门店数
+  value: '30'
+  unit: outlets/chain
+  source: '[business-plan.yaml beachhead 20-50 outlets；research.yaml market.som] 第三年 600 家门店、约 20 到 25 个集团的规模，意味着每个集团约 24 到 30 家门店，模型在换算 CAC 时取 30。'
+- id: A28
+  name: 每个落地连锁的混合 CAC
+  value: '33'
+  unit: USDK/chain
+  source: '[business-plan.yaml gtm.channels；market.buyingProcess] 创始人主导的企业级销售辅以部分伙伴转介，仍然需要一次实质性的诊断和上线动作。'
+- id: A29
+  name: 每个运营门店的混合 CAC
+  value: '1.1'
+  unit: USDK/outlet
+  source: '[基于 A27 和 A28 推导] 每个连锁 $33K 除以 30 家运营门店，得出每门店约 $1.1K 的 CAC。'
+- id: A30
+  name: 第二年账户规模结构
+  value: 早期生产环境集团平均约 37 到 40 家门店，到第三年结构才逐步扩宽到 30 家
+  unit: outlets/chain
+  source: '[business-plan.yaml milestones 12-24 months 和 beachhead 定义] 让第二年 300 家门店的里程碑与所述 5 到 8 个生产环境集团的目标相互印证，早期生产环境集团平均约 37 到 40 家门店，之后到第三年结构才拓宽向 30 家。'
+headcount:
+- role: CEO / 商户金融科技 GTM
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 工程
+  q1y1: 1
+  q2y1: 2
+  q3y1: 2
+  q4y1: 2
+  q4y2: 3
+  q4y3: 4
+- role: 实施 / 财务运营
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 2
+  q4y2: 3
+  q4y3: 3
+- role: 合作伙伴关系 / 风险
+  q1y1: 0
+  q2y1: 0
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 销售
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 2
+- role: G&A / 运营
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 5
+  q4y1: 6
+  q4y2: 10
+  q4y3: 12
+headcountAnnualizedPayrollK:
+  q1y1: 315.0
+  q2y1: 440.0
+  q3y1: 540.0
+  q4y1: 620.0
+  q4y2: 1005.0
+  q4y3: 1240.0
+y1Monthly:
+- month: M1
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 19.6
+  salesMarketingK: 12.9
+  researchDevelopmentK: 14.9
+  generalAdministrativeK: 8.3
+  opexK: 36.1
+  ebitdaK: -36.1
+  cashEopK: 1863.9
+- month: M2
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 26.3
+  salesMarketingK: 14.2
+  researchDevelopmentK: 14.9
+  generalAdministrativeK: 10.3
+  opexK: 39.4
+  ebitdaK: -39.4
+  cashEopK: 1824.5
+- month: M3
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 26.3
+  salesMarketingK: 14.2
+  researchDevelopmentK: 14.9
+  generalAdministrativeK: 10.3
+  opexK: 39.4
+  ebitdaK: -39.4
+  cashEopK: 1785.1
+- month: M4
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salaryK: 36.7
+  salesMarketingK: 14.2
+  researchDevelopmentK: 25.3
+  generalAdministrativeK: 10.3
+  opexK: 49.8
+  ebitdaK: -49.8
+  cashEopK: 1735.3
+- month: M5
+  customersEop: 25
+  newCustomers: 25
+  revenueK: 3.4
+  cogsK: 9.0
+  grossProfitK: -5.6
+  salaryK: 36.7
+  salesMarketingK: 14.4
+  researchDevelopmentK: 25.3
+  generalAdministrativeK: 10.3
+  opexK: 50.0
+  ebitdaK: -55.6
+  cashEopK: 1679.7
+- month: M6
+  customersEop: 50
+  newCustomers: 25
+  revenueK: 10.1
+  cogsK: 10.2
+  grossProfitK: -0.1
+  salaryK: 36.7
+  salesMarketingK: 14.7
+  researchDevelopmentK: 25.3
+  generalAdministrativeK: 10.3
+  opexK: 50.3
+  ebitdaK: -50.4
+  cashEopK: 1629.3
+- month: M7
+  customersEop: 50
+  newCustomers: 0
+  revenueK: 13.4
+  cogsK: 10.9
+  grossProfitK: 2.5
+  salaryK: 36.7
+  salesMarketingK: 14.9
+  researchDevelopmentK: 25.3
+  generalAdministrativeK: 10.3
+  opexK: 50.5
+  ebitdaK: -48.0
+  cashEopK: 1581.3
+- month: M8
+  customersEop: 75
+  newCustomers: 25
+  revenueK: 16.8
+  cogsK: 11.5
+  grossProfitK: 5.3
+  salaryK: 45.0
+  salesMarketingK: 20.0
+  researchDevelopmentK: 25.3
+  generalAdministrativeK: 13.6
+  opexK: 58.9
+  ebitdaK: -53.6
+  cashEopK: 1527.7
+- month: M9
+  customersEop: 75
+  newCustomers: 0
+  revenueK: 20.2
+  cogsK: 12.2
+  grossProfitK: 8.0
+  salaryK: 45.0
+  salesMarketingK: 20.2
+  researchDevelopmentK: 25.3
+  generalAdministrativeK: 13.6
+  opexK: 59.1
+  ebitdaK: -51.1
+  cashEopK: 1476.6
+- month: M10
+  customersEop: 100
+  newCustomers: 25
+  revenueK: 23.5
+  cogsK: 12.8
+  grossProfitK: 10.7
+  salaryK: 45.0
+  salesMarketingK: 20.4
+  researchDevelopmentK: 25.3
+  generalAdministrativeK: 13.6
+  opexK: 59.3
+  ebitdaK: -48.6
+  cashEopK: 1428.0
+- month: M11
+  customersEop: 100
+  newCustomers: 0
+  revenueK: 26.9
+  cogsK: 16.8
+  grossProfitK: 10.1
+  salaryK: 51.7
+  salesMarketingK: 21.9
+  researchDevelopmentK: 25.3
+  generalAdministrativeK: 15.6
+  opexK: 62.8
+  ebitdaK: -52.7
+  cashEopK: 1375.3
+- month: M12
+  customersEop: 100
+  newCustomers: 0
+  revenueK: 26.9
+  cogsK: 16.8
+  grossProfitK: 10.1
+  salaryK: 51.7
+  salesMarketingK: 21.9
+  researchDevelopmentK: 25.3
+  generalAdministrativeK: 15.6
+  opexK: 62.8
+  ebitdaK: -52.7
+  cashEopK: 1322.6
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 150
+  revenueK: 100.8
+  cogsK: 57.1
+  grossProfitK: 43.7
+  salaryK: 165.5
+  salesMarketingK: 69.6
+  researchDevelopmentK: 89.4
+  generalAdministrativeK: 49.8
+  opexK: 208.8
+  ebitdaK: -165.1
+  cashEopK: 1157.5
+- quarter: Q2Y2
+  customersEop: 200
+  revenueK: 141.1
+  cogsK: 64.9
+  grossProfitK: 76.2
+  salaryK: 219.7
+  salesMarketingK: 99.2
+  researchDevelopmentK: 110.4
+  generalAdministrativeK: 55.7
+  opexK: 265.3
+  ebitdaK: -189.1
+  cashEopK: 968.4
+- quarter: Q3Y2
+  customersEop: 250
+  revenueK: 181.4
+  cogsK: 79.1
+  grossProfitK: 102.3
+  salaryK: 244.7
+  salesMarketingK: 103.9
+  researchDevelopmentK: 110.4
+  generalAdministrativeK: 71.5
+  opexK: 285.8
+  ebitdaK: -183.5
+  cashEopK: 784.9
+- quarter: Q4Y2
+  customersEop: 300
+  revenueK: 221.7
+  cogsK: 90.1
+  grossProfitK: 131.6
+  salaryK: 251.4
+  salesMarketingK: 107.2
+  researchDevelopmentK: 110.4
+  generalAdministrativeK: 73.5
+  opexK: 291.1
+  ebitdaK: -159.5
+  cashEopK: 625.4
+- quarter: Q1Y3
+  customersEop: 380
+  revenueK: 274.1
+  cogsK: 100.1
+  grossProfitK: 174.0
+  salaryK: 269.6
+  salesMarketingK: 135.5
+  researchDevelopmentK: 111.9
+  generalAdministrativeK: 76.5
+  opexK: 323.9
+  ebitdaK: -149.9
+  cashEopK: 475.5
+- quarter: Q2Y3
+  customersEop: 460
+  revenueK: 338.6
+  cogsK: 112.3
+  grossProfitK: 226.3
+  salaryK: 309.9
+  salesMarketingK: 148.2
+  researchDevelopmentK: 143.1
+  generalAdministrativeK: 76.5
+  opexK: 367.8
+  ebitdaK: -141.5
+  cashEopK: 334.0
+- quarter: Q3Y3
+  customersEop: 530
+  revenueK: 399.1
+  cogsK: 123.9
+  grossProfitK: 275.2
+  salaryK: 309.9
+  salesMarketingK: 151.6
+  researchDevelopmentK: 143.1
+  generalAdministrativeK: 76.5
+  opexK: 371.2
+  ebitdaK: -96.0
+  cashEopK: 238.0
+- quarter: Q4Y3
+  customersEop: 600
+  revenueK: 455.5
+  cogsK: 134.6
+  grossProfitK: 320.9
+  salaryK: 309.9
+  salesMarketingK: 154.7
+  researchDevelopmentK: 143.1
+  generalAdministrativeK: 76.5
+  opexK: 374.3
+  ebitdaK: -53.4
+  cashEopK: 184.6
+totals:
+  y1:
+    revenueK: 141.2
+    ebitdaK: -577.4
+    cashEopK: 1322.6
+  y2:
+    revenueK: 645.0
+    ebitdaK: -697.2
+    cashEopK: 625.4
+  y3:
+    revenueK: 1467.3
+    ebitdaK: -440.8
+    cashEopK: 184.6
+unitEconomics:
+  arpuAnnualK: 3.2
+  grossMarginPct: 70.0
+  cacK: 1.1
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 66.7
+  ltvK: 12.5
+  ltvCacRatio: 11.4
+  cacPaybackMonths: 5.9
+fundingAsk:
+  round: pre-seed
+  amountM: 2.0
+  runwayMonths: 24
+  milestone: 在种子轮之前，达到约 300 家运营门店、5 到 8 个生产环境集团、第二套技术栈或打款伙伴，以及一个融资模块的验证。
+  useOfFunds:
+  - bucket: 工程
+    amountUsd: 760000
+    percentage: 38
+  - bucket: GTM
+    amountUsd: 540000
+    percentage: 27
+  - bucket: G&A
+    amountUsd: 320000
+    percentage: 16
+  - bucket: 缓冲金（6 个月）
+    amountUsd: 380000
+    percentage: 19
+scenarios:
+  downside:
+    description: 试点转化延后约一个季度，附加费更接近纯订阅定价，公司在第三年结束时低于完整的 600 家门店 SOM 情形。
+    y3RevenueK: 1200.0
+    y3EbitdaK: -650.0
+    cashLowPointK: -110.0
+    keyAssumptionChanges:
+    - 第三年第四季度末约 500 家运营门店，而不是 600 家。
+    - 由于基点附加费走弱，每门店混合年收入降到约 $3.0K。
+    - 销售周期仍接近六个月，拖慢试点转生产合同的速度。
+  base:
+    description: 招聘按里程碑门槛推进，一套启动技术栈，加上适度的用量费附加，让模型在第三年第四季度末达到研究测算的 600 家门店 SOM 情形，同时仍未实现盈亏平衡。
+    y3RevenueK: 1467.3
+    y3EbitdaK: -440.8
+    cashLowPointK: 184.6
+    keyAssumptionChanges:
+    - 每门店混合年收入维持在基于研究测算的 $3.225K 水平。
+    - 公司在第 24 个月达到 300 家运营门店，第 36 个月达到 600 家。
+    - 招聘继续按里程碑门槛推进，而不是提前铺开庞大的销售或产品团队。
+  upside:
+    description: 伙伴转介在第二年开始见效，更多商户采用用量费模块，门店扩张比计划更快触及滩头市场的上限。
+    y3RevenueK: 1700.0
+    y3EbitdaK: -180.0
+    cashLowPointK: 320.0
+    keyAssumptionChanges:
+    - 第三年第四季度末约 680 家运营门店，而不是 600 家。
+    - 随着附加费比例改善，每门店混合年收入升至约 $3.4K。
+    - 伙伴来源的商机缩短了实际销售周期，让实施产能利用率保持更高水平。
+sensitivity:
+- variable: ARPU
+  downsideCase: 每门店年收入 $3.0K
+  baseCase: 每门店年收入 $3.225K
+  upsideCase: 每门店年收入 $3.45K
+  y3RevenueImpactK: -102.0
+  cashImpactK: -90.0
+- variable: CAC
+  downsideCase: 每门店 CAC $1.4K
+  baseCase: 每门店 CAC $1.1K
+  upsideCase: 每门店 CAC $0.9K
+  y3RevenueImpactK: 0.0
+  cashImpactK: -180.0
+- variable: 流失率
+  downsideCase: 每月门店流失率 2.0%
+  baseCase: 每月门店流失率 1.5%
+  upsideCase: 每月门店流失率 1.0%
+  y3RevenueImpactK: -120.0
+  cashImpactK: -110.0
+- variable: 销售周期
+  downsideCase: 试点转生产合同周期 6 个月
+  baseCase: 混合周期 4.5 个月
+  upsideCase: 有伙伴引荐时周期 3.5 个月
+  y3RevenueImpactK: -210.0
+  cashImpactK: -170.0
+- variable: 毛利率
+  downsideCase: 长期毛利率 65%
+  baseCase: 长期毛利率 70%
+  upsideCase: 长期毛利率 74%
+  y3RevenueImpactK: 0.0
+  cashImpactK: -140.0
+- variable: 招聘节奏
+  downsideCase: 在可复制的技术栈复用能力形成之前，就提前招聘第二位销售和额外实施产能
+  baseCase: 招聘按里程碑门槛计划推进
+  upsideCase: 只有当伙伴来源的商机管道证明可复制之后，才追加 GTM 招聘
+  y3RevenueImpactK: 0.0
+  cashImpactK: -160.0
+modelDiagram:
+  title: 单位经济流程
+  mermaid: |
+    flowchart LR
+      DirectOutreach --> PaidPilots
+      PaidPilots --> LiveOutlets
+      PartnerReferrals --> LiveOutlets
+      LiveOutlets --> SubscriptionRevenue
+      LiveOutlets --> VolumeFees
+      SubscriptionRevenue --> GrossProfit
+      VolumeFees --> GrossProfit
+      GrossProfit --> Cash
+modelSanity:
+- checkName: 收入引擎
+  finding: 基准情形靠运营门店数从 100 增长到 600 家驱动，同时把混合收入维持在基于研究测算的每门店 $3.225K 附近。
+- checkName: 必须跑通的环节
+  finding: 试点转生产合同的转化必须维持在 45 到 90 天的部署窗口附近，这样一支 10 人规模的第二年团队才能在不沦为服务型公司的前提下做到 300 家门店。
+- checkName: 模型崩溃的条件
+  finding: 如果销售周期拉长到六个月左右，或附加费退回到纯订阅定价，下行情形会在第三年结束前把现金推到零以下。
+- checkName: 下一轮的验证依据
+  finding: 一旦公司在第 24 个月达到约 300 家运营门店、5 到 8 个生产环境集团、第二套技术栈的验证，以及至少一次融资模块的验证，下一轮融资就站得住脚。
+sanityChecks:
+  ruleOf40: 第三年增长率 127.5% + EBITDA 利润率 -30.0% = 97.5%（因为第二年基数仍然偏小而被拉高）。
+  burnMultiple: 第二年燃烧倍数约为 1.1 倍，随着门店密度上升、固定合规支出被摊薄，第三年改善到约 0.5 倍。
+  revenuePerFte: 第三年每 FTE（按第三年第四季度末计）收入 $122.3K（对标 SaaS 基准 $200 到 400K）。
+  flags:
+  - 第三年报告毛利率仍低于 70% 的目标，因为实施和合规成本还没有摊薄到足够多的运营门店上。
+  - 每 FTE 收入仍低于成熟 SaaS 的基准水平，只有当公司持续复用同一套启动技术栈模板、而不是为每个连锁做定制项目时，这才是可以接受的。
+  - 基准情形结束时现金只剩约 $185K，一个季度的试点转化延误就可能迫使公司增资或放慢招聘节奏。
+  - 模型仍然依赖第三年集中在 20 到 25 个多门店集团身上，少数几个部署延迟或流失的连锁就会明显拖动 EBITDA。
