@@ -1,0 +1,530 @@
+slug: bid-evidence-graph
+date: '2026-07-03'
+currency: USD
+modelStartMonth: 2026-08
+assumptions:
+  - id: A1
+    name: Model start month
+    value: 2026-08
+    unit: YYYY-MM
+    source: "[BP date 2026-07-03; model starts the next month]"
+  - id: A2
+    name: Opening cash after pre-seed close
+    value: '2500'
+    unit: USDK
+    source: "[BP fundingAsk targetFundingRangeUsd $2-4M; model uses the low-mid point $2.5M as the amount that closes at model start]"
+  - id: A3
+    name: Archive-onboarding / evidence-audit one-time fee per new design partner, Year 1
+    value: '29'
+    unit: USDK per project
+    source: "[BP gtm.pricing GBP15k-GBP30k archive-onboarding fee; USD estimate uses a GBP:USD ~1.27 FX heuristic (A20), midpoint ~$28.5K rounded to $29K]"
+  - id: A4
+    name: Archive-onboarding fee, Year 2 new customer
+    value: '32'
+    unit: USDK per project
+    source: "[Heuristic: onboarding fee grows ~10%/yr as templates and rule packs mature, consistent with BP pricing note that onboarding stays a discrete line item alongside the subscription]"
+  - id: A5
+    name: Archive-onboarding fee, Year 3 new customer
+    value: '35'
+    unit: USDK per project
+    source: "[Same onboarding-fee growth heuristic as A4, applied for a second year]"
+  - id: A6
+    name: Annual subscription ARPU, Year 1 pilot-conversion pricing
+    value: '45'
+    unit: USDK per customer per year
+    source: "[BP investorMemo.firstCustomer initialContract GBP30k-GBP75k annual subscription; model uses the low-mid end for first-year pilot-tier pricing before ROI is proven]"
+  - id: A7
+    name: Annual subscription ARPU, Year 2 blended
+    value: '55'
+    unit: USDK per customer per year
+    source: "[Interpolated ramp between the Year 1 pilot ARPU (A6) and the Year 3 mature blended ACV (A8), consistent with BP expansionLevers such as extra bid desks and partner workspaces lifting ACV over time]"
+  - id: A8
+    name: Annual subscription ARPU, Year 3 mature blended
+    value: '65'
+    unit: USDK per customer per year
+    source: "[research.yaml bottomUpSizingDrivers 'Blended ACV' ~$65k est., the same figure used to build the SAM/SOM math]"
+  - id: A9
+    name: Customer ramp, subscription customers end of period
+    value: 'Year 1: 3; Year 2: 8; Year 3: 30'
+    unit: customers EOP
+    source: "[BP milestones: 0-12mo 'close 2-3 paid design partners...convert at least 2 pilots into annual subscriptions'; 12-24mo 'Reach 5-7 subscription customers and at least 2 partner-sourced opportunities' (model hits 6 by Q2Y2, extends to 8 by Q4Y2 with partner-sourced adds); 24-36mo 'Reach roughly 25-30 customers and about $2.0M ARR']"
+  - id: A10
+    name: Gross margin ramp
+    value: 'Year 1: 55%; Year 2: 62%; Year 3: 70%'
+    unit: percent
+    source: "[BP businessModel targetGrossMarginPct 70 as the mature target; early years held lower given BP risks flag that archive ingestion and document normalization 'remain too bespoke, stretching onboarding past 90 days']"
+  - id: A11
+    name: CEO / founding seller loaded cash compensation
+    value: '85'
+    unit: USDK per FTE per year
+    source: "[UK early-stage B2B SaaS founder compensation heuristic: below-market cash salary plus ~20% employer NI/pension load; role per BP team 'CEO / founding seller', Month 0]"
+  - id: A12
+    name: Founding engineer loaded cash compensation
+    value: '120'
+    unit: USDK per FTE per year
+    source: "[UK early-stage B2B SaaS senior engineer compensation heuristic plus ~20% employer NI/pension load; role per BP team 'Founding eng', Month 0]"
+  - id: A13
+    name: Bid-domain product lead loaded cash compensation
+    value: '110'
+    unit: USDK per FTE per year
+    source: "[UK early-stage product/domain-lead compensation heuristic plus ~20% employer load; role per BP team 'Bid-domain product lead', Month 0-3]"
+  - id: A14
+    name: Applied AI and document engineer loaded cash compensation
+    value: '130'
+    unit: USDK per FTE per year
+    source: "[UK senior applied-AI/document-engineering compensation heuristic plus ~20% employer load; role per BP team 'Applied AI and document engineer', Month 6-9]"
+  - id: A15
+    name: Implementation and channel manager loaded cash compensation
+    value: '95'
+    unit: USDK per FTE per year
+    source: "[UK implementation/channel-manager compensation heuristic plus ~20% employer load; role per BP team 'Implementation and channel manager', Month 9-12]"
+  - id: A16
+    name: Sales / BDR loaded cash compensation
+    value: '90'
+    unit: USDK per FTE per year
+    source: "[UK enterprise SaaS sales-development compensation heuristic plus ~20% employer load; hire added post-Year 1 to scale beyond founder-led selling per BP sequencingRationale ('channel and module expansion only after pilots convert')]"
+  - id: A17
+    name: G&A / finance-ops loaded cash compensation
+    value: '70'
+    unit: USDK per FTE per year
+    source: "[UK early-stage finance/admin compensation heuristic plus ~20% employer load; first dedicated back-office hire added in Year 2 as headcount and billing complexity grow, operator judgment since BP team list does not name this role explicitly]"
+  - id: A18
+    name: Non-payroll operating baseline
+    value: 'Year 1: $6K/mo; Year 2: $10K/mo; Year 3: $15K/mo'
+    unit: USDK per month
+    source: "[Startup-finance heuristic for cloud hosting/LLM inference, tools, legal/compliance, insurance, and founder-led sales travel in an early UK B2B SaaS company]"
+  - id: A19
+    name: CAC per new subscription customer
+    value: '36.25'
+    unit: USDK per customer
+    source: "[Derived from modeled Year 1 sales & marketing spend ($108.75K) divided by 3 new subscription customers signed; consistent with BP GTM 'founder-led outbound' plus early implementation/channel spend]"
+  - id: A20
+    name: GBP:USD FX heuristic
+    value: '1.27'
+    unit: ratio
+    source: "[Simplifying FX heuristic used only to translate BP's GBP-denominated onboarding-fee anchors into USD; all other BP/research market-sizing figures are already USD-denominated]"
+  - id: A21
+    name: Monthly subscription logo churn
+    value: '1.2'
+    unit: percent
+    source: "[Industry heuristic for vertical enterprise SaaS embedded in a compliance workflow with high switching cost, roughly 12-15% annual logo churn; no churn figure is given directly in BP or research]"
+  - id: A22
+    name: Average sales cycle, paid audit to signed annual subscription
+    value: '3'
+    unit: months
+    source: "[Heuristic mapped to BP investorMemo.firstCustomer initialContract '8-12 weeks' evidence-audit and archive-onboarding project before conversion to the annual subscription decision]"
+  - id: A23
+    name: Cash conversion simplification
+    value: EBITDA approximates operating cash flow
+    unit: policy
+    source: "[Startup-finance heuristic: no debt, capex, or separate working-capital financing modeled in this pre-seed view]"
+  - id: A24
+    name: Hiring sequence
+    value: "CEO, Founding eng, and Bid-domain product lead at Month 0 (Q1Y1); Applied AI and document engineer at Month 6-9 (Q3Y1); Implementation and channel manager at Month 9-12 (Q4Y1); additional Engineering, Sales/BDR, and G&A hires phased through Year 2-3"
+    unit: role-start timing
+    source: "[BP team section start timings for the first five roles; Year 2-3 scale-up hires (2nd/3rd engineer, sales rep, G&A) are operator judgment sized to the customer ramp in A9]"
+  - id: A25
+    name: Funding ask amount and runway
+    value: "$2.5M pre-seed, 18-month runway"
+    unit: USDM / months
+    source: "[BP fundingAsk: round pre-seed, targetFundingRangeUsd $2-4M, runwayMonths 18; model selects the low-mid point of the range]"
+headcount:
+  - role: CEO / Founding Seller
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Founding Engineer
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 2
+    q4y3: 3
+  - role: Bid-domain Product Lead
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 2
+  - role: Applied AI / Document Engineer
+    q1y1: 0
+    q2y1: 0
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 2
+  - role: Implementation & Channel Manager
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 2
+    q4y3: 3
+  - role: Sales / BDR
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 2
+  - role: G&A / Finance-Ops
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 3
+  q3y1: 4
+  q4y1: 5
+  q4y2: 9
+  q4y3: 14
+headcountAnnualizedPayrollK:
+  q1y1: 315.0
+  q2y1: 315.0
+  q3y1: 445.0
+  q4y1: 540.0
+  q4y2: 915.0
+  q4y3: 1460.0
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 7.1
+    researchDevelopmentK: 19.2
+    generalAdministrativeK: 6.0
+    opexK: 32.2
+    ebitdaK: -32.2
+    cashEopK: 2467.8
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 7.1
+    researchDevelopmentK: 19.2
+    generalAdministrativeK: 6.0
+    opexK: 32.2
+    ebitdaK: -32.2
+    cashEopK: 2435.5
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 29.0
+    cogsK: 13.0
+    grossProfitK: 16.0
+    salesMarketingK: 7.1
+    researchDevelopmentK: 19.2
+    generalAdministrativeK: 6.0
+    opexK: 32.2
+    ebitdaK: -16.3
+    cashEopK: 2419.2
+  - month: M4
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salesMarketingK: 7.1
+    researchDevelopmentK: 19.2
+    generalAdministrativeK: 6.0
+    opexK: 32.2
+    ebitdaK: -32.2
+    cashEopK: 2386.9
+  - month: M5
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 29.0
+    cogsK: 13.0
+    grossProfitK: 16.0
+    salesMarketingK: 7.1
+    researchDevelopmentK: 19.2
+    generalAdministrativeK: 6.0
+    opexK: 32.2
+    ebitdaK: -16.3
+    cashEopK: 2370.6
+  - month: M6
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 3.8
+    cogsK: 1.7
+    grossProfitK: 2.1
+    salesMarketingK: 7.1
+    researchDevelopmentK: 19.2
+    generalAdministrativeK: 6.0
+    opexK: 32.2
+    ebitdaK: -30.2
+    cashEopK: 2340.5
+  - month: M7
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 32.8
+    cogsK: 14.7
+    grossProfitK: 18.0
+    salesMarketingK: 7.1
+    researchDevelopmentK: 30.0
+    generalAdministrativeK: 6.0
+    opexK: 43.1
+    ebitdaK: -25.1
+    cashEopK: 2315.4
+  - month: M8
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 3.8
+    cogsK: 1.7
+    grossProfitK: 2.1
+    salesMarketingK: 7.1
+    researchDevelopmentK: 30.0
+    generalAdministrativeK: 6.0
+    opexK: 43.1
+    ebitdaK: -41.0
+    cashEopK: 2274.4
+  - month: M9
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 7.5
+    cogsK: 3.4
+    grossProfitK: 4.1
+    salesMarketingK: 7.1
+    researchDevelopmentK: 30.0
+    generalAdministrativeK: 6.0
+    opexK: 43.1
+    ebitdaK: -39.0
+    cashEopK: 2235.4
+  - month: M10
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 7.5
+    cogsK: 3.4
+    grossProfitK: 4.1
+    salesMarketingK: 15.0
+    researchDevelopmentK: 30.0
+    generalAdministrativeK: 6.0
+    opexK: 51.0
+    ebitdaK: -46.9
+    cashEopK: 2188.5
+  - month: M11
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 7.5
+    cogsK: 3.4
+    grossProfitK: 4.1
+    salesMarketingK: 15.0
+    researchDevelopmentK: 30.0
+    generalAdministrativeK: 6.0
+    opexK: 51.0
+    ebitdaK: -46.9
+    cashEopK: 2141.7
+  - month: M12
+    customersEop: 3
+    newCustomers: 1
+    revenueK: 11.2
+    cogsK: 5.1
+    grossProfitK: 6.2
+    salesMarketingK: 15.0
+    researchDevelopmentK: 30.0
+    generalAdministrativeK: 6.0
+    opexK: 51.0
+    ebitdaK: -44.8
+    cashEopK: 2096.9
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 4
+    revenueK: 87.0
+    grossProfitK: 53.9
+    opexK: 188.4
+    ebitdaK: -134.5
+    cashEopK: 1962.4
+  - quarter: Q2Y2
+    customersEop: 6
+    revenueK: 146.5
+    grossProfitK: 90.8
+    opexK: 211.9
+    ebitdaK: -121.0
+    cashEopK: 1841.3
+  - quarter: Q3Y2
+    customersEop: 7
+    revenueK: 128.2
+    grossProfitK: 79.5
+    opexK: 235.3
+    ebitdaK: -155.8
+    cashEopK: 1685.5
+  - quarter: Q4Y2
+    customersEop: 8
+    revenueK: 142.0
+    grossProfitK: 88.0
+    opexK: 258.8
+    ebitdaK: -170.7
+    cashEopK: 1514.8
+  - quarter: Q1Y3
+    customersEop: 12
+    revenueK: 335.0
+    grossProfitK: 234.5
+    opexK: 307.8
+    ebitdaK: -73.3
+    cashEopK: 1441.5
+  - quarter: Q2Y3
+    customersEop: 17
+    revenueK: 451.2
+    grossProfitK: 315.9
+    opexK: 341.9
+    ebitdaK: -26.0
+    cashEopK: 1415.5
+  - quarter: Q3Y3
+    customersEop: 23
+    revenueK: 583.8
+    grossProfitK: 408.6
+    opexK: 375.9
+    ebitdaK: 32.7
+    cashEopK: 1448.2
+  - quarter: Q4Y3
+    customersEop: 30
+    revenueK: 732.5
+    grossProfitK: 512.8
+    opexK: 410.0
+    ebitdaK: 102.8
+    cashEopK: 1550.9
+totals:
+  y1:
+    revenueK: 132.0
+    ebitdaK: -403.1
+    cashEopK: 2096.9
+  y2:
+    revenueK: 503.8
+    ebitdaK: -582.0
+    cashEopK: 1514.8
+  y3:
+    revenueK: 2102.5
+    ebitdaK: 36.1
+    cashEopK: 1550.9
+unitEconomics:
+  arpuAnnualK: 65.0
+  grossMarginPct: 70.0
+  cacK: 36.25
+  monthlyChurnPct: 1.2
+  avgCustomerLifeMonths: 83.3
+  ltvK: 316.0
+  ltvCacRatio: 8.7
+  cacPaybackMonths: 9.6
+fundingAsk:
+  round: pre-seed
+  amountM: 2.5
+  runwayMonths: 18
+  milestone: "Convert at least 2 of the first 3 paid design partners into annual subscriptions, productize the tender-type parser and SharePoint coexistence workflow, and reach 5-7 subscription customers with at least one partner-sourced pilot before the next round."
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 1125000
+      percentage: 45
+    - bucket: GTM
+      amountUsd: 750000
+      percentage: 30
+    - bucket: "G&A"
+      amountUsd: 250000
+      percentage: 10
+    - bucket: "Buffer (6 mo)"
+      amountUsd: 375000
+      percentage: 15
+scenarios:
+  downside:
+    description: "Archive ingestion stays services-heavy and partner-sourced pilots arrive a quarter late, so gross margin stalls and the Year 3 logo count falls well short of the BP's 25-30 milestone."
+    y3RevenueK: 1350.0
+    y3EbitdaK: -230.0
+    cashLowPointK: 980.0
+    keyAssumptionChanges:
+      - "Year 3 ends at ~22 subscription customers instead of 30 as onboarding queues back up."
+      - "Blended ARPU stays near $58K instead of $65K because fewer accounts reach production-tier pricing."
+      - "Gross margin caps at 64% instead of 70% as archive cleanup remains partly bespoke, per the BP's own top risk."
+  base:
+    description: "Three Year 1 design partners convert into a growing subscription base that reaches 8 customers by Q4Y2 and 30 by Q4Y3, consistent with the BP's milestone path and the research.yaml $65K blended ACV anchor."
+    y3RevenueK: 2102.5
+    y3EbitdaK: 36.1
+    cashLowPointK: 1415.5
+    keyAssumptionChanges:
+      - "Subscription ARPU steps from $45K (Year 1 pilot pricing) to $55K (Year 2) to $65K (Year 3 blended)."
+      - "Gross margin ramps from 55% to 70% as onboarding standardizes around one common evidence ontology."
+      - "Customer count grows 3 to 8 to 30 across the three years, matching BP milestones for each 12-month horizon."
+  upside:
+    description: "Channel and partner-sourced referrals convert faster than modeled, pushing ACV and logo count above the base case without a major unplanned hiring pull-forward."
+    y3RevenueK: 2700.0
+    y3EbitdaK: 260.0
+    cashLowPointK: 1560.0
+    keyAssumptionChanges:
+      - "Year 3 ends at ~36 subscription customers as partner-sourced pilots convert faster than the base case."
+      - "Blended ARPU rises toward $72K as more accounts add partner workspaces and extra bid desks."
+      - "Gross margin reaches 73% as template reuse further reduces exception-handling labor."
+sensitivity:
+  - variable: ARPU
+    downsideCase: "Blended ARPU averages $58K instead of $65K in Year 3."
+    baseCase: "Blended ARPU is $65K in Year 3."
+    upsideCase: "Blended ARPU rises to $72K in Year 3."
+    y3RevenueImpactK: -210.0
+    cashImpactK: -140.0
+  - variable: CAC
+    downsideCase: "Founder-led selling plus travel pushes CAC to about $45K per customer."
+    baseCase: "CAC is $36.25K per new subscription customer."
+    upsideCase: "Partner-sourced referrals cut CAC to about $30K."
+    y3RevenueImpactK: 0.0
+    cashImpactK: -60.0
+  - variable: churn
+    downsideCase: "Monthly logo churn rises to 2.0% as some early pilots do not renew."
+    baseCase: "Monthly logo churn is 1.2%."
+    upsideCase: "Monthly logo churn improves to 0.8% as the evidence graph becomes embedded in the bid workflow."
+    y3RevenueImpactK: -150.0
+    cashImpactK: -90.0
+  - variable: sales cycle
+    downsideCase: "Average time from paid audit to signed subscription slips from 3 to 5 months."
+    baseCase: "Average sales cycle is about 3 months."
+    upsideCase: "Validated case studies shorten the cycle to about 2 months."
+    y3RevenueImpactK: -180.0
+    cashImpactK: -130.0
+  - variable: gross margin
+    downsideCase: "Gross margin stalls at 64% because onboarding remains partly bespoke."
+    baseCase: "Gross margin reaches 70% in Year 3."
+    upsideCase: "Gross margin reaches 73% through stronger template and partner reuse."
+    y3RevenueImpactK: 0.0
+    cashImpactK: -110.0
+  - variable: hiring pace
+    downsideCase: "Two non-revenue hires (2nd engineer, G&A) are pulled forward by two quarters."
+    baseCase: "Hiring follows the measured quarter-end plan tied to the customer ramp."
+    upsideCase: "Back-office and second-engineer hires stay delayed until 5-7 customers are proven."
+    y3RevenueImpactK: 10.0
+    cashImpactK: -150.0
+modelDiagram:
+  title: unit economics flow
+  mermaid: |
+    flowchart LR
+      Leads[Bid director and preconstruction leads] --> Audits[Paid evidence audits]
+      Audits --> Pilots[Design-partner onboarding, 8-12 weeks]
+      Pilots --> Subscriptions[Annual bid-desk subscriptions]
+      Subscriptions --> Revenue[Blended ARPU x subscription customers]
+      Revenue --> GrossProfit[Gross profit after delivery cost]
+      GrossProfit --> Cash[Cash runway toward next round]
+modelSanity:
+  - checkName: Revenue engine
+    finding: "Base-case revenue is driven by subscription ACV stepping from $45K (Year 1 pilot pricing) to $65K (Year 3 blended) across a customer base that scales from 3 to 30 logos, plus one-time onboarding fees for each newly signed design partner."
+  - checkName: Must go right
+    finding: "The company must convert at least 2 of the first 3 paid design partners into annual subscriptions in Year 1 and keep onboarding partner/template-led so gross margin can climb from 55% toward the BP's 70% target instead of getting stuck in services-heavy delivery."
+  - checkName: Model breaks if
+    finding: "The Q4Y2-to-Q4Y3 jump from 8 to 30 customers slips or gross margin stalls near 64%, which the sensitivity table shows could cut Year 3 revenue by roughly $200K+ and pull the cash trough down toward the tighter $1.0-1.3M minimum-burn estimate."
+  - checkName: Next-round proof
+    finding: "The seed case is strongest once the company reaches 5-7 subscription customers with at least one partner-sourced pilot by Q4Y2 and begins posting EBITDA-positive quarters in Year 3, as shown in Q3Y3-Q4Y3."
+sanityChecks:
+  ruleOf40: "Y3 growth 317% (off a small $503.8K Y2 base) + EBITDA margin 1.7% = ~319%; this figure is inflated by the tiny revenue base rather than reflecting mature-SaaS rule-of-40 health."
+  burnMultiple: "Y2 burn multiple ~1.6x using $582.0K net burn over $371.8K incremental revenue vs Y1; Year 3 turns cash-generative (EBITDA +$36.1K) so a burn multiple is not meaningful that year."
+  revenuePerFte: "$150.2K Y3 revenue per FTE (14 FTE) vs a mature SaaS benchmark of roughly $200-400K; still below benchmark, consistent with an implementation-heavy vertical SaaS company in its third year."
+  flags:
+    - "Year 3 customer count jumps from 8 (Q4Y2) to 30 (Q4Y3), a roughly 3.75x logo increase in a single year that mirrors the BP's own 24-36 month milestone but is far more aggressive than the hiring-constrained Year 1-Year 2 pace; this is the single biggest execution risk in the model."
+    - "Rule-of-40 and YoY growth % are distorted by a very small Year 2 revenue base ($503.8K) and should not be benchmarked against mature SaaS comparables."
+    - "Gross margin recovery from 55% (Y1) to 70% (Y3) assumes onboarding standardizes largely as hoped; the BP's own risk section warns archive ingestion could 'remain too bespoke,' in which case both gross margin and the Year 3 customer ramp are optimistic."
+    - "Revenue per FTE ($150.2K) stays below the $200-400K mature SaaS benchmark through Year 3, so headcount efficiency at scale is not yet proven."
+    - "The $2.5M funding ask leaves a modeled cash trough of ~$1.42M, comfortably above zero; this is sized to the BP's own $2-4M/18-month guidance rather than the tighter ~$1.0-1.3M minimum this cost model implies is strictly required, with the gap acting as a buffer against slower sales cycles or heavier services costs than modeled here."
