@@ -1,0 +1,228 @@
+slug: semi-custom-gpu-assurance
+date: '2026-07-03'
+executiveSummary: 可授权 GPU IP 让非 hyperscaler OEM 也开始认真考虑半定制 AI 芯片，但最难的拍板点不再是芯片怎么设计，而是流片前能不能证明买家手里的真实 CUDA workload 迁过去后，既能跑通，也能打到 BOM 和功耗目标。首个客户会是一家 300-800 人的 AI appliance 厂商或区域服务器 OEM，卖私有推理机架，在 Nvidia 方案下毛利打不进目标。公司卖的是一套流片前 workload replay 实验室：抓生产环境里的 CUDA traces、model graphs 和 memory profiles，放到合作方的 simulator 和 compiler 输出上重跑，大约 6 周交付一份围绕单个 accelerator 项目的 go/no-go assurance pack。研究同时证明了供需两侧都在成形——Dell、HPE、Penguin、Lenovo 已经把 private AI/AI factory 系统打包成产品，OXMIQ、Arm、Marvell 也在把半定制算力的供给门槛往下压——但也提醒我们，近期市场仍是一个高价值、强集中的细分赛道，而不是一个宽广的软件品类。按研究测算，TAM 约为 $180.0M，SAM 约为 $45.0M，Y3 可触达的 SOM 约为 $3.6M，所以这门生意能不能变成 venture case，关键不在第一张订单，而在能不能从单次评估工作流扩到 post-silicon 校准和跨厂商兼容层。这个切口之所以成立，是因为现在没有哪家在位企业真正占住“买方侧的 system of record”：把客户 traces 一路连到 tapeout、BOM、功耗和 bring-up 风险。EDA 厂商卖工具，IP 厂商卖自家路径。最悬而未决的两件事是：2026-2028 年到底会不会有足够多 OEM 真给第一轮半定制 accelerator 评估拨预算；以及新一代 IP 生态会不会给中立第三方足够的 simulator 和 compiler 访问权限。因此，这份计划把未来 18 个月定义成证明期：拿下 2-3 个付费共创客户、打通 2-3 条 toolchain 集成，并证明流片前预测足够可信，能把一次性 pilot 转成年度项目订阅。
+problem:
+- AI appliance 厂商和服务器 OEM 越来越被 Nvidia BOM、机架功耗和路线图依赖压着走，推理系统毛利被不断挤薄；但一旦决定做半定制 accelerator，就得先拍出数百万美元的流片预算。
+- 现有替代方案散落在顾问报告、厂商 benchmark、Excel 版 ROI 模型和零散的 simulator 跑数之间，没有谁能在拨预算前，拿买家真实 workload 做一遍中立 replay。
+- CUDA、memory 或 orchestration 的缺口，往往要等到 bring-up 才暴露；那时资本已经花出去，扩编后的 silicon 团队也已经招上了。
+solution:
+- 在客户可控的基础设施里抓取有代表性的 CUDA traces、model graphs、batch shapes 和 memory profiles，再把它们标准化到单个候选 accelerator 项目的 replay 输入。
+- 把这些 workload 放进可授权 GPU 的 simulators、compiler toolchains 和 emulation targets，流片前先把 portability、memory pressure 和预估 perf-per-watt 跑出来。
+- 交付一份把技术结论连到 BOM、功耗和项目时间线假设上的高管 assurance pack；等首批 silicon 回来后，再往后接 telemetry，持续回标模型并推动续约。
+whyWeWin:
+- 公司站在 vendor-neutral 的位置上，而这个市场里的 IP 供应商天然会证明自家架构最好，EDA 在位企业卖的又是工程工具，不是买方侧的 go/no-go 工作流。
+- 匿名化 workload traces、portability failures 和 first-silicon 校准数据，会随着项目变多越滚越厚；这些跨项目视角，单个 OEM、顾问或 IP 厂商都拿不到。
+- 滩头市场收得足够窄，价值能很快跑出来：一张 accelerator card、一个明确触发点、一个 6 周证明周期，直接挂着一笔硬 tapeout 决策。
+- 产品交付的不是实验室看板，而是 VP Hardware 和 GM 这种采购负责人可以直接拿去拍板的决策材料：把 compiler 和 simulation 输出翻译成能不能投项目。
+strategicChoices:
+  beachhead: 北美的 AI appliance 厂商与区域服务器 OEM，卖 1-8 机架的私有推理集群。因为 Nvidia 方案下的 BOM 和功耗包络打穿了产品毛利目标，它们开始评估第一张半定制 accelerator card。
+  wedgeRationale: 这群客户已经在卖真系统，也已经被机架级毛利和功耗压力顶到墙上，现在又第一次暴露在 OXMIQ 这类可授权 GPU 方案面前，于是会自然冒出一个很具体的 6 周证明项目。要是一上来就去做 hyperscaler 自研芯片、通用 EDA 或成品芯片优化，不但销售周期更长，撞上的在位企业也更强，而公司还没先证明“中立 workload replay 真能改写 funding decision”这件事。
+  sequencingRationale: 产品先做流片前 replay 和 assurance memo，因为今天市场上缺的就是这笔支出；只有先拿到一条可回标的基线预测，post-silicon telemetry 才值得往下做。销售先靠创始人主导，集成先靠合作伙伴带进来，不要急着搭规模化销售队伍；前 2-3 个客户和前 2-3 条 toolchain，会直接决定哪些能力能产品化，哪些还只是定制服务。
+  notYet:
+  - 拥有完整内部 silicon 团队的 hyperscaler 训练芯片项目
+  - 替换整套 emulation 或 EDA suite
+  - 把自主 accelerator 设计优化或 compiler 开发直接做成产品
+  - 在 GPU 邻近项目还没跑出可复制性前，就铺向所有 accelerator 类型
+market:
+  tam: $180.0M（研究测算：到 2029 年，全球每年约 360 个半定制 accelerator 评估项目 × 每个项目约 $500k 的混合年价值）
+  sam: $45.0M（研究测算：北美和欧洲约 150 个项目 × 首年约 $300k 的年化价值）
+  som: $3.6M（研究测算：到第 3 年拿下 12 个活跃项目 × 每个项目约 $300k 的混合年价值）
+  segments:
+  - 销售私有推理集群的北美 AI appliance 厂商
+  - 正在评估第一轮授权 accelerator 的欧洲 sovereign/private AI OEM 或服务器项目
+  buyingProcess: silicon、compiler 和 platform-performance 团队会先围绕单个 accelerator 项目界定 replay 范围；当管理层需要一份可审计的 go/no-go 结论，才能批准流片预算或扩招 silicon 团队时，VP Hardware Engineering、AI Systems GM 或 Head of Silicon 才会签字。预算更可能从 custom silicon evaluation、emulation 或 AI infrastructure program 里挪出来，而不是单独新增一条软件预算。
+product:
+  mvp: 面向单个 accelerator 项目的安全 replay 实验室：抓取有代表性的客户 traces，放到一条合作方 simulator 和 compiler 栈上运行，并在 6 周内交付一份 portability、memory pressure 和 perf-per-watt assurance memo。这个 MVP 明确是买方侧决策支持，不是保证书，也不是完整的硬件验证套件。
+  sixMonth: 支持 2-3 条愿意配合的 toolchain 集成，补上 workload 覆盖率看板和版本化 confidence bands，让共创客户看清哪些结论取决于 simulator fidelity、CUDA 版本或 memory topology 假设。
+  twelveMonth: 上线 first-silicon telemetry 和 regression monitoring，让每个客户都能把预测结果和实际 bring-up 结果对上；同时在前两条可授权或半定制 accelerator 路径之间，开始做跨厂商比较。
+  twentyFourMonth: 在现有账户里变成 accelerator 评估的 system of record：同时支持多个活跃项目、把 benchmark 映射回真实 traces，并在共创客户证据足够强时，向 NPU 或 FPGA 推理这类邻近 accelerator 品类扩展。
+  keyBets:
+  - 客户会允许 trace capture 跑在客户自控基础设施上，并在 NDA 之下共享提炼后的输出。
+  - 至少两条可授权 IP 或定制算力生态，会开放足够的 simulator 和 compiler 访问权限，让中立 replay 层能成立。
+  - 流片前 replay 至少能覆盖 80% 的重点 workload，在第一颗 silicon 出来前依然足够支持决策。
+  - 把预测结果和 first-silicon bring-up 回标，会比竞争对手打包邻近功能更快地建立信任。
+gtm:
+  wedge: 以一个 6 周的流片前 assurance 项目切入，围绕单个 accelerator 评估，把零散的顾问研究和供应商说法收束成一份基于真实 workload 的 go/no-go 决策包。
+  channels:
+  - 创始人主导，直接卖给滩头市场 OEM 里的 VP Hardware、GM AI Systems 和 Head of Silicon
+  - 借可授权 IP 厂商、Arm 或定制算力生态，以及设计服务公司，跑共创客户与转介绍
+  - 从已经参与 software bring-up 的 emulation 和 prototyping 合作伙伴那里，拉出技术侧需求
+  funnelTargets: 目标账户→技术摸底 30-40%；技术摸底→付费试点 25-35%；试点→年度项目订阅 60%+。
+  pricing: 先按单个 accelerator 评估收付费 pilot，再转成按活跃 accelerator 项目收费的年度订阅；另外收 workload capture 和 simulator 集成的 onboarding 费用，第一批 silicon 回来后再叠加 bring-up telemetry 模块。定价逻辑不是卖通用开发者工具，而是吃进现有 custom-silicon 和评估预算，因为它要避免的是数百万美元级别的流片误判。
+businessModel:
+  revenueStreams:
+  - 单个 accelerator 评估的付费 pilot
+  - 按活跃 accelerator 项目收费的年度订阅
+  - workload capture、脱敏和 simulator 集成的一次性 onboarding
+  - post-silicon telemetry 与 regression 模块
+  unitOfValue: 单个活跃 accelerator 评估项目
+  targetGrossMarginPct: 70
+  expansionLevers:
+  - 在同一个 OEM 账户里，扩到更多 accelerator 项目和更多产品线
+  - 从流片前 assurance 延伸到 bring-up telemetry 与 compiler regression monitoring
+  - 等 GPU 滩头市场跑出可复制性后，再加上跨厂商 benchmark 和邻近 accelerator 品类
+strategyMap:
+  northStarMetric: 完成流片前 assurance pack、且覆盖 80% 以上重点 workload 的活跃 accelerator 项目数
+  inputMetrics:
+  - 手里有 2027 或 2028 活跃 accelerator 评估项目的合格滩头账户数
+  - 每个项目里被采集并重放的重点客户 workload 占比
+  - 从收到 traces 到交付高管 assurance memo 的试点周期
+  - 预测结果与 first-silicon 或高保真 emulator 结果之间的误差
+  - 试点转年度订阅的转化率
+  moatsToBuild:
+  - 跨项目的匿名化 workload traces、kernel failures 和 portability regressions 数据库
+  - 把流片前预测和 first-silicon bring-up 结果连起来的校准数据集，以及对应的 confidence bands
+  - 值得信任的合作方集成与安全数据处理流程，让公司成为中立的决策层
+  killCriteria:
+  - 在 9 个月内，从前 10 个目标账户里拿不到至少 2 个付费共创客户
+  - 在 6 个月内，拿不到至少 2 条来自可授权 IP 或定制算力合作方、真正可用的 simulator/compiler 集成
+  - 流片前预测在两个早期项目上，对 bring-up 或 emulator 结果的误差持续超过 20%，或者连一个关键 portability blocker 都抓不住
+  mermaid: |
+    flowchart LR
+      Wedge[AI appliance semi-custom evaluation] --> MVP[Pre-silicon replay lab]
+      MVP --> Proof[Trusted go or no-go assurance pack]
+      Proof --> Expansion[Post-silicon calibration and multi-program expansion]
+investorMemo:
+  verdict:
+    call: 观察
+    conviction: 痛点真实，切口也站得住，但在公司证明自己手里确实有点名共创客户需求、且能拿到至少两个新 accelerator 生态的中立集成权限之前，判断仍只能维持在有限 conviction。
+    whyBelieve: 研究同时看到供给侧品类成形和需求侧买家准备度：OXMIQ 让可授权 GPU IP 这件事站住了，Dell、HPE、Penguin 和 Lenovo 也证明了非 hyperscaler 基础设施买家已经在场。
+    whyDoubt: 近期市场高度集中，手里还没有点名的共创客户，而最难的风险又都是结构性的，不是表面功夫：拿不到 simulator 访问权限、或者预测精度不够，整个品类都可能直接失效。
+    nextDiligence: 先拿下 2-3 个付费共创客户，并证明至少有一个 pilot 能在 6 周内真正改变或加快一笔 accelerator 立项决策。
+  firstCustomer:
+    title: 北美 AI appliance 厂商的 VP Hardware Engineering
+    profile: 一家 300-800 人的厂商，卖的是机架级私有推理系统，年化 Nvidia 支出超过 $5M，手里有一个正在评估中的 2027 accelerator-card 项目，但内部没有足够大的 compiler 团队，无法在流片前证明兼容性。
+    trigger: 下一代 appliance SKU 在 Nvidia 方案下打不进毛利或机架功耗目标，迫使管理层认真评估授权 GPU IP 或其他半定制 accelerator 路径。
+    buyer: VP Hardware Engineering、AI Systems GM 或 Head of Silicon
+    initialContract: 单个 accelerator 项目的 6 周付费 pilot，价格处在低六位数美元区间；如果 replay 变成常设的 go/no-go 决策层，再转成每个活跃项目每年约 $200k-$350k 的合同，并追加 onboarding。
+  mustBeTrue:
+  - 到 2026-2028 年，北美和欧洲至少会有 15-20 个 OEM 或 appliance 账户，为第一轮半定制 accelerator 评估拨预算。
+  - 中立第三方能从至少两个 accelerator 生态里拿到足够的 simulator、compiler 和 trace 访问权限，跑出可信的 pilots。
+  - 产品能在客户自控基础设施里，于 6 周内采集并重放 80% 以上的重点生产 workload。
+  - 在早期项目上，流片前预测和 emulator 或 first-silicon 结果之间的误差可以稳定压在 15-20% 以内。
+  - 经济买家会把成功的 pilot 转成每个项目每年 $200k-$350k 的合同，而且预算来自现有硬件或评估支出。
+  diligenceQuestions:
+  - 哪些点名的 AI appliance 厂商或区域 OEM，路线图里已经排上了有预算的 2027 accelerator 评估项目？
+  - OXMIQ 这类合作方，以及 Arm/Marvell 生态，实际愿意向中立 assurance layer 暴露哪些 simulator 和 compiler 接口？
+  - 公司怎样才能在 traces 留在客户自控基础设施里的前提下，依然把可复用的护城河积累起来？
+  - 要让 VP Hardware 真敢用一份 no-go memo 去取消或推迟 tapeout，预测准确率至少要高到什么程度？
+  - 为什么 Synopsys、Siemens、Cadence 或 IP 厂商自己，不能把足够的 replay 功能打包进去，直接抹掉这个切口？
+  - 实际第一笔预算到底是谁签：硬件 GM、silicon 负责人，还是 platform-performance 负责人？
+operatingAssumptions:
+- assumption: 未来 24 个月里，滩头市场会有足够多的第一轮半定制 accelerator 评估项目，能支撑 2-3 个共创客户和一条聚焦的销售管道。
+  basis: research.yaml
+  validationTest: 筛出 8-12 个目标账户，逐一确认 2027 或 2028 评估项目的路线图时间点、项目 sponsor 和预算状态。
+  decisionImpact: 如果合格项目不到 3 个，公司就该更久地保持服务驱动，或者把切口放宽到邻近的 emulator 支撑型采购工作流。
+- assumption: 以中立第三方身份拿到合作方 simulator、compiler 输出和 workload 接口，在商业和技术上都能跑通。
+  basis: research.yaml
+  validationTest: 和 2-3 家可授权 IP 或定制算力合作方做集成 workshop，至少拿到 2 条能工作的 sandbox 集成。
+  decisionImpact: 如果访问权限被卡死，公司就会退化成套在客户自有工具外的一层咨询服务，而不是可规模化产品。
+- assumption: 客户愿意在不把敏感模型 IP 移出本地的前提下，允许产品在客户自控基础设施里做安全的 workload capture。
+  basis: research.yaml
+  validationTest: 在一个共创客户意向方处，跑通一次带脱敏和法务审查的 trace-capture POC。
+  decisionImpact: 如果 trace 访问过于受限，产品就得从流片前 assurance 收缩到 benchmark 转译或 post-silicon telemetry。
+- assumption: 只要配上明确的 confidence bands，流片前 replay 的准确度就足以改写 tapeout 决策。
+  basis: idea.yaml
+  validationTest: 把 pilot 预测和至少 2 个项目上的 emulator 结果及 first-silicon 结果逐项对比，并按 workload 类别量误差。
+  decisionImpact: 如果预测误差长期高于 20%，或者抓不住关键 blocker，公司就不该卖 go/no-go 产品，而应退回 advisory analytics 定位。
+- assumption: 在付费 pilot 之后，买家愿意从现有 custom-silicon、emulation 或 AI infrastructure 预算里，续成按项目计费的年度订阅。
+  basis: research.yaml
+  validationTest: 在前 5 个销售周期里，逐笔记录实际预算科目、签字人，以及从 pilot 到年度合同的转化路径。
+  decisionImpact: 如果买家必须申请全新预算，或只愿意买一次性项目，定价和招聘就必须更偏服务化，venture case 也会明显变弱。
+experimentRoadmap:
+- horizon: 0-90 天
+  experiment: 筛出 8-12 个北美滩头账户，确认它们是否存在正在进行中的 2027 或 2028 accelerator 评估项目。
+  hypothesis: 研究里那批买家，至少有 3 个近期项目同时满足：预算已触发、经济买家已点名。
+  successMetric: 至少 3 个合格机会，且确认了项目时间线、预算负责人和愿意评审 pilot scope。
+  owner: 创始人 / GTM
+- horizon: 0-90 天
+  experiment: 与 2-3 家可授权 IP 或定制算力合作方做技术范围界定，重点看 simulator、compiler 和 trace 接口。
+  hypothesis: 至少有 2 家合作方会开放足够多的工件，支撑一条中立 replay 工作流。
+  successMetric: 拿到 2 份签字的技术评估计划，或 2 条带版本要求的 sandbox 集成。
+  owner: 创始人 / 合作伙伴
+- horizon: 0-90 天
+  experiment: 在一个潜在客户环境里，跑通一次安全的 trace-capture POC。
+  hypothesis: 带脱敏的客户本地采集，已经足够覆盖 go/no-go 决策真正关心的 workload。
+  successMetric: 在不把原始敏感工件移出客户控制域的前提下，抓到 80% 以上的重点 workload。
+  owner: 创始工程师
+- horizon: 3-6 个月
+  experiment: 为一个 accelerator 项目交付首个 6 周付费 replay pilot。
+  hypothesis: 一份中立 assurance pack 足以替掉顾问研究和厂商 benchmark，进入 funding decision。
+  successMetric: pilot 在 6 周内交付，并被用进一次高管项目评审或 tapeout 决策。
+  owner: 创始工程师 / 解决方案工程师
+- horizon: 6-12 个月
+  experiment: 在前 2 个项目上，把 replay 预测和 emulator 输出或 first-silicon bring-up 结果做回标。
+  hypothesis: 带 confidence band 的预测，能把误差压在足够支持决策的范围内。
+  successMetric: 按 workload 类别看，关键 perf-per-watt 和 portability 预测的误差带达到 15-20% 或更好。
+  owner: 编译器 / 性能工程师
+- horizon: 6-12 个月
+  experiment: 把 2 个 pilot 账户转成年订阅，并卖出第一个 bring-up telemetry 附加模块。
+  hypothesis: 产品能从一次性证明项目，走成持续付费的 system-of-record 支出。
+  successMetric: 签下 2 份年度订阅，并让至少 1 个 live 项目挂上 telemetry 模块。
+  owner: 创始人 / GTM
+operations:
+- 一套安全的 trace-capture 与脱敏流程，确保敏感模型资产始终留在客户自控基础设施里。
+- 按 toolchain 版本维护的 simulator/compiler 集成矩阵，并为每个版本给出明确的 confidence bands。
+- 标准化 assurance memo 模板，把 workload 结论直接挂到 BOM、功耗和 tapeout 假设上。
+- 覆盖 export control、NDA 和合作方访问权限的流程，支撑跨境协作与先进算力工件流转。
+- 每季度一轮校准，把流片前预测和 emulator / bring-up 结果对账。
+team:
+- role: 创始人 / GM
+  startTiming: 第 0 月
+  rationale: 前几个单子不是量产 SaaS 销售，而是高战略性项目，所以必须由创始人亲自拿下共创客户销售、合作方谈判和高管 assurance 叙事。
+- role: 创始工程师
+  startTiming: 第 0 月
+  rationale: 负责把安全 workload capture、replay orchestration 和第一版 assurance-pack 工作流真正搭出来。
+- role: 编译器与性能工程师
+  startTiming: 第 0-2 月
+  rationale: 把 traces 标准化、读懂 simulator 和 compiler 输出，并搭出那层把技术信号变成可信预测的校准系统。
+- role: 解决方案工程师
+  startTiming: 第 3 月
+  rationale: 把 pilots 部进客户环境、管好 trace capture，也防止早期项目无边界地滑向纯服务外包。
+- role: 产品与合作伙伴负责人
+  startTiming: 第 9 月
+  rationale: 把前几条集成真正产品化，并为公司从一次性 pilot 扩到可复制的多项目部署做准备。
+milestones:
+- horizon: 0-12 个月
+  items:
+  - 在北美私有推理 OEM 细分里，签下 2-3 个付费共创客户。
+  - 完成首个 6 周 pilot，在至少一条 toolchain 上覆盖 80% 以上的重点 workload。
+  - 拿下至少 2 条带明确版本 confidence bands 的 simulator 或 compiler 集成。
+  - 把 2 个 pilot 转成年订阅，并启动 first-silicon 校准。
+- horizon: 12-24 个月
+  items:
+  - 为现有账户上线 bring-up telemetry 和 regression monitoring。
+  - 在不重做整套定制开发的前提下，支持 2-3 条 accelerator 路径的跨厂商比较。
+  - 跨多个 logo 跑到 6-8 个活跃 accelerator 项目，同时保持部署可复制。
+  - 如果 export-control 流程跑得通，打开首个欧洲 sovereign/private AI 评估项目。
+- horizon: 24-36 个月
+  items:
+  - 把活跃 accelerator 项目数做到 10-12 个，基本贴近研究测算的第 3 年 SOM。
+  - 如果校准数据继续站得住，在现有账户里扩到至少 1 个邻近 accelerator 品类。
+  - 在复购客户内部，成为 accelerator go/no-go 决策的买方侧 system of record。
+risks:
+- risk: 非 hyperscaler 的半定制 accelerator 品类，成形速度可能比研究假设更慢。
+  likelihood: Medium
+  impact: High
+  mitigation: 先盯住点名的共创客户项目，同时保留由 emulator 支撑的邻近采购工作流，作为退路。
+- risk: IP 或 EDA 合作方可能不给访问权限，或者直接打包足够多的 replay 能力，把独立切口压缩掉。
+  likelihood: Medium
+  impact: High
+  mitigation: 坚持 vendor-neutral，跨多个生态做集成，并把买方面向的决策 memo 和 post-silicon 校准数据抓在自己手里。
+- risk: 流片前 replay 可能没有足够高的保真度，无法支持真实的 tapeout 决策。
+  likelihood: Medium
+  impact: High
+  mitigation: 卖的是带 confidence band 的决策支持，而不是保证书；持续用 first-silicon 结果回标，并拒绝在未验证 workload 上做过度承诺。
+- risk: 出于 IP 敏感性或 export-control 约束，客户可能无法共享足够多的 workload 证据。
+  likelihood: High
+  impact: Medium
+  mitigation: 把 capture 留在客户基础设施里，尽量减少原始工件流动，并把法务和 export-control 操作流程标准化。
+- risk: 早期部署可能滑成高度定制化服务，拖慢毛利率改善。
+  likelihood: Medium
+  impact: Medium
+  mitigation: 先把切口死死收在一张 accelerator card、一个买家动作和严格的 6 周 scope 里，再考虑扩模块和扩客户类型。
+fundingAsk:
+  round: pre-seed
+  targetFundingRangeUsd: $2-4M
+  runwayMonths: 18
+  useOfFundsSummary: 为公司提供 18 个月跑道：把安全 replay MVP 做出来，拿下 2-3 个付费共创客户，打通 2-3 条 toolchain 集成，补齐核心 compiler 与 solutions 团队，并在扩大销售前，先证明 pilot 能稳定转成年度订阅。
