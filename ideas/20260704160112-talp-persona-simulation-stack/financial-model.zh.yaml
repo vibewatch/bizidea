@@ -1,0 +1,511 @@
+slug: talp-persona-simulation-stack
+date: "2026-07-04"
+currency: USD
+modelStartMonth: "2026-07"
+assumptions:
+- id: A1
+  name: 起始客户数（M1）
+  value: "0"
+  unit: count
+  source: "[BP executiveSummary / milestones：预上线阶段，尚无年度客户]"
+- id: A2
+  name: 年度订阅 ARPU
+  value: "12000"
+  unit: USD/year
+  source: "[research.yaml market.som.rationale：“到第三年约 120 个品牌，年均花费约 $12,000”]"
+- id: A3
+  name: 平均一次性试点费用
+  value: "9000"
+  unit: USD/pilot
+  source: "[BP investorMemo.firstCustomer.initialContract：“$6,000-$12,000 试点”，取中位值]"
+- id: A4
+  name: 第二、三年新客户的按决策实施/试点费
+  value: "3000"
+  unit: USD/new customer
+  source: "[BP gtm.pricing：“按决策收费的套餐定价约 $3,000-$5,000”，因第二、三年试点借助模板更快，取低值]"
+- id: A5
+  name: 目标毛利率
+  value: "72"
+  unit: percent
+  source: "[BP businessModel.targetGrossMarginPct：72]"
+- id: A6
+  name: 第一年签下的付费试点数
+  value: "5"
+  unit: count
+  source: "[BP milestones 0-12mo：“围绕已排定的调价、档位或结账上线，签下 4-6 个付费试点”，取中位值]"
+- id: A7
+  name: 第一年试点转年度订阅数
+  value: "2"
+  unit: count
+  source: "[BP milestones 0-12mo：“把至少两个试点转成按季度使用的年度订阅”]"
+- id: A8
+  name: 第二年末年度客户数
+  value: "20"
+  unit: count
+  source: "[BP milestones 12-24mo：“做到 15-25 个按季度重复使用模拟的年度客户”，取中位值]"
+- id: A9
+  name: 第三年末年度客户数
+  value: "120"
+  unit: count
+  source: "[BP milestones 24-36mo：“做到约 120 个订阅品牌或代理商托管的客户部署，与研究测算的 SOM 情形一致”]"
+- id: A10
+  name: 创始团队招募时间线
+  value: "3 位创始人于第 0 个月到位；Shopify 集成工程师第 4 个月到位；解决方案工程师/客户成功第 6 个月到位"
+  unit: count/timing
+  source: "[BP team[]：创始产品-GTM、创始工程师、应用机器学习/评测的 startTiming 为第 0 个月，Shopify 集成工程师为第 4 个月，解决方案工程师为第 6 个月]"
+- id: A11
+  name: 全负载年化薪资区间
+  value: "CEO/创始人 $150K；工程师 $160K；应用机器学习 $170K；集成工程师 $150K；解决方案工程师/客户成功 $120K；销售/客户经理 $130K；行政/运营 $110K"
+  unit: USD/FTE/year
+  source: "经验估算：种子期常见的全负载薪酬区间（基本工资 + 薪资税 + 福利负担），参考种子期薪酬基准报告（如 AngelList/Carta 的种子期薪酬报告）；business-plan.yaml 和 research.yaml 中都没有公司专属的薪资数据"
+- id: A12
+  name: 第一年非人力运营支出
+  value: "研发工具 $2.0K/月；销售与市场 $3.0K/月；行政 $3.5K/月"
+  unit: USD thousands/month
+  source: "经验估算：3-5 人团队典型的种子前 SaaS 非人力运营支出（云服务/开发工具、创始人外呼差旅、法务/会计/保险）；输入材料中没有细项"
+- id: A13
+  name: 第二、三年非人力运营支出
+  value: "第二年 $45K/季度；第三年 $75K/季度"
+  unit: USD thousands/quarter
+  source: "经验估算：非人力运营支出随人员规模和 BP gtm.channels 中的伙伴/营销活动（生态市场、伙伴联合销售）同步扩张；输入材料中没有细项"
+- id: A14
+  name: COGS 占营收比例
+  value: "28"
+  unit: percent
+  source: "由 A5 推导（100% - 72% 目标毛利率）"
+- id: A15
+  name: 月度客户流失率
+  value: "2.5"
+  unit: percent/month
+  source: "经验估算：早期 B2B SaaS、ACV 低于 $50K 合同的客户流失率基准（常见区间为 2-3%/月）；research.yaml 中没有该产品品类的厂商专属流失数据"
+- id: A16
+  name: EBITDA 近似净现金消耗
+  value: "true"
+  unit: boolean
+  source: "经验估算：早期建模的标准简化处理，因输入材料未披露重大资本开支或营运资金波动"
+- id: A17
+  name: 融资金额
+  value: "3.0"
+  unit: USD millions
+  source: "[BP fundingAsk.targetFundingRangeUsd：“$2-4M”，取中位值]"
+- id: A18
+  name: 融资现金跑道
+  value: "18"
+  unit: months
+  source: "[BP fundingAsk.runwayMonths：18]；建模现金显示，在第 18 个月之后、进入第二年 12-24 个月里程碑窗口前，还有额外缓冲，之后才需要 A 轮"
+- id: A19
+  name: 收入确认方法
+  value: "试点/实施费用于交付当月确认；年度订阅按月摊销确认（年度合同金额 / 12）"
+  unit: method
+  source: "经验估算：针对 [BP businessModel.revenueStreams] 中描述的“一次性+订阅”混合定价，采用标准的 SaaS/服务收入确认方法"
+- id: A20
+  name: CAC 计算依据
+  value: "第三年综合销售与市场支出（GTM/客户成功/销售岗位的人力成本占比，加上非人力销售市场运营支出）除以第三年净新增年度客户数（100）"
+  unit: method
+  source: "由人员岗位构成（A11）和 A9 推导；标准自下而上 CAC 计算法"
+- id: A21
+  name: 在 BP 明确列出的五个岗位之外新增的销售/客户经理与行政/运营岗位
+  value: "销售/客户经理从第一年第四季度起；行政/运营从第二年第四季度起"
+  unit: count/timing
+  source: "运营判断：BP 中第二年做到 15-25 个年度客户的里程碑（A8），需要专职的定额销售和财务/运营能力，而 [BP team[]] 里没有明确列出这些岗位；参照粗略经验法则——每 $1-1.5M 目标新增 ARR 配 1 名客户经理，每 10-15 名 FTE 配 1 名运营/财务人员——来估算规模"
+headcount:
+- role: 创始产品/GTM 负责人
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 创始工程师
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 2
+  q4y2: 3
+  q4y3: 3
+- role: 应用机器学习 / 评测工程师
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 2
+  q4y3: 2
+- role: Shopify 集成工程师
+  q1y1: 0
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 2
+- role: 解决方案工程师 / 客户成功
+  q1y1: 0
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 2
+  q4y3: 3
+- role: 销售 / 客户经理
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 1
+  q4y2: 1
+  q4y3: 2
+- role: "行政 / 运营"
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 5
+  q3y1: 5
+  q4y1: 7
+  q4y2: 11
+  q4y3: 14
+headcountAnnualizedPayrollK:
+  q1y1: 480.0
+  q2y1: 750.0
+  q3y1: 750.0
+  q4y1: 1040.0
+  q4y2: 1600.0
+  q4y3: 2000.0
+y1Monthly:
+- month: M1
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 9.25
+  researchDevelopmentK: 29.5
+  generalAdministrativeK: 9.75
+  opexK: 48.5
+  ebitdaK: -48.5
+  cashEopK: 2951.5
+- month: M2
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 9.25
+  researchDevelopmentK: 29.5
+  generalAdministrativeK: 9.75
+  opexK: 48.5
+  ebitdaK: -48.5
+  cashEopK: 2903.0
+- month: M3
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 9.0
+  cogsK: 2.52
+  grossProfitK: 6.48
+  salesMarketingK: 9.25
+  researchDevelopmentK: 29.5
+  generalAdministrativeK: 9.75
+  opexK: 48.5
+  ebitdaK: -42.02
+  cashEopK: 2860.98
+- month: M4
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 9.25
+  researchDevelopmentK: 42.0
+  generalAdministrativeK: 9.75
+  opexK: 61.0
+  ebitdaK: -61.0
+  cashEopK: 2799.98
+- month: M5
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 9.0
+  cogsK: 2.52
+  grossProfitK: 6.48
+  salesMarketingK: 9.25
+  researchDevelopmentK: 42.0
+  generalAdministrativeK: 9.75
+  opexK: 61.0
+  ebitdaK: -54.52
+  cashEopK: 2745.46
+- month: M6
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 9.0
+  cogsK: 2.52
+  grossProfitK: 6.48
+  salesMarketingK: 19.25
+  researchDevelopmentK: 42.0
+  generalAdministrativeK: 9.75
+  opexK: 71.0
+  ebitdaK: -64.52
+  cashEopK: 2680.94
+- month: M7
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 19.25
+  researchDevelopmentK: 42.0
+  generalAdministrativeK: 9.75
+  opexK: 71.0
+  ebitdaK: -71.0
+  cashEopK: 2609.94
+- month: M8
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 9.0
+  cogsK: 2.52
+  grossProfitK: 6.48
+  salesMarketingK: 19.25
+  researchDevelopmentK: 42.0
+  generalAdministrativeK: 9.75
+  opexK: 71.0
+  ebitdaK: -64.52
+  cashEopK: 2545.42
+- month: M9
+  customersEop: 1
+  newCustomers: 1
+  revenueK: 1.0
+  cogsK: 0.28
+  grossProfitK: 0.72
+  salesMarketingK: 19.25
+  researchDevelopmentK: 42.0
+  generalAdministrativeK: 9.75
+  opexK: 71.0
+  ebitdaK: -70.28
+  cashEopK: 2475.14
+- month: M10
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 10.0
+  cogsK: 2.8
+  grossProfitK: 7.2
+  salesMarketingK: 19.25
+  researchDevelopmentK: 55.33
+  generalAdministrativeK: 9.75
+  opexK: 84.33
+  ebitdaK: -77.13
+  cashEopK: 2398.01
+- month: M11
+  customersEop: 2
+  newCustomers: 1
+  revenueK: 2.0
+  cogsK: 0.56
+  grossProfitK: 1.44
+  salesMarketingK: 30.08
+  researchDevelopmentK: 55.33
+  generalAdministrativeK: 9.75
+  opexK: 95.16
+  ebitdaK: -93.72
+  cashEopK: 2304.29
+- month: M12
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 2.0
+  cogsK: 0.56
+  grossProfitK: 1.44
+  salesMarketingK: 30.08
+  researchDevelopmentK: 55.33
+  generalAdministrativeK: 9.75
+  opexK: 95.16
+  ebitdaK: -93.72
+  cashEopK: 2210.57
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 5
+  revenueK: 19.5
+  grossProfitK: 14.04
+  opexK: 340.0
+  ebitdaK: -325.96
+  cashEopK: 1884.61
+- quarter: Q2Y2
+  customersEop: 9
+  revenueK: 33.0
+  grossProfitK: 23.76
+  opexK: 375.0
+  ebitdaK: -351.24
+  cashEopK: 1533.37
+- quarter: Q3Y2
+  customersEop: 14
+  revenueK: 49.5
+  grossProfitK: 35.64
+  opexK: 410.0
+  ebitdaK: -374.36
+  cashEopK: 1159.01
+- quarter: Q4Y2
+  customersEop: 20
+  revenueK: 69.0
+  grossProfitK: 49.68
+  opexK: 445.0
+  ebitdaK: -395.32
+  cashEopK: 763.69
+- quarter: Q1Y3
+  customersEop: 35
+  revenueK: 127.5
+  grossProfitK: 91.8
+  opexK: 500.0
+  ebitdaK: -408.2
+  cashEopK: 355.49
+- quarter: Q2Y3
+  customersEop: 55
+  revenueK: 195.0
+  grossProfitK: 140.4
+  opexK: 525.0
+  ebitdaK: -384.6
+  cashEopK: -29.11
+- quarter: Q3Y3
+  customersEop: 85
+  revenueK: 300.0
+  grossProfitK: 216.0
+  opexK: 550.0
+  ebitdaK: -334.0
+  cashEopK: -363.11
+- quarter: Q4Y3
+  customersEop: 120
+  revenueK: 412.5
+  grossProfitK: 297.0
+  opexK: 575.0
+  ebitdaK: -278.0
+  cashEopK: -641.11
+totals:
+  y1:
+    revenueK: 51.0
+    ebitdaK: -789.43
+    cashEopK: 2210.57
+  y2:
+    revenueK: 171.0
+    ebitdaK: -1446.88
+    cashEopK: 763.69
+  y3:
+    revenueK: 1035.0
+    ebitdaK: -1404.8
+    cashEopK: -641.11
+unitEconomics:
+  arpuAnnualK: 12.0
+  grossMarginPct: 72
+  cacK: 9.4
+  monthlyChurnPct: 2.5
+  avgCustomerLifeMonths: 40.0
+  ltvK: 28.8
+  ltvCacRatio: 3.06
+  cacPaybackMonths: 13.1
+fundingAsk:
+  round: pre-seed
+  amountM: 3.0
+  runwayMonths: 18
+  milestone: "在 3 个共创客户身上完成 ≥10 次历史回测，签下 4-6 个付费试点，把 ≥2 个试点转成年度订阅，上线 Shopify 加一个计费连接器，拿下一个伙伴渠道，并在进入“12-24 个月做到 15-25 个年度客户”的里程碑窗口时，保留 ≥6 个月的缓冲（对应 BP milestones 0-12mo 和 12-24mo）。"
+  useOfFunds:
+  - bucket: 工程
+    amountUsd: 1350000
+    percentage: 45
+  - bucket: GTM
+    amountUsd: 900000
+    percentage: 30
+  - bucket: "行政"
+    amountUsd: 300000
+    percentage: 10
+  - bucket: "缓冲（6 个月）"
+    amountUsd: 450000
+    percentage: 15
+scenarios:
+  downside:
+    description: "试点转年度订阅的转化率贴着 BP kill-criteria 的下限（40%）走，而不是 funnelTargets 的中位值；月流失率升到 4%；更繁重的人工审核把毛利率压缩到 65%；第三年客户基础比基准情形大致砍半。"
+    y3RevenueK: 520.0
+    y3EbitdaK: -1562.0
+    cashLowPointK: -1850.0
+    keyAssumptionChanges:
+    - 第三年末年度客户约 60 个，而非 120 个（A9 减半）
+    - 月流失率 4%，而非 2.5%（A15）
+    - 毛利率 65%，而非 72%（A5）
+  base:
+    description: "对应主模型：第一年试点按 BP 声明的最低值转化（5 个里的 2 个），第二年做到 20 个年度客户（BP 15-25 区间的中位值），第三年通过 Shopify 生态加伙伴渠道扩展到 120 个客户，与研究测算的 SOM 数学一致。"
+    y3RevenueK: 1035.0
+    y3EbitdaK: -1404.8
+    cashLowPointK: -641.11
+    keyAssumptionChanges:
+    - 按 totals.y3 和 y2y3Quarterly 中的建模结果
+  upside:
+    description: "伙伴渠道表现超预期（对应 BP gtm.channels 的联合销售假设），试点转年度订阅的转化率保持在 BP funnelTargets 区间的上限附近（70%+），ARPU 通过超额/高级用量扩大，算力效率把毛利率推高到 76%。"
+    y3RevenueK: 1550.0
+    y3EbitdaK: -1022.0
+    cashLowPointK: -150.0
+    keyAssumptionChanges:
+    - 第三年末年度客户约 160 个，而非 120 个（A9 上调）
+    - 综合 ARPU 约 $14K/年，而非 $12K（通过超额收入使 A2 上调）
+    - 毛利率 76%，而非 72%（A5）
+sensitivity:
+- variable: ARPU
+  downsideCase: "$9K/年年度合同（买家把价格谈到低于 BP 的 $18-36K 年化区间，逼近试点转化下限）"
+  baseCase: "$12K/年年度合同，依据 SOM 测算（A2）"
+  upsideCase: "$15K/年年度合同，靠超额和高级用量拉动"
+  y3RevenueImpactK: 370.0
+  cashImpactK: 265.0
+- variable: CAC
+  downsideCase: "$14K 综合 CAC（创始人主导外呼仍是主渠道，没有伙伴杠杆）"
+  baseCase: "$9.4K 综合 CAC（A20）"
+  upsideCase: "$6K 综合 CAC（按 BP gtm.channels，伙伴渠道带来的商机拉低单个合格商机成本）"
+  y3RevenueImpactK: 300.0
+  cashImpactK: 220.0
+- variable: 流失率
+  downsideCase: "月流失率 4%（平均生命周期 25 个月）"
+  baseCase: "月流失率 2.5%，行业经验值（A15）"
+  upsideCase: "月流失率 1.5%（平均生命周期 67 个月），准确率记分卡逐步建立信任后达成"
+  y3RevenueImpactK: 250.0
+  cashImpactK: 180.0
+- variable: "销售周期 / 试点转年度订阅转化率"
+  downsideCase: "40% 的试点转年度订阅转化率，即 BP kill-criteria 下限"
+  baseCase: "约 55% 转化率，落在 BP funnelTargets 中试点转订阅 50%+ 的区间内"
+  upsideCase: "70%+ 转化率，BP funnelTargets 区间上限"
+  y3RevenueImpactK: 500.0
+  cashImpactK: 380.0
+- variable: 毛利率
+  downsideCase: "毛利率 60%（更多人工审核合规工作和高算力回测）"
+  baseCase: "毛利率 72%，依据 BP businessModel.targetGrossMarginPct（A5）"
+  upsideCase: "毛利率 78%，随回测算力和模板规模化提升"
+  y3RevenueImpactK: 0.0
+  cashImpactK: 186.0
+- variable: 招聘节奏
+  downsideCase: "团队把第三年第四季度的人员编制提前到第二年第四季度（提前 6 个月），推高烧钱速度却没有匹配的营收"
+  baseCase: "人员规模按人员编制表爬坡（三年内从 3 人到 14 名 FTE）"
+  upsideCase: "招聘比计划晚 4 个月，以放慢实施和伙伴入驻为代价换来更长的现金跑道"
+  y3RevenueImpactK: -50.0
+  cashImpactK: 400.0
+modelDiagram:
+  title: 单位经济模型流程
+  mermaid: |
+    flowchart LR
+      Outbound[Founder-led outbound + Shopify ecosystem] --> Pilot[Paid pilot $6K-$12K]
+      Pilot --> Backtest[Backtest + pre-launch simulation]
+      Backtest --> Scorecard[Predicted-vs-actual scorecard]
+      Scorecard --> Convert[Convert to annual subscription $12K/yr]
+      Convert --> Revenue[Recurring revenue]
+      Revenue --> GrossProfit[Gross profit at 72% margin]
+      GrossProfit --> Cash[Cash runway]
+      Partner[Partner channel: subscription platforms + agencies] --> Pilot
+modelSanity:
+- checkName: 营收引擎
+  finding: "基准情形的营收，靠把少量付费试点转成 $12K/年的年度订阅来驱动，再通过 Shopify 生态和伙伴渠道商机，从第二年的 20 个客户扩展到第三年约 120 个客户，与研究测算的 SOM 数学一致。"
+- checkName: 必须做对的事
+  finding: "回测准确率和“预测 vs 实际”记分卡必须迈过商业计划自己定的门槛（10 次回测里 6 次转化率方向正确、7 次流失方向正确），试点才能按 funnelTargets 区间甚至更高的比例转成年度订阅，而不是掉到 40% 的 kill-criteria 下限。"
+- checkName: 模型失效的条件
+  finding: "如果伙伴渠道表现不及预期，第三年从 20 个客户跳到 120 个客户的曲线就会塌向下行情形（约 60 个客户，现金最低点接近 -$1.85M）；由于基准情形本身就在第三年第二季度转为现金为负，A 轮必须在那之前很早就完成交割。"
+- checkName: 下一轮融资的证明点
+  finding: "下一轮融资能否成立，取决于“12-24 个月做到 15-25 个按季度重复使用的年度客户，并有至少一个活跃伙伴渠道”这个里程碑，而模型显示到那个时点（第二年末），账上只剩大约 6-9 个月的现金缓冲。"
+sanityChecks:
+  ruleOf40: "第三年增长率约 505%（营收从 $171K 到 $1,035K）加上 EBITDA 利润率 -135.7% = 约 369%；鉴于第一、二年营收基数太小，这个阶段谈方向性意义不大，下面单独标记出来，而不是当作一个真实的效率信号。"
+  burnMultiple: "第三年烧钱倍数约 1.17 倍（净烧钱 $1,404.8K / 净新增 ARR $1,200K，来自 100 个新客户、每个 $12K）；早期 SaaS 的基准是 <1 倍为优秀，1-1.5 倍为良好。"
+  revenuePerFte: "第三年人均营收 $73.9K（$1,035K / 14 名 FTE），对比成熟 SaaS 的基准 $200-400K；这反映的是尚未规模化、试点密集的打法，本身不算一个危险信号。"
+  flags:
+  - 在只靠一轮种子前融资、没有建模过渡性融资的情况下，现金从第三年第二季度（约第 29 个月）起转为负值；A 轮必须在那之前完成交割，否则招聘或开支就得放缓——这与 fundingAsk.runwayMonths 的 18 个月加上逐渐收窄的缓冲是一致的。
+  - Rule-of-40 和烧钱倍数的读数，被第一、二年过小的营收基数扭曲了，只有等 ARR 超过大约 $1-2M，这些基准才有意义。
+  - 人均营收在整个第三年之前，都远低于成熟 SaaS $200-400K 的基准，反映的是商业计划里描述的那种试点密集、近似服务型的打法；必须靠自助式入驻和伙伴杠杆改善这一点，否则单位经济模型撑不起规模化。
+  - 第三年客户从 20 涨到 120、一年翻六倍的爬坡曲线相当激进，而且完全押注在一个还没验证过的伙伴渠道上；research.yaml 和 business-plan.yaml 里都还没有公开证据表明伙伴渠道能撑起这个量级，所以下行情形（约 60 个客户）应该被当作同样可能发生。
+  - research.yaml 里没有针对这个产品品类的流失率基准；2.5%/月这个数字（A15）是一个行业经验值，不是经过验证的数字，一旦第一批年度续约发生，就该换成真实的群组数据。
+  - 第一年试点转年度订阅的转化率，是按商业计划声明的最低值建模的（5 个试点里的 2 个）；如果实际转化率贴着 40% 的 kill-criteria 下限走，而不是更高的 funnelTargets 区间，第二、三年的客户数和营收就应该向下行情形打折扣。
