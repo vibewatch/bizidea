@@ -1,0 +1,537 @@
+slug: street-scene-escalation-os
+date: "2026-07-05"
+currency: USD
+modelStartMonth: 2026-08
+assumptions:
+- id: A1
+  name: 模型起始月份
+  value: 2026-08
+  unit: YYYY-MM
+  source: "[BP date 2026-07-05] 模型起始月定为商业计划日期之后的下一个月。"
+- id: A2
+  name: 第 1 个月期初现金（种子前期融资）
+  value: "$3.0M"
+  unit: USD
+  source: "[BP fundingAsk targetFundingRangeUsd $2-4M + runwayMonths 18] 按 $2-4M 区间偏中高段的种子前期融资额建模，对应 18-24 个月的烧钱节奏，在模型起点一次性到账。"
+- id: A3
+  name: 期初活跃付费车队账户数
+  value: "0"
+  unit: count
+  source: "[BP executiveSummary + milestones 0-12 months] 公司在模型起点尚无收入，必须先拿下共创客户。"
+- id: A4
+  name: 活跃客户定义
+  value: 一个处于付费试点或生产监测阶段的付费人行道车队运营商账户，记为 customersEop
+  unit: definition
+  source: "[BP businessModel.unitOfValue“监测服务区内的一台在线机器人”，因定价和里程碑均按运营商账户表述，这里汇总到车队账户层级]"
+- id: A5
+  name: 第 1 年付费试点合同价值
+  value: 试点 1 于第 4 个月签约，年化运行率约 $120K（每月 $10K）；试点 2 于第 8 个月以同样运行率签约，到第 1 年第 4 季度共有 2 个活跃试点
+  unit: USD/customer/year
+  source: "[BP investorMemo.firstCustomer.initialContract“单一都市圈 $40k-$75k”的试点定价，换算成 3-6 个月付费试点的年化运行率] + [BP milestones 0-12mo“拿下一个付费试点……拿下两个共创客户”]"
+- id: A6
+  name: 混合 ARPU 爬坡路径
+  value: 第 1 年 $120K/年（仅试点价）；第 2 年 $165K/年（试点与早期生产账户混合）；第 3 年 $180K/年（成熟生产价）
+  unit: USD/customer/year
+  source: "[BP investorMemo.firstCustomer.initialContract“$150k-$220k ARR”生产价区间 + Research market.som“10 个客户、每个约 $180k ARR”] 第 3 年的成熟 ARPU，直接取 SOM 里给出的单客户 ARR。"
+- id: A7
+  name: 客户数增长节奏
+  value: 第 1 年末为 2 个试点；第 2 年每季度新增 1/1/0/1，年末达到 5 个；第 3 年每季度新增 1/1/2/1，年末达到 10 个
+  unit: count
+  source: "[BP milestones 12-24mo“达到三到五个付费客户”+ 24-36mo“达到 10 个客户，ARR 约 $1.8M”] + [BP gtm.funnelTargets 试点转生产环境转化率 50% 以上]"
+- id: A8
+  name: 第 3 年期末 ARR 与 SOM 对齐
+  value: 10 个客户 × $180K = $1.8M 期末 ARR
+  unit: USD
+  source: "[Research market.som“第 3 年 SOM 约 $1.8M，基于 10 个客户、每个约 $180k ARR”] 直接作为第 3 年第 4 季度期末运行率的校验值；第 3 年全年确认收入（$1,327.5K）更低，是因为客户是在年内逐步上线的。"
+- id: A9
+  name: 毛利率爬坡路径
+  value: 第 1 年 55%；第 2 年 63%；第 3 年 70%
+  unit: pct of revenue
+  source: "[BP businessModel.targetGrossMarginPct 70] 第 1-2 年低于目标值，因为付费试点集成和影子模式复核工作量大；第 3 年随连接器和审计工作流按 BP sequencingRationale 标准化，达到既定目标。"
+- id: A10
+  name: 月度活跃账户流失率（仅用于 LTV 测算）
+  value: 1.5%/month
+  unit: pct/month
+  source: "[针对集中型企业安全账户的创业财务经验值] 仅用于推导单位经济模型里的平均客户生命周期；上文第 1-3 年的离散客户数并未建模零星流失，因为第 2 年前的基数仍是个位数。"
+- id: A11
+  name: 创始人/CEO 综合薪酬
+  value: "$180K/year"
+  unit: USD/year
+  source: "[BP team 创始人/CEO，第 0 个月起] 适度的创始人现金薪酬，加上薪资税和福利，符合种子前期阶段创始人薪酬的经验区间。"
+- id: A12
+  name: 工程综合薪酬
+  value: "$205K/year"
+  unit: USD/year
+  source: "[BP team 创始工程师，第 0 个月起] 资深平台/数据工程人才，含薪资负担。"
+- id: A13
+  name: 安全/机器学习负责人综合薪酬
+  value: "$210K/year"
+  unit: USD/year
+  source: "[BP team 安全/机器学习负责人，第 1 个月起] 专精 VLM/分类体系和评估框架的人才，因稀缺性定价略高于普通工程岗位。"
+- id: A14
+  name: 前线部署集成工程师综合薪酬
+  value: "$190K/year"
+  unit: USD/year
+  source: "[BP team 前线部署集成工程师，第 6 个月起] 面向客户、负责在异构 RobOps/遥测技术栈中做部署工程。"
+- id: A15
+  name: 客户成功与安全运营综合薪酬
+  value: "$150K/year"
+  unit: USD/year
+  source: "[BP team 客户成功与安全运营，第 9 个月起] 负责标注质检、每周干预复盘，以及城市/保险公司报告支持。"
+- id: A16
+  name: 销售/合作伙伴综合薪酬
+  value: "$220K/year"
+  unit: USD/year
+  source: "[BP gtm.channels 创始人主导 + 集成式分发 + Research 竞品集普遍走企业定制定价] 对应第 2 年创始人主导销售需要支援时，招入的第一位专职销售/合作伙伴的 OTE 等值薪酬。"
+- id: A17
+  name: 招聘时间线
+  value: 第 1 个月：创始人/CEO + 创始工程师；第 2 个月：安全/机器学习负责人；第 6 个月：前线部署集成工程师；第 9 个月：客户成功/安全运营；第 10 个月：第二名工程师；第 2 年新增第二名安全/机器学习人员、第二名前线部署工程师、第二名客户成功人员，以及第一名销售/合作伙伴（平滑爬坡至第 2 年第 4 季度）；第 3 年新增第三名工程师、第三名安全/机器学习人员、第三名客户成功人员，以及第二名销售/合作伙伴（平滑爬坡至第 3 年第 4 季度）
+  unit: timeline
+  source: "[BP team 前五个岗位的 startTiming] 结合 [BP milestones 12-24mo/24-36mo] 延展到第 2-3 年，因为生产支持、相邻车队迁移和 10 个客户的服务量，光靠第 0-9 个月组建的团队撑不住。"
+- id: A18
+  name: 薪酬在损益表科目间的分摊
+  value: 创始人/CEO 60% 销售与市场 / 40% 管理费用；工程 100% 研发；安全/机器学习 100% 研发；前线部署集成工程师 50% 销售与市场 / 50% 研发；客户成功与安全运营 70% 销售与市场 / 30% 管理费用；销售/合作伙伴 100% 销售与市场
+  unit: allocation
+  source: "[BP team rationales + BP operations] 把每个岗位实际的日常工作（创始人主导销售、分类体系/引擎搭建、客户部署、每周安全复盘）对应到损益表使用的运营科目上。"
+- id: A19
+  name: 非薪酬类销售与市场支出
+  value: "第 1-6 个月 $3K/mo，第 7-12 个月 $6K/mo；第 2 年 $14K/mo，第 3 年 $20K/mo"
+  unit: USD/month
+  source: "[BP gtm.channels“创始人主导直接销售”+ 共创客户切入 + 集成式分发] 经验估算涵盖试点现场差旅、参加机器人行业会展，以及合作伙伴赋能，而非付费需求生成。"
+- id: A20
+  name: 非薪酬类研发支出
+  value: "第 1-6 个月 $6K/mo，第 7-12 个月 $10K/mo；第 2 年 $16K/mo，第 3 年 $22K/mo"
+  unit: USD/month
+  source: "[BP product MVP“接入匿名快照……给场景分类” + Research 中的 VLM/云端推理工作流] 经验估算涵盖云端/GPU 推理、影子模式评估算力，以及随在线车队规模扩大的数据/标注工具支出。"
+- id: A21
+  name: 非薪酬类管理费用支出
+  value: "第 1-6 个月 $4K/mo，第 7-12 个月 $6K/mo；第 2 年 $9K/mo，第 3 年 $12K/mo"
+  unit: USD/month
+  source: "[BP operations“本地匿名化、保留期和隐私控制” + 无障碍/保险公司报告义务] 经验估算涵盖与城市和保险公司审查要求挂钩的法律、保险及隐私/合规顾问费用。"
+- id: A22
+  name: 第 2-3 年人力插值规则
+  value: 各岗位的小数 FTE，在第 1 年第 4 季度、第 2 年第 4 季度、第 3 年第 4 季度这几个快照点之间按季度线性插值
+  unit: modeling convention
+  source: "[Schema headcount 列规则] 避免薪酬科目出现陡峭跳变，因为并非每个第 2-3 年岗位都有 BP 明确给出的入职日期；由此得到从 $1,140K（第 1 年第 4 季度）到 $2,115K（第 2 年第 4 季度）再到 $2,900K（第 3 年第 4 季度）的平滑年化薪酬爬坡。"
+- id: A23
+  name: 现金转化规则
+  value: 现金变动等于 EBITDA
+  unit: modeling convention
+  source: "[创业财务经验值] 假设在种子前期/早期种子规模下，对一家软件加集成业务而言，资本支出、债务偿付、税费和营运资金波动都可忽略不计。"
+- id: A24
+  name: CAC 计算规则
+  value: "$238.7K = （第 2+3 年销售与市场支出 $1,909.5K）/ 第 2-3 年净新增 8 个客户"
+  unit: USD/new customer
+  source: "[BP gtm.funnelTargets“每年锁定 20 个目标 ICP 账户，转化出 6-8 个合格评估、2-3 个付费试点”] 面对只有 45 支车队的 SAM，这种狭窄的创始人主导型企业销售，意味着相对 ARPU 而言，每拿下一个客户的单价成本会偏高。"
+- id: A25
+  name: LTV 计算规则
+  value: LTV = 成熟期 ARPU × 成熟期毛利率 ×（平均客户生命周期月数 / 12）
+  unit: modeling convention
+  source: "[标准 SaaS 单位经济模型经验值] 使用第 3 年成熟期 ARPU（$180K）和第 3 年毛利率（70%），配合 A10 中 1.5%/月的流失率经验值，得到 66.7 个月的平均生命周期。"
+- id: A26
+  name: 收入核对规则
+  value: 月度/季度 revenueK = customersEop（或期间内平均客户数）× 混合 ARPU / 12（季度则除以 4）
+  unit: modeling convention
+  source: "[任务约束：损益表收入必须与客户数 × ARPU 核对一致] 在第 2/3 年的每个季度内，取期初和期末客户数的平均值，避免因期末才签约的客户而高估收入。"
+- id: A27
+  name: 融资额测算
+  value: "$3.0M 种子前期融资，按建模的 18-24 个月烧钱节奏测算"
+  unit: USD
+  source: "[BP fundingAsk targetFundingRangeUsd $2-4M + runwayMonths 18 + BP milestones 12-24mo] 覆盖第 1-2 年累计约 $2,763K 的烧钱额，支撑到第 24 个月的里程碑（3-5 个付费客户，第一个试点转为生产环境），留出大约一个季度的缓冲，之后就必须完成新一轮种子融资交割。"
+- id: A28
+  name: 品类增长背景
+  value: "22.99% CAGR 品类增长代理指标（2026-2035）"
+  unit: pct CAGR
+  source: "[Research categoryDynamics.growthRate“22.99% CAGR（代理指标：自主末端配送市场，2026-2035）”] 仅作为 rule-of-40 合理性检验的方向性背景，并非直接的收入驱动因素，因为实际 SAM 只有 $9.0M，窄得多。"
+headcount:
+- role: 创始人/CEO
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 工程
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 2
+  q4y2: 3
+  q4y3: 4
+- role: 安全/机器学习
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 2
+  q4y3: 3
+- role: 前线部署集成工程师
+  q1y1: 0
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 2
+  q4y3: 2
+- role: 客户成功与安全运营
+  q1y1: 0
+  q2y1: 0
+  q3y1: 1
+  q4y1: 1
+  q4y2: 2
+  q4y3: 3
+- role: 销售/合作伙伴
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 2
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 5
+  q4y1: 6
+  q4y2: 11
+  q4y3: 15
+headcountAnnualizedPayrollK:
+  q1y1: 595.0
+  q2y1: 785.0
+  q3y1: 935.0
+  q4y1: 1140.0
+  q4y2: 2115.0
+  q4y3: 2900.0
+y1Monthly:
+- month: M1
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 12.0
+  researchDevelopmentK: 23.1
+  generalAdministrativeK: 10.0
+  opexK: 45.1
+  ebitdaK: -45.1
+  cashEopK: 2954.9
+- month: M2
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 12.0
+  researchDevelopmentK: 40.6
+  generalAdministrativeK: 10.0
+  opexK: 62.6
+  ebitdaK: -62.6
+  cashEopK: 2892.3
+- month: M3
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 12.0
+  researchDevelopmentK: 40.6
+  generalAdministrativeK: 10.0
+  opexK: 62.6
+  ebitdaK: -62.6
+  cashEopK: 2829.7
+- month: M4
+  customersEop: 1
+  newCustomers: 1
+  revenueK: 10.0
+  cogsK: 4.5
+  grossProfitK: 5.5
+  salesMarketingK: 12.0
+  researchDevelopmentK: 40.6
+  generalAdministrativeK: 10.0
+  opexK: 62.6
+  ebitdaK: -57.1
+  cashEopK: 2772.7
+- month: M5
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 10.0
+  cogsK: 4.5
+  grossProfitK: 5.5
+  salesMarketingK: 12.0
+  researchDevelopmentK: 40.6
+  generalAdministrativeK: 10.0
+  opexK: 62.6
+  ebitdaK: -57.1
+  cashEopK: 2715.6
+- month: M6
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 10.0
+  cogsK: 4.5
+  grossProfitK: 5.5
+  salesMarketingK: 19.9
+  researchDevelopmentK: 48.5
+  generalAdministrativeK: 10.0
+  opexK: 78.4
+  ebitdaK: -72.9
+  cashEopK: 2642.7
+- month: M7
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 10.0
+  cogsK: 4.5
+  grossProfitK: 5.5
+  salesMarketingK: 22.9
+  researchDevelopmentK: 52.5
+  generalAdministrativeK: 12.0
+  opexK: 87.4
+  ebitdaK: -81.9
+  cashEopK: 2560.7
+- month: M8
+  customersEop: 2
+  newCustomers: 1
+  revenueK: 20.0
+  cogsK: 9.0
+  grossProfitK: 11.0
+  salesMarketingK: 22.9
+  researchDevelopmentK: 52.5
+  generalAdministrativeK: 12.0
+  opexK: 87.4
+  ebitdaK: -76.4
+  cashEopK: 2484.3
+- month: M9
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 20.0
+  cogsK: 9.0
+  grossProfitK: 11.0
+  salesMarketingK: 31.7
+  researchDevelopmentK: 52.5
+  generalAdministrativeK: 15.8
+  opexK: 99.9
+  ebitdaK: -88.9
+  cashEopK: 2395.4
+- month: M10
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 20.0
+  cogsK: 9.0
+  grossProfitK: 11.0
+  salesMarketingK: 31.7
+  researchDevelopmentK: 69.6
+  generalAdministrativeK: 15.8
+  opexK: 117.0
+  ebitdaK: -106.0
+  cashEopK: 2289.4
+- month: M11
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 20.0
+  cogsK: 9.0
+  grossProfitK: 11.0
+  salesMarketingK: 31.7
+  researchDevelopmentK: 69.6
+  generalAdministrativeK: 15.8
+  opexK: 117.0
+  ebitdaK: -106.0
+  cashEopK: 2183.4
+- month: M12
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 20.0
+  cogsK: 9.0
+  grossProfitK: 11.0
+  salesMarketingK: 31.7
+  researchDevelopmentK: 69.6
+  generalAdministrativeK: 15.8
+  opexK: 117.0
+  ebitdaK: -106.0
+  cashEopK: 2077.4
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 3
+  revenueK: 103.1
+  grossProfitK: 65.0
+  opexK: 462.9
+  ebitdaK: -398.0
+  cashEopK: 1679.4
+- quarter: Q2Y2
+  customersEop: 4
+  revenueK: 144.4
+  grossProfitK: 91.0
+  opexK: 523.9
+  ebitdaK: -432.9
+  cashEopK: 1246.5
+- quarter: Q3Y2
+  customersEop: 4
+  revenueK: 165.0
+  grossProfitK: 104.0
+  opexK: 584.8
+  ebitdaK: -480.9
+  cashEopK: 765.7
+- quarter: Q4Y2
+  customersEop: 5
+  revenueK: 185.6
+  grossProfitK: 116.9
+  opexK: 645.8
+  ebitdaK: -528.8
+  cashEopK: 236.9
+- quarter: Q1Y3
+  customersEop: 6
+  revenueK: 247.5
+  grossProfitK: 173.2
+  opexK: 739.8
+  ebitdaK: -566.6
+  cashEopK: -329.7
+- quarter: Q2Y3
+  customersEop: 7
+  revenueK: 292.5
+  grossProfitK: 204.8
+  opexK: 788.9
+  ebitdaK: -584.1
+  cashEopK: -913.8
+- quarter: Q3Y3
+  customersEop: 9
+  revenueK: 360.0
+  grossProfitK: 252.0
+  opexK: 837.9
+  ebitdaK: -585.9
+  cashEopK: -1499.8
+- quarter: Q4Y3
+  customersEop: 10
+  revenueK: 427.5
+  grossProfitK: 299.2
+  opexK: 887.0
+  ebitdaK: -587.8
+  cashEopK: -2087.5
+totals:
+  y1:
+    revenueK: 140.0
+    ebitdaK: -922.6
+    cashEopK: 2077.4
+  y2:
+    revenueK: 598.1
+    ebitdaK: -1840.6
+    cashEopK: 236.9
+  y3:
+    revenueK: 1327.5
+    ebitdaK: -2324.4
+    cashEopK: -2087.5
+unitEconomics:
+  arpuAnnualK: 180.0
+  grossMarginPct: 70.0
+  cacK: 238.7
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 66.7
+  ltvK: 700.0
+  ltvCacRatio: 2.93
+  cacPaybackMonths: 22.7
+fundingAsk:
+  round: pre-seed
+  amountM: 3.0
+  runwayMonths: 18
+  milestone: "拿下第一个付费试点并转化为 $150K-$220K 的生产合同，客户数达到三到五个付费车队账户，上线 RobOps/遥测连接器和人工审批审计日志，并证明每 100 次配送的语义远程协助分钟数下降 30% 以上——这是 BP 里 12-24 个月的里程碑——然后才需要完成新一轮种子融资交割。"
+  useOfFunds:
+  - bucket: 工程
+    amountUsd: 1350000
+    percentage: 45
+  - bucket: GTM
+    amountUsd: 810000
+    percentage: 27
+  - bucket: "G&A"
+    amountUsd: 300000
+    percentage: 10
+  - bucket: "缓冲（6 个月）"
+    amountUsd: 540000
+    percentage: 18
+scenarios:
+  downside:
+    description: 语义类异常占远程协助负荷的比例，被证明比宣称的要小；新车队起步缓慢；定价落在既定区间的低端；集成工作也让毛利率一直低于目标。
+    y3RevenueK: 860.0
+    y3EbitdaK: -2720.4
+    cashLowPointK: -2577.6
+    keyAssumptionChanges:
+    - 客户数到第 3 年第 4 季度只到 7 个，而不是 10 个（第 2 年新增 1/0/1/1，第 3 年新增 1/0/1/1），因为试点转生产环境的进度放缓。
+    - 混合 ARPU 降至第 2 年 $150K / 第 3 年 $160K，而不是 $165K / $180K，因为买家把价格压向既定区间的低端。
+    - 毛利率封顶在第 2 年 58% / 第 3 年 62%，而不是 63% / 70%，因为上线过程一直偏重服务投入。
+  base:
+    description: 基准情景遵循 BP 的里程碑顺序——第 1 年 2 个付费试点，第 2 年第 4 季度达到 5 个付费车队账户（落在既定 3-5 区间中段），第 3 年第 4 季度按 SOM 的成熟 ARPU $180K 达到 10 个客户，毛利率在第 3 年达到 70% 的目标。
+    y3RevenueK: 1327.5
+    y3EbitdaK: -2324.4
+    cashLowPointK: -2087.5
+    keyAssumptionChanges:
+    - 混合 ARPU 从第 1 年（仅试点价）的 $120K，爬升到第 2 年的 $165K，再到第 3 年的 $180K，对应试点转向生产定价。
+    - 客户数第 1 年按 0/1/2/2 增长，第 2 年新增 +1/+1/+0/+1，第 3 年新增 +1/+1/+2/+1，到第 3 年第 4 季度达到 10 个，期末恰好对上第 3 年 $1.8M 的 SOM。
+    - 招聘规模到第 2 年第 4 季度达到 11 个 FTE，第 3 年第 4 季度达到 15 个 FTE；若无新融资，模型要求在第 3 年第 1 季度之前完成新一轮融资。
+  upside:
+    description: 共创客户的案例让创始人主导的销售动作可复制，相邻车队的扩展提前发生，随着高级报告模块的搭售，定价也落在既定生产价区间的高端。
+    y3RevenueK: 1947.5
+    y3EbitdaK: -1851.4
+    cashLowPointK: -1465.3
+    keyAssumptionChanges:
+    - 客户数到第 3 年第 4 季度达到 13 个（基准情景为 10 个），因为相邻车队试点和第二个都市圈提前拉来了更多账户。
+    - 混合 ARPU 上升到第 2 年 $175K / 第 3 年 $205K，因为高级审计/保险/对标模块的搭售速度更快。
+    - 毛利率达到第 2 年 65% / 第 3 年 72%，因为连接器和审计导出功能比计划提前实现标准化。
+sensitivity:
+- variable: ARPU
+  downsideCase: "第 3 年成熟期每车队账户年值 $160K"
+  baseCase: "第 3 年成熟期每车队账户年值 $180K"
+  upsideCase: "第 3 年成熟期每车队账户年值 $200K"
+  y3RevenueImpactK: -147.5
+  cashImpactK: -137.5
+- variable: CAC
+  downsideCase: "创始人主导的销售动作放缓；第 2-3 年只净新增 6 支车队，而不是 8 支，把有效 CAC 推高到远超 $300K"
+  baseCase: "第 2-3 年净新增 8 支车队，CAC 约 $238.7K"
+  upsideCase: "共创客户转介绍让销售与市场支出保持平稳，第 2-3 年净新增 10 支车队，把 CAC 拉低到约 $190K"
+  y3RevenueImpactK: -405.0
+  cashImpactK: -348.5
+- variable: 客户流失率
+  downsideCase: "2.5%/月的客户流失率，把平均生命周期缩短到约 40 个月，压低 LTV，还需要额外的新增客户才能保住第 3 年同样的净客户数"
+  baseCase: "1.5%/月的客户流失率，平均生命周期 66.7 个月"
+  upsideCase: "黏性强的安全工作流账户流失率降到 1.0%/月，把平均生命周期延长到接近 100 个月"
+  y3RevenueImpactK: -90.0
+  cashImpactK: -85.0
+- variable: 销售周期
+  downsideCase: 第 2-3 年每一笔车队签约都因采购及数据/隐私审查耗时更久而推迟一个季度。
+  baseCase: 车队签约按 BP 里程碑节奏落地（第 2 年第 4 季度 3-5 个，第 3 年第 4 季度 10 个）。
+  upsideCase: 参考案例部署和标准化的数据共享协议，让签约提前约一个季度。
+  y3RevenueImpactK: -225.0
+  cashImpactK: -222.5
+- variable: 毛利率
+  downsideCase: 第 3 年毛利率封顶在 62%，因为集成和影子模式复核工作一直偏重服务投入。
+  baseCase: 第 3 年毛利率达到 BP 设定的 70% 目标。
+  upsideCase: 第 3 年毛利率达到 74%，因为连接器、审计导出和云边混合部署都比计划提前实现标准化。
+  y3RevenueImpactK: 0.0
+  cashImpactK: -136.1
+- variable: 招聘节奏
+  downsideCase: 第 2-3 年的招聘爬坡（到第 2 年第 4 季度 11 个 FTE，第 3 年第 4 季度 15 个）在收入得到验证之前，就提前了一个季度。
+  baseCase: 招聘按与生产环境转化和相邻车队验证节点挂钩的插值曲线推进。
+  upsideCase: 第 3 年最后一批工程和客户成功岗位的招聘，推迟一个季度到相邻车队迁移试点得到验证之后。
+  y3RevenueImpactK: 0.0
+  cashImpactK: -220.0
+modelDiagram:
+  title: 单位经济模型流程
+  mermaid: |
+    flowchart LR
+      Pilots[Paid pilot fleet accounts] --> Production[Production fleet accounts]
+      Production --> Expansion[Second metro / adjacent-fleet expansion]
+      Expansion --> Revenue[Recognized revenue]
+      Revenue --> GrossProfit[Gross profit]
+      GrossProfit --> Cash[Cash after opex]
+modelSanity:
+- checkName: 收入引擎
+  finding: 基准情景的收入，来自把第 1 年末的 2 个付费试点车队，扩大到第 3 年第 4 季度的 10 个活跃车队账户，成熟期每账户年值约 $180K，期末数字与研究里的 SOM 完全吻合。
+- checkName: 必须跑通的事
+  finding: 第一个付费试点必须转化为 $150K-$220K 的生产合同，并证明远程协助分钟数下降 30% 以上的里程碑，这样第 2 年才能再签下 3-5 支车队，而 CAC 不会不成比例地上升。
+- checkName: 模型失效条件
+  finding: 如果新车队签约速度放缓到 CAC 下行情景，第 3 年收入会减少约 $405K，现金低点还会再深约 $349K，迫使下一轮融资比计划提前。
+- checkName: 下一轮融资证明
+  finding: 一旦公司把第一个试点转为生产环境、签下 3-5 支付费车队、上线人工审批的审计工作流，并完成一次相邻车队迁移试点——也就是这轮融资对应要达到的 BP 12-24 个月里程碑——种子轮的说服力就会最强。
+sanityChecks:
+  ruleOf40: "第 3 年收入增速 121.9% + EBITDA 利润率 -175.1% = -53.2%（深度为负，因为公司仍处于针对一个小 SAM 的早期获客阶段，还谈不上用 rule-of-40 来对标）。"
+  burnMultiple: "第 3 年烧钱倍数约 3.2 倍（烧钱 $2,324.4K / 净新增收入 $729.4K），反映出运营支出仍明显跑在 $9.0M 这个小 SAM 的收入潜力前面。"
+  revenuePerFte: "第 3 年年末 15 个 FTE 对应人均收入约 $88.5K，明显低于典型 SaaS $200K-$400K 的基准——考虑到滩头市场狭窄，这在当前阶段是预期之内的，但如果相邻车队扩展停滞，就是一个真实的效率风险。"
+  flags:
+  - "模型要求在第 22 个月左右（第 3 年第 1 季度）之前完成新一轮种子融资，因为若无新融资，累计烧钱会让现金转负；超出既定 18 个月现金跑道的缓冲，其实不到完整的 6 个月。"
+  - "第 3 年人均收入（约 $88.5K）和烧钱倍数（约 3.2 倍），相对典型 SaaS 基准都偏弱，这与商业计划自己给出的“观察，尚非明确的规模化赢家”投资判断是一致的。"
+  - "客户数在第 2 年结束前一直是个位数，第 3 年也只到 10 个，所以每延迟或流失一个车队客户，都会对收入和现金造成实质性摆动——在这样的样本量下，流失率、CAC 和回本周期这些数字只是示意性的，谈不上统计意义上的稳健。"
+  - "CAC 回本周期（约 22.7 个月）和 LTV/CAC（约 2.9 倍），都低于典型企业级 SaaS 的健康阈值（回本 12-18 个月，LTV/CAC 3 倍以上），这也呼应了研究报告自己提出的尽调缺口——买家是否愿意支付完整的生产级定价。"
+  - "毛利率从 55% 爬升到 BP 设定的 70% 目标，在很大程度上仍是一项假设；如果付费试点比模型设想的更长时间保持服务重投入，EBITDA 和现金的实际表现会明显差于基准情景（参见毛利率敏感性分析）。"

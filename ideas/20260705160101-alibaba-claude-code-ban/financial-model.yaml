@@ -1,0 +1,583 @@
+slug: coding-agent-rollout-gate
+date: '2026-07-05'
+currency: USD
+modelStartMonth: 2026-08
+assumptions:
+  - id: A1
+    name: Model start month
+    value: 2026-08
+    unit: YYYY-MM
+    source: '[BP date 2026-07-05] the model starts with the first full operating month after the dated plan.'
+  - id: A2
+    name: Opening cash / pre-seed raise
+    value: $2.8M
+    unit: USD
+    source: '[BP fundingAsk targetFundingRangeUsd $2-4M + BP fundingAsk runwayMonths 18 + model cash low point] the base case raise is sized to reach the Q4Y2/Q1Y3 seed-proof milestone and still hold about six months of peak-burn buffer.'
+  - id: A3
+    name: Starting paying accounts
+    value: '0'
+    unit: count
+    source: '[BP milestones 0-12 months] the company starts pre-revenue and must first convert design partners into paid pilots.'
+  - id: A4
+    name: Paying account definition
+    value: A paid pilot or annual production customer governing at least one cohort.
+    unit: definition
+    source: '[BP businessModel.revenueStreams + BP gtm.pricing] customersEop counts any account already paying for pilot or production scope.'
+  - id: A5
+    name: Pilot economics
+    value: $60K over roughly 2 months (~$30K/mo)
+    unit: USD/account
+    source: '[BP investorMemo.firstCustomer.initialContract $40k-$80k pilot] the model uses the midpoint pilot fee for early cohort-approval projects.'
+  - id: A6
+    name: Production subscription economics
+    value: $180K ARR per production logo (~1,500 seats × $120 governed seat-year attach)
+    unit: USD/account/year
+    source: '[BP gtm.pricing $80-$150 seat-year + Research market.som 35 logos × 1,500 seats × $120] steady-state pricing matches the researched governance attach and the BP annual contract range.'
+  - id: A7
+    name: Customer ramp
+    value: 3 paying accounts by M12, 8 by Q4Y2, and 35 by Q4Y3.
+    unit: customersEop
+    source: '[BP milestones + BP experimentRoadmap + BP gtm.channels + Research market.som] base case assumes founder-led pilots in Y1, repeatable production conversions in Y2, and partner plus same-account expansion in Y3.'
+  - id: A8
+    name: Revenue recognition convention
+    value: 'Revenue equals period-end paying accounts × blended realized revenue per account for that period: Y1 about $17K-$22K/month, Y2 about $33K-$42K/quarter, Y3 about $42K-$45K/quarter.'
+    unit: formula
+    source: '[BP gtm.pricing + BP investorMemo.firstCustomer.initialContract + Research market.som] this reconciles customer counts to the pilot-to-production pricing mix.'
+  - id: A9
+    name: Gross margin ramp
+    value: 0% pre-revenue; 35%-45% in monetized Y1 months; 52%-66% in Y2; 68%-70% in Y3.
+    unit: gross margin percent
+    source: '[BP businessModel.targetGrossMarginPct 70 + BP operations + startup-finance heuristic] high-touch onboarding and evidence work depress early margins before templates and routing automation mature.'
+  - id: A10
+    name: Hiring timeline
+    value: M1 founder CEO, founding engineer, and founding product/security; M5 solutions/integrations; M10 customer success; M13 first sales/partnerships; M16 engineer 2; M22 engineer 3; M27 solutions 2; M29 sales 2; M31 G&A; M33 engineer 4.
+    unit: timeline
+    source: '[BP team + BP strategicChoices.sequencingRationale + startup-finance heuristic] hiring stays lean until pilot conversion proof exists, then adds delivery and GTM capacity ahead of the Y3 expansion push.'
+  - id: A11
+    name: Founder loaded compensation
+    value: $170K
+    unit: USD/year
+    source: '[BP team Founder CEO + startup-finance heuristic] lean pre-seed founder cash compensation plus payroll taxes and benefits.'
+  - id: A12
+    name: Engineering loaded compensation
+    value: $200K
+    unit: USD/year
+    source: '[BP team Founding eng + startup-finance heuristic] senior applied-security and platform engineering talent is required, but pre-seed cash pay stays below public-company levels.'
+  - id: A13
+    name: Product / security loaded compensation
+    value: $180K
+    unit: USD/year
+    source: '[BP team Founding product/security + startup-finance heuristic] reflects a technical policy owner who can run pilots and shape auditable controls.'
+  - id: A14
+    name: Solutions / integrations loaded compensation
+    value: $165K
+    unit: USD/year
+    source: '[BP team Solutions and integrations engineer + startup-finance heuristic] this role must implement managed-desktop, proxy, and fallback integrations in customer environments.'
+  - id: A15
+    name: Customer success loaded compensation
+    value: $145K
+    unit: USD/year
+    source: '[BP team Customer success and implementation lead + startup-finance heuristic] covers production onboarding and same-account expansion support without building a large services bench.'
+  - id: A16
+    name: Sales / partnerships loaded compensation
+    value: $180K
+    unit: USD/year
+    source: '[BP gtm.channels + startup-finance heuristic] includes concentrated enterprise outreach, partner management, and variable comp for a niche security workflow sale.'
+  - id: A17
+    name: G&A / ops loaded compensation
+    value: $120K
+    unit: USD/year
+    source: '[BP operations + startup-finance heuristic] covers finance, vendor management, insurance, and basic compliance operations once production scale appears.'
+  - id: A18
+    name: Payroll allocation to P&L lines
+    value: Founder 55% S&M / 20% R&D / 25% G&A; engineering 100% R&D; product/security 75% R&D / 25% G&A; solutions 35% S&M / 65% R&D; customer success 60% S&M / 40% G&A; sales 100% S&M; G&A 100% G&A.
+    unit: allocation
+    source: '[BP team role rationales + BP operations] this maps payroll into functional lines while keeping implementation-heavy delivery visible.'
+  - id: A19
+    name: Non-payroll opex ramp
+    value: Monthly non-payroll spend starts at S&M/R&D/G&A of $4K/$10K/$6K and exits Y3 around $25K/$20K/$12K per month.
+    unit: USD/month
+    source: '[BP operations + startup-finance heuristic] covers cloud, travel, partner motion, legal, audit, and insurance without assuming a heavy paid-demand engine.'
+  - id: A20
+    name: Cash conversion convention
+    value: Cash movement equals EBITDA.
+    unit: formula
+    source: '[startup-finance heuristic] capex, taxes, financing fees, and working-capital timing are assumed immaterial at pre-seed scale.'
+  - id: A21
+    name: Steady-state monthly logo churn
+    value: 2.0%
+    unit: percent per month
+    source: '[startup-finance heuristic for early enterprise workflow SaaS + BP key bets on same-account expansion] once embedded in rollout policy, logos should be sticky but the model still assumes meaningful early-stage churn.'
+  - id: A22
+    name: CAC convention
+    value: Total 36-month sales and marketing spend divided by 35 net new paying accounts.
+    unit: formula
+    source: '[model calc using base-case S&M spend + BP gtm.funnelTargets] this captures founder-led enterprise selling plus partner introductions across the full buildout period.'
+  - id: A23
+    name: Next-round milestone for funding sizing
+    value: By Q4Y2/Q1Y3 the company should have 8 production logos or equivalent paid cohort volume, second-agent support, and at least one partner-sourced expansion.
+    unit: milestone
+    source: '[BP milestones 12-24 months + BP product.twelveMonth + BP experimentRoadmap 9-18 months] the pre-seed is sized to reach seed-ready proof on conversion, expansion, and channel credibility.'
+  - id: A24
+    name: Quarterly salary-roll convention
+    value: Y2-Y3 salary rows use actual monthly hires inside each quarter rather than only quarter-end snapshots.
+    unit: convention
+    source: '[Headcount column convention + BP team startTiming] this keeps salary expense internally consistent with the monthly hiring ramp.'
+  - id: A25
+    name: Base sales cycle
+    value: Roughly 90 days from paid pilot start to annual production conversion.
+    unit: days
+    source: '[BP experimentRoadmap 3-6 months and 6-12 months + BP gtm.wedge] early customers should decide inside one rollout cycle if approval speed and fallback continuity improve.'
+headcount:
+  - role: Founder CEO
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Engineering
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 3
+    q4y3: 4
+  - role: Product / Security
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Solutions / Integrations
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 2
+  - role: Customer Success / Implementation
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Sales / Partnerships
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 2
+  - role: G&A / Ops
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 0
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 4
+  q4y1: 5
+  q4y2: 8
+  q4y3: 12
+headcountAnnualizedPayrollK:
+  q1y1: 550.0
+  q2y1: 715.0
+  q3y1: 715.0
+  q4y1: 860.0
+  q4y2: 1440.0
+  q4y3: 2105.0
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 45.8
+    salesMarketingK: 11.8
+    researchDevelopmentK: 40.8
+    generalAdministrativeK: 13.3
+    opexK: 65.9
+    ebitdaK: -65.9
+    cashEopK: 2734.1
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 45.8
+    salesMarketingK: 11.8
+    researchDevelopmentK: 40.8
+    generalAdministrativeK: 13.3
+    opexK: 65.9
+    ebitdaK: -65.9
+    cashEopK: 2668.2
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 45.8
+    salesMarketingK: 11.8
+    researchDevelopmentK: 40.8
+    generalAdministrativeK: 13.3
+    opexK: 65.9
+    ebitdaK: -65.9
+    cashEopK: 2602.3
+  - month: M4
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 45.8
+    salesMarketingK: 12.8
+    researchDevelopmentK: 41.8
+    generalAdministrativeK: 13.3
+    opexK: 67.9
+    ebitdaK: -67.9
+    cashEopK: 2534.4
+  - month: M5
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 59.6
+    salesMarketingK: 17.6
+    researchDevelopmentK: 50.7
+    generalAdministrativeK: 13.3
+    opexK: 81.6
+    ebitdaK: -81.6
+    cashEopK: 2452.8
+  - month: M6
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 20.0
+    cogsK: 13.0
+    grossProfitK: 7.0
+    salaryK: 59.6
+    salesMarketingK: 17.6
+    researchDevelopmentK: 50.7
+    generalAdministrativeK: 13.3
+    opexK: 81.6
+    ebitdaK: -74.6
+    cashEopK: 2378.2
+  - month: M7
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 20.0
+    cogsK: 13.0
+    grossProfitK: 7.0
+    salaryK: 59.6
+    salesMarketingK: 18.6
+    researchDevelopmentK: 51.7
+    generalAdministrativeK: 13.3
+    opexK: 83.6
+    ebitdaK: -76.6
+    cashEopK: 2301.6
+  - month: M8
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 22.0
+    cogsK: 13.6
+    grossProfitK: 8.4
+    salaryK: 59.6
+    salesMarketingK: 18.6
+    researchDevelopmentK: 51.7
+    generalAdministrativeK: 13.3
+    opexK: 83.6
+    ebitdaK: -75.2
+    cashEopK: 2226.4
+  - month: M9
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 36.0
+    cogsK: 21.6
+    grossProfitK: 14.4
+    salaryK: 59.6
+    salesMarketingK: 18.6
+    researchDevelopmentK: 51.7
+    generalAdministrativeK: 13.3
+    opexK: 83.6
+    ebitdaK: -69.2
+    cashEopK: 2157.2
+  - month: M10
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 36.0
+    cogsK: 20.9
+    grossProfitK: 15.1
+    salaryK: 71.7
+    salesMarketingK: 26.9
+    researchDevelopmentK: 52.7
+    generalAdministrativeK: 19.1
+    opexK: 98.7
+    ebitdaK: -83.6
+    cashEopK: 2073.6
+  - month: M11
+    customersEop: 3
+    newCustomers: 1
+    revenueK: 51.0
+    cogsK: 28.1
+    grossProfitK: 22.9
+    salaryK: 71.7
+    salesMarketingK: 26.9
+    researchDevelopmentK: 52.7
+    generalAdministrativeK: 19.1
+    opexK: 98.7
+    ebitdaK: -75.8
+    cashEopK: 1997.8
+  - month: M12
+    customersEop: 3
+    newCustomers: 0
+    revenueK: 54.0
+    cogsK: 29.7
+    grossProfitK: 24.3
+    salaryK: 71.7
+    salesMarketingK: 26.9
+    researchDevelopmentK: 52.7
+    generalAdministrativeK: 19.1
+    opexK: 98.7
+    ebitdaK: -74.4
+    cashEopK: 1923.4
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 4
+    revenueK: 132.0
+    cogsK: 63.4
+    grossProfitK: 68.6
+    salaryK: 260.1
+    salesMarketingK: 131.7
+    researchDevelopmentK: 161.1
+    generalAdministrativeK: 60.3
+    opexK: 353.1
+    ebitdaK: -284.5
+    cashEopK: 1638.9
+  - quarter: Q2Y2
+    customersEop: 5
+    revenueK: 180.0
+    cogsK: 75.6
+    grossProfitK: 104.4
+    salaryK: 309.9
+    salesMarketingK: 134.7
+    researchDevelopmentK: 214.2
+    generalAdministrativeK: 60.3
+    opexK: 409.2
+    ebitdaK: -304.8
+    cashEopK: 1334.1
+  - quarter: Q3Y2
+    customersEop: 6
+    revenueK: 234.0
+    cogsK: 86.6
+    grossProfitK: 147.4
+    salaryK: 309.9
+    salesMarketingK: 140.7
+    researchDevelopmentK: 217.2
+    generalAdministrativeK: 63.3
+    opexK: 421.2
+    ebitdaK: -273.8
+    cashEopK: 1060.3
+  - quarter: Q4Y2
+    customersEop: 8
+    revenueK: 336.0
+    cogsK: 114.2
+    grossProfitK: 221.8
+    salaryK: 360.0
+    salesMarketingK: 146.7
+    researchDevelopmentK: 270.0
+    generalAdministrativeK: 63.3
+    opexK: 480.0
+    ebitdaK: -258.2
+    cashEopK: 802.1
+  - quarter: Q1Y3
+    customersEop: 12
+    revenueK: 504.0
+    cogsK: 161.3
+    grossProfitK: 342.7
+    salaryK: 373.8
+    salesMarketingK: 157.5
+    researchDevelopmentK: 282.0
+    generalAdministrativeK: 66.3
+    opexK: 505.8
+    ebitdaK: -163.1
+    cashEopK: 639.0
+  - quarter: Q2Y3
+    customersEop: 18
+    revenueK: 774.0
+    cogsK: 239.9
+    grossProfitK: 534.1
+    salaryK: 431.4
+    salesMarketingK: 203.1
+    researchDevelopmentK: 300.0
+    generalAdministrativeK: 66.3
+    opexK: 569.4
+    ebitdaK: -35.3
+    cashEopK: 603.7
+  - quarter: Q3Y3
+    customersEop: 26
+    revenueK: 1144.0
+    cogsK: 343.2
+    grossProfitK: 800.8
+    salaryK: 493.0
+    salesMarketingK: 230.1
+    researchDevelopmentK: 319.6
+    generalAdministrativeK: 99.3
+    opexK: 649.0
+    ebitdaK: 151.8
+    cashEopK: 755.5
+  - quarter: Q4Y3
+    customersEop: 35
+    revenueK: 1575.0
+    cogsK: 472.5
+    grossProfitK: 1102.5
+    salaryK: 526.2
+    salesMarketingK: 239.1
+    researchDevelopmentK: 355.8
+    generalAdministrativeK: 102.3
+    opexK: 697.2
+    ebitdaK: 405.3
+    cashEopK: 1160.8
+totals:
+  y1:
+    revenueK: 239.0
+    ebitdaK: -876.6
+    cashEopK: 1923.4
+  y2:
+    revenueK: 882.0
+    ebitdaK: -1121.3
+    cashEopK: 802.1
+  y3:
+    revenueK: 3997.0
+    ebitdaK: 358.7
+    cashEopK: 1160.8
+unitEconomics:
+  arpuAnnualK: 180.0
+  grossMarginPct: 70.0
+  cacK: 45.8
+  monthlyChurnPct: 2.0
+  avgCustomerLifeMonths: 50.0
+  ltvK: 525.0
+  ltvCacRatio: 11.5
+  cacPaybackMonths: 4.4
+fundingAsk:
+  round: pre-seed
+  amountM: 2.8
+  runwayMonths: 24
+  milestone: Reach 8 production logos or equivalent paid cohort volume, ship second-agent support, and prove one partner-sourced expansion before the seed round.
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 1260000
+      percentage: 45
+    - bucket: GTM
+      amountUsd: 700000
+      percentage: 25
+    - bucket: G&A
+      amountUsd: 280000
+      percentage: 10
+    - bucket: Buffer (6 mo)
+      amountUsd: 560000
+      percentage: 20
+scenarios:
+  downside:
+    description: Production conversions slip, late Y2/Y3 hiring is partially throttled, and gross margin stays more services-heavy than planned.
+    y3RevenueK: 2940.0
+    y3EbitdaK: -190.0
+    cashLowPointK: 440.0
+    keyAssumptionChanges:
+      - Q4Y3 customersEop reaches about 24 instead of 35.
+      - Realized revenue per production logo exits closer to roughly $170K ARR than $180K ARR.
+      - Gross margin exits near 66% and the late-Y3 engineering hire slips by about one quarter.
+  base:
+    description: Founder-led pilots convert on one-rollout-cycle timelines, budget comes from adjacent assistant spend, and partner plus same-account expansion drive the Y3 ramp.
+    y3RevenueK: 3997.0
+    y3EbitdaK: 358.7
+    cashLowPointK: 604.8
+    keyAssumptionChanges:
+      - 3 paying accounts by M12, 8 by Q4Y2, and 35 by Q4Y3.
+      - Steady-state production value reaches about $180K ARR per logo in line with the researched SOM math.
+      - Gross margin reaches the BP target 70% by Y3 as onboarding, evidence packaging, and routing templates standardize.
+  upside:
+    description: A partner channel becomes productive earlier, premium replay and retention modules attach faster, and deployment templates improve margin ahead of plan.
+    y3RevenueK: 4821.0
+    y3EbitdaK: 1028.0
+    cashLowPointK: 828.5
+    keyAssumptionChanges:
+      - Q4Y3 customersEop reaches about 40 instead of 35.
+      - Premium retention and incident-replay modules lift blended value toward roughly $190K-$195K ARR per production logo.
+      - Gross margin exits around 72% as integrations and evidence exports reuse faster across cohorts.
+sensitivity:
+  - variable: ARPU
+    downsideCase: Seat-year pricing lands near the low end of the BP range and add-on attach is weak.
+    baseCase: Production logos settle around the researched $180K ARR level.
+    upsideCase: Retention and replay modules push blended production value toward about $190K-$195K ARR.
+    y3RevenueImpactK: -400.0
+    cashImpactK: -280.0
+  - variable: CAC
+    downsideCase: Partner referrals underperform and more founder time plus travel is needed to win each pilot.
+    baseCase: Founder-led selling and a narrow buyer set keep CAC near $46K.
+    upsideCase: One productive managed-desktop or governance partner keeps CAC closer to $40K.
+    y3RevenueImpactK: -120.0
+    cashImpactK: -190.0
+  - variable: churn
+    downsideCase: Monthly churn rises toward 3.0% if some accounts standardize on a sovereign replacement after the first year.
+    baseCase: Monthly churn holds near 2.0% once the rollout gate is embedded in policy workflow.
+    upsideCase: Monthly churn stays near 1.5% because the evidence and fallback runbooks become sticky.
+    y3RevenueImpactK: -220.0
+    cashImpactK: -160.0
+  - variable: sales cycle
+    downsideCase: Pilot-to-production conversion stretches from about 90 days to roughly 150 days.
+    baseCase: One rollout quarter is enough to prove 72-hour approvals and an accepted fallback runbook.
+    upsideCase: Security review and budget owner alignment compress conversion closer to 60 days.
+    y3RevenueImpactK: -700.0
+    cashImpactK: -360.0
+  - variable: gross margin
+    downsideCase: More deployments stay services-heavy and gross margin stalls in the mid-60s.
+    baseCase: Gross margin reaches 70% by Y3 as templates and routing automation improve.
+    upsideCase: Gross margin reaches roughly 72% with faster reuse of evidence exports and fallback rules.
+    y3RevenueImpactK: 0.0
+    cashImpactK: -240.0
+  - variable: hiring pace
+    downsideCase: Y3 scale hires are pulled forward before partner leverage is proven.
+    baseCase: Hiring follows the BP sequencing and waits for conversion proof before scale roles are added.
+    upsideCase: One late-Y3 engineering or GTM hire can slip without slowing bookings materially.
+    y3RevenueImpactK: 80.0
+    cashImpactK: -220.0
+modelDiagram:
+  title: unit economics flow
+  mermaid: |
+    flowchart LR
+      Triggers[Regional rollout trigger] --> PaidPilots[Paid cohort-approval pilots]
+      PaidPilots --> ApprovedSeats[Governed seats under policy]
+      ApprovedSeats --> AnnualSubs[Annual seat subscriptions]
+      AnnualSubs --> AddOns[Retention and replay modules]
+      AddOns --> Revenue[Revenue]
+      Revenue --> GrossProfit[Gross profit]
+      GrossProfit --> Cash[Cash and runway]
+modelSanity:
+  - checkName: Revenue engine
+    finding: Base revenue comes from moving from 3 paying accounts at Y1 exit to 35 by Q4Y3 while steady-state production value reaches the researched roughly $180K ARR per logo.
+  - checkName: Must go right
+    finding: Budget owners have to treat the rollout gate as an attach to existing Copilot, Cursor, or Qoder spend and same-account cohort expansion must start by the first annual renewal.
+  - checkName: Model breaks if
+    finding: If pilot-to-production conversion stretches beyond one rollout quarter and gross margin stalls below the mid-60s, the downside case pulls the cash floor toward roughly $0.4M even after throttling late hires.
+  - checkName: Next-round proof
+    finding: The seed case is 8 production logos or equivalent cohort volume by Q4Y2/Q1Y3, second-agent support, and one partner-sourced expansion that shows repeatable channel leverage.
+sanityChecks:
+  ruleOf40: Y3 growth 353.2% + EBITDA margin 9.0% = 362.2%
+  burnMultiple: Y2 burn multiple is about 1.6x using roughly $1.1M of EBITDA burn against about $0.7M of net new ARR; Q3Y3 turns EBITDA positive.
+  revenuePerFte: $333K Y3 on 12 ending FTE (benchmark $200-400K SaaS)
+  flags:
+    - The base case requires the company to jump from 8 to 35 paying accounts in Y3, so same-account expansion and the first partner channel both need to work earlier than in a typical enterprise SaaS ramp.
+    - customersEop includes paid pilots in Y1, so recurring-only production logos trail the headline count until Y2.
+    - Q4Y3 ARR reaches the researched roughly $6.3M SOM run-rate, so any narrowing of the true beachhead would force a slower hiring and revenue plan.
+    - Gross margin reaches the 70% target only if onboarding, evidence packaging, and fallback runbooks become standardized rather than staying services-heavy.
+    - Cash is modeled as EBITDA; enterprise prepayments, collections timing, or compliance capex could move the actual cash curve by a quarter.
