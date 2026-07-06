@@ -1,0 +1,217 @@
+slug: wet-lab-execution-compiler
+date: '2026-07-06'
+executiveSummary: 混合设备编队的生物实验室，移液机器人、培养箱和酶标仪早就买齐了；真正卡住上线的，还是把科学家写的 SOP 翻成设备可执行 run，以及在 assay 失败时把流程救回来。我们先盯 50–300 人的合成生物学 CRO 和转化核心实验室，因为新客户 assay、新 workcell 和第二站点迁移，都会逼团队在 deadline 下把同一套实验方案跑在一堆异构仪器上。产品不是去替换实验室现有的编排栈，而是做一层厂商中立的执行编译器：吃进 SOP，映射到受支持的设备和耗材，先模拟最可能出错的环节，再吐出一份可供人审核的 run 计划和批准过的恢复步骤。第一步验证节点很窄，也很容易证伪：先把某一类重复性 assay 从 SOP 交接到首个验证通过自动化 run 的时间压下来，再在同一工作流上把失败 run 的恢复时间打下去。研究支持的需求不小，但也绝非无限：TAM 约 $412.5M，滩头 SAM 约 $148.5M；在高触达共创客户打法下，第 3 年 SOM 大致 $5.0M。公司要赢，前提只有一个——设备适配器、验证过的实验方案映射和已批准的恢复历史，最终能滚成一套厂商原生工具和内部脚本都没法在混合设备环境里复制的执行 IP。真正可能推翻这套计划的，不是模型新不新，而是这类痛点是否高频且真握着预算，足以支撑软件，而不是被当成一单单定制集成服务。研究还没能独立验证客户采用情况、生产环境错误率，以及一次可信发布之外的广泛设备覆盖，所以这份计划刻意把范围收窄、把人放在审批环里，也把融资规模压在 pre-seed。
+problem:
+- 混合机器人 workcell 的实验室，每上一条新的 qPCR、ELISA 或细胞活性 SOP，往往还得花上几天把它翻成各家厂商脚本；于是 2–5 个自动化工程师卡住了 assay 上线、迁移和排障。
+- 一旦 run 失败，设备日志、耗材假设和恢复逻辑散落在不同工具和不同工程师手里，转化工作流里就会反复重跑、烧掉样本，审计性也很弱。
+solution:
+- 先把科学家写的 SOP 编译成某一类 assay 所需的受支持设备图、耗材计划和执行顺序；run 开始前，先对时序、耗材、体积和仪器资源冲突做一轮模拟检查。
+- 执行过程中持续吃设备日志和 assay 输出，把偏差拉出来，给出人工可审核的恢复路径，并把版本化执行记录存下来，供后续 assay 迁移和站点 rollout 复用。
+whyWeWin:
+- 品类空档很具体：现有编排工具管的是设备，信息化平台管的是记录，但还没有哪个被点名的竞争对手真正占住“厂商中立的 SOP-to-device 编译 + 运行时恢复”这层。
+- 每一次成功验证的编译，都会沉淀实验方案到设备的映射、约束数据和已批准的恢复历史；这些东西一多，OEM 软件和内部脚本就越来越难在异构 workcell 上复刻。
+- 滩头市场的痛点和硬交付 deadline 直接挂钩，人又稀缺，所以一个窄工作流产品比泛化的 AI scientist 平台更容易先证明 ROI。
+strategicChoices:
+  beachhead: 50–300 人的合成生物学 CRO 和转化核心实验室，跑 3–10 个机器人 workcell，混用移液机器人、培养箱、洗板机和酶标仪，但自动化工程师只有 2–5 个；先从其中的定制 qPCR、ELISA 和细胞活性工作流切入。
+  wedgeRationale: 这个入口比通用实验室自动化平台更快拿到 proof，因为 assay family 重复、workcell 已经装好、购买触发点具体，而且 setup/恢复时间可以在一次试点里量出来，不用逼客户换硬件，也不用逼他们统一到同一家厂商栈。
+  sequencingRationale: 产品先把一类受支持 assay family 的 compile + simulate 做通，再在同一工作流上加上基于日志的恢复，然后再补审计性、第二站点迁移和更广的适配器覆盖。GTM 前期由创始人亲自打单，先让 2–3 个付费共创客户把首批设备集和定价基础钉住；只有在适配器复用被证明成立后，才去谈集成商或 OEM 合作，避免公司沦为定制服务层。
+  notYet:
+  - 不会一上来就支持所有 assay 类型和所有 OEM 设备族；前 24 个月只盯重复性高的板式工作流和很窄的一组适配器。
+  - 不会做全自动恢复，也不会让 run 在无人监督下自行改动；在信任和验证数据站稳前，人工审批始终保留在环里。
+  - 不会去做受监管制造、CLIA 诊断生产，或整套替换式 lab OS；第一款产品只是压在现有系统之上的翻译层和恢复层。
+market:
+  tam: $412.5M（研究估算：全球约 1,500 家具备自动化能力的生物实验室 × 约 5 个机器人 workcell × 每个 workcell 每年约 $55k 软件价值）
+  sam: $148.5M（研究估算：北美和欧洲约 600 个合成生物学 CRO、生物铸造平台与转化核心实验室站点，持续受 mixed-fleet assay 痛点困扰）
+  som: $5.0M（研究里的第 3 年情景：15 家客户 × 约 6 个受覆盖 workcell × 每个 workcell 年价值约 $55k，打法是高触达共创客户）
+  segments:
+  - 用混合机器人 workcell 交付定制 assay 开发项目的合成生物学 CRO
+  - 要把重复性 qPCR、ELISA 和细胞工作流做标准化的转化核心实验室与 biofoundry 型运营方
+  buyingProcess: 当新 assay、新 workcell 或第二站点带来 setup 或重跑压力时，实验室自动化工程师或 assay 开发负责人会先当 champion。只有在付费试点证明 setup 时间更短、审计性可接受，而且不用替换现有硬件或记录系统后，实验室自动化负责人、平台运营 VP 或核心设施主任才会拍板。
+product:
+  mvp: 先支持一类重复性 assay family，围住一组常见的 mixed-fleet workcell 模板：吃进 SOP，映射到受支持设备和耗材，模拟高概率失败点，再生成一份人工可审核的执行计划和恢复手册。不做自动改 run，不做广泛 OEM 覆盖，也不试图替换客户现有的调度器、ELN 或编排栈。
+  sixMonth: 先用 2–3 个共创客户证明 compile + simulate 的价值，再在受支持工作流上加上设备日志接入和 run diff，并上线版本化审批，让团队在执行前就能把编译计划和原始 SOP 对着看。
+  twelveMonth: 从 1 类 assay family 扩到相邻的 2 类，补上已批准恢复回放、第二个 workcell 和第二站点迁移工作流，以及适合转化环境的基础审计级执行记录。
+  twentyFourMonth: 把适配器覆盖拓到最常见的目标 workcell，推出高级验证工作流与合规模块，再加上多站点分析，让客户按项目标准化实验方案迁移，而不是把每次部署都当成新的集成项目。
+  keyBets:
+  - 一组很窄的适配器就能覆盖足够多的早期 assay 体量，让 onboarding 更像产品，而不是重服务。
+  - 在买方真正相信闭环自动化之前，人工审核过的编译计划就已经足以把 setup 时间实打实压下来。
+  - 设备日志和 assay 输出里，确实藏着足够可复用的信号，能为首个 assay family 滚出恢复库。
+  - 按 workcell 收费，再叠加实验方案 onboarding，比卖一套泛企业平台更贴合买方已有的自动化预算科目。
+gtm:
+  wedge: 先作为某一类重复性 assay family 的实验方案编译器，切进 mixed-fleet 的 CRO 和核心实验室环境；这些团队一碰到新客户 assay、新 workcell 或第二站点，就得在 deadline 下把同一工作流重新跑起来。
+  channels:
+  - 创始人主导直销，直接找实验室自动化负责人、assay 开发负责人和核心设施主任
+  - 已经在帮客户落地异构 workcell 的自动化集成商和 OEM 转介绍 / 联合销售伙伴
+  - 与 biofoundry 和转化核心设施共创的设计伙伴试点——这些地方本来就跑重复性强、自动化密集的工作流
+  funnelTargets: 目标账户→合格试点 25-35%；合格试点→付费试点 50%+；付费试点→年度生产合同 50%+，前提是一类实验方案家族已在受支持 workcell 上验证通过
+  pricing: 按机器人 workcell 收年度订阅费，每个验证过的实验方案家族再收一次 onboarding 费用；后续再卖验证工作流控制和多站点分析等高级模块。这样定价一来对齐买方已经熟悉的预算科目，二来让首个客户可以先从 1 个 workcell、1 条工作流起步，三来把扩容路径直接绑到更多 workcell、更多 assay family 和第二站点 rollout 上。
+businessModel:
+  revenueStreams:
+  - 按机器人 workcell 收取年度软件订阅费，前提是它运行的是受支持的实验方案家族
+  - 每新增一类实验方案家族或一套设备模板 rollout，收一次 onboarding 与验证费用
+  - 高级验证工作流、多站点分析和合规模块
+  unitOfValue: 每个运行受支持实验方案家族的机器人 workcell
+  targetGrossMarginPct: 72
+  expansionLevers:
+  - 首条工作流验证通过后，在同一实验室里继续加 workcell
+  - 沿着同一套适配器底座，叠加新的实验方案家族和恢复库
+  - 从单站点扩到第二站点迁移与标准化 rollout
+  - 等执行记录被运营团队真正信任后，再上卖验证工作流与分析模块
+strategyMap:
+  northStarMetric: 受支持 assay family 从 SOP 交接到首个验证通过自动化 run 的中位耗时
+  inputMetrics:
+  - 每个付费客户上线并跑起来的受支持 workcell 数
+  - 自动化工程师完成一条受支持实验方案的编译与验证所需中位工时
+  - run 偏差里，有多少比例是靠已批准恢复手册解决，而不是靠人工重写脚本
+  - 付费试点转年度生产合同的转化率
+  moatsToBuild:
+  - 覆盖 mixed-fleet qPCR、ELISA 和细胞活性工作流的实验方案到设备约束图谱
+  - 把设备日志、assay 结果和升级阈值串起来的已批准恢复路径库
+  - 版本化执行与审批历史，让站点迁移和验证变更控制都比内部脚本更省事
+  killCriteria:
+  - 发现阶段开始 6 个月内，首批 6 个目标账户里，付费试点签下来的少于 2 个。
+  - MVP 没能把某一类受支持 assay family 从 SOP 交接到首个验证通过 run 的中位时间至少压低 30%。
+  - 超过一半的试点部署工作，都需要落到计划外的定制适配器工程，而不是既定那组窄设备集。
+  mermaid: |
+    flowchart LR
+      Wedge[Mixed-fleet assay beachhead] --> MVP[Protocol compiler MVP]
+      MVP --> Proof[Setup-time and recovery proof]
+      Proof --> Expansion[Recovery library, compliance, multi-site rollout]
+investorMemo:
+  verdict:
+    call: 值得约见 / 继续深挖
+    conviction: 切口有希望，痛点也真实，但投资判断最终要看前 2–3 个试点能不能证明预算权是持续存在的，适配器也真的能复用。
+    whyBelieve: 研究显示 mixed-fleet 翻译瓶颈真实存在，竞争格局分散；同时，2026 年 7 月还有一个可信信号证明，带反馈的 protocol-to-device 执行已经开始具备产品化条件。
+    whyDoubt: 独立客户采用、生产环境错误率和必要设备覆盖范围都还没被证明；如果这些关键点站不住，公司很可能会滑成定制集成服务，或被相邻编排厂商吞掉。
+    nextDiligence: 下一步先从共创客户手里拿 setup 时间、重跑根因、设备重合度和预算拥有者的数据，再决定 GTM 和毛利率假设能不能承保。
+  firstCustomer:
+    title: 合成生物学 CRO 的实验室自动化负责人
+    profile: 75–200 人的 CRO，手上有 3–10 个机器人 workcell，混用移液机器人、培养箱和酶标仪，主要交付定制 assay 开发项目。
+    trigger: 来了新客户 assay、新 workcell，或第二站点时，团队必须在交付 deadline 下把同一套 qPCR、ELISA 或细胞活性实验方案跑在不同设备上。
+    buyer: 实验室自动化负责人
+    initialContract: 先在 1–2 个 workcell 和 1 个实验方案家族上做付费试点，合同额 $50k-$100k（含 onboarding）；等 3–5 个 workcell 和已批准恢复工作流跑起来后，再转成每年 $180k-$300k 的正式生产合同。
+  mustBeTrue:
+  - 目标滩头实验室从 SOP 交接到首个验证通过自动化 run，平均要花掉 40+ 小时的自动化工程师时间。
+  - 滩头市场里，至少 25% 的重大重跑或上线延误，源头是产品能解决的执行与集成问题，而不只是 assay 科学本身。
+  - 不换硬件的前提下，一组很窄的适配器就能覆盖首批共创客户里 60%+ 的相关 qPCR、ELISA 和细胞活性体量。
+  - 经济买方会在付费试点后，愿意为按 workcell 计费的软件单列预算，而不是把问题继续按项目型服务处理。
+  - 只要 setup 时间和恢复指标改善足够明显，至少一半的付费试点能在 6 个月内转成年度生产合同。
+  diligenceQuestions:
+  - 被点名的目标实验室，SOP 到首个 run 的基线 setup 时间和重跑率到底是多少，又是怎么量出来的？
+  - 首批 10 个目标账户最常见的是哪些仪器家族，适配器重合度到底有多少能复用？
+  - 第一张合同究竟是谁来签，预算又是从哪条科目里挪出来？
+  - 恢复建议里，有多少能靠遥测标准化出来，又有多少仍得靠服务团队手工编码？
+  - Benchling、Biosero 或 OEM 工作流软件，凭什么不能补出足够多的编译和恢复能力，把这道切口抹平？
+operatingAssumptions:
+- assumption: 早期目标实验室在重复性板式 assay 上浪费掉的自动化工程师时间，已经大到值得买一套专门软件，而不是多写点脚本。
+  basis: research.yaml
+  validationTest: 围绕 1 条 qPCR、ELISA 或细胞活性工作流，从 5–8 家目标实验室收集时间日志、版本历史和试点基线，量出 SOP 交接到首个 run 的中位耗时。
+  decisionImpact: 如果 setup 工作量不高，或发生频率太低，就继续收窄到摩擦最大的 assay 子类型；再不行就放弃这条切口。
+- assumption: 围住常见移液机器人、培养箱、洗板机和酶标仪组合的一组窄适配器，足以覆盖首批共创客户的大部分需求。
+  basis: research.yaml
+  validationTest: 收集前 5–8 个潜在客户的设备清单，算出目标工作流里有多少体量能落进首批受支持设备模板。
+  decisionImpact: 如果适配器重合度太弱，滩头市场就必须再收窄到更标准化的客户切片，或改定价去吸收更重的服务负担。
+- assumption: 按 workcell 订阅收费，再叠加实验方案 onboarding，和买方今天为自动化改造做预算的方式是对得上的。
+  basis: idea.yaml
+  validationTest: 在 discovery 里同时摆出几种定价方案，跟踪买方在付费试点 SOW 里真正愿意接受哪一种。
+  decisionImpact: 如果买方抗拒按 workcell 付费，就在放大销售前把包装改成按实验方案家族或按站点签。
+- assumption: 在完全信任自动闭环之前，转化环境已经能接受人工可审核的编译计划和恢复建议。
+  basis: research.yaml
+  validationTest: 让共创客户里的 assay 负责人和质量相关方先审一轮模拟 run 计划与恢复 diff，再决定是否进入真实执行。
+  decisionImpact: 如果审核摩擦仍然很高，就把产品先收回到 compile + simulate 质检层，延后恢复模块。
+- assumption: 设备日志和 assay 输出里，确实有足够稳定的重复模式，能给首个 assay family 滚出一套可复用恢复库。
+  basis: 经营判断
+  validationTest: 在试点里标注 20–30 次 run 偏差，看恢复建议能否跨不止一次事故、甚至跨客户复用。
+  decisionImpact: 如果恢复数据太稀疏，或强烈依赖单点上下文，护城河就要从运行时恢复转向实验方案验证和站点迁移工具。
+experimentRoadmap:
+- horizon: 0–90 天
+  experiment: 围绕 1 类重复性 assay，在 5–8 家目标 CRO 和转化核心实验室做 setup 时间基线研究。
+  hypothesis: 目标实验室确实在 SOP 翻译上花掉了足够多的工程时间，值得为编译器单独付费。
+  successMetric: 8 个目标账户里，至少 5 个在 1 条受支持工作流上，从 SOP 交接到首个验证通过自动化 run 需要 40+ 小时自动化工程师时间。
+  owner: 创始人 / 实验室自动化负责人
+- horizon: 0–90 天
+  experiment: 对前 10 个目标账户做设备清单与适配器重合度分析。
+  hypothesis: 首批很窄的设备模板集就能覆盖大部分相关 assay 体量。
+  successMetric: 首批受支持 workcell 模板，在前 10 个评估账户里至少覆盖 60%+ 的相关工作流体量。
+  owner: 创始工程师
+- horizon: 0–90 天
+  experiment: 和实验室自动化负责人、平台运营负责人、核心设施主任一起做定价与预算拥有者 discovery。
+  hypothesis: 买方会愿意从现有自动化预算里，买按 workcell 收费的订阅和实验方案 onboarding。
+  successMetric: 6 个严肃潜在客户里，至少 4 个识别出同一个稳定买方角色和可接受的定价模型。
+  owner: 创始人 / GTM
+- horizon: 3–6 个月
+  experiment: 在 1–2 个共创客户处，把 compile + simulate MVP 跑在 1 条 qPCR 或 ELISA 工作流上。
+  hypothesis: 只要有人审核，编译计划就能把首个验证通过自动化 run 的时间压下来，而不必做深度整套替换集成。
+  successMetric: 相对各实验室试点前基线，SOP 交接到首个验证通过 run 的中位时间至少下降 30%。
+  owner: 创始工程师
+- horizon: 6–12 个月
+  experiment: 在首批共创客户的同一条受支持工作流上，加上基于日志的恢复建议与回放。
+  hypothesis: 执行与集成失败足够常见，一层恢复能力能显著减少重跑工作量。
+  successMetric: 失败 run 的恢复时间下降 20%+，或在试点工作流上看到可量化的可避免重跑下降。
+  owner: 自动化集成工程师
+- horizon: 12–18 个月
+  experiment: 把 1 个成功试点扩到第二个 workcell 或第二个站点，并转成年度生产合同。
+  hypothesis: 一旦 1 条工作流被验证通过，同一客户内扩容会比拿新 logo 更容易，也更能支撑按 workcell 收费。
+  successMetric: 签下 2 份年度生产合同，并在不到 30 天 onboarding 工作量内完成 1 次第二 workcell 或第二站点 rollout。
+  owner: 创始人 / GTM
+operations:
+- 任何 live run 之前，都要先做高触达 onboarding：把 SOP、耗材假设和设备能力映射进受支持的 workcell 模板。
+- 编译计划真正下发到仪器前，先过模拟、diff 审阅和审批日志。
+- 集成要写回客户现有的记录系统、调度系统和设备日志系统，让部署是叠加，而不是整套替换。
+- 每季度和共创客户复盘 setup 时间、重跑根因和可复用恢复模式，把这些经验产品化。
+team:
+- role: 创始工程师
+  startTiming: 第 0 个月
+  rationale: 实验方案编译器、设备图谱和模拟引擎是技术内核；没有它，共创客户试点根本开不起来。
+- role: 创始人 / 实验室自动化领域负责人
+  startTiming: 第 0 个月
+  rationale: 公司要想拿下早期共创客户，并把受支持工作流定义准，必须有人能和实验室自动化负责人及 assay 负责人讲同一种操作语言。
+- role: 自动化集成工程师
+  startTiming: 第 3–4 个月
+  rationale: 等首批共创客户确认最重要的 workcell 组合之后，再把适配器开发和设备日志接入补上。
+- role: 共创客户 GTM 负责人
+  startTiming: 第 6 个月
+  rationale: MVP 能 demo 后，公司需要有人专门做外联和试点管理，服务一个窄但极度关系驱动的买方群体。
+- role: 质量 / 合规产品负责人
+  startTiming: 第 9–12 个月
+  rationale: 一旦要从早期试点往更大范围 rollout，转化实验室就会要求更强的审批、变更控制和审计能力。
+milestones:
+- horizon: 0–12 个月
+  items:
+  - 在 CRO 和转化核心实验室滩头市场里，签下 2–3 个付费共创客户。
+  - 围住 2–3 套常见 mixed-fleet workcell 模板，先支持 1 类 assay family。
+  - 至少在 1 条试点工作流上，证明 SOP 交接到首个验证通过 run 的时间下降 30%+，失败 run 恢复再快 20%+。
+  - 和目标客户一起确认首个预算拥有者、可接受定价模型，以及可审计的审批流。
+- horizon: 12–24 个月
+  items:
+  - 把 2–3 个共创客户转成每年 $180k-$300k 的正式生产合同。
+  - 从 1 类受支持 assay family 扩到相邻 2 类，并上线第二 workcell 或第二站点迁移工作流。
+  - 给审计要求更高的客户，推出高级验证工作流与合规模块。
+  - 做到 5–8 个付费客户，同时让 onboarding 仍围绕可复用适配器模板，而不是滑向定制项目。
+- horizon: 24–36 个月
+  items:
+  - 做到研究里第 3 年的 SOM 目标：约 $5.0M，覆盖约 15 家客户和约 90 个 workcell。
+  - 继续扩适配器覆盖和多站点分析，同时别丢掉人工可审核恢复这层优势。
+  - 结合留存和部署经济模型，决定下一步是往 biotech 平台团队扩，还是往监管更重的工艺开发实验室走。
+risks:
+- risk: 设备集成摊子越铺越大，可能在产品市场契合被证明前，就把每次部署都拖成定制工程项目。
+  likelihood: High
+  impact: High
+  mitigation: 先按共创客户的设备重合度围出 1 类 assay family 和 1 组窄设备模板；凡是不能强化可复用适配器底座的集成，一律不接。
+- risk: 买方也许接受 compile + simulate 辅助，却不愿在真实湿实验工作流里接受软件生成的恢复建议。
+  likelihood: High
+  impact: High
+  mitigation: 恢复始终先走人工审批，把底层 SOP 和设备计划的 diff 摆给客户看；先靠模拟和 setup 时间节省建立信任，再考虑放大自动化权限。
+- risk: 痛点也许真实，但发生太间歇，最终让买方把产品当成顾问支持，而不是持续的软件预算。
+  likelihood: Medium
+  impact: High
+  mitigation: 付费试点必须绑硬基线指标，定价也要绑到 workcell 和重复工作流上；如果转年度合同的表现弱，就尽早砍掉这条切口。
+- risk: 相邻厂商或 OEM 生态，可能把足够多的工作流环节吃进去，压缩创业公司的差异化空间。
+  likelihood: Medium
+  impact: Medium
+  mitigation: 继续押注跨 OEM 的实验方案可移植性、已批准恢复历史，以及能写回记录系统的执行记录，而不是去和别人正面打通用编排套件。
+fundingAsk:
+  round: pre-seed
+  targetFundingRangeUsd: $2-4M
+  runwayMonths: 18
+  useOfFundsSummary: 用 18 个月现金跑道把窄 assay family 编译器做出来，先支持 2–3 套可复用 workcell 模板，拿下 2–3 个付费共创客户，证明 setup 时间和失败 run 的 ROI，再看这门生意能不能作为软件规模化，而不是滑向定制集成服务。
