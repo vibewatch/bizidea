@@ -1,0 +1,588 @@
+slug: homeowners-renewal-rescue-rail
+date: '2026-07-07'
+currency: USD
+modelStartMonth: 2026-08
+assumptions:
+- id: A1
+  name: 模型起始月份
+  value: 2026-08
+  unit: YYYY-MM
+  source: '[business-plan.yaml date 2026-07-07] 计划日期之后的第一个完整运营月。'
+- id: A2
+  name: pre-seed 交割后期初现金
+  value: '2400'
+  unit: USDK
+  source: '[business-plan.yaml fundingAsk.targetFundingRangeUsd $2-4M] 模型采用 $2.4M，处于所述区间偏低至中段的位置，用以覆盖 18 个月现金跑道外加 6 个月缓冲。'
+- id: A3
+  name: 收入计量单位
+  value: 活跃救援运营席位
+  unit: definition
+  source: '[business-plan.yaml businessModel.unitOfValue] 模型把每个活跃、付费的救援团队席位计为 1 个可计费单位。'
+- id: A4
+  name: 单个活跃席位的综合年收入
+  value: '12.0'
+  unit: USDK/seat-year
+  source: '[research.yaml bottomUpSizingDrivers "Blended annual revenue per active seat: $12,000"; business-plan.yaml gtm.pricing] 按 BP 定价叙述，已经是席位订阅费和救回保单成功费混合之后的综合数字。'
+- id: A5
+  name: 收入确认时点
+  value: 按每个周期期初与期末席位数的平均值确认
+  unit: policy
+  source: '[startup-finance heuristic] 假设新增席位平均落在周期中段，与试点在周期中段折算进年度合同的假设一致。'
+- id: A6
+  name: 第 1 年月末席位数路径
+  value: 0,0,3,3,6,6,6,6,12,12,16,18
+  unit: active paid seats
+  source: '[business-plan.yaml investorMemo.firstCustomer.initialContract 60-90 天付费试点转化为 6-12 个席位、$80k-150k ARR；milestones 0-12 months：签下两家共创客户，把两个试点转化为年度合同，拿下一份引荐合作]'
+- id: A7
+  name: 第 2 年季末席位数路径
+  value: Q1Y2 45; Q2Y2 80; Q3Y2 125; Q4Y2 180
+  unit: active paid seats
+  source: '[business-plan.yaml milestones 12-24 months：在 15-20 家大型代理机构或代理网络中达到约 180 个活跃救援席位]'
+- id: A8
+  name: 第 3 年季末席位数路径
+  value: Q1Y3 200; Q2Y3 220; Q3Y3 240; Q4Y3 260
+  unit: active paid seats
+  source: '[business-plan.yaml milestones 24-36 months：邻近州和邻近房产品类扩展] research.yaml market.som（$2.2M / 约 180 个席位）是仅限加州的天花板，因此第 3 年超出 180 的约 80 个增量席位，依赖尚未验证的邻近扩展 mustBeTrue 假设，已在 sanityChecks 中标记。'
+- id: A9
+  name: 毛利率目标
+  value: '70'
+  unit: percent
+  source: '[business-plan.yaml businessModel.targetGrossMarginPct] 按已确认收入的 30% 作为 COGS 建模（证据收集消息/API 成本、查勘网络费用、云托管）。'
+- id: A10
+  name: 用于单位经济模型的月席位/客户流失率
+  value: '2.5'
+  unit: percent
+  source: '[startup-finance heuristic] 高于典型企业级 SaaS，因为核心价值主张（结构化投保材料能提升承保/续保挽回率）按 BP operatingAssumptions #2 仍未得到验证，但与续保挂钩的成功费定价能部分抵消这一点。'
+- id: A11
+  name: 创始人/CEO 全额现金薪酬
+  value: '150'
+  unit: USDK/year
+  source: '[business-plan.yaml team Founder/CEO] 按低于市场价的创始人薪资，加上薪资税和福利负担建模。'
+- id: A12
+  name: 创始工程师全额现金薪酬
+  value: '190'
+  unit: USDK/year
+  source: '[business-plan.yaml team Founding eng] 按资深技术联合创始人薪酬包，加上薪资负担建模。'
+- id: A13
+  name: 保险运营负责人全额现金薪酬
+  value: '160'
+  unit: USDK/year
+  source: '[business-plan.yaml team Insurance ops lead] 按把承保/合规规则转化为产品逻辑的领域专家运营者薪酬建模。'
+- id: A14
+  name: 合作伙伴成功/合规负责人全额现金薪酬
+  value: '150'
+  unit: USDK/year
+  source: '[business-plan.yaml team Partner success/compliance] 按负责客户入驻和审计轨迹的岗位薪酬建模。'
+- id: A15
+  name: 集成工程师全额现金薪酬
+  value: '175'
+  unit: USDK/year
+  source: '[business-plan.yaml team Integration engineer] 按负责比价工具/AMS/数据合作伙伴对接的工程师薪酬建模。'
+- id: A16
+  name: 客户经理全额现金薪酬
+  value: '170'
+  unit: USDK/year
+  source: '[business-plan.yaml milestones 12-24 months; gtm.channels] 按创始人主导销售需要支援后，面向企业级代理机构的销售人员薪酬建模。'
+- id: A17
+  name: 客户成功/入驻经理全额现金薪酬
+  value: '140'
+  unit: USDK/year
+  source: '[business-plan.yaml milestones 12-24 months] 按席位数在前两家共创客户之外持续扩张时，负责售后推广的岗位薪酬建模。'
+- id: A18
+  name: 第二位产品工程师全额现金薪酬
+  value: '180'
+  unit: USDK/year
+  source: '[business-plan.yaml milestones 12-24 months：比价工具/AMS 集成和查勘复用] 按集成范围扩大后，增加工程深度的岗位薪酬建模。'
+- id: A19
+  name: 第二位客户经理全额现金薪酬
+  value: '170'
+  unit: USDK/year
+  source: '[business-plan.yaml milestones 24-36 months：多州扩展] 按负责打开邻近州或邻近房产品类切口的销售人员薪酬建模。'
+- id: A20
+  name: 数据/分析工程师全额现金薪酬
+  value: '175'
+  unit: USDK/year
+  source: '[business-plan.yaml twentyFourMonth：把市场承保口径和救援基准数据产品化] 按为 MGU 和承保公司构建基准/分析产品的岗位薪酬建模。'
+- id: A21
+  name: 招聘节奏
+  value: M1 招创始人/CEO、创始工程师与保险运营负责人；M5 招合作伙伴成功/合规负责人；M6 招集成工程师；Q1Y2 招客户经理；Q2Y2 招客户成功经理；Q3Y2 招第二位产品工程师；Q1Y3 招第二位客户经理；Q2Y3 招数据/分析工程师
+  unit: timing
+  source: '[business-plan.yaml team startTiming; milestones 12-24 and 24-36 months] 只有在前两个试点转化、且 180 席位里程碑已经启动之后，GTM 和第二梯队工程岗位才会入场。'
+- id: A22
+  name: 薪酬职能分摊
+  value: 创始人/CEO 60% 计入 S&M / 40% 计入 G&A；创始工程师 100% 计入 R&D；保险运营负责人 60% 计入 R&D / 40% 计入 G&A；合作伙伴成功/合规负责人 50% 计入 S&M / 50% 计入 G&A；集成工程师 100% 计入 R&D；客户经理 100% 计入 S&M；客户成功经理 40% 计入 S&M / 60% 计入 G&A；第二位产品工程师 100% 计入 R&D；第二位客户经理 100% 计入 S&M；数据/分析工程师 100% 计入 R&D
+  unit: allocation
+  source: '[business-plan.yaml team rationales; operations] 合规工作量大的岗位在 R&D（产品规则）和 G&A（审计/法务）之间分摊，创始人和销售岗位则计入 S&M。'
+- id: A23
+  name: 非人力运营支出爬坡
+  value: 第 1 年 S&M 每月 $3.0-6.0K，R&D 每月 $4.0-7.0K，G&A 每月 $6.0-9.0K，按季度递增；第 2-3 年 S&M 每季度固定 $22-36K 外加季度收入的 5%，R&D 每季度 $26-40K，G&A 每季度 $32-46K
+  unit: USDK per period
+  source: '[startup-finance heuristic] 覆盖短信/邮件证据收集 API、云托管、野火/承保口径数据授权，以及考虑到 business-plan.yaml risks 中标记的登记经纪人和保障建议风险后，高于平均水平的法务/合规支出。'
+- id: A24
+  name: 现金转换政策
+  value: EBITDA 近似等于经营性现金变动
+  unit: policy
+  source: '[startup-finance heuristic] 现阶段模型未纳入债务、资本支出、税项，或重大营运资本波动。'
+- id: A25
+  name: 融资现金跑道目标
+  value: '24'
+  unit: months
+  source: '[business-plan.yaml fundingAsk.runwayMonths 18] 按标准 startup-finance heuristic，在所述 18 个月 pre-seed 计划基础上增加 6 个月缓冲建模。'
+- id: A26
+  name: 下一轮里程碑
+  value: 在 15-20 家大型加州代理机构或代理网络中达到约 180 个活跃救援席位，上线一个比价工具/AMS 集成，并推出一个邻近州或邻近房产品类的试点
+  unit: milestone
+  source: '[business-plan.yaml milestones 12-24 months; fundingAsk.useOfFundsSummary] 用于确定本轮融资规模和所需缓冲。'
+headcount:
+- role: 创始人/CEO
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 创始工程师
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 保险运营负责人
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 合作伙伴成功/合规负责人
+  q1y1: 0
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 集成工程师
+  q1y1: 0
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 客户经理
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: 客户成功经理
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: 第二位产品工程师
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 1
+  q4y3: 1
+- role: 第二位客户经理
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 0
+  q4y3: 1
+- role: 数据/分析工程师
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 0
+  q4y2: 0
+  q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 5
+  q3y1: 5
+  q4y1: 5
+  q4y2: 8
+  q4y3: 10
+headcountAnnualizedPayrollK:
+  q1y1: 500.0
+  q2y1: 825.0
+  q3y1: 825.0
+  q4y1: 825.0
+  q4y2: 1315.0
+  q4y3: 1660.0
+y1Monthly:
+- month: M1
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 10.5
+  researchDevelopmentK: 27.8
+  generalAdministrativeK: 16.3
+  opexK: 54.6
+  ebitdaK: -54.6
+  cashEopK: 2345.4
+- month: M2
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 0.0
+  grossProfitK: 0.0
+  salesMarketingK: 10.5
+  researchDevelopmentK: 27.8
+  generalAdministrativeK: 16.3
+  opexK: 54.6
+  ebitdaK: -54.6
+  cashEopK: 2290.8
+- month: M3
+  customersEop: 3
+  newCustomers: 3
+  revenueK: 1.5
+  cogsK: 0.5
+  grossProfitK: 1.1
+  salesMarketingK: 10.5
+  researchDevelopmentK: 27.8
+  generalAdministrativeK: 16.3
+  opexK: 54.6
+  ebitdaK: -53.5
+  cashEopK: 2237.3
+- month: M4
+  customersEop: 3
+  newCustomers: 0
+  revenueK: 3.0
+  cogsK: 0.9
+  grossProfitK: 2.1
+  salesMarketingK: 11.5
+  researchDevelopmentK: 28.8
+  generalAdministrativeK: 17.3
+  opexK: 57.6
+  ebitdaK: -55.5
+  cashEopK: 2181.8
+- month: M5
+  customersEop: 6
+  newCustomers: 3
+  revenueK: 4.5
+  cogsK: 1.4
+  grossProfitK: 3.2
+  salesMarketingK: 17.8
+  researchDevelopmentK: 28.8
+  generalAdministrativeK: 23.6
+  opexK: 70.2
+  ebitdaK: -67.0
+  cashEopK: 2114.8
+- month: M6
+  customersEop: 6
+  newCustomers: 0
+  revenueK: 6.0
+  cogsK: 1.8
+  grossProfitK: 4.2
+  salesMarketingK: 17.8
+  researchDevelopmentK: 43.4
+  generalAdministrativeK: 23.6
+  opexK: 84.8
+  ebitdaK: -80.6
+  cashEopK: 2034.2
+- month: M7
+  customersEop: 6
+  newCustomers: 0
+  revenueK: 6.0
+  cogsK: 1.8
+  grossProfitK: 4.2
+  salesMarketingK: 18.8
+  researchDevelopmentK: 44.4
+  generalAdministrativeK: 24.6
+  opexK: 87.8
+  ebitdaK: -83.6
+  cashEopK: 1950.6
+- month: M8
+  customersEop: 6
+  newCustomers: 0
+  revenueK: 6.0
+  cogsK: 1.8
+  grossProfitK: 4.2
+  salesMarketingK: 18.8
+  researchDevelopmentK: 44.4
+  generalAdministrativeK: 24.6
+  opexK: 87.8
+  ebitdaK: -83.6
+  cashEopK: 1867.0
+- month: M9
+  customersEop: 12
+  newCustomers: 6
+  revenueK: 9.0
+  cogsK: 2.7
+  grossProfitK: 6.3
+  salesMarketingK: 18.8
+  researchDevelopmentK: 44.4
+  generalAdministrativeK: 24.6
+  opexK: 87.8
+  ebitdaK: -81.5
+  cashEopK: 1785.5
+- month: M10
+  customersEop: 12
+  newCustomers: 0
+  revenueK: 12.0
+  cogsK: 3.6
+  grossProfitK: 8.4
+  salesMarketingK: 19.8
+  researchDevelopmentK: 45.4
+  generalAdministrativeK: 25.6
+  opexK: 90.8
+  ebitdaK: -82.4
+  cashEopK: 1703.1
+- month: M11
+  customersEop: 16
+  newCustomers: 4
+  revenueK: 14.0
+  cogsK: 4.2
+  grossProfitK: 9.8
+  salesMarketingK: 19.8
+  researchDevelopmentK: 45.4
+  generalAdministrativeK: 25.6
+  opexK: 90.8
+  ebitdaK: -81.0
+  cashEopK: 1622.1
+- month: M12
+  customersEop: 18
+  newCustomers: 2
+  revenueK: 17.0
+  cogsK: 5.1
+  grossProfitK: 11.9
+  salesMarketingK: 19.8
+  researchDevelopmentK: 45.4
+  generalAdministrativeK: 25.6
+  opexK: 90.8
+  ebitdaK: -78.9
+  cashEopK: 1543.2
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 45
+  revenueK: 94.5
+  cogsK: 28.4
+  grossProfitK: 66.2
+  salesMarketingK: 89.2
+  researchDevelopmentK: 141.3
+  generalAdministrativeK: 81.8
+  opexK: 312.3
+  ebitdaK: -246.1
+  cashEopK: 1297.1
+- quarter: Q2Y2
+  customersEop: 80
+  revenueK: 187.5
+  cogsK: 56.3
+  grossProfitK: 131.3
+  salesMarketingK: 124.1
+  researchDevelopmentK: 143.3
+  generalAdministrativeK: 94.3
+  opexK: 361.7
+  ebitdaK: -230.4
+  cashEopK: 1066.7
+- quarter: Q3Y2
+  customersEop: 125
+  revenueK: 307.5
+  cogsK: 92.3
+  grossProfitK: 215.3
+  salesMarketingK: 139.1
+  researchDevelopmentK: 167.8
+  generalAdministrativeK: 106.8
+  opexK: 413.7
+  ebitdaK: -198.4
+  cashEopK: 868.3
+- quarter: Q4Y2
+  customersEop: 180
+  revenueK: 457.5
+  cogsK: 137.3
+  grossProfitK: 320.3
+  salesMarketingK: 148.6
+  researchDevelopmentK: 192.3
+  generalAdministrativeK: 108.8
+  opexK: 449.7
+  ebitdaK: -129.4
+  cashEopK: 738.9
+- quarter: Q1Y3
+  customersEop: 200
+  revenueK: 570.0
+  cogsK: 171.0
+  grossProfitK: 399.0
+  salesMarketingK: 177.5
+  researchDevelopmentK: 194.3
+  generalAdministrativeK: 110.8
+  opexK: 482.6
+  ebitdaK: -83.6
+  cashEopK: 655.3
+- quarter: Q2Y3
+  customersEop: 220
+  revenueK: 630.0
+  cogsK: 189.0
+  grossProfitK: 441.0
+  salesMarketingK: 203.8
+  researchDevelopmentK: 218.1
+  generalAdministrativeK: 112.8
+  opexK: 534.7
+  ebitdaK: -93.7
+  cashEopK: 561.6
+- quarter: Q3Y3
+  customersEop: 240
+  revenueK: 690.0
+  cogsK: 207.0
+  grossProfitK: 483.0
+  salesMarketingK: 208.8
+  researchDevelopmentK: 242.0
+  generalAdministrativeK: 114.8
+  opexK: 565.6
+  ebitdaK: -82.6
+  cashEopK: 479.0
+- quarter: Q4Y3
+  customersEop: 260
+  revenueK: 750.0
+  cogsK: 225.0
+  grossProfitK: 525.0
+  salesMarketingK: 213.8
+  researchDevelopmentK: 244.0
+  generalAdministrativeK: 116.8
+  opexK: 574.6
+  ebitdaK: -49.6
+  cashEopK: 429.4
+totals:
+  y1:
+    revenueK: 79.0
+    ebitdaK: -856.8
+    cashEopK: 1543.2
+  y2:
+    revenueK: 1047.0
+    ebitdaK: -804.3
+    cashEopK: 738.9
+  y3:
+    revenueK: 2640.0
+    ebitdaK: -309.5
+    cashEopK: 429.4
+unitEconomics:
+  arpuAnnualK: 12.0
+  grossMarginPct: 70.0
+  cacK: 3.1
+  monthlyChurnPct: 2.5
+  avgCustomerLifeMonths: 40.0
+  ltvK: 28.0
+  ltvCacRatio: 9.0
+  cacPaybackMonths: 4.4
+fundingAsk:
+  round: pre-seed
+  amountM: 2.4
+  runwayMonths: 24
+  milestone: 在 15-20 家大型加州代理机构或代理网络中达到约 180 个活跃救援席位，上线一个比价工具/AMS 集成，并在融 seed 轮之前推出一个邻近州或邻近房产品类的试点。
+  useOfFunds:
+  - bucket: 工程
+    amountUsd: 960000
+    percentage: 40
+  - bucket: GTM
+    amountUsd: 648000
+    percentage: 27
+  - bucket: G&A
+    amountUsd: 480000
+    percentage: 20
+  - bucket: 缓冲（6 个月）
+    amountUsd: 312000
+    percentage: 13
+scenarios:
+  downside:
+    description: 房主证据收集完成率和试点转年度合同的转化率都低于 BP 目标，席位增长远远达不到 180 个的里程碑，毛利率滑向服务型经济模式，邻近州扩展的赌注也没能兑现。
+    y3RevenueK: 1350.0
+    y3EbitdaK: -1280.0
+    cashLowPointK: -955.4
+    keyAssumptionChanges:
+    - 第 2 年年末只做到 85 个席位（不是 180 个），第 3 年年末只做到 135 个席位（不是 260 个），因为投保材料完整率和承保转化率的提升，都没达到 BP 20 个百分点和 25% 的目标。
+    - 毛利率从 70% 压缩到 65%，因为更多案件需要人工管家式支持才能维持可承保状态。
+    - 到第 18 个月，没有任何邻近州或房产品类打开，第 3 年增长因此只能靠加州核心的重新询价业务量封顶。
+  base:
+    description: 两个共创客户试点转化为年度合同，席位数通过引荐合作和一次比价工具/AMS 集成持续复利增长，公司在达到 BP 12-24 个月 180 个席位里程碑后，再靠一次温和的邻近州扩展进一步拉动第 3 年增长。
+    y3RevenueK: 2640.0
+    y3EbitdaK: -309.5
+    cashLowPointK: 429.4
+    keyAssumptionChanges:
+    - 席位数按 A6、A7 和 A8 的路径增长，第 1 年年末做到 18 个，第 2 年年末做到 180 个，第 3 年年末做到 260 个。
+    - 单席位综合年收入维持在研究得出的 $12.0K，毛利率维持在商业计划 70% 的目标。
+    - 团队到第 3 年年末扩到 10 个 FTE，GTM 和第二梯队工程岗位都只在前两个试点转化之后才入场。
+  upside:
+    description: 引荐合作和比价工具/AMS 集成把试点转生产合同的时间提前，邻近州扩展和基准数据的赌注提前兑现，成功费和分析产品的搭售也拉高了单席位综合 ARR 和毛利率。
+    y3RevenueK: 3813.8
+    y3EbitdaK: 567.9
+    cashLowPointK: 1045.0
+    keyAssumptionChanges:
+    - 第 2 年年末做到 220 个席位，第 3 年年末做到 340 个席位，因为引荐驱动的代理网络扩张跑得比基准情景更快。
+    - 单席位综合年收入从 $12.0K 升到 $13.5K，因为救回保单成功费和提前搭售的基准数据拉高了综合值。
+    - 毛利率从 70% 提升到 73%，因为投保材料模板和查勘合作伙伴的复用降低了边际交付成本。
+sensitivity:
+- variable: ARPU
+  downsideCase: 单席位综合年收入降到 $10.5K，因为代理机构对成功费部分有抵触，最终更接近纯席位定价。
+  baseCase: 单席位综合年收入维持在研究得出的 $12.0K。
+  upsideCase: 单席位综合年收入升到 $13.5K，因为成功费和基准数据搭售更早落地。
+  y3RevenueImpactK: -330.0
+  cashImpactK: -231.0
+- variable: CAC
+  downsideCase: 非人力 S&M 支出从季度收入的 5% 升到 7%，因为代理机构的采购和合规尽调拉长了销售流程。
+  baseCase: 建模的 CAC 维持在每个新增席位约 $3.1K，混合了第 2 年的新客户获取和存量账户内席位扩张。
+  upsideCase: 引荐合作和比价工具/AMS 集成把 S&M 强度压向收入的 4%。
+  y3RevenueImpactK: 0.0
+  cashImpactK: -75.0
+- variable: 流失率
+  downsideCase: 月席位流失率从 2.5% 升到 4.0%，因为承保转化率提升尚未得到验证，部分代理机构在试点结束后停用席位。
+  baseCase: 单位经济模型假设月流失率为 2.5%，建模的席位路径本身已经计入了温和的流失。
+  upsideCase: 成功费的利益一致性和审计轨迹带来的粘性，把实际流失率压向 1.5%。
+  y3RevenueImpactK: -210.0
+  cashImpactK: -145.0
+- variable: 销售周期
+  downsideCase: 合规和登记经纪人评审，让每一次试点转年度合同和引荐合作伙伴上线，都比建模晚了大约一个季度。
+  baseCase: 基准情景假设两个共创客户试点都在第 1 年内转化为年度合同，席位增长在第 2 年按计划持续复利。
+  upsideCase: 完成比价工具/AMS 集成，加上标杆代理机构的背书，把转化时间提前大约一个季度。
+  y3RevenueImpactK: -240.0
+  cashImpactK: -280.0
+- variable: 毛利率
+  downsideCase: 毛利率滑到 66%，因为查勘协调和证据质检，比打包工作流预设的更依赖人工。
+  baseCase: 毛利率维持在商业计划 70% 的目标。
+  upsideCase: 毛利率提升到 73%，因为投保材料模板和查勘合作伙伴的复用降低了边际交付成本。
+  y3RevenueImpactK: 0.0
+  cashImpactK: -150.0
+- variable: 招聘节奏
+  downsideCase: 合作伙伴成功/合规负责人和第二位产品工程师，都得整体提前大约两个季度入场，才能在规模扩大时维持审计轨迹和集成的整洁。
+  baseCase: 基准情景维持 A21 里精干的招聘坡度，因为假设投保材料模板和档案能在各席位间良好复用。
+  upsideCase: 即便席位增长超出计划，招聘也能维持基准节奏，因为引荐来源的代理机构需要的定制化入驻更少。
+  y3RevenueImpactK: 0.0
+  cashImpactK: -90.0
+modelDiagram:
+  title: 单位经济模型流转
+  mermaid: |
+    flowchart LR
+      NonRenewalNotice[Non-renewal notice intake] --> EvidenceCapture[Homeowner evidence capture]
+      EvidenceCapture --> PacketAssembly[Appetite-matched packet]
+      PacketAssembly --> Seats[Active rescue-ops seats]
+      Seats --> Revenue
+      Revenue --> GrossProfit
+      GrossProfit --> Cash
+modelSanity:
+- checkName: 收入引擎
+  finding: 基准情景收入来自活跃救援运营席位的增长：第 1 年年末 18 个，第 2 年年末 180 个，第 3 年年末 260 个，每个席位对应 $12.0K 的综合年收入。
+- checkName: 必须跑通的事
+  finding: 公司必须把两个共创客户试点都转化为年度合同，并证明投保材料完整率提升 20 个百分点、报价周转加快 25%，这样席位扩张才能在不依赖重服务支持的前提下，持续复利地逼近 12-24 个月 180 个席位的里程碑。
+- checkName: 模型失效条件
+  finding: 如果房主证据收集完成率或承保转化率的提升不达标，毛利率滑向服务型经济模式，下行情景显示现金会在第 3 年内转负，本轮融资就需要桥接。
+- checkName: 下一轮融资证明
+  finding: 一旦公司在 15-20 家代理机构中做到约 180 个活跃救援席位，上线一个实际的比价工具/AMS 集成，并在最初的加州切口之外拿下一个试点，seed 故事才算站得住。
+sanityChecks:
+  ruleOf40: 第 3 年增长 152.1% + EBITDA 利润率 -11.7% = 140.4%（由于第 2 年收入基数很小而被推高，应当作方向性参考，而不是成熟公司的基准）。
+  burnMultiple: 第 2 年 burn multiple 约 0.4x，对应约 $1.94M 的净新增年化席位 ARR；第 3 年改善至约 0.3x，对应约 $0.96M 的净新增年化席位 ARR。
+  revenuePerFte: 第 3 年年末按 FTE 计算的人均收入约 $264K，落在早期企业级 SaaS 粗略 $200K-$400K 的区间里。
+  flags:
+  - 建模的 CAC 把真正新代理机构获取，和已签约共创客户账户内低成本的席位扩张混在了一起，因此 $3.1K 的 CAC 和 9.0 倍的 LTV/CAC，很可能低估了拿下头几家大型加州代理机构的真实成本。
+  - 第 3 年约 $480K 的收入（以及超出研究得出的 180 个席位加州 SOM 的大部分席位增长），都依赖 business-plan.yaml mustBeTrue 中尚未验证的邻近州或邻近房产品类扩展赌注，该假设已被明确标记为未经验证。
+  - 70% 的毛利率和软件驱动的打法，都假设房主证据收集完成率能达到 BP 7 天内 60% 的门槛；如果达不到，更多人工管家式工作会同时压缩毛利率并拖慢席位增长。
+  - 模型在整个第 3 年都维持 EBITDA 为负，因此下一轮融资更依赖已证明的席位扩张速度和集成证明，而不是短期盈利能力。
+  - 第 3 年年末仅有 10 个 FTE（一位集成工程师、一位合作伙伴成功/合规岗位）支撑 260 个席位和繁重的合规/审计轨迹要求，这可能低估了在规模化时维持登记经纪人与保障建议边界清晰所需的人力。

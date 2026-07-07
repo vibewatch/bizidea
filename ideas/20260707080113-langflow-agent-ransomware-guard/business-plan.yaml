@@ -1,0 +1,325 @@
+slug: agent-secret-fuse
+date: "2026-07-07"
+executiveSummary: >-
+  Agent Secret Fuse targets a newly exposed control gap in self-hosted agent
+  runtimes: Langflow-style workflows often mount reusable model-provider,
+  database, and internal API credentials directly into one breachable host.
+  JadePuffer validated that failure mode by moving from a Langflow exploit to
+  production database access and multi-model key theft, so the first sale
+  should be a hardening pilot for one production workflow rather than a broad
+  AI-governance pitch. The beachhead is 100-300 employee vertical SaaS vendors
+  running customer-specific Langflow or Flowise automations inside their own
+  VPCs and now facing security review from enterprise buyers, boards, or
+  cyber-insurers. The MVP is a Langflow/Flowise proxy and sidecar that issues
+  step-scoped access for model-provider, database, and internal API calls,
+  builds an execution graph, and starts in observe mode before inline kill
+  actions are enabled. Pricing, channel, and onboarding stay aligned around one
+  protected workspace because that is how the first customer feels pain and how
+  adjacent secrets and IAM budgets are already allocated. The researched TAM
+  and SAM for this narrow wedge are only about $400M and $72M, so venture
+  upside depends on proving expansion from Langflow and Flowise into MCP
+  servers and broader internal AI platforms rather than maximizing a niche
+  framework feature. The biggest disconfirming risk is that buyers decide
+  Vault, workload identity, and manual controls are good enough, or that the
+  proxy adds too much latency or noise to customer-facing flows. Research
+  supports incident severity and adjacent budget, but it does not quantify how
+  many target teams already run self-hosted Langflow or Flowise in production,
+  so the first 18 months must prove deployment speed, paid-pilot conversion,
+  and second-workspace expansion before the company scales sales.
+problem:
+  - Self-hosted agent teams frequently mount OpenAI, Anthropic, database, and internal API credentials into Langflow or Flowise runtimes, so one runtime exploit can become cross-system credential theft.
+  - Existing vaults, cloud secret managers, and prompt guardrails do not decide which agent step should receive which credential in-flight, nor do they pause a compromised run before it fans out across tenants or systems.
+solution:
+  - Insert a proxy and sidecar between Langflow or Flowise and each secret-backed dependency so high-risk steps receive short-lived, policy-bound access instead of reusable environment secrets.
+  - Build an execution graph and incident replay trail for every credentialed run, then start customers in observe mode and graduate to pause, kill, and rotation actions once policies are tuned on real workloads.
+whyWeWin:
+  - We control the runtime credential-issuance boundary where storage-only secret managers stop and prompt or content guardrails never reach.
+  - The first buyer and buying trigger are concrete — one production workflow under security review — which creates a faster sales motion than a horizontal AI-security platform pitch.
+  - Cross-customer execution graphs, blocked-run replays, and connector-specific policy templates can compound into a runtime-specific moat that Vault, Teleport, or Langflow itself does not naturally own.
+strategicChoices:
+  beachhead: >-
+    100-300 employee vertical SaaS vendors self-hosting customer-specific
+    Langflow or Flowise automations inside their own VPCs, with production
+    model-provider and database access and a willingness to isolate risky
+    workloads per tenant or per workspace.
+  wedgeRationale: >-
+    This slice already has real secrets, real customer scrutiny, and
+    small-enough engineering teams that they are more likely to buy an overlay
+    than build one; it reaches proof faster than selling to very large
+    enterprises with internal platform teams or to smaller startups that lack
+    security budget.
+  sequencingRationale: >-
+    Product starts with Langflow or Flowise plus the highest-risk connector
+    classes in observe mode because research shows integration breadth and
+    false positives are the main adoption risks; GTM starts with one protected
+    workspace sold by founders because the trigger is a single security review,
+    not a company-wide platform migration; hiring prioritizes deployment and
+    policy tuning before quota-carrying sales because time-to-value determines
+    whether the current alternatives look good enough.
+  notYet:
+    - Shared-tenant deployments that cannot isolate high-risk workflows per workspace or tenant.
+    - Broad AI-governance, prompt-monitoring, or SIEM-replacement features.
+    - Native plug-ins for every MCP server and custom runtime before the Langflow or Flowise proxy path works repeatedly.
+market:
+  tam: "$400M (research estimate: ~8,000 mid-market software and AI-platform accounts at roughly $50k initial ACV)"
+  sam: "$72M (research estimate: ~1,600 North America and Europe vertical SaaS or AI-platform teams already self-hosting customer-specific agent workflows at roughly $45k ACV)"
+  som: "$3.6M (research estimate: ~60 customers by year 3 at roughly $60k blended ARR after land-and-expand)"
+  segments:
+    - "100-300 employee vertical SaaS vendors self-hosting customer-specific support or workflow automations on Langflow or Flowise."
+    - AI consultancies and managed platform teams operating high-risk agent workspaces for multiple customers.
+  buyingProcess: >-
+    A platform-security or AI-platform engineer usually surfaces the gap during
+    a customer security review, cyber-insurance questionnaire, or post-incident
+    tabletop, then the VP Engineering or CISO sponsors a paid pilot for one
+    protected workspace. The deal closes when the buyer can show that shared
+    model and database credentials are removed from the runtime without
+    breaking the workflow or adding unacceptable operational overhead.
+product:
+  mvp: >-
+    Langflow- and Flowise-first proxy and sidecar that covers model-provider
+    keys, MySQL or Postgres credentials, and selected internal API tokens for
+    one production workflow, with step-scoped access, execution-graph replay,
+    observe mode, and a manual pause or kill switch. It excludes broad prompt
+    security, shared-tenant policy automation, and deep native coverage for
+    every custom connector.
+  sixMonth: >-
+    Package a repeatable Kubernetes deployment for Langflow and Flowise, ship
+    policy templates for the top credential classes, and deliver evidence
+    export plus manual rotation hooks that let customers prove containment to
+    security reviewers.
+  twelveMonth: >-
+    Add enforced short-lived leases, automated credential rotation after
+    containment events, the first MCP connector pack, and production-grade
+    policy-tuning workflows that keep false positives low enough for
+    customer-facing automations.
+  twentyFourMonth: >-
+    Expand the control plane from Langflow and Flowise into MCP servers, custom
+    tool-calling runners, and internal AI platforms, while keeping the same
+    per-step access, replay, and kill-switch architecture.
+  keyBets:
+    - A proxy and sidecar can cover most high-risk credentialed calls before customers demand deep framework-specific plug-ins.
+    - Observe-mode baselining can earn enough trust that more than half of paid pilots turn on inline containment.
+    - Buyers care more about removing shared runtime secrets and proving blast-radius control than about buying another generic AI dashboard.
+gtm:
+  wedge: >-
+    Sell a paid hardening pilot for one existing Langflow or Flowise
+    deployment by removing shared model and database secrets from a single
+    production workflow, running it in observe mode, and converting to
+    production enforcement once the customer sees acceptable latency and
+    false-positive rates.
+  channels:
+    - Founder-led sales into VP Engineering, platform security leads, and AI-platform owners at 100-300 employee vertical SaaS vendors.
+    - Kubernetes and platform-security consultancies already implementing self-hosted agent stacks, workload identity, and queue or proxy patterns.
+    - Cyber-insurance, incident-response, and enterprise security-review referrals where the trigger is proving containment after the Langflow breach.
+  funnelTargets: "Lead→security-qualified discovery 25-35%, discovery→paid pilot 40-50%, paid pilot→production 50%+, production→second protected workspace within 9 months in 35%+ of accounts."
+  pricing: >-
+    Annual subscription priced by protected workspace or runtime cluster, with
+    a usage component for credential leases and replay retention, because the
+    buyer is approving a bounded production workflow rather than buying seats.
+    The first contract should be a $15k-$25k paid pilot that converts to
+    roughly $45k-$75k annual value once enforced policies go live.
+businessModel:
+  revenueStreams:
+    - Annual subscription for protected workspaces or runtime clusters.
+    - Usage fees for credential leases, incident replay retention, and premium policy packs.
+    - One-time onboarding and deployment packages for the first production workflow.
+  unitOfValue: Protected production workspace / runtime cluster with credentialed agent actions.
+  targetGrossMarginPct: 72
+  expansionLevers:
+    - Add more protected workspaces, business-critical workflows, and environments inside the same account.
+    - Expand from model-provider and database coverage into internal APIs, object stores, and MCP connectors.
+    - Upsell premium audit, insurer-response, and long-horizon replay modules once the customer depends on evidence exports.
+strategyMap:
+  northStarMetric: >-
+    Number of production agent workspaces running without long-lived shared
+    credentials and with enforceable containment policies.
+  inputMetrics:
+    - Median days from kickoff to first observe-mode evidence on a live workflow.
+    - Percentage of credentialed tool calls served through step-scoped leases instead of reusable secrets.
+    - Paid pilot to production conversion rate.
+    - False-positive pause rate after the first 30 days of policy tuning.
+    - Second-workspace expansion rate in production accounts.
+  moatsToBuild:
+    - Cross-customer execution graph and credential-request dataset for Langflow-, Flowise-, and MCP-style workflows.
+    - Connector-specific policy templates that encode which step patterns are normal for model, database, and internal API access.
+    - Incident replay corpus linking abnormal fan-out patterns to the containment actions that worked.
+  killCriteria:
+    - Fewer than 3 of the first 10 security-qualified opportunities buy a paid pilot within 6 months of first serious demo.
+    - The first 3 deployments fail to route at least 70% of model-provider and database calls through short-lived access within 30 days.
+    - False-positive pauses stay above 2% of approved runs or add more than 150 ms P95 overhead per credentialed step after tuning.
+    - Fewer than 2 pilot customers convert to production at $45k+ annualized value by month 12.
+  mermaid: |
+    flowchart LR
+      Wedge[Langflow/Flowise containment pilot] --> MVP[Observe-mode proxy and step-scoped access]
+      MVP --> Proof[Paid pilot converts to production evidence]
+      Proof --> Expansion[MCP and internal AI platform expansion]
+investorMemo:
+  verdict:
+    call: "Meet / investigate further"
+    conviction: >-
+      Acute problem signal and a coherent first-customer motion justify a
+      meeting, but conviction stays medium until a proxy-first deployment
+      proves customers will pay beyond existing vault and IAM spend.
+    whyBelieve: >-
+      A real attack chain created a board-level question current alternatives
+      answer poorly—who gets which credential, for how long, and how a team
+      stops a compromised run in-flight.
+    whyDoubt: >-
+      The initial wedge is narrow and integration-heavy, and buyers may prefer
+      to extend Vault, cloud workload identity, or framework hardening rather
+      than add another inline control plane.
+    nextDiligence: >-
+      See one live Langflow or Flowise pilot remove shared secrets from a
+      production workflow and convert to a paid deployment within one budget
+      cycle.
+  firstCustomer:
+    title: VP Engineering at a 100-300 employee vertical SaaS vendor self-hosting customer-specific agent workflows
+    profile: >-
+      The company runs Langflow or Flowise inside its own VPC for support or
+      back-office automations, stores model-provider keys and production
+      database credentials as reusable runtime secrets, and must pass
+      enterprise security review to keep shipping those workflows.
+    trigger: >-
+      An insurer, board member, or enterprise prospect asks how one compromised
+      flow would be contained after the Langflow breach, forcing the team to
+      prove that secrets cannot fan out across tenants or systems.
+    buyer: VP Engineering
+    initialContract: >-
+      A $15k-$25k paid pilot for one protected workspace and the top
+      credential classes, converting to a $45k-$75k annual subscription plus
+      usage once observe mode graduates to enforced policies.
+  mustBeTrue:
+    - At least one beachhead segment is treating runtime containment as a current budget item after customer, board, or insurer scrutiny.
+    - A proxy-first deployment can remove more than 70% of long-lived model-provider and database secrets from the first production workflow without a rewrite.
+    - Observe-mode baselining can keep false-positive containment actions below 2% of approved runs on customer-facing workflows.
+    - More than half of paid pilots convert to production at $45k+ annual value because buyers judge storage-only secret controls as insufficient.
+    - At least 35% of production accounts expand to a second protected workspace or runtime within 12 months, proving the wedge is not a one-off incident purchase.
+  diligenceQuestions:
+    - How many target accounts already run self-hosted Langflow, Flowise, or similar tool-calling workflows in production?
+    - Which credential classes create the fastest buying trigger: model-provider keys, database credentials, internal API tokens, or object-store access?
+    - What P95 latency overhead and operational burden does the proxy add to representative production flows?
+    - In live evaluations, what protection gap remains after a buyer uses Vault or cloud workload identity correctly?
+    - Are insurer questionnaires and enterprise security reviews already forcing a dedicated control requirement, or is the trigger still anecdotal?
+operatingAssumptions:
+  - assumption: Adjacent secrets and machine-identity budgets are flexible enough to fund a standalone runtime containment pilot without waiting for a new annual budget cycle.
+    basis: research.yaml
+    validationTest: Close at least 4 paid pilots from the first 8 security-qualified opportunities within 90 days of formal evaluation.
+    decisionImpact: If false, the company must pivot to partner-led services, bundled OEM distribution, or a longer enterprise funding plan instead of a fast direct sales motion.
+  - assumption: A proxy and sidecar can cover enough high-risk connector classes to demonstrate value before deep native plug-ins are required.
+    basis: research.yaml
+    validationTest: In the first 3 deployments, route at least 70% of model-provider, database, and selected internal API calls through the broker without breaking the existing workflow.
+    decisionImpact: If false, roadmap and hiring shift toward framework-specific adapters and a narrower ICP, delaying gross-margin improvement.
+  - assumption: Buyers will accept per-workspace or per-tenant isolation for the first protected workflows rather than insisting on fully shared multi-tenant enforcement on day one.
+    basis: research.yaml
+    validationTest: Win 3 design partners that agree to isolate the first high-risk workflow at the workspace or tenant boundary as part of deployment.
+    decisionImpact: If false, the beachhead must narrow to single-tenant deployments or move upmarket to accounts with stronger infrastructure control.
+  - assumption: Observe-mode replay and policy tuning can keep false-positive containment actions low enough for customer-facing automations.
+    basis: operator judgment
+    validationTest: After 30 days of baseline data, keep false-positive pauses below 2% of approved runs and resolve each review in under 15 minutes.
+    decisionImpact: If false, the product remains advisory or alerting-first, which weakens pricing power and slows pilot-to-production conversion.
+  - assumption: Security-review and insurer triggers compress the first sales cycle enough to justify a pre-seed go-to-market plan.
+    basis: idea.yaml
+    validationTest: Median time from confirmed trigger to signed paid pilot stays under 90 days across the first 6 qualified deals.
+    decisionImpact: If false, funding needs and hiring pace change because the company would be selling on a slower compliance cycle than planned.
+experimentRoadmap:
+  - horizon: "0–90 days"
+    experiment: Interview 25 target accounts and map current secret exposure, workflow types, and trigger events.
+    hypothesis: At least 10 qualified prospects already run or plan one customer-specific self-hosted agent workflow that would fail a serious security review today.
+    successMetric: 10+ qualified accounts with named workflow, credential classes, and buyer or reviewer identified.
+    owner: Founder CEO
+  - horizon: "0–90 days"
+    experiment: Ship an observe-mode proxy for OpenAI, Anthropic, Gemini, and MySQL or Postgres on one Langflow or Flowise design partner.
+    hypothesis: The first deployment can cover most high-risk credentialed calls in under 30 days without a workflow rewrite.
+    successMetric: One design partner routes 70%+ of targeted calls through the broker within 30 days of kickoff.
+    owner: Founding eng
+  - horizon: "0–90 days"
+    experiment: Benchmark latency, replay quality, and false-positive policy suggestions on representative flows.
+    hypothesis: Inline brokerage can stay within customer SLOs while surfacing abnormal fan-out patterns that humans would miss.
+    successMetric: P95 added latency below 150 ms per credentialed step and at least 3 materially risky off-graph events identified in testing.
+    owner: Security / platform engineer
+  - horizon: "3–6 months"
+    experiment: Convert 3 design partners into paid pilots triggered by security review or insurer pressure.
+    hypothesis: Buyers will pay for hardening and evidence before full autonomous kill logic is broadly enabled.
+    successMetric: 3 paid pilots signed at $15k+ each with agreed production go-live criteria.
+    owner: Founder CEO
+  - horizon: "6–12 months"
+    experiment: Turn on enforced pause or kill policies for the first production accounts and measure conversion.
+    hypothesis: Observe-mode evidence is enough to earn production trust in at least half of paid pilots.
+    successMetric: 2+ paid pilots convert to production at $45k+ annualized value with false-positive pauses below 2%.
+    owner: Security product lead
+  - horizon: "6–12 months"
+    experiment: Recruit consultancy and insurer or incident-response partners and measure partner-sourced pipeline.
+    hypothesis: Partners can lower trust and integration friction faster than pure outbound sales.
+    successMetric: 3 signed partners and 30%+ of qualified pipeline sourced through partners by month 12.
+    owner: Partnerships lead
+operations:
+  - Maintain a standard onboarding worksheet mapping each workflow's model, database, internal API, workspace, and emergency kill owner before any credentials are brokered.
+  - Run every account through observe-mode baseline, incident tabletop, and rollback plan before enabling enforced pause or kill policies.
+  - Export replay evidence and containment events into the customer's existing vault, SIEM, and ticketing systems instead of trying to replace those tools.
+  - Package reference Kubernetes deployments for queue mode, proxy count, workload identity, and reverse-proxy handling with selected consultancies.
+team:
+  - role: Founding eng
+    startTiming: Month 0
+    rationale: Build the broker, execution graph, and first Langflow or Flowise connector coverage needed for paid pilots.
+  - role: Founder CEO
+    startTiming: Month 0
+    rationale: Own founder-led sales, design-partner recruiting, and security-review messaging while the product and ICP are still being defined.
+  - role: Security / platform engineer
+    startTiming: Month 2
+    rationale: Own workload identity integrations, credential rotation, and production reliability for the first customer deployments.
+  - role: Solutions engineer
+    startTiming: Month 4
+    rationale: Shorten deployment time, codify Kubernetes playbooks, and protect core engineering bandwidth as pilots multiply.
+  - role: Security product lead
+    startTiming: Month 7
+    rationale: Turn pilot learnings into reusable policies, replay workflows, and evidence exports that customers trust in production.
+  - role: Partnerships lead
+    startTiming: Month 10
+    rationale: Build consultancy, insurer, and incident-response channels after the packaged deployment path and conversion story exist.
+milestones:
+  - horizon: "0–12 months"
+    items:
+      - Ship Langflow and Flowise observe-mode coverage for model-provider keys, MySQL or Postgres, and selected internal APIs.
+      - Win 3 paid pilots and convert at least 2 to production contracts at $45k+ annualized value.
+      - Prove first deployment reaches observe-mode evidence in under 30 days with false-positive pauses below 2% after tuning.
+      - Land 2 consultancy partners and 1 insurer or incident-response referral channel.
+  - horizon: "12–24 months"
+    items:
+      - Add enforced short-lived leases, automated rotation after containment events, and the first MCP connector pack.
+      - Reach 10-15 production customers and second-workspace expansion in at least 35% of them.
+      - Launch premium audit and insurer-response evidence modules that increase ACV without expanding core deployment scope.
+  - horizon: "24–36 months"
+    items:
+      - Expand beyond Langflow and Flowise into MCP servers, custom runners, and internal AI platforms.
+      - Reach roughly 60 customers and validate the year-3 SOM case through multi-workspace land-and-expand.
+      - Turn cross-customer execution data into reusable policy defaults and benchmarking that strengthen partner distribution and retention.
+risks:
+  - risk: Proxy integration takes too much custom work across runtimes and connectors.
+    likelihood: High
+    impact: High
+    mitigation: Start with Langflow, Flowise, and a narrow connector list, then productize reference deployments before adding long-tail connectors.
+  - risk: Buyers decide existing vault, workload identity, and manual rotation are good enough.
+    likelihood: Medium
+    impact: High
+    mitigation: Sell measured blast-radius reduction on one production workflow and integrate with current vault or IAM tools rather than replacing them.
+  - risk: False-positive pauses or added latency break customer-facing automations.
+    likelihood: Medium
+    impact: High
+    mitigation: Default to observe mode, benchmark representative flows, and require named rollback owners before inline enforcement.
+  - risk: The beachhead market is smaller or slower than research estimates imply.
+    likelihood: Medium
+    impact: High
+    mitigation: Track production deployment count and trigger quality early, then expand into MCP and internal AI platforms only after 5-10 validated design partners.
+  - risk: Framework vendors or cloud platforms bundle enough step-aware controls to erase the wedge.
+    likelihood: Medium
+    impact: Medium
+    mitigation: Stay cross-framework, partner with secret and IAM vendors, and compound a replay plus policy dataset that bundled features cannot match quickly.
+fundingAsk:
+  round: pre-seed
+  targetFundingRangeUsd: "$2.5-3.5M"
+  runwayMonths: 18
+  useOfFundsSummary: >-
+    Fund 18 months to ship the Langflow- and Flowise-first containment product,
+    close 3-5 paid pilots, convert 2-3 to production, package the deployment
+    playbook with partners, and determine whether expansion into MCP and
+    internal AI platforms is real before hiring a larger sales team.
