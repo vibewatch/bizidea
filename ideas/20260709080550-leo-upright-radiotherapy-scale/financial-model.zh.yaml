@@ -1,0 +1,490 @@
+slug: upright-radiotherapy-utilization-os
+date: '2026-07-09'
+currency: USD
+modelStartMonth: 2026-08
+assumptions:
+- id: A1
+  name: 每间治疗室的付费投运前试点费
+  value: '75'
+  unit: USD 千（一次性）
+  source: '[BP investorMemo.firstCustomer.initialContract: "$50K-$100K paid pre-go-live pilot for one room"；按中位数建模]'
+- id: A2
+  name: 每间已上线治疗室的年度生产 ARR
+  value: '175'
+  unit: USD 千 / 间 / 年
+  source: '[BP investorMemo.firstCustomer.initialContract 区间 $175K-$250K；与 research.yaml market.som 中较保守的 "$175k annual budget per room" 对齐]'
+- id: A3
+  name: 每间新治疗室的一次性实施 / 数据映射费（Y1 后）
+  value: '25'
+  unit: USD 千（一次性）
+  source: '[BP businessModel.revenueStreams: "One-time implementation, data-mapping, and payer-configuration fees"；按 Y1 试点费约 1/3 估算，因为 BP twelveMonth 计划假设 onboarding 会更可复制]'
+- id: A4
+  name: 目标稳态毛利率
+  value: '70'
+  unit: percent
+  source: '[BP businessModel.targetGrossMarginPct: 70]'
+- id: A5
+  name: Y1 / Y2 / Y3 年末在约治疗室数
+  value: 3 / 7 / 12
+  unit: 治疗室数量
+  source: '[Y3=12 对应 research.yaml market.som: "12 live rooms across roughly 8-10 lighthouse systems"；Y1/Y2 根据 BP milestones 插值得到（Y1 2-3 个付费试点，Y2 扩到多房间 / 相邻模态）]'
+- id: A6
+  name: 创始团队起始招聘月份
+  value: 创始人/CEO M1、创始工程师 M1、产品/实施负责人 M2、临床报销负责人 M4、解决方案工程师 M7、战略合作负责人 M10
+  unit: 模型月份
+  source: '[BP team[]: startTiming Month 0/0/1/3/6/9，再整体 +1 以匹配从 1 开始计的模型月份]'
+- id: A7
+  name: 各岗位全包年薪（含工资税 / 福利）
+  value: CEO $175K、工程 $220K、产品/实施负责人 $200K、临床报销负责人 $230K、解决方案工程师 $190K、合作负责人 $190K OTE
+  unit: USD / FTE / 年
+  source: '[创业财务经验值：早期 health-tech 团队的全包薪酬区间；临床报销负责人因专业性更强而溢价]'
+- id: A8
+  name: 创始人主导销售到首个付费试点签约的周期
+  value: '4'
+  unit: 自启动起的月数
+  source: '[BP gtm.channels: founder-led direct sales；BP sequencingRationale: GTM 在 2-3 家灯塔机构跑出付费试点前都保持创始人主导——这里按企业级医疗系统 4 个月销售周期建模]'
+- id: A9
+  name: 试点交付 / 项目周期
+  value: '2'
+  unit: 月
+  source: '[BP experimentRoadmap 90-180 days: "First paid pilot launches within 8 weeks of kickoff"]'
+- id: A10
+  name: Y1 试点转生产的数量
+  value: 前 3 个试点里有 2 个在 Y1 内转成年度生产合同；第 3 个在 Y2 Q1 转化
+  unit: 数量
+  source: '[BP milestones 0-12 months: "Convert at least 2 pilots into annual per-room production contracts"]'
+- id: A11
+  name: 每间新治疗室的 CAC
+  value: '125'
+  unit: USD 千 / 新客户
+  source: '[按模型里的 Y2 销售与市场开支 ÷ 新签治疗室数推导，反映 BP buyingProcess 所说的长医疗系统销售周期]'
+- id: A12
+  name: 月度总收入流失率（生产后）
+  value: '1.5'
+  unit: 每月百分比（平均客户生命周期约 5.6 年）
+  source: '[创业财务经验值：嵌入式、按治疗室计费的 enterprise health-tech 基础设施通常更粘；但 BP / research 里还没有在跑生产客户能验证它]'
+- id: A13
+  name: pre-seed 融资额与声明跑道
+  value: 融资 $2.0M / 18 个月跑道
+  unit: USD 百万 / 月
+  source: '[BP fundingAsk: round pre-seed, targetFundingRangeUsd "$2-4M", runwayMonths 18；按更精简 burn 曲线取区间下沿]'
+- id: A14
+  name: 期初现金
+  value: '2000'
+  unit: USD 千，等于模型起点一次性到账的全部融资
+  source: '[标准建模约定：pre-seed 资金在 T0 到账]'
+- id: A15
+  name: COGS 构成
+  value: 交付人力（产品/实施负责人、临床报销负责人、解决方案工程师部分工时）+ 托管 / 基础设施
+  unit: n/a
+  source: '[运营判断，且与 BP product.mvp 的只读架构和 BP operations 里提到的审计日志、BAA 约束一致]'
+- id: A16
+  name: 非人力 SG&A 开支（法务、保险、合规 / HIPAA-BAA 准备、工具）
+  value: 7-13，到 Y3 升至 20-24
+  unit: USD 千 / 月
+  source: '[根据 BP operations 推导：既然要维持只读集成、BAA、基于角色的权限和审计日志，合规开支就会随客户数上升]'
+- id: A17
+  name: 下行 / 上行转化率区间
+  value: 试点转生产：下行 33%（3 个里 1 个）vs 上行 100%（3 个里 3 个）
+  unit: percent
+  source: '[BP strategyMap.killCriteria: "Fewer than half of paid pilots convert to annual per-room contracts" 给出了下行边界]'
+- id: A18
+  name: 市场规模基础（TAM / SAM / SOM）来自模型，不是观察值
+  value: TAM $68.6M / SAM $15.8M / SOM $2.1M，且都标记为 isEstimate:true
+  unit: USD
+  source: '[research.yaml market.tam / sam / som 的 rationale——三个数字都明确写着它们是 modeled estimates]'
+headcount:
+- role: 创始人 / CEO
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 创始 / 产品工程师
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 2
+  q4y3: 2
+- role: 产品与实施负责人
+  q1y1: 1
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 2
+- role: 临床报销负责人
+  q1y1: 0
+  q2y1: 1
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 解决方案工程师
+  q1y1: 0
+  q2y1: 0
+  q3y1: 1
+  q4y1: 1
+  q4y2: 1
+  q4y3: 1
+- role: 战略合作 / BD 负责人
+  q1y1: 0
+  q2y1: 0
+  q3y1: 0
+  q4y1: 1
+  q4y2: 2
+  q4y3: 2
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 5
+  q4y1: 6
+  q4y2: 8
+  q4y3: 9
+headcountAnnualizedPayrollK:
+  q1y1: 595.0
+  q2y1: 825.0
+  q3y1: 1015.0
+  q4y1: 1205.0
+  q4y2: 1615.0
+  q4y3: 1815.0
+y1Monthly:
+- month: M1
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 2.0
+  grossProfitK: -2.0
+  salesMarketingK: 12.7
+  researchDevelopmentK: 18.3
+  generalAdministrativeK: 12.8
+  opexK: 43.9
+  ebitdaK: -45.9
+  cashEopK: 1954.1
+- month: M2
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 10.3
+  grossProfitK: -10.3
+  salesMarketingK: 12.7
+  researchDevelopmentK: 26.7
+  generalAdministrativeK: 12.8
+  opexK: 52.2
+  ebitdaK: -62.6
+  cashEopK: 1891.5
+- month: M3
+  customersEop: 0
+  newCustomers: 0
+  revenueK: 0.0
+  cogsK: 10.3
+  grossProfitK: -10.3
+  salesMarketingK: 12.7
+  researchDevelopmentK: 26.7
+  generalAdministrativeK: 12.8
+  opexK: 52.2
+  ebitdaK: -62.6
+  cashEopK: 1828.9
+- month: M4
+  customersEop: 1
+  newCustomers: 1
+  revenueK: 0.0
+  cogsK: 23.8
+  grossProfitK: -23.8
+  salesMarketingK: 12.7
+  researchDevelopmentK: 32.4
+  generalAdministrativeK: 12.8
+  opexK: 58.0
+  ebitdaK: -81.8
+  cashEopK: 1747.2
+- month: M5
+  customersEop: 1
+  newCustomers: 0
+  revenueK: 37.5
+  cogsK: 23.8
+  grossProfitK: 13.7
+  salesMarketingK: 12.7
+  researchDevelopmentK: 32.4
+  generalAdministrativeK: 12.8
+  opexK: 58.0
+  ebitdaK: -44.2
+  cashEopK: 1702.9
+- month: M6
+  customersEop: 2
+  newCustomers: 1
+  revenueK: 37.5
+  cogsK: 23.8
+  grossProfitK: 13.7
+  salesMarketingK: 12.7
+  researchDevelopmentK: 32.4
+  generalAdministrativeK: 12.8
+  opexK: 58.0
+  ebitdaK: -44.2
+  cashEopK: 1658.7
+- month: M7
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 52.1
+  cogsK: 37.4
+  grossProfitK: 14.7
+  salesMarketingK: 15.7
+  researchDevelopmentK: 35.6
+  generalAdministrativeK: 14.8
+  opexK: 66.2
+  ebitdaK: -51.5
+  cashEopK: 1607.2
+- month: M8
+  customersEop: 2
+  newCustomers: 0
+  revenueK: 52.1
+  cogsK: 37.4
+  grossProfitK: 14.7
+  salesMarketingK: 15.7
+  researchDevelopmentK: 35.6
+  generalAdministrativeK: 14.8
+  opexK: 66.2
+  ebitdaK: -51.5
+  cashEopK: 1555.7
+- month: M9
+  customersEop: 3
+  newCustomers: 1
+  revenueK: 29.2
+  cogsK: 37.4
+  grossProfitK: -8.3
+  salesMarketingK: 15.7
+  researchDevelopmentK: 35.6
+  generalAdministrativeK: 14.8
+  opexK: 66.2
+  ebitdaK: -74.4
+  cashEopK: 1481.3
+- month: M10
+  customersEop: 3
+  newCustomers: 0
+  revenueK: 66.7
+  cogsK: 37.4
+  grossProfitK: 29.2
+  salesMarketingK: 31.6
+  researchDevelopmentK: 35.6
+  generalAdministrativeK: 14.8
+  opexK: 82.0
+  ebitdaK: -52.7
+  cashEopK: 1428.5
+- month: M11
+  customersEop: 3
+  newCustomers: 0
+  revenueK: 66.7
+  cogsK: 37.4
+  grossProfitK: 29.2
+  salesMarketingK: 31.6
+  researchDevelopmentK: 35.6
+  generalAdministrativeK: 14.8
+  opexK: 82.0
+  ebitdaK: -52.7
+  cashEopK: 1375.8
+- month: M12
+  customersEop: 3
+  newCustomers: 0
+  revenueK: 29.2
+  cogsK: 37.4
+  grossProfitK: -8.3
+  salesMarketingK: 31.6
+  researchDevelopmentK: 35.6
+  generalAdministrativeK: 14.8
+  opexK: 82.0
+  ebitdaK: -90.2
+  cashEopK: 1285.5
+y2y3Quarterly:
+- quarter: Q1Y2
+  customersEop: 4
+  revenueK: 178.1
+  grossProfitK: 65.1
+  opexK: 274.6
+  ebitdaK: -209.5
+  cashEopK: 1076.0
+- quarter: Q2Y2
+  customersEop: 5
+  revenueK: 221.9
+  grossProfitK: 108.1
+  opexK: 303.2
+  ebitdaK: -195.1
+  cashEopK: 880.9
+- quarter: Q3Y2
+  customersEop: 6
+  revenueK: 265.6
+  grossProfitK: 151.1
+  opexK: 331.9
+  ebitdaK: -180.7
+  cashEopK: 700.1
+- quarter: Q4Y2
+  customersEop: 7
+  revenueK: 309.4
+  grossProfitK: 194.1
+  opexK: 360.5
+  ebitdaK: -166.4
+  cashEopK: 533.8
+- quarter: Q1Y3
+  customersEop: 8
+  revenueK: 353.1
+  grossProfitK: 230.9
+  opexK: 369.7
+  ebitdaK: -138.9
+  cashEopK: 394.9
+- quarter: Q2Y3
+  customersEop: 9
+  revenueK: 396.9
+  grossProfitK: 267.6
+  opexK: 379.0
+  ebitdaK: -111.4
+  cashEopK: 283.5
+- quarter: Q3Y3
+  customersEop: 10
+  revenueK: 440.6
+  grossProfitK: 304.4
+  opexK: 388.2
+  ebitdaK: -83.9
+  cashEopK: 199.7
+- quarter: Q4Y3
+  customersEop: 12
+  revenueK: 531.2
+  grossProfitK: 388.0
+  opexK: 397.5
+  ebitdaK: -9.5
+  cashEopK: 190.2
+totals:
+  y1:
+    revenueK: 370.8
+    ebitdaK: -714.5
+    cashEopK: 1285.5
+  y2:
+    revenueK: 975.0
+    ebitdaK: -751.7
+    cashEopK: 533.8
+  y3:
+    revenueK: 1721.9
+    ebitdaK: -343.6
+    cashEopK: 190.2
+unitEconomics:
+  arpuAnnualK: 175.0
+  grossMarginPct: 70.0
+  cacK: 125.0
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 66.7
+  ltvK: 680.6
+  ltvCacRatio: 5.4
+  cacPaybackMonths: 12.2
+fundingAsk:
+  round: pre-seed
+  amountM: 2.0
+  runwayMonths: 18
+  milestone: 先把前 3 个付费试点里的至少 2 个转成按治疗室计费的年度生产合同，再签下第 3-4 个付费试点，验证 1 个相邻模态（小型质子或 MR-linac）工作流原型，并发布 1 个客户自有爬坡案例——也就是 BP 里 12-24 个月那组里程碑——同时还得在那个节点之后再留出 6 个月现金缓冲。
+  useOfFunds:
+  - bucket: Engineering
+    amountUsd: 500000
+    percentage: 25
+  - bucket: GTM
+    amountUsd: 800000
+    percentage: 40
+  - bucket: G&A
+    amountUsd: 200000
+    percentage: 10
+  - bucket: Buffer (6 mo)
+    amountUsd: 500000
+    percentage: 25
+scenarios:
+  downside:
+    description: 如果试点转生产跌到 BP 自己的 止损边界——前 3 个里只有 1 个转化，也就是不到一半——买方就可能把预算收回到 OEM 服务或现有 EHR / OIS 扩展上，而相邻模态原型也会拖过 Y3。这样到 Y3 时，治疗室数只能到约 8 间而不是 12 间，收入按比例缩水；但 人手规模 又不会像收入那样同步收缩，结果就是 Y3 结束前现金转负，必须在跑到模型里的 12-24 个月里程碑前先接一笔过桥融资或降价轮。
+    y3RevenueK: 1150.0
+    y3EbitdaK: -750.0
+    cashLowPointK: -350.0
+    keyAssumptionChanges:
+    - 试点转生产从基准的 67% 掉到 33%（3 个里 1 个），对应 BP killCriteria 的下限
+    - 相邻模态验证从 Y2 拖到 Y3 以后，SOM 路径跟着后移
+    - 到 Q4Y3 时治疗室数只到约 8 间，而不是 12 间
+  base:
+    description: 基准情形下，前 3 个付费试点里有 2 个在 Y1 转成年付生产合同，第 3 个在 Y2Q1 转化；公司在整个 Y2 基本保持每季新增约 1 间治疗室，再叠加相邻模态和多房间扩张的加速，到 Q4Y3 做到 12 间已投运治疗室，与 research.yaml 里模型化的 Y3 SOM 一致。毛利率则会从试点密集、偏薄甚至为负的 Y1 月份，逐步爬向 70% 的目标值。
+    y3RevenueK: 1721.9
+    y3EbitdaK: -343.6
+    cashLowPointK: 190.2
+    keyAssumptionChanges:
+    - 与本模型主表和单位经济模型完全一致
+  upside:
+    description: 上行情形里，前 3 个试点全部转成生产，相邻模态原型（小型质子 / MR-linac）到 Y2 年中就能转成付费试点，再加上 OEM / 改造伙伴转介缩短销售周期，Q4Y3 的治疗室数可推到约 16 间。此时 混合 ARPU 会更靠近 BP 合同区间 $175K-$250K 的上沿，因为相邻模态能带来溢价定价。经营杠杆也会在 Q4Y3 把 EBITDA 轻微拉正。
+    y3RevenueK: 2950.0
+    y3EbitdaK: 210.0
+    cashLowPointK: 850.0
+    keyAssumptionChanges:
+    - 试点转生产升到 100%（3 个里 3 个），且 1 个相邻模态试点在 Y2 转化
+    - 混合 ARPU 向 $225K / room 靠拢，反映相邻模态溢价
+    - 到 Q4Y3 时治疗室数达到约 16 间，而不是 12 间
+sensitivity:
+- variable: 每间治疗室 ARPU
+  downsideCase: $150K / room（价格受压，没有相邻模态溢价）
+  baseCase: $175K / room（research.yaml 里模型化的工作流预算 / room）
+  upsideCase: $225K / room（BP 合同区间上沿，含模态溢价）
+  y3RevenueImpactK: -246.0
+  cashImpactK: -172.0
+- variable: 试点转生产率
+  downsideCase: 33%（前 3 个里转 1 个），对应 BP killCriteria 下限
+  baseCase: 67%（前 3 个里 2 个在 Y1 转化，第 3 个在 Y2Q1 转化）
+  upsideCase: 100%（3 个全转，且第二间治疗室扩张更快）
+  y3RevenueImpactK: -560.0
+  cashImpactK: -540.0
+- variable: 到首个付费试点的销售周期
+  downsideCase: 9 个月（资本委员会买方更谨慎）
+  baseCase: 4 个月（按 BP gtm.channels 的创始人主导打法）
+  upsideCase: 3 个月（OEM / 改造伙伴带来的熟人转介）
+  y3RevenueImpactK: -180.0
+  cashImpactK: -220.0
+- variable: 毛利率爬坡轨迹
+  downsideCase: 卡在约 50%（交付效率低、材料包仍大量手工组装）
+  baseCase: 随着手册标准化，逐步爬向 70% 目标
+  upsideCase: 做到约 78%（支付方材料包组装自动化）
+  y3RevenueImpactK: 0.0
+  cashImpactK: -310.0
+- variable: 月度流失率（生产后）
+  downsideCase: 3.0% / 月（年化约 30%，买方按 BP 风险假设退回 OEM 服务）
+  baseCase: 1.5% / 月（年化约 17%，按嵌入式按治疗室基础设施经验值）
+  upsideCase: 0.75% / 月（年化约 9%，一旦接好系统，切换成本很高）
+  y3RevenueImpactK: -180.0
+  cashImpactK: -150.0
+- variable: 招聘节奏
+  downsideCase: 解决方案工程师和合作负责人都晚招 2 个季度
+  baseCase: 按 BP team[] 的 startTiming 招人（M1 / M1 / M2 / M4 / M7 / M10）
+  upsideCase: 比计划提前 1 个季度招人，去吃快于模型的需求
+  y3RevenueImpactK: -150.0
+  cashImpactK: 50.0
+modelDiagram:
+  title: 单位经济流转
+  mermaid: |
+    flowchart LR
+      Target[目标：3-6 院区网络，1 个可改造机房] --> Pilot[付费投运前试点：$75K]
+      Pilot --> Convert{能转生产吗？}
+      Convert -->|~67% Y1| Production[年度每间治疗室 ARR：$175K]
+      Convert -->|~33%| Churned[未转化：只停留在试点]
+      Production --> Rooms[已投运治疗室：Y1 3 间到 Y3 12 间]
+      Rooms --> Revenue[确认收入]
+      Revenue --> GrossProfit[毛利，目标约 70%]
+      GrossProfit --> Cash[经营现金余额]
+      Cash --> NextRound[在 12-24 个月里程碑上接 seed]
+modelSanity:
+- checkName: 收入引擎
+  finding: 收入引擎靠的是：把 $75K 的付费投运前试点，转成每间治疗室每年 $175K 的生产合同；治疗室数则从 Y1 年末 3 间，爬到 research.yaml 模型化 Y3 SOM 对应的 12 间。
+- checkName: 必须成立的事
+  finding: 前 3 个付费试点里，至少 2 个必须在 Y1 内转成年度生产合同——这是 BP 自己写下的里程碑——否则治疗室爬坡、毛利率轨迹和现金跑道都保不住基准路径。
+- checkName: 模型失灵条件
+  finding: 如果试点转生产掉到 BP killCriteria 设定的“低于一半”，下行情形显示 Y3 收入会下滑约 33%，且 Y3 结束前现金转负，被迫接一笔过桥融资。
+- checkName: 下一轮证明点
+  finding: 到第 18-24 个月前，拿下 2+ 个生产合同、验证 1 个相邻模态（小型质子或 MR-linac）原型，并发布 1 个客户自有爬坡案例，才足以支撑在这笔 $2.0M pre-seed 之上继续融一轮 seed。
+sanityChecks:
+  ruleOf40: Y3 收入增速 76.6% + Y3 EBITDA 利润率 -20.0% = Rule of 40 分数约 56.6，主要靠增长而不是盈利拉动。
+  burnMultiple: Y2 burn multiple 约 1.07x，Y3 改善到约 0.39x（Bessemer 经验：低于 1x 说明增长更省钱），反映出随着治疗室数增长快于 人手规模，经营杠杆开始出现。
+  revenuePerFte: $233K 的 Y3 退出 ARR run-rate / FTE（12 间治疗室 x $175K / 9 FTE），落在 $200K-$400K SaaS 基准区间内，但考虑到临床 / 实施人手占比更高，仍偏区间下沿。
+  flags:
+  - research.yaml 里的 TAM / SAM / SOM 都明确标成 modeled estimates（isEstimate:true），所以本模型瞄准的整个 Y3 收入上限——12 间治疗室、$2.1M SOM——天然继承了这层不确定性，而不是观察值。
+  - Y1 前 9 个月里有 5 个月毛利为负，因为试点阶段的交付人力压过了偏薄的试点收入；70% 毛利率只是稳态假设，还没在真实生产治疗室里被证明。
+  - CAC（$125K / room）和生产后月度流失（1.5%）都还是经验值，BP / research 里没有任何实证基础，因为公司连 1 个付费试点都还没签下来——前 2-3 个试点转化后就该用真实数据替换。
+  - 模型假设除了这笔 $2.0M pre-seed 之外没有新增融资；到 Q3Y3-Q4Y3 时现金只剩约 1 个月缓冲，这意味着 seed 轮必须在大约第 30 个月前后就落地，而不能拖到 36 个月。
+  - 收入集中度风险很高：只要前 2-3 个锚点治疗室里掉 1 个，Y1-Y2 增长轨迹都会被明显改写，这也呼应了 BP 自己的判断——按治疗室预算和漫长企业销售周期，未必天然撑得起风险投资级别经济性。
+  - Y2 / Y3 的 人手规模和间接费用 只是按 Y1 末与 Y3 末快照线性插值得到，并不是一份细颗粒度招聘计划，所以现实里的季度 opex 跳变大概率会比模型更颠。
