@@ -1,0 +1,594 @@
+slug: embedded-ai-savings-copilot
+date: "2026-07-09"
+currency: USD
+modelStartMonth: "2026-08"
+assumptions:
+  - id: A1
+    name: Model start month
+    value: "2026-08"
+    unit: month
+    source: '[BP date 2026-07-09] The model starts in the first full month after the business-plan date.'
+  - id: A2
+    name: Starting cash after seed close
+    value: $3.0M
+    unit: usdM
+    source: '[BP fundingAsk targetFundingRangeUsd $3-5M; BP fundingAsk.runwayMonths 18] The base case
+      uses the floor of the stated seed range and carries roughly a 6-month buffer beyond the BPs 18-month
+      operating plan.'
+  - id: A3
+    name: Average deployed institution size
+    value: 87.5K members with 80% digital reach, or about 70K billable members
+    unit: members
+    source: '[BP investorMemo.firstCustomer 75,000-150,000 members; BP market.som 100k average members;
+      research.bottomUpSizingDrivers digital reach 80%] The model assumes slightly smaller-than-SOM average
+      institutions in the first three years.'
+  - id: A4
+    name: Production PMPM price
+    value: $0.40 PMPM
+    unit: usd_per_member_month
+    source: '[BP gtm.pricing; research.bottomUpSizingDrivers software price assumption] The recurring
+      production contract follows the BP and research pricing anchor.'
+  - id: A5
+    name: Steady-state annual subscription per live institution
+    value: $336K ARR
+    unit: usdK_per_customer_year
+    source: '[A3 + A4] About 70K billable members x $0.40 PMPM x 12 months yields $336K ARR, which sits
+      inside the BPs $200K-$400K annual production range.'
+  - id: A6
+    name: Pilot commercial package
+    value: $25K implementation fee plus $45K pilot fee over 90 days
+    unit: usdK_per_pilot
+    source: '[BP gtm.pricing; BP investorMemo.firstCustomer.initialContract] The pilot package uses a
+      mid-range implementation fee and a paid 90-day pilot consistent with the BPs $30K-$75K pilot guidance.'
+  - id: A7
+    name: Pilot duration and production conversion timing
+    value: 90-day paid pilots with production pricing starting in month 4 for successful cohorts
+    unit: months
+    source: '[BP gtm.wedge 90-120 days; BP gtm.funnelTargets paid pilot to production 50%+; BP product.twelveMonth]
+      The base case assumes the strongest early pilots convert on roughly a one-quarter cadence so Y2
+      revenue can shift from services to PMPM subscriptions.'
+  - id: A8
+    name: Paying-institution ramp
+    value: 4 paying institutions by Y1 exit, 12 by Q4Y2, and 26 by Q4Y3
+    unit: customers
+    source: '[BP product.sixMonth/twelveMonth/twentyFourMonth; BP milestones] This lands at the lower-middle
+      of the BPs 25-30 institution year-3 range while still requiring visible partner help by Y3.'
+  - id: A9
+    name: Gross margin ramp
+    value: 48%-58% in Y1, 60%-67% in Y2, and 68%-70% in Y3
+    unit: percent
+    source: '[BP businessModel.targetGrossMarginPct 70; BP strategicChoices.sequencingRationale; research.adoptionFrictionMatrix]
+      Early launches absorb more integration, review, and support work before repeatable connectors and
+      compliance packets standardize delivery.'
+  - id: A10
+    name: Monthly churn
+    value: 1.3%
+    unit: percent
+    source: Startup-finance heuristic for sticky but still substitutable regulated B2B fintech sold into
+      midsize institutions; low churn is justified by workflow embedding, but non-zero churn reflects
+      competitive and procurement risk flagged in [BP risks] and [research.incumbentThesis].
+  - id: A11
+    name: Loaded salary bands
+    value: Founder $180K; engineering/data $195K; product/compliance $180K; implementation $165K; GTM
+      $175K; customer success/analytics $155K; G&A $130K
+    unit: usdK_per_fte_year
+    source: Startup-finance heuristic for U.S. seed-stage fintech hiring mapped to the roles and sequencing
+      in [BP team].
+  - id: A12
+    name: Headcount ramp snapshots
+    value: Founder 1/1/1/1/1/1; engineering-data 1/2/2/2/4/5; product-compliance 1/1/1/1/2/2; implementation-partnerships
+      0/0/1/1/2/3; GTM-sales 0/0/0/1/2/3; customer-success-analytics 0/0/0/0/1/2; G&A-ops 0/0/0/0/1/1
+      across q1y1/q2y1/q3y1/q4y1/q4y2/q4y3
+    unit: fte
+    source: '[BP team; BP operations; BP strategicChoices.sequencingRationale] The model adds scale roles
+      only after connectors, compliance packaging, and partner motion become repeatable constraints.'
+  - id: A13
+    name: Non-payroll operating budgets
+    value: Y1 $40K-$64K per month, Y2 $76K-$100K per month, and Y3 $111K-$138K per month
+    unit: usdK
+    source: Startup-finance heuristic for a regulated fintech carrying cloud, data, security, travel,
+      partner-marketing, legal, insurance, and audit overhead on top of payroll.
+  - id: A14
+    name: Quarterly payroll smoothing
+    value: Y2 and Y3 salary lines use month-by-month hires between the required snapshot columns
+    unit: method
+    source: '[Financial Modeler contract] Quarterly salary expense is smoothed between q4y1, q4y2, and
+      q4y3 snapshots so payroll stays consistent with the BP hiring sequence.'
+  - id: A15
+    name: Cash-conversion simplification
+    value: EBITDA approximates cash movement after the seed close
+    unit: method
+    source: Startup-finance heuristic for an asset-light software business with no debt, tax, or capex
+      line modeled separately at this stage.
+  - id: A16
+    name: Downside scenario deltas
+    value: $312K ARR per live institution, 10 paying institutions by Q4Y2 and 21 by Q4Y3, and gross margin
+      3 points below base
+    unit: scenario_inputs
+    source: '[BP risks; research.sensitivityCases] The downside reflects slower partner access, more compliance
+      friction, and weaker PMPM realization if deposit outcomes take longer to prove.'
+  - id: A17
+    name: Upside scenario deltas
+    value: $360K ARR per live institution, 13 paying institutions by Q4Y2 and 30 by Q4Y3, and gross margin
+      2 points above base
+    unit: scenario_inputs
+    source: '[BP milestones; research.distributionChannels; research.partnershipEcosystem] The upside
+      assumes partner referrals and packaged deployment patterns pull forward both launches and production
+      rollouts.'
+headcount:
+  - role: Founder/CEO
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Engineering/Data
+    q1y1: 1
+    q2y1: 2
+    q3y1: 2
+    q4y1: 2
+    q4y2: 4
+    q4y3: 5
+  - role: Product/Compliance
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 2
+    q4y3: 2
+  - role: Implementation/Partnerships
+    q1y1: 0
+    q2y1: 0
+    q3y1: 1
+    q4y1: 1
+    q4y2: 2
+    q4y3: 3
+  - role: GTM/Sales
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 2
+    q4y3: 3
+  - role: Customer Success/Analytics
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 2
+  - role: G&A/Ops
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 5
+  q4y1: 6
+  q4y2: 13
+  q4y3: 17
+headcountAnnualizedPayrollK:
+  q1y1: 555.0
+  q2y1: 750.0
+  q3y1: 915.0
+  q4y1: 1090.0
+  q4y2: 2285.0
+  q4y3: 2975.0
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 31.3
+    salesMarketingK: 12.0
+    researchDevelopmentK: 16.0
+    generalAdministrativeK: 12.0
+    opexK: 40.0
+    ebitdaK: -71.3
+    cashEopK: 2928.7
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 46.3
+    salesMarketingK: 12.0
+    researchDevelopmentK: 16.0
+    generalAdministrativeK: 12.0
+    opexK: 40.0
+    ebitdaK: -86.3
+    cashEopK: 2842.4
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 46.3
+    salesMarketingK: 12.0
+    researchDevelopmentK: 16.0
+    generalAdministrativeK: 12.0
+    opexK: 40.0
+    ebitdaK: -86.3
+    cashEopK: 2756.1
+  - month: M4
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 40.0
+    cogsK: 20.8
+    grossProfitK: 19.2
+    salaryK: 62.5
+    salesMarketingK: 15.0
+    researchDevelopmentK: 20.0
+    generalAdministrativeK: 13.0
+    opexK: 48.0
+    ebitdaK: -91.3
+    cashEopK: 2664.8
+  - month: M5
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 15.0
+    cogsK: 7.8
+    grossProfitK: 7.2
+    salaryK: 62.5
+    salesMarketingK: 15.0
+    researchDevelopmentK: 20.0
+    generalAdministrativeK: 13.0
+    opexK: 48.0
+    ebitdaK: -103.3
+    cashEopK: 2561.5
+  - month: M6
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 55.0
+    cogsK: 28.6
+    grossProfitK: 26.4
+    salaryK: 62.5
+    salesMarketingK: 15.0
+    researchDevelopmentK: 20.0
+    generalAdministrativeK: 13.0
+    opexK: 48.0
+    ebitdaK: -84.1
+    cashEopK: 2477.4
+  - month: M7
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 43.0
+    cogsK: 20.6
+    grossProfitK: 22.4
+    salaryK: 62.5
+    salesMarketingK: 15.0
+    researchDevelopmentK: 20.0
+    generalAdministrativeK: 13.0
+    opexK: 48.0
+    ebitdaK: -88.1
+    cashEopK: 2389.3
+  - month: M8
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 43.0
+    cogsK: 20.6
+    grossProfitK: 22.4
+    salaryK: 62.5
+    salesMarketingK: 15.0
+    researchDevelopmentK: 20.0
+    generalAdministrativeK: 13.0
+    opexK: 48.0
+    ebitdaK: -88.1
+    cashEopK: 2301.2
+  - month: M9
+    customersEop: 3
+    newCustomers: 1
+    revenueK: 96.0
+    cogsK: 43.2
+    grossProfitK: 52.8
+    salaryK: 76.3
+    salesMarketingK: 18.0
+    researchDevelopmentK: 22.0
+    generalAdministrativeK: 16.0
+    opexK: 56.0
+    ebitdaK: -79.5
+    cashEopK: 2221.7
+  - month: M10
+    customersEop: 3
+    newCustomers: 0
+    revenueK: 71.0
+    cogsK: 31.9
+    grossProfitK: 39.1
+    salaryK: 76.3
+    salesMarketingK: 18.0
+    researchDevelopmentK: 22.0
+    generalAdministrativeK: 16.0
+    opexK: 56.0
+    ebitdaK: -93.2
+    cashEopK: 2128.5
+  - month: M11
+    customersEop: 4
+    newCustomers: 1
+    revenueK: 111.0
+    cogsK: 46.6
+    grossProfitK: 64.4
+    salaryK: 90.8
+    salesMarketingK: 22.0
+    researchDevelopmentK: 24.0
+    generalAdministrativeK: 18.0
+    opexK: 64.0
+    ebitdaK: -90.4
+    cashEopK: 2038.1
+  - month: M12
+    customersEop: 4
+    newCustomers: 0
+    revenueK: 99.0
+    cogsK: 41.6
+    grossProfitK: 57.4
+    salaryK: 90.8
+    salesMarketingK: 22.0
+    researchDevelopmentK: 24.0
+    generalAdministrativeK: 18.0
+    opexK: 64.0
+    ebitdaK: -97.4
+    cashEopK: 1940.7
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 6
+    revenueK: 433.0
+    cogsK: 173.2
+    grossProfitK: 259.8
+    salaryK: 347.1
+    salesMarketingK: 90.0
+    researchDevelopmentK: 78.0
+    generalAdministrativeK: 60.0
+    opexK: 228.0
+    ebitdaK: -315.3
+    cashEopK: 1625.4
+  - quarter: Q2Y2
+    customersEop: 8
+    revenueK: 573.0
+    cogsK: 211.9
+    grossProfitK: 361.1
+    salaryK: 417.5
+    salesMarketingK: 102.0
+    researchDevelopmentK: 84.0
+    generalAdministrativeK: 66.0
+    opexK: 252.0
+    ebitdaK: -308.4
+    cashEopK: 1317.0
+  - quarter: Q3Y2
+    customersEop: 10
+    revenueK: 728.0
+    cogsK: 254.7
+    grossProfitK: 473.3
+    salaryK: 492.6
+    salesMarketingK: 114.0
+    researchDevelopmentK: 90.0
+    generalAdministrativeK: 72.0
+    opexK: 276.0
+    ebitdaK: -295.3
+    cashEopK: 1021.7
+  - quarter: Q4Y2
+    customersEop: 12
+    revenueK: 896.0
+    cogsK: 295.6
+    grossProfitK: 600.4
+    salaryK: 571.2
+    salesMarketingK: 126.0
+    researchDevelopmentK: 96.0
+    generalAdministrativeK: 78.0
+    opexK: 300.0
+    ebitdaK: -270.8
+    cashEopK: 750.9
+  - quarter: Q1Y3
+    customersEop: 15
+    revenueK: 1134.0
+    cogsK: 362.9
+    grossProfitK: 771.1
+    salaryK: 571.2
+    salesMarketingK: 144.0
+    researchDevelopmentK: 105.0
+    generalAdministrativeK: 84.0
+    opexK: 333.0
+    ebitdaK: -133.1
+    cashEopK: 617.8
+  - quarter: Q2Y3
+    customersEop: 18
+    revenueK: 1386.0
+    cogsK: 429.6
+    grossProfitK: 956.4
+    salaryK: 600.4
+    salesMarketingK: 156.0
+    researchDevelopmentK: 111.0
+    generalAdministrativeK: 90.0
+    opexK: 357.0
+    ebitdaK: -1.0
+    cashEopK: 616.8
+  - quarter: Q3Y3
+    customersEop: 22
+    revenueK: 1678.0
+    cogsK: 503.4
+    grossProfitK: 1174.6
+    salaryK: 688.8
+    salesMarketingK: 168.0
+    researchDevelopmentK: 117.0
+    generalAdministrativeK: 96.0
+    opexK: 381.0
+    ebitdaK: 104.8
+    cashEopK: 721.6
+  - quarter: Q4Y3
+    customersEop: 26
+    revenueK: 1988.0
+    cogsK: 596.4
+    grossProfitK: 1391.6
+    salaryK: 743.7
+    salesMarketingK: 186.0
+    researchDevelopmentK: 126.0
+    generalAdministrativeK: 102.0
+    opexK: 414.0
+    ebitdaK: 233.9
+    cashEopK: 955.5
+totals:
+  y1:
+    revenueK: 573.0
+    grossProfitK: 311.3
+    ebitdaK: -1059.3
+    cashEopK: 1940.7
+  y2:
+    revenueK: 2630.0
+    grossProfitK: 1694.6
+    ebitdaK: -1189.8
+    cashEopK: 750.9
+  y3:
+    revenueK: 6186.0
+    grossProfitK: 4293.7
+    ebitdaK: 204.6
+    cashEopK: 955.5
+unitEconomics:
+  arpuAnnualK: 336.0
+  grossMarginPct: 70.0
+  cacK: 220.0
+  monthlyChurnPct: 1.3
+  avgCustomerLifeMonths: 76.9
+  ltvK: 1507.7
+  ltvCacRatio: 6.9
+  cacPaybackMonths: 11.2
+fundingAsk:
+  round: seed
+  amountM: 3.0
+  runwayMonths: 24
+  milestone: Reach 10-12 live credit unions, ship repeatable Alkami and Q2 deployment patterns, and prove
+    that partner or CUSO channels can drive roughly 30% of qualified pipeline before the next raise.
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 1200000
+      percentage: 40
+    - bucket: GTM
+      amountUsd: 840000
+      percentage: 28
+    - bucket: G&A
+      amountUsd: 360000
+      percentage: 12
+    - bucket: Buffer (6 mo)
+      amountUsd: 600000
+      percentage: 20
+scenarios:
+  downside:
+    description: Partner access and compliance approval take longer, leaving fewer production launches
+      and lower PMPM realization by Y3.
+    y3RevenueK: 4952.0
+    y3EbitdaK: -801.2
+    cashLowPointK: -336.9
+    keyAssumptionChanges:
+      - Steady-state subscription value falls from about $336K to about $312K ARR per live institution.
+      - Paying-institution count reaches only 10 by Q4Y2 and 21 by Q4Y3.
+      - Gross margin stays about 3 points below base because implementation and compliance work remain
+        more custom.
+      - The company does not get enough partner leverage to offset slower direct-sales and launch cycles.
+  base:
+    description: The base case reaches 12 paying credit unions by Q4Y2 and 26 by Q4Y3 while shifting the
+      mix from paid pilots to PMPM subscriptions.
+    y3RevenueK: 6186.0
+    y3EbitdaK: 204.6
+    cashLowPointK: 602.7
+    keyAssumptionChanges:
+      - Steady-state subscription value stays at about $336K ARR per live institution.
+      - The company exits Y1 with 4 paying institutions and reaches 12 by Q4Y2, consistent with the BP
+        milestone ladder.
+      - Gross margin improves from the high-40s in early pilots to 70% by H2Y3 as deployment patterns
+        standardize.
+      - Headcount ramps to 13 FTE by Q4Y2 and 17 by Q4Y3, with scale hires added only after the first
+        partner motion is working.
+  upside:
+    description: Partner referrals and faster deployment templates pull forward launches and let the company
+      finish Y3 close to the BP's 30-institution SOM line.
+    y3RevenueK: 7310.0
+    y3EbitdaK: 1132.1
+    cashLowPointK: 1034.0
+    keyAssumptionChanges:
+      - Steady-state subscription value rises from about $336K to about $360K ARR per live institution.
+      - Paying-institution count reaches 13 by Q4Y2 and 30 by Q4Y3.
+      - Gross margin runs about 2 points above base because support and governance packaging standardize
+        earlier.
+      - Channel-sourced pipeline materially supplements founder-led selling by the second half of Y2.
+sensitivity:
+  - variable: ARPU
+    downsideCase: $312K steady-state ARR at roughly 65K billable members per institution
+    baseCase: $336K steady-state ARR at roughly 70K billable members per institution
+    upsideCase: $360K steady-state ARR at roughly 75K billable members per institution
+    y3RevenueImpactK: -374.0
+    cashImpactK: -368.9
+  - variable: CAC
+    downsideCase: $260K fully loaded CAC if partner referrals underperform and outbound stays founder-heavy
+    baseCase: $220K blended CAC with founder-led selling plus partner intros
+    upsideCase: $180K once partner and reference pipeline lowers direct acquisition effort
+    y3RevenueImpactK: 0.0
+    cashImpactK: -319.5
+  - variable: churn
+    downsideCase: 2.0% monthly churn if outcome proof or governance trust stays uneven
+    baseCase: 1.3% monthly churn
+    upsideCase: 0.8% monthly churn with stronger embedded-outcome proof
+    y3RevenueImpactK: -205.0
+    cashImpactK: -143.5
+  - variable: sales cycle
+    downsideCase: Post-Y1 pilot starts and production rollouts slip by about 2 months
+    baseCase: 90-day pilots with production pricing starting in roughly one quarter
+    upsideCase: Partner-approved playbooks pull launches about one quarter earlier
+    y3RevenueImpactK: -609.0
+    cashImpactK: -689.9
+  - variable: gross margin
+    downsideCase: Steady-state gross margin stalls near 67%
+    baseCase: Gross margin reaches 70% by H2Y3
+    upsideCase: Gross margin reaches 72% with cleaner templates and lighter support load
+    y3RevenueImpactK: 0.0
+    cashImpactK: -281.8
+  - variable: hiring pace
+    downsideCase: Late-stage scale hires are pulled into Q1Y3 before revenue density catches up
+    baseCase: Scale hires follow production and partner milestones
+    upsideCase: One noncritical scale hire slips until after 20 live institutions
+    y3RevenueImpactK: 0.0
+    cashImpactK: -285.8
+modelDiagram:
+  title: unit economics flow
+  mermaid: |
+    flowchart LR
+      Leads[Board-triggered buyer meetings] --> Pilots[Paid pilots]
+      Pilots --> Production[Production credit unions]
+      Pilots --> Impl[Implementation fees]
+      Production --> PMPM[PMPM subscription revenue]
+      Production --> Expansion[Second-module expansion]
+      PMPM --> GrossProfit
+      Expansion --> GrossProfit
+      Impl --> GrossProfit
+      GrossProfit --> Cash
+modelSanity:
+  - checkName: Revenue engine
+    finding: Base-case growth comes from moving from 4 paying institutions at Y1 exit to 26 by Q4Y3 on
+      roughly $336K steady-state ARR, with most Y2-Y3 revenue shifting from pilots into PMPM subscriptions.
+  - checkName: Must go right
+    finding: The company must keep pilot-to-production conversion near one quarter and turn partner channels
+      into real pipeline by Y3, or the model will not support 26 paying institutions on the planned headcount.
+  - checkName: Model breaks if
+    finding: If partner access and PMPM realization slip toward the downside case, Y3 revenue falls to
+      about $5.0M, EBITDA turns roughly $0.8M negative, and cash drops below zero.
+  - checkName: Next-round proof
+    finding: The next financing is justified once 10-12 live credit unions, two repeatable deployment
+      patterns, and roughly 30% partner-sourced qualified pipeline show the wedge scales beyond founder-led
+      selling.
+sanityChecks:
+  ruleOf40: Y3 growth 135.2% + EBITDA margin 3.3% = 138.5%.
+  burnMultiple: Y2 burn multiple is about 0.6x and improves to positive quarterly EBITDA by Q3Y3.
+  revenuePerFte: $363.9K Y3 on 17 end-of-year FTE (healthy for vertical SaaS/fintech if partner channels
+    carry seller productivity).
+  flags:
+    - Base-case logo growth assumes Q2, Alkami, league, or CUSO channels become material by Y3; pure founder-led
+      outbound would likely not support 26 paying institutions.
+    - Customer rows model net paying institutions, while churn is reflected mainly in unit economics and
+      sensitivity rather than explicit quarterly logo losses.
+    - Full-year Y3 EBITDA is only modestly positive, so a two-quarter delay in production conversions
+      would likely force an earlier follow-on raise.
