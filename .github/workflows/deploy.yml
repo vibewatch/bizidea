@@ -1,0 +1,67 @@
+name: Deploy website to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'website/**'
+      - 'ideas/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      BASE_PATH: /
+      SITE_URL: https://bizidea.genisisiq.com
+      PUBLIC_GA_ID: ${{ vars.PUBLIC_GA_ID }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            website/package-lock.json
+      - name: Restore incremental build caches
+        uses: actions/cache@v5
+        with:
+          path: |
+            website/.astro
+            .cache
+          key: bizidea-incremental-${{ runner.os }}-node22-${{ hashFiles('website/src/**', 'website/scripts/**', 'scripts/**', 'website/package-lock.json', 'package-lock.json') }}-${{ hashFiles('ideas/**/*.yaml') }}
+          restore-keys: |
+            bizidea-incremental-${{ runner.os }}-node22-${{ hashFiles('website/src/**', 'website/scripts/**', 'scripts/**', 'website/package-lock.json', 'package-lock.json') }}-
+            bizidea-incremental-${{ runner.os }}-node22-
+      - name: Install root deps
+        run: npm ci --no-audit --no-fund
+      - name: Install website deps
+        working-directory: website
+        run: npm ci --no-audit --no-fund
+      - name: Validate and build website
+        run: npm run validate:all
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: website/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

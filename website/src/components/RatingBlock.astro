@@ -1,0 +1,129 @@
+---
+import { t, type Lang } from '../lib/i18n';
+interface Dimension { score: number; rationale: string; }
+interface SelectionLens {
+  championDimension: 'creativeNovelty' | 'venturePotential' | 'whiteSpace';
+  championScore: number;
+  whyThisWins: string;
+  acceptedTradeoff: string;
+}
+interface Props {
+  overall: number;
+  lang?: Lang;
+  selectionLens?: SelectionLens;
+  dimensions: {
+    market: Dimension;
+    differentiation: Dimension;
+    execution: Dimension;
+    timeliness: Dimension;
+  };
+}
+const { overall, dimensions, selectionLens, lang = 'en' } = Astro.props as Props;
+const items: Array<[string, Dimension]> = [
+  [t('rating.market', lang), dimensions.market],
+  [t('rating.differentiation', lang), dimensions.differentiation],
+  [t('rating.execution', lang), dimensions.execution],
+  [t('rating.timeliness', lang), dimensions.timeliness],
+];
+---
+<div class="bz-rating">
+  {selectionLens && (
+    <div class="bz-rating__selection">
+      <span class="bz-label">{t('dossier.selectedFor', lang)}</span>
+      <strong>{t(`selection.${selectionLens.championDimension}`, lang)} · {selectionLens.championScore}/5</strong>
+      <p>{selectionLens.whyThisWins}</p>
+      <small>{selectionLens.acceptedTradeoff}</small>
+    </div>
+  )}
+  <div class="bz-rating__overall">
+    <span class="bz-label bz-rating__label">{t('dossier.overallRating', lang)}</span>
+    <span class="bz-rating__score">{overall.toFixed(1)}</span>
+    <span class="bz-label bz-rating__scale">/ 5.0</span>
+  </div>
+  <ol class="bz-rating__grid">
+    {items.map(([name, dim]) => (
+      <li class="bz-rating__cell">
+        <span class="bz-rating__num">{dim.score}</span>
+        <div class="bz-rating__body">
+          <span class="bz-label bz-rating__name">{name}</span>
+          <p class="bz-rating__rationale">{dim.rationale}</p>
+        </div>
+      </li>
+    ))}
+  </ol>
+</div>
+<style>
+  .bz-rating {
+    border-top: var(--rule-thin);
+    border-bottom: var(--rule-thin);
+    padding: var(--space-5) 0;
+    margin: var(--space-5) 0;
+  }
+  .bz-rating__overall {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+  .bz-rating__selection {
+    display: grid;
+    gap: var(--space-2);
+    padding: 0 0 var(--space-5);
+    margin-bottom: var(--space-5);
+    border-bottom: var(--rule-hairline);
+  }
+  .bz-rating__selection strong {
+    font-family: var(--font-display);
+    font-size: var(--fs-xl);
+    color: var(--ink-strong);
+  }
+  .bz-rating__selection p,
+  .bz-rating__selection small {
+    margin: 0;
+    max-width: 72ch;
+  }
+  .bz-rating__selection p { color: var(--ink-page); }
+  .bz-rating__selection small { color: var(--caption-gray); }
+  .bz-rating__label { color: var(--caption-gray); }
+  .bz-rating__score {
+    font-family: var(--font-display);
+    font-size: var(--fs-2xl);
+    line-height: 1;
+    color: var(--ink-page);
+  }
+  .bz-rating__scale { color: var(--caption-gray); }
+  .bz-rating__grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-5);
+  }
+  @media (max-width: 767px) {
+    .bz-rating__grid { grid-template-columns: 1fr; }
+  }
+  .bz-rating__cell {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-4);
+    border-top: var(--rule-hairline);
+    padding-top: var(--space-4);
+  }
+  .bz-rating__num {
+    font-family: var(--font-display);
+    font-size: var(--fs-xl);
+    line-height: 1;
+    color: var(--ink-page);
+    min-width: 1.4em;
+  }
+  .bz-rating__body { display: flex; flex-direction: column; gap: var(--space-1); }
+  .bz-rating__name { color: var(--ink-page); font-weight: 700; }
+  .bz-rating__rationale {
+    font-family: var(--font-sans);
+    font-size: var(--fs-base);
+    line-height: 1.55;
+    margin: 0;
+    color: var(--ink-page);
+  }
+</style>

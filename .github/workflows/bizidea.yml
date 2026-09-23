@@ -1,0 +1,251 @@
+# Scheduled daily Bizidea run.
+#
+# This workflow is intentionally a thin CI wrapper. The `Bizidea` agent owns
+# orchestration: one News Triage scan, idea generation + dedupe, then parallel
+# per-idea report pipelines when the Copilot runtime supports concurrent
+# subagents. CI installs dependencies, invokes the orchestrator, validates, and
+# commits any completed reports.
+#
+# Required secrets / setup:
+# - COPILOT_PAT — PAT for a Copilot-licensed account; passed to the Copilot CLI.
+# - BIZIDEA_PAT — PAT with repo write access for checkout/push and downstream deploy triggers.
+
+name: Bizidea — triage, generate, and publish reports
+
+on:
+  # schedule: # Disabled; Cloudflare Worker handles scheduling.
+  #   - cron: "0 7 * * *"
+  workflow_dispatch:
+    inputs:
+      cap:
+        description: "Max reports per run (1-5)"
+        type: choice
+        options:
+          - "1"
+          - "2"
+          - "3"
+          - "4"
+          - "5"
+        required: false
+        default: "5"
+      timeWindow:
+        description: "Time window phrase (e.g. 'yesterday', 'last 7 days')"
+        type: string
+        required: false
+        default: "yesterday"
+      model:
+        description: "Copilot model to use (effort is derived automatically)"
+        type: choice
+        options:
+          - "gpt-5.4"
+          - "gpt-5.5"
+          - "claude-opus-4.6"
+          - "claude-sonnet-4.6"
+        required: false
+        default: "gpt-5.4"
+      topic:
+        description: "Topic scope; leave blank for broad 'startup news'"
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bizidea-daily
+  cancel-in-progress: false
+
+jobs:
+  generate-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Verify secrets
+        env:
+          BIZIDEA_PAT: ${{ secrets.BIZIDEA_PAT }}
+          COPILOT_PAT: ${{ secrets.COPILOT_PAT }}
+        run: |
+          set -euo pipefail
+          missing=0
+          if [ -z "${BIZIDEA_PAT:-}" ]; then
+            echo "Missing required secret: BIZIDEA_PAT" >&2
+            missing=1
+          fi
+          if [ -z "${COPILOT_PAT:-}" ]; then
+            echo "Missing required secret: COPILOT_PAT" >&2
+            missing=1
+          fi
+          exit "$missing"
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+          token: ${{ secrets.BIZIDEA_PAT }}
+
+      - name: Snapshot ideas/
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/bizidea-snapshot
+          if [ -d ideas ]; then
+            find ideas -type f | LC_ALL=C sort > /tmp/bizidea-snapshot/before.txt
+          else
+            : > /tmp/bizidea-snapshot/before.txt
+          fi
+          echo "Snapshotted $(wc -l < /tmp/bizidea-snapshot/before.txt) file(s) in ideas/."
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: |
+            package-lock.json
+            website/package-lock.json
+
+      - name: Install root deps
+        run: npm ci --no-audit --no-fund
+
+      - name: Install website deps
+        working-directory: website
+        run: npm ci --no-audit --no-fund
+
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot --no-audit --no-fund
+
+      - name: Resolve inputs
+        id: inputs
+        env:
+          RAW_CAP: ${{ github.event.inputs.cap }}
+          RAW_WINDOW: ${{ github.event.inputs.timeWindow }}
+          RAW_MODEL: ${{ github.event.inputs.model }}
+          RAW_TOPIC: ${{ github.event.inputs.topic }}
+        run: |
+          set -euo pipefail
+          CAP="${RAW_CAP:-}"
+          WINDOW="${RAW_WINDOW:-}"
+          MODEL="${RAW_MODEL:-}"
+          TOPIC="${RAW_TOPIC:-}"
+          if [ -z "$CAP" ]; then CAP="5"; fi
+          if [ -z "$WINDOW" ]; then WINDOW="yesterday"; fi
+          if [ -z "$MODEL" ]; then MODEL="gpt-5.4"; fi
+          if ! [[ "$CAP" =~ ^[1-5]$ ]]; then
+            echo "Invalid cap '$CAP'; expected an integer from 1 to 5." >&2
+            exit 2
+          fi
+          if [ "${#WINDOW}" -gt 80 ] || ! [[ "$WINDOW" =~ ^[A-Za-z0-9][A-Za-z0-9\ .,/_:+-]*$ ]]; then
+            echo "Invalid timeWindow '$WINDOW'; use a short plain-text phrase like 'yesterday' or 'last 7 days'." >&2
+            exit 2
+          fi
+          if [ -n "$TOPIC" ]; then
+            if [ "${#TOPIC}" -gt 120 ] || ! [[ "$TOPIC" =~ ^[A-Za-z0-9][A-Za-z0-9\ .,/_:+\&\(\)\'-]*$ ]]; then
+              echo "Invalid topic '$TOPIC'; use a short plain-text phrase." >&2
+              exit 2
+            fi
+            SCOPE="narrow"
+            EFFECTIVE_TOPIC="$TOPIC"
+          else
+            SCOPE="broad"
+            EFFECTIVE_TOPIC="startup news"
+          fi
+          case "$MODEL" in
+            gpt-5.4)          EFFORT="high" ;;
+            gpt-5.5)          EFFORT="high" ;;
+            claude-opus-4.6)  EFFORT="high" ;;
+            claude-sonnet-4.6) EFFORT="high" ;;
+            *)
+              echo "Invalid model '$MODEL'; allowed: gpt-5.4, gpt-5.5, claude-opus-4.6, claude-sonnet-4.6." >&2
+              exit 2
+              ;;
+          esac
+          echo "cap=$CAP" >> "$GITHUB_OUTPUT"
+          echo "window=$WINDOW" >> "$GITHUB_OUTPUT"
+          echo "model=$MODEL" >> "$GITHUB_OUTPUT"
+          echo "effort=$EFFORT" >> "$GITHUB_OUTPUT"
+          echo "topic=$EFFECTIVE_TOPIC" >> "$GITHUB_OUTPUT"
+          echo "scope=$SCOPE" >> "$GITHUB_OUTPUT"
+
+      - name: Run Bizidea agent
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
+        run: |
+          set -euo pipefail
+          copilot --yolo --autopilot --model "${{ steps.inputs.outputs.model }}" --effort "${{ steps.inputs.outputs.effort }}" --agent "Bizidea" -p "Run the full Bizidea pipeline for ${{ steps.inputs.outputs.window }}. topic: ${{ steps.inputs.outputs.topic }}. topicScope: ${{ steps.inputs.outputs.scope }}. cap: ${{ steps.inputs.outputs.cap }}. Use native custom-agent delegation. Run News Triage once, generate and dedupe every selected champion, then process surviving folders through research -> business plan -> financial model -> reporter. Start each artifact's Chinese translation as soon as that English artifact validates, overlap it with the next English stage, and wait for all five translations before final validation. Enforce champion-dimension, source-diversity, originality, semantic-deduplication, and translation-quality gates. Keep independent report folders concurrent, cap triage at 16 queries and 32 fetches, use a 24-36 page adaptive research budget, delete duplicate or failed current-run folders, and finish with full validation. Do not invoke Bizidea recursively or run git commands."
+
+      - name: Repair YAML
+        working-directory: website
+        run: npm run repair:yaml
+
+      - name: Rebuild index
+        run: node scripts/build-ideas-index.mjs --strict
+
+      - name: Validate reports
+        run: npm run validate:all
+
+      - name: Commit & push
+        run: |
+          set -euo pipefail
+          git config user.name "bizidea-bot"
+          git config user.email "bizidea-bot@users.noreply.github.com"
+          git fetch origin "${{ github.ref_name }}"
+          git rebase --autostash "origin/${{ github.ref_name }}"
+          node scripts/build-ideas-index.mjs --strict
+          npm run validate:all
+          git add ideas/
+          if git diff --cached --quiet; then
+            echo "No new reports today."
+            exit 0
+          fi
+          STAMP="$(date -u +%F)"
+          git commit -m "chore(ideas): daily run $STAMP"
+          git push origin HEAD:${{ github.ref_name }}
+
+      - name: Collect new ideas/ files
+        if: failure()
+        id: collect_new_ideas
+        run: |
+          set -euo pipefail
+          BEFORE="/tmp/bizidea-snapshot/before.txt"
+          STAGE="/tmp/bizidea-snapshot/new-files"
+          if [ ! -f "$BEFORE" ]; then
+            echo "No baseline snapshot found; skipping new-file collection."
+            echo "has_new=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          rm -rf "$STAGE"
+          mkdir -p "$STAGE"
+          if [ -d ideas ]; then
+            find ideas -type f | LC_ALL=C sort > /tmp/bizidea-snapshot/after.txt
+          else
+            : > /tmp/bizidea-snapshot/after.txt
+          fi
+          comm -13 "$BEFORE" /tmp/bizidea-snapshot/after.txt > /tmp/bizidea-snapshot/new.txt
+          COUNT=$(wc -l < /tmp/bizidea-snapshot/new.txt | tr -d ' ')
+          if [ "$COUNT" = "0" ]; then
+            echo "No new files in ideas/ since snapshot."
+            echo "has_new=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Collecting $COUNT new file(s) for artifact upload."
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            dest="$STAGE/$f"
+            mkdir -p "$(dirname "$dest")"
+            cp -p "$f" "$dest"
+          done < /tmp/bizidea-snapshot/new.txt
+          cp /tmp/bizidea-snapshot/new.txt "$STAGE/_new-files.txt"
+          echo "has_new=true" >> "$GITHUB_OUTPUT"
+
+      - name: Upload new ideas/ files
+        if: failure() && steps.collect_new_ideas.outputs.has_new == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ideas-new-on-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/bizidea-snapshot/new-files
+          if-no-files-found: ignore
+          retention-days: 14

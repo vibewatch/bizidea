@@ -1,0 +1,130 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Ribbon from './Ribbon.astro';
+import Rule from './Rule.astro';
+import StoryTile from './StoryTile.astro';
+import { t, type Lang } from '../lib/i18n';
+import {
+  buildLocalizedIndexMap,
+  dossierHref,
+  formatRunTimestamp,
+  languagePrefix,
+  localizedSector,
+  localizedText,
+  type IdeaEntry,
+  type LocalizedTextField,
+} from '../lib/page-helpers';
+import { summarizeReportEntries } from '../lib/reports';
+
+interface Props {
+  entries: IdeaEntry[];
+  monthLabel: string;
+  lang: Lang;
+  langSwitchHref: string;
+}
+
+const { entries, monthLabel, lang, langSwitchHref } = Astro.props as Props;
+const summary = summarizeReportEntries(entries, lang);
+const base = import.meta.env.BASE_URL;
+const hrefFor = (entry: IdeaEntry) => dossierHref(entry, lang, base);
+const localized = buildLocalizedIndexMap(entries, lang);
+const localText = (entry: IdeaEntry, field: LocalizedTextField) => localizedText(entry, localized, field);
+const sectorFor = (entry: IdeaEntry) => localizedSector(entry, lang);
+---
+
+<BaseLayout
+  title={`${monthLabel} ${t('archive.titleSuffix', lang)}`}
+  description={t('archive.month.description', lang)}
+  lang={lang}
+  langSwitchHref={langSwitchHref}
+>
+  <section class="bz-page-masthead">
+    <div class="bz-container">
+      <p class="bz-page-masthead__eyebrow bz-label">
+        <a href={`${languagePrefix(base, lang)}archive/`}>{t('archive.back', lang)}</a>
+      </p>
+      <h1 class="bz-page-masthead__title">{monthLabel}</h1>
+      <p class="bz-page-masthead__deck">
+        {entries.length} {entries.length === 1 ? t('home.dossierCount.one', lang) : t('home.dossierCount.other', lang)} · {t('archive.month.deck', lang)}
+      </p>
+      <dl class="bz-month-summary">
+        <div>
+          <dt class="bz-label">{t('archive.summary.avgRating', lang)}</dt>
+          <dd>{summary.averageRating?.toFixed(1) ?? '—'}</dd>
+        </div>
+        <div>
+          <dt class="bz-label">{t('archive.summary.sectors', lang)}</dt>
+          <dd>{summary.sectorCount}</dd>
+        </div>
+        <div>
+          <dt class="bz-label">{t('archive.summary.topSector', lang)}</dt>
+          <dd>{summary.topSector?.label ?? '—'}</dd>
+        </div>
+        <div>
+          <dt class="bz-label">{t('archive.summary.topDossier', lang)}</dt>
+          <dd>{summary.topEntry ? <a href={hrefFor(summary.topEntry)}>{localText(summary.topEntry, 'pitch')}</a> : '—'}</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <Rule weight="thin" />
+  <Ribbon label={t('archive.ribbon', lang)} id="month-dossiers" />
+
+  <div class="bz-container">
+    <div class="bz-grid">
+      {entries.map((entry) => (
+        <StoryTile
+          href={hrefFor(entry)}
+          kicker={`${localText(entry, 'kicker')} · ${sectorFor(entry)}`}
+          headline={localText(entry, 'pitch')}
+          deck={localText(entry, 'topic')}
+          meta={formatRunTimestamp(entry.data.runTimestamp)}
+          rating={entry.data.rating}
+          lang={lang}
+        />
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .bz-month-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-3);
+    margin: var(--space-4) 0 0;
+    padding: var(--space-3) var(--space-4);
+    background: var(--paper-wheat);
+    border-top: 3px solid var(--claret);
+  }
+  .bz-month-summary div { min-width: 0; }
+  .bz-month-summary dt {
+    color: var(--caption-gray);
+    margin: 0 0 var(--space-1);
+  }
+  .bz-month-summary dd {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--fs-md);
+    font-weight: 700;
+    line-height: 1.18;
+    color: var(--ink-page);
+  }
+  .bz-month-summary a { color: var(--ink-page); text-decoration: none; }
+  .bz-month-summary a:hover { color: var(--claret); }
+  @media (max-width: 899px) { .bz-month-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 520px) { .bz-month-summary { grid-template-columns: 1fr; } }
+
+  .bz-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+  .bz-grid > :global(*) {
+    border-top: var(--rule-thin);
+    padding-top: var(--space-4);
+  }
+  @media (max-width: 1023px) { .bz-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 599px) { .bz-grid { grid-template-columns: 1fr; } }
+</style>

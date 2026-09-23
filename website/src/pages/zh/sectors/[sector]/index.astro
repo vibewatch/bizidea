@@ -1,0 +1,72 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import Ribbon from '../../../../components/Ribbon.astro';
+import Rule from '../../../../components/Rule.astro';
+import StoryTile from '../../../../components/StoryTile.astro';
+import { hasZhTranslation } from '../../../../content/ideas-loader';
+import { t, type Lang } from '../../../../lib/i18n';
+import { buildLocalizedIndexMap, dossierHref, formatRunTimestamp, localizedSector, localizedText, type IdeaEntry, type LocalizedTextField } from '../../../../lib/page-helpers';
+import { groupIdeasBySector, summarizeReportEntries } from '../../../../lib/reports';
+
+const lang: Lang = 'zh';
+
+export async function getStaticPaths() {
+  const all = (await getCollection('ideas')).filter((entry) => hasZhTranslation(entry.id));
+  return groupIdeasBySector(all, 'zh').map((group) => ({
+    params: { sector: group.slug },
+    props: { entries: group.entries, sectorSlug: group.slug, sectorLabel: group.label },
+  }));
+}
+
+const { entries: rawEntries, sectorSlug, sectorLabel } = Astro.props;
+const entries = rawEntries as IdeaEntry[];
+const summary = summarizeReportEntries(entries, lang);
+const base = import.meta.env.BASE_URL;
+const hrefFor = (entry: IdeaEntry) => dossierHref(entry, lang, base);
+const localized = buildLocalizedIndexMap(entries, lang);
+const localText = (entry: IdeaEntry, field: LocalizedTextField) => localizedText(entry, localized, field);
+const sectorFor = (entry: IdeaEntry) => localizedSector(entry, lang);
+---
+<BaseLayout
+  title={`${sectorLabel} ${t('sectors.titleSuffix', lang)}`}
+  description={t('sectors.description', lang)}
+  lang={lang}
+  langSwitchHref={`${base}sectors/${sectorSlug}/`}
+>
+  <section class="bz-page-masthead">
+    <div class="bz-container">
+      <p class="bz-page-masthead__eyebrow bz-label"><a href={`${base}zh/sectors/`}>{t('sectors.back', lang)}</a></p>
+      <h1 class="bz-page-masthead__title">{sectorLabel}</h1>
+      <p class="bz-page-masthead__deck">
+        {entries.length} {entries.length === 1 ? t('home.dossierCount.one', lang) : t('home.dossierCount.other', lang)} · {t('archive.summary.avgRating', lang)} {summary.averageRating?.toFixed(1) ?? '—'}
+      </p>
+    </div>
+  </section>
+
+  <Rule weight="thin" />
+  <Ribbon label={t('sectors.ribbon', lang)} id="sector-dossiers" />
+
+  <div class="bz-container">
+    <div class="bz-grid">
+      {entries.map((entry) => (
+        <StoryTile
+          href={hrefFor(entry)}
+          kicker={`${localText(entry, 'kicker')} · ${sectorFor(entry)}`}
+          headline={localText(entry, 'pitch')}
+          deck={localText(entry, 'topic')}
+          meta={formatRunTimestamp(entry.data.runTimestamp)}
+          rating={entry.data.rating}
+          lang={lang}
+        />
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .bz-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+  .bz-grid > :global(*) { border-top: var(--rule-thin); padding-top: var(--space-4); }
+  @media (max-width: 1023px) { .bz-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 599px) { .bz-grid { grid-template-columns: 1fr; } }
+</style>

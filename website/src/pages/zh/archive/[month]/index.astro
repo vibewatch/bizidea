@@ -1,0 +1,25 @@
+---
+import { getCollection } from 'astro:content';
+import ArchiveMonthPage from '../../../../components/ArchiveMonthPage.astro';
+import { hasZhTranslation } from '../../../../content/ideas-loader';
+import type { Lang } from '../../../../lib/i18n';
+import type { IdeaEntry } from '../../../../lib/page-helpers';
+import { groupIdeasByMonth } from '../../../../lib/reports';
+
+const lang: Lang = 'zh';
+
+export async function getStaticPaths() {
+  const all = (await getCollection('ideas')).filter((entry) => hasZhTranslation(entry.id));
+  return groupIdeasByMonth(all, 'zh').map((month) => ({
+    params: { month: month.slug },
+    props: { entries: month.entries, monthSlug: month.slug, monthLabel: month.label },
+  }));
+}
+
+const { entries: rawEntries, monthSlug, monthLabel } = Astro.props;
+const entries = rawEntries as IdeaEntry[];
+const base = import.meta.env.BASE_URL;
+const langSwitchHref = `${base}archive/${monthSlug}/`;
+---
+
+<ArchiveMonthPage entries={entries} monthLabel={monthLabel} lang={lang} langSwitchHref={langSwitchHref} />

@@ -1,0 +1,287 @@
+---
+import '../styles/tokens.css';
+import monaSans from '../assets/fonts/mona-sans.woff2?url';
+import { t, type Lang } from '../lib/i18n';
+interface Props {
+  title: string;
+  description?: string;
+  lang?: Lang;
+  langSwitchHref?: string;
+}
+const { title, description, lang = 'en', langSwitchHref } = Astro.props as Props;
+const base = import.meta.env.BASE_URL;
+const langSwitchLabel = t('lang.switch', lang);
+const homeHref = lang === 'zh' ? `${base}zh/` : base;
+const archiveHref = lang === 'zh' ? `${base}zh/archive/` : `${base}archive/`;
+const sectorsHref = lang === 'zh' ? `${base}zh/sectors/` : `${base}sectors/`;
+const topRatedHref = lang === 'zh' ? `${base}zh/top-rated/` : `${base}top-rated/`;
+const searchHref = lang === 'zh' ? `${base}zh/search/` : `${base}search/`;
+const rssHref = lang === 'zh' ? `${base}zh/rss.xml` : `${base}rss.xml`;
+const rssTitle = 'BizIdea RSS';
+const rawGaId = import.meta.env.PUBLIC_GA_ID;
+const gaId = typeof rawGaId === 'string' && /^G-[A-Z0-9]+$/i.test(rawGaId.trim()) ? rawGaId.trim() : '';
+const enableGa = Boolean(gaId) && import.meta.env.PROD;
+---
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="icon" href={`${base}favicon.svg`} type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title={rssTitle} href={rssHref} />
+    <link rel="preload" href={monaSans} as="font" type="font/woff2" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100..900&display=swap"
+    />
+    {enableGa && (
+      <>
+        <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></script>
+        <script is:inline set:html={`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}');`} />
+      </>
+    )}
+  </head>
+  <body>
+    <header class="bz-utility">
+      <div class="bz-container bz-utility__row">
+        <a href={homeHref} class="bz-utility__brand" aria-label={t('brand.home', lang)}>
+          <span class="bz-utility__mark" aria-hidden="true">B</span>
+          <span>BizIdea</span>
+        </a>
+        <nav class="bz-utility__nav" aria-label={t('footer.sections', lang)}>
+          <a href={homeHref}>{t('footer.latest', lang)}</a>
+          <a href={archiveHref}>{t('footer.all', lang)}</a>
+          <a href={sectorsHref}>{t('footer.sectors', lang)}</a>
+          <a href={topRatedHref}>{t('footer.topRated', lang)}</a>
+          <a href={searchHref}>{t('footer.search', lang)}</a>
+        </nav>
+        <div class="bz-utility__right">
+          <a class="bz-utility__link bz-label" href={rssHref} aria-label={t('footer.rss', lang)}>RSS</a>
+          {langSwitchHref && (
+            <a class="bz-lang-toggle bz-label" href={langSwitchHref}>{langSwitchLabel}</a>
+          )}
+        </div>
+      </div>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="bz-footer">
+      <div class="bz-container bz-footer__row">
+        <div class="bz-footer__left">
+          <span class="bz-footer__brand">BizIdea</span>
+          <span class="bz-footer__dot" aria-hidden="true"></span>
+          <span class="bz-footer__tag">{t('footer.tag', lang)}</span>
+        </div>
+        <span class="bz-footer__copyright">{t('footer.copyright', lang)}</span>
+      </div>
+    </footer>
+
+    <style>
+      .bz-utility {
+        background:
+          linear-gradient(90deg, rgba(153, 15, 61, 0.08), transparent 38%),
+          var(--paper-soft);
+        color: var(--ink-page);
+        border-bottom: 1px solid var(--hairline);
+        position: relative;
+      }
+      .bz-utility::after {
+        content: '';
+        position: absolute;
+        left: 0; right: 0; bottom: -1px;
+        height: 2px;
+        background: var(--claret);
+        opacity: 0.18;
+      }
+      .bz-utility__row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 72px;
+        gap: var(--space-4);
+        flex-wrap: wrap;
+        padding-block: var(--space-2);
+      }
+      .bz-utility__brand {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-3);
+        font-family: var(--font-display);
+        font-weight: 800;
+        font-size: clamp(1.625rem, 0.9vw + 1.3rem, 1.875rem);
+        line-height: 1;
+        letter-spacing: var(--tracking-display-tight);
+        color: var(--ink-strong);
+        text-decoration: none;
+      }
+      .bz-utility__brand:hover { color: var(--claret); }
+      .bz-utility__mark {
+        display: inline-grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        background: var(--claret);
+        color: var(--paper);
+        font-family: var(--font-display);
+        font-size: 1.125rem;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: 0;
+        box-shadow: 0 1px 0 rgba(122, 10, 48, 0.6) inset;
+      }
+      .bz-utility__nav {
+        order: 3;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: var(--space-1);
+        flex: 1 0 100%;
+        min-width: 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .bz-utility__nav::-webkit-scrollbar {
+        display: none;
+      }
+      .bz-utility__nav a {
+        display: inline-flex;
+        align-items: center;
+        color: var(--ink-page);
+        text-decoration: none;
+        font-family: var(--font-sans);
+        font-variant-caps: all-small-caps;
+        font-weight: 700;
+        font-size: var(--fs-base);
+        letter-spacing: 0.04em;
+        line-height: 1;
+        padding: var(--space-2) var(--space-2);
+        border-bottom: 2px solid transparent;
+        white-space: nowrap;
+        transition: color 140ms ease, border-bottom-color 140ms ease;
+      }
+      .bz-utility__nav a:hover,
+      .bz-utility__nav a:focus-visible {
+        color: var(--claret);
+        border-bottom-color: var(--claret);
+      }
+      @media (min-width: 760px) {
+        .bz-utility__row { flex-wrap: nowrap; padding-block: 0; }
+        .bz-utility__nav {
+          order: 0;
+          justify-content: center;
+          flex: 1 1 auto;
+        }
+      }
+      @media (min-width: 1080px) {
+        .bz-utility__nav { gap: var(--space-2); }
+        .bz-utility__nav a { padding-inline: var(--space-3); }
+      }
+      .bz-utility__right {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+      }
+      .bz-utility__link {
+        text-decoration: none;
+        color: var(--claret);
+        border: 1px solid rgba(153, 15, 61, 0.32);
+        background: var(--claret-wash);
+        padding: var(--space-2) var(--space-3);
+        font-size: var(--fs-sm);
+        line-height: 1;
+        letter-spacing: 0.06em;
+        transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+      }
+      .bz-utility__link:hover {
+        color: var(--paper);
+        background: var(--claret);
+        border-color: var(--claret);
+      }
+      .bz-lang-toggle {
+        text-decoration: none;
+        color: var(--ink-page);
+        border: 1px solid var(--hairline);
+        background: var(--paper);
+        padding: var(--space-2) var(--space-3);
+        font-size: var(--fs-sm);
+        line-height: 1;
+        letter-spacing: 0.06em;
+        transition: color 140ms ease, border-color 140ms ease;
+      }
+      .bz-lang-toggle:hover {
+        color: var(--claret);
+        border-color: var(--claret);
+      }
+
+      .bz-footer {
+        background: var(--ink-black);
+        color: var(--paper);
+        margin-top: var(--space-9);
+        padding: var(--space-6) 0;
+        border-top: 3px solid var(--claret);
+      }
+      .bz-footer__row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+        font-family: var(--font-sans);
+        font-size: var(--fs-sm);
+      }
+      .bz-footer__left {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: var(--space-2);
+        min-width: 0;
+      }
+      .bz-footer__brand {
+        font-family: var(--font-display);
+        font-size: var(--fs-lg);
+        font-weight: 800;
+        letter-spacing: var(--tracking-display-tight);
+        color: var(--paper);
+        line-height: 1;
+      }
+      .bz-footer__dot {
+        width: 4px;
+        height: 4px;
+        background: var(--claret);
+        opacity: 0.85;
+        transform: translateY(1px);
+      }
+      .bz-footer__tag {
+        color: var(--paper-wheat);
+        opacity: 0.82;
+        font-size: var(--fs-sm);
+        line-height: 1.35;
+      }
+      .bz-footer__copyright {
+        font-family: var(--font-sans);
+        font-weight: 400;
+        font-variant-caps: normal;
+        color: var(--paper);
+        opacity: 0.6;
+        font-size: var(--fs-sm);
+        letter-spacing: 0;
+        line-height: 1.45;
+        text-align: right;
+      }
+      @media (max-width: 560px) {
+        .bz-footer__row {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: var(--space-3);
+        }
+        .bz-footer__left { align-items: baseline; }
+        .bz-footer__dot { display: none; }
+        .bz-footer__copyright { text-align: left; }
+      }
+    </style>
+  </body>
+</html>

@@ -1,0 +1,102 @@
+---
+import BusinessModelCanvas from './BusinessModelCanvas.astro';
+import CitedText from './CitedText.astro';
+import FactRow from './FactRow.astro';
+import IdeaScorecard from './IdeaScorecard.astro';
+import Mermaid from './Mermaid.astro';
+import Ribbon from './Ribbon.astro';
+import { uiLabel } from '../lib/dossier-format';
+import { t, type Lang } from '../lib/i18n';
+import type { IdeaStage } from '../lib/stage-schemas';
+
+interface Props {
+  idea: IdeaStage;
+  lang?: Lang;
+}
+
+const { idea, lang = 'en' } = Astro.props as Props;
+const ui = (label: string) => uiLabel(label, lang);
+---
+
+<Ribbon label={t('section.whyNow', lang)} id="why-now" />
+<div class="bz-container bz-section">
+  {Array.isArray(idea?.whyNow) && (
+    <ol class="bz-list">
+      {idea.whyNow.map((w: any) => (
+        <li><CitedText text={w.point} lang={lang} /></li>
+      ))}
+    </ol>
+  )}
+  <p class="bz-story__lead"><strong>{t('label.catalyst', lang)}</strong> <CitedText text={idea?.startupThesis?.whyNowCatalyst} lang={lang} /></p>
+</div>
+
+<Ribbon label={t('section.idea', lang)} id="idea" />
+<div class="bz-container bz-section">
+  <p class="bz-story__lead">{idea?.solution}</p>
+  {idea?.differentiator && (
+    <p class="bz-story__lead bz-lead--quiet"><strong>{t('label.whatsDifferent', lang)}</strong> {idea.differentiator}</p>
+  )}
+  <FactRow
+    caption={t('label.startupThesis', lang)}
+    rows={[
+      { label: ui('Beachhead'), value: idea?.startupThesis?.beachhead ?? null },
+      { label: ui('Wedge'), value: idea?.startupThesis?.wedge ?? null },
+      { label: ui('Non-obvious insight'), value: idea?.startupThesis?.nonObviousInsight ?? null },
+      { label: ui('Venture-scale path'), value: idea?.startupThesis?.ventureScalePath ?? null },
+    ]}
+  />
+  {idea?.targetUser && (
+    <FactRow
+      caption={t('label.targetUser', lang)}
+      rows={[
+        { label: ui('Primary user'), value: idea.targetUser.primary ?? null },
+        { label: ui('Secondary user'), value: idea.targetUser.secondary ?? null },
+        { label: ui('Economic buyer'), value: idea.targetUser.buyer ?? null },
+      ]}
+    />
+  )}
+  {idea?.goToMarketSeed && (
+    <FactRow
+      caption={t('label.gtmSeed', lang)}
+      rows={[
+        { label: ui('First customer'), value: idea.goToMarketSeed.firstCustomer ?? null },
+        { label: ui('Buying trigger'), value: idea.goToMarketSeed.buyingTrigger ?? null },
+        { label: ui('Current alternative'), value: idea.goToMarketSeed.currentAlternative ?? null },
+        { label: ui('Switching reason'), value: idea.goToMarketSeed.switchingReason ?? null },
+        { label: ui('Pricing hypothesis'), value: idea.goToMarketSeed.pricingHypothesis ?? null },
+      ]}
+    />
+  )}
+  {Array.isArray(idea?.jobsToBeDone) && idea.jobsToBeDone.length > 0 && (
+    <>
+      <h3 class="bz-section__head">{ui('Jobs to be done')}</h3>
+      <table class="bz-comp">
+        <thead>
+          <tr>
+            <th class="bz-label">{ui('Job')}</th>
+            <th class="bz-label">{ui('Current alternative')}</th>
+            <th class="bz-label">{ui('Success metric')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {idea.jobsToBeDone.map((j: any) => (
+            <tr>
+              <td>{j.job}</td>
+              <td>{j.currentAlternative}</td>
+              <td>{j.successMetric}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  )}
+  {idea?.conceptDiagram?.mermaid && (
+    <Mermaid title={idea.conceptDiagram.title} code={idea.conceptDiagram.mermaid} />
+  )}
+  {idea?.ideaScorecard && (
+    <IdeaScorecard scorecard={idea.ideaScorecard} lang={lang} />
+  )}
+  {idea?.businessModelCanvas && (
+    <BusinessModelCanvas canvas={idea.businessModelCanvas} lang={lang} />
+  )}
+</div>
