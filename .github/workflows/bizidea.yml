@@ -34,15 +34,15 @@ on:
         required: false
         default: "yesterday"
       model:
-        description: "Copilot model to use (effort is derived automatically)"
+        description: "Analysis model; ZH Translator uses GPT-5.6 Luna"
         type: choice
         options:
+          - "gpt-6-luna"
+          - "gpt-5.6-luna"
+          - "gpt-6-sol"
           - "gpt-5.4"
-          - "gpt-5.5"
-          - "claude-opus-4.6"
-          - "claude-sonnet-4.6"
         required: false
-        default: "gpt-5.4"
+        default: "gpt-6-luna"
       topic:
         description: "Topic scope; leave blank for broad 'startup news'"
         type: string
@@ -133,7 +133,7 @@ jobs:
           TOPIC="${RAW_TOPIC:-}"
           if [ -z "$CAP" ]; then CAP="5"; fi
           if [ -z "$WINDOW" ]; then WINDOW="yesterday"; fi
-          if [ -z "$MODEL" ]; then MODEL="gpt-5.4"; fi
+          if [ -z "$MODEL" ]; then MODEL="gpt-6-luna"; fi
           if ! [[ "$CAP" =~ ^[1-5]$ ]]; then
             echo "Invalid cap '$CAP'; expected an integer from 1 to 5." >&2
             exit 2
@@ -154,12 +154,12 @@ jobs:
             EFFECTIVE_TOPIC="startup news"
           fi
           case "$MODEL" in
-            gpt-5.4)          EFFORT="high" ;;
-            gpt-5.5)          EFFORT="high" ;;
-            claude-opus-4.6)  EFFORT="high" ;;
-            claude-sonnet-4.6) EFFORT="high" ;;
+            gpt-6-luna)   EFFORT="xhigh" ;;
+            gpt-5.6-luna) EFFORT="xhigh" ;;
+            gpt-6-sol)    EFFORT="xhigh" ;;
+            gpt-5.4)      EFFORT="high" ;;
             *)
-              echo "Invalid model '$MODEL'; allowed: gpt-5.4, gpt-5.5, claude-opus-4.6, claude-sonnet-4.6." >&2
+              echo "Invalid model '$MODEL'; allowed: gpt-6-luna, gpt-5.6-luna, gpt-6-sol, gpt-5.4." >&2
               exit 2
               ;;
           esac
@@ -175,7 +175,7 @@ jobs:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
         run: |
           set -euo pipefail
-          copilot --yolo --autopilot --model "${{ steps.inputs.outputs.model }}" --effort "${{ steps.inputs.outputs.effort }}" --agent "Bizidea" -p "Run the full Bizidea pipeline for ${{ steps.inputs.outputs.window }}. topic: ${{ steps.inputs.outputs.topic }}. topicScope: ${{ steps.inputs.outputs.scope }}. cap: ${{ steps.inputs.outputs.cap }}. Use native custom-agent delegation. Run News Triage once, generate and dedupe every selected champion, then process surviving folders through research -> business plan -> financial model -> reporter. Start each artifact's Chinese translation as soon as that English artifact validates, overlap it with the next English stage, and wait for all five translations before final validation. Enforce champion-dimension, source-diversity, originality, semantic-deduplication, and translation-quality gates. Keep independent report folders concurrent, cap triage at 16 queries and 32 fetches, use a 24-36 page adaptive research budget, delete duplicate or failed current-run folders, and finish with full validation. Do not invoke Bizidea recursively or run git commands."
+          copilot --yolo --autopilot --model "${{ steps.inputs.outputs.model }}" --reasoning-effort "${{ steps.inputs.outputs.effort }}" --agent "Bizidea" -p "Run the full Bizidea pipeline for ${{ steps.inputs.outputs.window }}. topic: ${{ steps.inputs.outputs.topic }}. topicScope: ${{ steps.inputs.outputs.scope }}. cap: ${{ steps.inputs.outputs.cap }}. Use native custom-agent delegation. Run News Triage once, generate and dedupe every selected champion, then process surviving folders through research -> business plan -> financial model -> reporter. Start each artifact's Chinese translation as soon as that English artifact validates, overlap it with the next English stage, and wait for all five translations before final validation. Enforce champion-dimension, source-diversity, originality, semantic-deduplication, and translation-quality gates. Keep independent report folders concurrent, cap triage at 16 queries and 32 fetches, use a 24-36 page adaptive research budget, delete duplicate or failed current-run folders, and finish with full validation. Do not invoke Bizidea recursively or run git commands."
 
       - name: Repair YAML
         working-directory: website

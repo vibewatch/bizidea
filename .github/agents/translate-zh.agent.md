@@ -1,7 +1,7 @@
 ---
 description: "Use when: generating one Simplified Chinese *.zh.yaml file from a completed report artifact. Keywords: translate zh, Chinese localization, bilingual report."
 name: "ZH Translator"
-model: "GPT-5.4 (copilot)"
+model: "GPT-5.6 Luna (copilot)"
 user-invocable: false
 ---
 

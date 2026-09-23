@@ -1,7 +1,6 @@
 ---
 description: "Use when: generating one startup idea from a selected News Triage cluster. Keywords: startup idea, triage cluster, why-now thesis, dedupe idea."
 name: "Idea Generator"
-model: "GPT-5.4 (copilot)"
 user-invocable: false
 ---
 

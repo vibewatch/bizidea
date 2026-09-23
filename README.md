@@ -132,12 +132,12 @@ In CI, [`deploy.yml`](.github/workflows/deploy.yml) restores `website/.astro` an
 
 In CI, the Cloudflare scheduler dispatches the workflow daily. Manual triggers:
 
-- **GitHub UI**: Actions → *Bizidea — triage, generate, and publish reports* → *Run workflow*. Inputs: `cap` (1–5), `timeWindow` (e.g. `yesterday`, `last 7 days`), and `model`. All supported models use effort `high`; deterministic validators and one retry provide the quality safety net.
+- **GitHub UI**: Actions → *Bizidea — triage, generate, and publish reports* → *Run workflow*. Inputs: `cap` (1–5), `timeWindow` (e.g. `yesterday`, `last 7 days`), and the analysis `model`. The default is GPT-6 Luna at `xhigh`; the ZH Translator independently uses GPT-5.6 Luna. Deterministic validators and one retry provide the quality safety net.
 - **Local Copilot CLI** (requires a Copilot license):
 
   ```bash
   npm install -g @github/copilot
-  copilot --yolo --autopilot --model gpt-5.4 --effort high --agent Bizidea \
+  copilot --yolo --autopilot --model gpt-6-luna --reasoning-effort xhigh --agent Bizidea \
     -p "Scan yesterday's startup news and generate up to 5 non-duplicate startup reports."
   ```
 
@@ -157,7 +157,7 @@ npx wrangler secret put GITHUB_REPO    # vibewatch/bizidea
 npx wrangler deploy
 ```
 
-Optional vars in [cloudflare/wrangler.toml](cloudflare/wrangler.toml) override dispatch defaults: `BIZIDEA_CAP` (1–5, default `5`), `BIZIDEA_TIME_WINDOW` (default `yesterday`), `BIZIDEA_MODEL` (default `gpt-5.4`; also `gpt-5.5` / `claude-opus-4.6` / `claude-sonnet-4.6` — effort derived automatically).
+Optional vars in [cloudflare/wrangler.toml](cloudflare/wrangler.toml) override dispatch defaults: `BIZIDEA_CAP` (1–5, default `5`), `BIZIDEA_TIME_WINDOW` (default `yesterday`), `BIZIDEA_MODEL` (default `gpt-6-luna`; also `gpt-5.6-luna` / `gpt-6-sol` / `gpt-5.4` — effort derived automatically).
 
 ## Required secrets
 

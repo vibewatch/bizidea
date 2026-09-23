@@ -15,4 +15,4 @@ npx wrangler deploy
 
 Use `vibewatch/bizidea` for `GITHUB_REPO`. `GITHUB_TOKEN` should be a fine-grained GitHub PAT with `Actions: Read and write` access on this repository.
 
-Adjust `BIZIDEA_CAP`, `BIZIDEA_TIME_WINDOW`, or `GITHUB_REF` in `wrangler.toml` if the scheduled run should use different workflow inputs.
+Adjust `BIZIDEA_CAP`, `BIZIDEA_TIME_WINDOW`, `BIZIDEA_MODEL`, or `GITHUB_REF` in `wrangler.toml` if the scheduled run should use different workflow inputs. The default analysis model is `gpt-6-luna`; supported overrides are `gpt-5.6-luna`, `gpt-6-sol`, and `gpt-5.4`. Chinese translation remains pinned to GPT-5.6 Luna by its custom agent.

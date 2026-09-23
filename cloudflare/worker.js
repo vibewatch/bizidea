@@ -13,16 +13,16 @@
  *   GITHUB_REF = "main"
  *   BIZIDEA_CAP = "5"
  *   BIZIDEA_TIME_WINDOW = "yesterday"
- *   BIZIDEA_MODEL = "gpt-5.4"  (allowed: gpt-5.4, gpt-5.5, claude-opus-4.6, claude-sonnet-4.6)
+ *   BIZIDEA_MODEL = "gpt-6-luna"  (allowed: gpt-6-luna, gpt-5.6-luna, gpt-6-sol, gpt-5.4)
  */
 
 const WORKFLOW = "bizidea.yml";
 const DEFAULT_REF = "main";
 const DEFAULT_CAP = "5";
 const DEFAULT_TIME_WINDOW = "yesterday";
-const DEFAULT_MODEL = "gpt-5.4";
+const DEFAULT_MODEL = "gpt-6-luna";
 
-const ALLOWED_MODELS = ["gpt-5.4", "gpt-5.5", "claude-opus-4.6", "claude-sonnet-4.6"];
+const ALLOWED_MODELS = ["gpt-6-luna", "gpt-5.6-luna", "gpt-6-sol", "gpt-5.4"];
 
 export default {
   async scheduled(event, env, _ctx) {
