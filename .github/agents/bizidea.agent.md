@@ -148,7 +148,7 @@ Resolve:
 - New ideas must use `qualityPolicyVersion: 2`, avoid OS/copilot/control-plane naming, and pass the originality audit.
 - Research must use `researchPolicyVersion: 3`, a 24–36 page adaptive evidence budget, diverse sources, and saturation-based stopping instead of a 100-source quota.
 - `index.selectionLens` must mirror `idea.selectionLens`.
-- All five Chinese files must pass structural, numeric, untranslated-prose, terminology, protected-term, qualifier, semantic-compression, and translationese checks before editing. Invalid edits must roll back to the validated first pass.
+- All five Chinese files must pass structural, numeric, untranslated-prose, terminology, protected-term, qualifier, semantic-compression, key-predicate, and translationese checks before editing. Invalid edits must roll back to the validated first pass.
 
 ## Speed policy
 

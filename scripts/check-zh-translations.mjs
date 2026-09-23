@@ -107,6 +107,10 @@ const STRICT_TRANSLATIONESE_PATTERNS = [
   /体现了/,
   /这构成了/,
   /关键数字包括/,
+  /最(?:晚|迟)截至/,
+  /未达到至少/,
+  /客户入驻启动后/,
+  /工作流工作量大/,
 ];
 const PROTECTED_NARRATIVE_TERM_RE = /\b(?:[A-Z]{2,}[A-Z0-9-]*|[A-Z][A-Za-z0-9]*[A-Z][A-Za-z0-9]*|Excel|Word|Deltek|SharePoint|Salesforce|Microsoft|Oracle|Amazon|Google)\b/g;
 const TRANSLATABLE_GENERIC_TERM_RE = /^(?:AI|IT|VP|COO|COOs|ROI|TAM|KPI|KPIs|ICP|ACV|ACVs|RFP|GovCon|FY\d*)$/;
@@ -115,6 +119,12 @@ const STRICT_QUALIFIER_RULES = [
   { source: /\bestimat(?:e|ed|es|ing)\b/gi, target: /(估计|估算|预计|测算|约|大约|大致|大概)/, label: 'estimated' },
   { source: /\bat least\b/gi, target: /(至少|不低于|以上|未达)/, label: 'at least' },
   { source: /\bat most\b/gi, target: /(至多|最多|不超过)/, label: 'at most' },
+  { source: /\bonly\b/gi, target: /(只|仅|唯一|只有|仅有|不过|不超过|才|再)/, label: 'only' },
+  {
+    source: /\bby\s+(?:Q[1-4]Y\d+|Q[1-4]\s*20\d{2}|20\d{2}|year[- ]end|month\s+\d+)\b/gi,
+    target: /(?:(?:截至|不晚于|(?<!达)到).{0,8}(?:Q[1-4]Y\d+|Q[1-4]\s*20\d{2}|20\d{2}|年末|第?\d+个月)|(?:增至|升至).{0,60}(?:Q[1-4]Y\d+|Q[1-4]\s*20\d{2}|20\d{2}|年末|第?\d+个月)|(?:Q[1-4]Y\d+|Q[1-4]\s*20\d{2}|20\d{2}|年末|第?\d+个月).{0,8}(?:达成|达到))/,
+    label: 'deadline by',
+  },
   { source: /\b(?:likely|probably)\b/gi, target: /(可能|很可能|大概率|多半|往往)/, label: 'likely' },
   {
     source: /\b(?:(?:do|does|did|have|has|had)\s+)?not yet\b/gi,
@@ -129,6 +139,77 @@ const STRICT_QUALIFIER_RULES = [
   { source: /\bno public\b/gi, target: /(没有公开|无公开|尚无公开|未见公开|缺少公开)/, label: 'no public' },
   { source: /\breportedly\b/gi, target: /(据报道|据称)/, label: 'reportedly' },
   { source: /\bclaims?\b/gi, target: /(声称|称|说法|主张)/, label: 'claim' },
+];
+const STRICT_SEMANTIC_RULES = [
+  {
+    source: /\baccuracy\b/i,
+    target: /(准确率|准确度|精度)/,
+    label: 'accuracy metric',
+  },
+  {
+    source: /\breviewer-approved(?: historical impact)? mapping\b/i,
+    target: /(?:(?:经|获|通过)审核(?:认可)?的?.{0,6}映射|审核认可的.{0,6}映射|映射.{0,8}(?:获|经|通过)审核(?:认可)?)/,
+    label: 'reviewer-approved mapping predicate',
+  },
+  {
+    source: /\breach\s+80%\s+reviewer-approved mapping\b/i,
+    target: /(?:(?:映射准确率.{0,6}(?:达到|为)\s*80%).{0,12}(?:审核|认可)|(?:审核|认可).{0,12}映射准确率.{0,6}(?:达到|为)\s*80%)/,
+    forbiddenTarget: /审核认可率/,
+    label: 'reviewer-approved mapping metric',
+  },
+  {
+    source: /\bworkflow-heavy\b/i,
+    target: /(?:工作流(?:工作量大|工作繁重|任务繁重|任务密集|环节繁重|环节复杂)|(?:繁重|密集|复杂|大量).{0,6}工作流(?:工作|任务|环节))/,
+    label: 'workflow-heavy intensity',
+  },
+  {
+    source: /\bbid and proposal costs?\b/i,
+    target: /(?:(?:投标|竞标).{0,5}(?:和|与|及).{0,5}(?:提案|标书)|(?:提案|标书).{0,5}(?:和|与|及).{0,5}(?:投标|竞标)).{0,6}成本/,
+    label: 'bid-and-proposal cost scope',
+  },
+  {
+    source: /\bcosts?\s+(?:rose|rises|rising)\s+from\s+\d+(?:\.\d+)?%\s+to\s+\d+(?:\.\d+)?%/i,
+    target: /(?:(?:成本|费用).{0,8}(?:占比|比例)|(?:占比|比例).{0,8}(?:成本|费用))/,
+    label: 'percentage cost metric',
+  },
+  {
+    source: /\bcore trade-?off is explicit\b/i,
+    target: /(?:(?:核心|主要).{0,5}(?:取舍|权衡).{0,5}(?:明确|清楚)|(?:明确|清楚).{0,5}(?:核心|主要).{0,5}(?:取舍|权衡))/,
+    label: 'explicit core tradeoff',
+  },
+  {
+    source: /\bweakening the claim\b/i,
+    target: /(?:削弱|弱化|动摇|降低).{0,30}(?:主张|说法|判断|可信)/,
+    label: 'claim-weakening polarity',
+  },
+  {
+    source: /\bachieve\s+80%\s+reviewer-approved(?: historical impact)? mapping accuracy\b/i,
+    target: /(?:(?:经审核(?:确认|认可)的)?映射准确率.{0,6}(?:达到|为)\s*80%|映射准确率.{0,6}80%.{0,8}(?:经|获|通过)审核(?:认可)?)/,
+    forbiddenTarget: /80%\s*(?:及?以上|或以上|至少|不低于)/,
+    label: 'exact 80% mapping threshold',
+  },
+  {
+    source: /\bwithin\s+3\s+weeks\s+of\s+onboarding\b/i,
+    target: /(?:客户)?(?:导入|入驻)(?:开始|启动)?后?.{0,6}3\s*周内|3\s*周内.{0,8}(?:客户)?(?:导入|入驻)/,
+    label: 'onboarding clock',
+  },
+  {
+    source: /\ban eighth system lands by Q4Y3\b/i,
+    target: /到\s*Q4Y3(?:时)?[，,]?.{0,12}(?:第八个系统|再(?:签下|落地)一个系统).{0,8}(?:落地|签下|上线)?/,
+    label: 'eighth-system deadline attachment',
+  },
+  {
+    source: /\bsecond-service-line expansion arrives earlier\b/i,
+    target: /(?:第二条服务线.{0,6}(?:(?:扩张|扩展).{0,6}(?:提前|更早)|(?:提前|更早).{0,6}(?:扩张|扩展))|(?:提前|更早).{0,8}第二条服务线.{0,6}(?:扩张|扩展))/,
+    forbiddenTarget: /提前到来/,
+    label: 'service-line expansion predicate',
+  },
+  {
+    source: /\bonly reaches 7 paying systems by Q4Y3\b/i,
+    target: /到\s*Q4Y3(?:时)?[，,]?.{0,12}(?:只|仅|只有|仅有).{0,6}7\s*个?付费系统/,
+    forbiddenTarget: /最(?:晚|迟)/,
+    label: 'seven-system deadline attachment',
+  },
 ];
 const VERBATIM_PATH_PATTERNS = [
   /(^|\.)slug$/,
@@ -188,6 +269,10 @@ function listReportFolders(root) {
         return false;
       }
     });
+}
+
+function sameTokenMultiset(left, right) {
+    return JSON.stringify([...left].sort()) === JSON.stringify([...right].sort());
 }
 
 function collectSignalTitles(parsed) {
@@ -352,7 +437,7 @@ function lintAdvancedPair(source, translated, strictEditor = false) {
 
     const sourceNumbers = normalizedNumberTokens(sourceNode);
     const translatedNumbers = normalizedNumberTokens(translatedNode);
-    if (JSON.stringify(sourceNumbers) !== JSON.stringify(translatedNumbers)) {
+    if (!sameTokenMultiset(sourceNumbers, translatedNumbers)) {
       issues.push({
         rule: 'R7-number-drift',
         path,
@@ -385,11 +470,15 @@ function lintAdvancedPair(source, translated, strictEditor = false) {
       }
     }
 
-    if (/[\u3400-\u9fff]\s+[\u3400-\u9fff]/.test(translatedNode)) {
+    if (
+      /[\u3400-\u9fff]\s+[\u3400-\u9fff]/.test(translatedNode)
+      || /[，。！？；、：]\s+[\u3400-\u9fff]/.test(translatedNode)
+      || (CJK_RE.test(translatedNode) && / {2,}/.test(translatedNode))
+    ) {
       issues.push({
         rule: 'R11-cjk-spacing',
         path,
-        message: 'Chinese text contains an invalid space between Chinese characters.',
+        message: 'Chinese text contains invalid ASCII spacing.',
       });
     }
 
@@ -465,6 +554,19 @@ function lintAdvancedPair(source, translated, strictEditor = false) {
             rule: 'R16-qualifier-drift',
             path: pair.path,
             message: `source qualifier "${rule.label}" is not explicit in the Chinese value.`,
+          });
+        }
+      }
+
+      for (const rule of STRICT_SEMANTIC_RULES) {
+        if (
+          rule.source.test(pair.source)
+          && (!rule.target.test(pair.translated) || rule.forbiddenTarget?.test(pair.translated))
+        ) {
+          issues.push({
+            rule: 'R17-key-predicate-drift',
+            path: pair.path,
+            message: `source predicate "${rule.label}" is not explicit in the Chinese value.`,
           });
         }
       }

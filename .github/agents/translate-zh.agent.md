@@ -122,6 +122,25 @@ analyst have written this from scratch, without ever seeing the English?*
    - **Name the actor and action before the conclusion.** Identify who did
      what, what changed, and what remains unproven. Put the result, judgement,
      or limitation last.
+   - **Preserve the semantic head of every metric.** Accuracy, approval rate,
+     conversion rate, share, cost, time, and count are different measures.
+     Keep the original numerator and denominator, and attach modifiers such as
+     `reviewer-approved` to the metric they actually qualify. A percentage
+     cost statement needs its ratio noun (`成本占比`); never add `以上` or
+     `至少` when the source gives an exact threshold. Render `reach 80%
+     reviewer-approved mapping` as `映射准确率达到 80%，并获审核人员认可`,
+     never as `80% 审核认可率`.
+     Write `低于 80%` or `未达到 80% 下限`, not `未达到至少 80%`.
+   - **Preserve scope and intensity.** `bid and proposal costs` covers both
+     categories; `workflow-heavy onboarding` means onboarding requires
+     substantial workflow work, not merely that it uses a workflow. Prefer
+     the neutral `客户导入阶段的工作流任务繁重`; do not invent particular
+     configuration or integration tasks.
+   - **Preserve boundaries and operators.** Keep `only`, `by`, `until`,
+     `through`, conjunctions, negation, and causal direction explicit.
+     Render `by Q4Y3` as `到/截至 Q4Y3`, not `Q4Y3 前` or `时间为 Q4Y3`.
+     Put the boundary next to the event it modifies: `到 Q4Y3 时，第八个系统
+     落地`. Do not write redundant forms such as `最晚截至`.
 3. **Use concrete verbs.** Prefer 落地 / 拼出 / 卡住 / 砸钱 / 吃掉 / 跑通
    / 挤压 / 撬动 / 顶住 / 守住 / 抢回 / 打穿 over 实现 / 进行 / 做出 /
    完成 / 形成. Prefer 主动 over 被动. Collapse `进行 / 做出 + 名词`
@@ -130,7 +149,8 @@ analyst have written this from scratch, without ever seeing the English?*
 4. **Remove English scaffolding.** Chinese often needs fewer explicit
    connectors. Delete mechanical 因此 / 从而 / 以及 / 并且 when sequence
    already carries the relationship. Remove unnecessary 一个 / 一些 / 们 /
-   该 / 其 unless they change the meaning.
+   该 / 其 unless they change the meaning. Do not delete framing that carries
+   a decision, tradeoff, limitation, or contrast.
 5. **Read it back silently.** If you would re-read the sentence to parse
    it, rewrite the whole sentence — do not patch a word. Repeat until
    nothing makes you pause.
@@ -323,6 +343,7 @@ For `qualityPolicyVersion: 2` reports, the linter compares the Chinese file with
 - **R14 undertranslation**: a long source claim was compressed enough to suggest mechanisms, scope, or caveats were dropped.
 - **R15 duplicate collapse**: distinct source passages were flattened into the same generic Chinese sentence.
 - **R16 qualifier drift**: explicit uncertainty such as `estimated`, `at least`, `likely`, `not yet`, or `no public evidence` disappeared.
+- **R17 key-predicate drift**: a metric identity, conjunction scope, intensity modifier, tradeoff, or causal/polarity relation changed.
 
 If the linter exits non-zero:
 
