@@ -25,6 +25,7 @@
 //   node scripts/check-zh-translations.mjs <ideasRoot>         # scans every
 //                                                              # report folder
 //   node scripts/check-zh-translations.mjs --pair <source.yaml> <target.zh.yaml>
+//   node scripts/check-zh-translations.mjs --pair --strict-editor <source.yaml> <target.zh.yaml>
 //
 // Exit code is 0 when clean, 1 when issues are reported, 2 on bad invocation.
 
@@ -94,6 +95,41 @@ const TRANSLATIONESE_PATTERNS = [
   /这意味着/,
   /这表明/,
 ];
+const STRICT_TRANSLATIONESE_PATTERNS = [
+  /正在.{0,18}中/,
+  /做出(?:决定|决策)/,
+  /产生影响/,
+  /实现(?:增长|提升|改善)/,
+  /呈现.{0,12}特征/,
+  /围绕.{0,12}展开/,
+  /予以/,
+  /在.{0,12}层面/,
+  /体现了/,
+  /这构成了/,
+  /关键数字包括/,
+];
+const PROTECTED_NARRATIVE_TERM_RE = /\b(?:[A-Z]{2,}[A-Z0-9-]*|[A-Z][A-Za-z0-9]*[A-Z][A-Za-z0-9]*|Excel|Word|Deltek|SharePoint|Salesforce|Microsoft|Oracle|Amazon|Google)\b/g;
+const TRANSLATABLE_GENERIC_TERM_RE = /^(?:AI|IT|VP|COO|COOs|ROI|TAM|KPI|KPIs|ICP|ACV|ACVs|RFP|GovCon|FY\d*)$/;
+const STRICT_QUALIFIER_RULES = [
+  { source: /\b(?:roughly|approximately)\b/gi, target: /(约|大约|大致|大概)/, label: 'approximately' },
+  { source: /\bestimat(?:e|ed|es|ing)\b/gi, target: /(估计|估算|预计|测算|约|大约|大致|大概)/, label: 'estimated' },
+  { source: /\bat least\b/gi, target: /(至少|不低于|以上|未达)/, label: 'at least' },
+  { source: /\bat most\b/gi, target: /(至多|最多|不超过)/, label: 'at most' },
+  { source: /\b(?:likely|probably)\b/gi, target: /(可能|很可能|大概率|多半|往往)/, label: 'likely' },
+  {
+    source: /\b(?:(?:do|does|did|have|has|had)\s+)?not yet\b/gi,
+    target: /(尚未|还没有|还未|仍未|目前没有|目前尚无|还不能|尚不能|仍不足|尚不足|还不足|无法说明|未得到验证|未获验证)/,
+    label: 'not yet',
+  },
+  {
+    source: /\b(?:unproven|not proven|do(?:es)? not prove|cannot prove)\b/gi,
+    target: /(未经证实|未获证实|尚未证明|不能证明|无法证明|未能证明|未得到验证)/,
+    label: 'unproven',
+  },
+  { source: /\bno public\b/gi, target: /(没有公开|无公开|尚无公开|未见公开|缺少公开)/, label: 'no public' },
+  { source: /\breportedly\b/gi, target: /(据报道|据称)/, label: 'reportedly' },
+  { source: /\bclaims?\b/gi, target: /(声称|称|说法|主张)/, label: 'claim' },
+];
 const VERBATIM_PATH_PATTERNS = [
   /(^|\.)slug$/,
   /(^|\.)sector$/,
@@ -133,6 +169,7 @@ const TERMINOLOGY_RULES = [
 function usage() {
   console.error('Usage: node scripts/check-zh-translations.mjs <reportFolderOrIdeasRoot>');
   console.error('   or: node scripts/check-zh-translations.mjs --pair <source.yaml> <target.zh.yaml>');
+  console.error('   or: node scripts/check-zh-translations.mjs --pair --strict-editor <source.yaml> <target.zh.yaml>');
   process.exit(2);
 }
 
@@ -222,8 +259,27 @@ function normalizeColonPaste(node) {
   );
 }
 
-function lintAdvancedPair(source, translated) {
+function countMatches(value, pattern) {
+  return (String(value).match(pattern) || []).length;
+}
+
+function sourceWordCount(value) {
+  return (String(value).match(/\b[A-Za-z]{2,}(?:-[A-Za-z]+)*\b/g) || []).length;
+}
+
+function translatedHanCount(value) {
+  return (String(value).match(/[\u3400-\u9fff\uf900-\ufaff]/g) || []).length;
+}
+
+function normalizedTranslatedText(value) {
+  return String(value)
+    .replace(/[\s，。：；！？、（）「」『』【】《》“”‘’"'`~!@#$%^&*()_+\-=[\]{}|\\/:;,.<>?]+/g, '')
+    .toLowerCase();
+}
+
+function lintAdvancedPair(source, translated, strictEditor = false) {
   const issues = [];
+  const stringPairs = [];
   const normalizedSource = normalizeColonPaste(source);
   const normalizedTranslated = normalizeColonPaste(translated);
 
@@ -282,6 +338,7 @@ function lintAdvancedPair(source, translated) {
     }
 
     if (typeof sourceNode !== 'string') return;
+    stringPairs.push({ path, source: sourceNode, translated: translatedNode });
     if (VERBATIM_PATH_PATTERNS.some((pattern) => pattern.test(path))) {
       if (sourceNode !== translatedNode) {
         issues.push({
@@ -356,10 +413,86 @@ function lintAdvancedPair(source, translated) {
   }
 
   compare(normalizedSource, normalizedTranslated, '');
+
+  if (strictEditor) {
+    const duplicateCandidates = new Map();
+
+    for (const pair of stringPairs) {
+      if (VERBATIM_PATH_PATTERNS.some((pattern) => pattern.test(pair.path))) continue;
+      if (!ENGLISH_PROSE_RE.test(pair.source) || !CJK_RE.test(pair.translated)) continue;
+
+      const protectedTerms = [
+        ...new Set(
+          (pair.source.match(PROTECTED_NARRATIVE_TERM_RE) || [])
+            .map((term) => term.replace(/-+$/, ''))
+            .filter((term) => term && !TRANSLATABLE_GENERIC_TERM_RE.test(term)),
+        ),
+      ];
+      const missingTerms = protectedTerms.filter((term) => !pair.translated.includes(term));
+      if (missingTerms.length > 0) {
+        issues.push({
+          rule: 'R13-protected-term-drift',
+          path: pair.path,
+          message: `protected narrative terms are missing: ${missingTerms.join(', ')}.`,
+        });
+      }
+
+      const words = sourceWordCount(pair.source);
+      const han = translatedHanCount(pair.translated);
+      if (words >= 20 && han / words < 0.7) {
+        issues.push({
+          rule: 'R14-undertranslation',
+          path: pair.path,
+          message: `translation is unusually compressed (${han} Han characters for ${words} source tokens); verify that mechanisms, scope, and caveats were not dropped.`,
+        });
+      }
+
+      for (const pattern of STRICT_TRANSLATIONESE_PATTERNS) {
+        if (pattern.test(pair.translated)) {
+          issues.push({
+            rule: 'R9-translationese',
+            path: pair.path,
+            message: `rewrite strict-editor phrase matching ${pattern}.`,
+          });
+          break;
+        }
+      }
+
+      for (const rule of STRICT_QUALIFIER_RULES) {
+        const expected = countMatches(pair.source, rule.source);
+        if (expected > 0 && !rule.target.test(pair.translated)) {
+          issues.push({
+            rule: 'R16-qualifier-drift',
+            path: pair.path,
+            message: `source qualifier "${rule.label}" is not explicit in the Chinese value.`,
+          });
+        }
+      }
+
+      if (words >= 15 && han >= 15) {
+        const key = normalizedTranslatedText(pair.translated);
+        if (!duplicateCandidates.has(key)) duplicateCandidates.set(key, []);
+        duplicateCandidates.get(key).push(pair);
+      }
+    }
+
+    for (const pairs of duplicateCandidates.values()) {
+      const distinctSources = new Set(pairs.map((pair) => pair.source.trim()));
+      if (pairs.length < 2 || distinctSources.size < 2) continue;
+      for (const pair of pairs) {
+        issues.push({
+          rule: 'R15-duplicate-collapse',
+          path: pair.path,
+          message: `distinct source passages collapsed into the same Chinese sentence at ${pairs.map((item) => item.path).join(', ')}.`,
+        });
+      }
+    }
+  }
+
   return issues;
 }
 
-function lintFile(absPath, signalTitles, sourcePath, advanced) {
+function lintFile(absPath, signalTitles, sourcePath, advanced, strictEditor = false) {
   const issues = [];
   let raw;
   try {
@@ -446,7 +579,7 @@ function lintFile(absPath, signalTitles, sourcePath, advanced) {
     let source;
     try {
       source = yaml.load(readFileSync(sourcePath, 'utf8'));
-      issues.push(...lintAdvancedPair(source, parsed));
+      issues.push(...lintAdvancedPair(source, parsed, strictEditor));
     } catch (err) {
       issues.push({ rule: 'SOURCE', path: '', message: `failed to load source file: ${err.message}` });
     }
@@ -508,7 +641,7 @@ function reportFolderResult({ folder, fileIssues }) {
   return count;
 }
 
-function lintPair(sourcePath, translatedPath) {
+function lintPair(sourcePath, translatedPath, strictEditor = false) {
   const fileIssues = new Map();
   let signalTitles = new Set();
   if (basename(translatedPath) === 'idea.zh.yaml') {
@@ -530,7 +663,7 @@ function lintPair(sourcePath, translatedPath) {
     }
   }
 
-  const issues = lintFile(translatedPath, signalTitles, sourcePath, advanced);
+  const issues = lintFile(translatedPath, signalTitles, sourcePath, advanced, strictEditor);
   if (issues.length > 0) fileIssues.set(basename(translatedPath), issues);
   return { folder: basename(dirname(translatedPath)), fileIssues };
 }
@@ -538,16 +671,17 @@ function lintPair(sourcePath, translatedPath) {
 function main() {
   const args = process.argv.slice(2);
   if (args[0] === '--pair') {
-    if (args.length !== 3) usage();
-    const sourcePath = resolve(args[1]);
-    const translatedPath = resolve(args[2]);
+    const strictEditor = args[1] === '--strict-editor';
+    if (args.length !== (strictEditor ? 4 : 3)) usage();
+    const sourcePath = resolve(args[strictEditor ? 2 : 1]);
+    const translatedPath = resolve(args[strictEditor ? 3 : 2]);
     for (const path of [sourcePath, translatedPath]) {
       if (!existsSync(path) || !statSync(path).isFile()) {
         console.error(`[check-zh-translations] not a file: ${path}`);
         process.exit(2);
       }
     }
-    const totalIssues = reportFolderResult(lintPair(sourcePath, translatedPath));
+    const totalIssues = reportFolderResult(lintPair(sourcePath, translatedPath, strictEditor));
     if (totalIssues === 0) {
       console.log(`[check-zh-translations] ✓ ${basename(translatedPath)} clean.`);
       process.exit(0);

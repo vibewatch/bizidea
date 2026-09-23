@@ -6,7 +6,7 @@ Live site: <https://bizidea.genisisiq.com>
 
 ## How it works
 
-A run is one orchestrator (`Bizidea`) delegating to seven specialists through GitHub Copilot's native custom-agent mechanism. Each specialist owns exactly one artifact and validates it; the orchestrator verifies files and validator exit codes instead of parsing a home-grown response protocol.
+A run is one orchestrator (`Bizidea`) delegating to eight specialists through GitHub Copilot's native custom-agent mechanism. Each specialist owns one stage and validates it; the orchestrator verifies files and validator exit codes instead of parsing a home-grown response protocol.
 
 ### End-to-end flow
 
@@ -30,13 +30,15 @@ flowchart TD
         mr["Market Researcher<br/>adaptive 24–36 page budget, TAM/SAM/SOM, competitors"] -->|"research.yaml"| bp["Business Plan Writer<br/>GTM, milestones, investor memo"]
         bp -->|"business-plan.yaml"| fm["Financial Modeler<br/>3-year P&amp;L, unit economics, funding ask"]
         fm -->|"financial-model.yaml"| rep["Reporter<br/>extract + rate &rarr; website sidecar"]
-        zh["ZH Translator &times; 5<br/>independent source/target pairs"]
+        zh["ZH Translator &times; 5<br/>GPT-6 Luna validated drafts"]
+        zhEdit["ZH Editor &times; 5<br/>source-anchored edit + rollback"]
         ideaFile -.->|"idea.zh.yaml"| zh
         mr -.->|"research.zh.yaml"| zh
         bp -.->|"business-plan.zh.yaml"| zh
         fm -.->|"financial-model.zh.yaml"| zh
         rep -.->|"index.zh.yaml"| zh
-        zh --> zhFiles[("*.zh.yaml &times; 5")]
+        zh --> zhEdit
+        zhEdit --> zhFiles[("*.zh.yaml &times; 5")]
     end
 
     zhFiles --> finalize{{"Bizidea finalize"}}
@@ -57,7 +59,8 @@ flowchart TD
 | 4 | **Business Plan Writer** | `<folder>/business-plan.yaml` | Investor-ready plan: ICP, product sequencing, GTM, milestones, hiring, risks, funding ask, investor memo. No web; gaps surfaced as `null`. |
 | 5 | **Financial Modeler** | `<folder>/financial-model.yaml` | 3-year model: monthly Y1 + quarterly Y2/Y3 P&L, headcount, CAC/LTV/payback, runway-based funding ask, `sanityChecks.flags`, `modelSanity` summary. Every number ties to `assumptions[]`. |
 | 6 | **Reporter** | `<folder>/index.yaml` | Extracts and rates into the compact website sidecar and exposes the idea's champion `selectionLens`. Preserves units (`K`, `M`); missing values → `null`. |
-| 7 | **ZH Translator** | One requested `<folder>/*.zh.yaml` | Five independent pair jobs overlap translation with downstream English stages; each runs schema, identifier, number, terminology, untranslated-prose, and translationese checks. |
+| 7 | **ZH Translator** | One requested `<folder>/*.zh.yaml` | GPT-6 Luna creates a publishable first pass and runs strict schema, identifier, number, terminology, qualifier, protected-term, undertranslation, and translationese checks. |
+| 8 | **ZH Editor** | Edits one validated `<folder>/*.zh.yaml` | GPT-6 Luna compares the complete English source with the valid Chinese draft, rewrites it as native investor-memo prose, and rolls back deterministically if the edited output damages fidelity. |
 | ∞ | **Bizidea** finalize | `ideas/_index.yaml` | After all five `*.zh.yaml` exist, sweeps partial `<runTimestamp>-*` folders, rebuilds the history index with `--strict`, then runs `npm run validate:all` (the same superset CI uses). |
 
 ### Orchestration rules
@@ -66,7 +69,7 @@ flowchart TD
 - **Native delegation.** Parent/child completion is provided by GitHub Copilot. Artifact existence and deterministic validators are authoritative.
 - **Champion selection.** Every selected cluster must lead the cohort in at least one exceptional dimension and sit on the Pareto frontier; weighted-average mediocrity cannot pass.
 - **Generate-then-research barrier.** All selected ideas are generated and deduped *before* any `Market Researcher` invocation, so the dedupe gate is authoritative across the batch.
-- **Ordered English, overlapped translation.** English stages remain dependency-ordered, while each validated artifact is translated concurrently with the next English stage.
+- **Ordered English, overlapped two-pass translation.** English stages remain dependency-ordered, while each validated artifact runs through GPT-6 Luna translation and source-anchored editing concurrently with the next English stage.
 - **Gate-and-retry.** A failed gate triggers exactly one retry of the same specialist. A second failure marks only that idea as failed and deletes its partial folder.
 - **Stable folder names.** [scripts/create-report-dir.mjs](scripts/create-report-dir.mjs) creates `ideas/<runTimestamp>-<slug>/` once; the name never changes if the slug evolves.
 - **Hard stops.** Triage failure or final index-rebuild failure aborts the whole run; per-idea failures only abort that idea.
@@ -83,7 +86,7 @@ Stage contracts are enforced deterministically by [scripts/validate-stage.mjs](s
 | `ideas/` | Report folders (English + `*.zh.yaml`). `_index.yaml` = aggregated history. `_triage/<ts>/` = daily triage. `_`-prefixed paths ignored by Astro. |
 | `website/` | [Astro 6](https://astro.build) site that renders reports. |
 | `cloudflare/` | Cloudflare Worker scheduler. |
-| `.github/agents/` | Copilot agents: `Bizidea` orchestrator, the seven specialists above, and shared references (`sector-vocabulary.md`, `yaml-syntax.md`). |
+| `.github/agents/` | Copilot agents: `Bizidea` orchestrator, the eight specialists above, and shared references (`sector-vocabulary.md`, `yaml-syntax.md`). |
 | `.github/workflows/` | `bizidea.yml` (Cloudflare-dispatched run) and `deploy.yml` (publishes the site on `main` pushes touching `website/**` or `ideas/**`). |
 | `scripts/` | Deterministic Node helpers for indexing, semantic dedupe, champion/source-quality gates, Chinese quality checks, measurement, and full validation. |
 | `.cache/` | Local-only digest manifests for incremental builds (gitignored; restored in CI via `actions/cache`). |
@@ -132,7 +135,7 @@ In CI, [`deploy.yml`](.github/workflows/deploy.yml) restores `website/.astro` an
 
 In CI, the Cloudflare scheduler dispatches the workflow daily. Manual triggers:
 
-- **GitHub UI**: Actions → *Bizidea — triage, generate, and publish reports* → *Run workflow*. Inputs: `cap` (1–5), `timeWindow` (e.g. `yesterday`, `last 7 days`), and the analysis `model`. The default is GPT-6 Luna at `xhigh`; the ZH Translator independently uses GPT-5.6 Luna. Deterministic validators and one retry provide the quality safety net.
+- **GitHub UI**: Actions → *Bizidea — triage, generate, and publish reports* → *Run workflow*. Inputs: `cap` (1–5), `timeWindow` (e.g. `yesterday`, `last 7 days`), and the analysis `model`. The default is GPT-6 Luna at `xhigh`; Chinese localization independently uses a GPT-6 Luna draft plus a source-anchored GPT-6 Luna editorial pass. Strict validators, a saved valid draft, and deterministic rollback provide the quality safety net.
 - **Local Copilot CLI** (requires a Copilot license):
 
   ```bash

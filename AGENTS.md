@@ -26,7 +26,7 @@
 | `ideas/` | Report artifacts — one dated folder per run; `_index.yaml` = aggregated catalog; `_triage/<ts>/` = triage decisions; `_`-prefixed paths ignored by Astro |
 | `website/` | Astro site that renders reports |
 | `cloudflare/` | Cloudflare Worker scheduler (dispatches `bizidea.yml` daily) |
-| `.github/agents/` | Native Copilot custom-agent definitions: `Bizidea` orchestrator, stage specialists, `ZH Translator`, plus shared references (`sector-vocabulary.md`, `yaml-syntax.md`) |
+| `.github/agents/` | Native Copilot custom-agent definitions: `Bizidea` orchestrator, stage specialists, `ZH Translator`, `ZH Editor`, plus shared references (`sector-vocabulary.md`, `yaml-syntax.md`) |
 | `.github/workflows/` | `bizidea.yml` (main pipeline run), `deploy.yml` (site publish on push) |
 | `scripts/` | Node helpers for index building, semantic dedupe, champion/source quality, translation fidelity, measurement, and validation |
 
