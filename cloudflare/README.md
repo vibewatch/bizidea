@@ -2,7 +2,7 @@
 
 This Worker uses a Cloudflare Cron Trigger to dispatch the repository's Daily Bizidea run workflow through GitHub's `workflow_dispatch` API.
 
-The Worker runs at `07:00 UTC` every day, matching the previous GitHub Actions schedule. The GitHub Actions cron in `.github/workflows/bizidea.yml` is commented out so Cloudflare is the only automatic scheduler.
+The Worker runs every eight hours at `00:00`, `08:00`, and `16:00 UTC`. The GitHub Actions cron in `.github/workflows/bizidea.yml` is commented out so Cloudflare is the only automatic scheduler.
 
 ## Deploy
 

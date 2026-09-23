@@ -3,8 +3,9 @@
 # This workflow is intentionally a thin CI wrapper. The `Bizidea` agent owns
 # orchestration: one News Triage scan, idea generation + dedupe, then parallel
 # per-idea report pipelines when the Copilot runtime supports concurrent
-# subagents. CI installs dependencies, invokes the orchestrator, validates, and
-# commits any completed reports.
+# subagents. The generate job has read-only repository access and hands an
+# immutable validated bundle to a separate publish job. Re-running a failed
+# publish job therefore does not spend AI credits again.
 #
 # Required secrets / setup:
 # - COPILOT_PAT — PAT for a Copilot-licensed account; passed to the Copilot CLI.
@@ -40,43 +41,37 @@ on:
         default: ""
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: bizidea-daily
   cancel-in-progress: false
 
 jobs:
-  generate-and-publish:
+  generate:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 330
+    outputs:
+      run_timestamp: ${{ steps.inputs.outputs.run_timestamp }}
     defaults:
       run:
         shell: bash
     steps:
       - name: Verify secrets
         env:
-          BIZIDEA_PAT: ${{ secrets.BIZIDEA_PAT }}
           COPILOT_PAT: ${{ secrets.COPILOT_PAT }}
         run: |
           set -euo pipefail
-          missing=0
-          if [ -z "${BIZIDEA_PAT:-}" ]; then
-            echo "Missing required secret: BIZIDEA_PAT" >&2
-            missing=1
-          fi
           if [ -z "${COPILOT_PAT:-}" ]; then
             echo "Missing required secret: COPILOT_PAT" >&2
-            missing=1
+            exit 1
           fi
-          exit "$missing"
 
       - name: Checkout
         uses: actions/checkout@v6
         with:
           ref: ${{ github.ref_name }}
           fetch-depth: 0
-          token: ${{ secrets.BIZIDEA_PAT }}
 
       - name: Snapshot ideas/
         run: |
@@ -121,6 +116,7 @@ jobs:
           TOPIC="${RAW_TOPIC:-}"
           if [ -z "$CAP" ]; then CAP="5"; fi
           if [ -z "$WINDOW" ]; then WINDOW="yesterday"; fi
+          RUN_TIMESTAMP="$(date -u +%Y%m%d%H%M%S)"
           if ! [[ "$CAP" =~ ^[1-5]$ ]]; then
             echo "Invalid cap '$CAP'; expected an integer from 1 to 5." >&2
             exit 2
@@ -140,17 +136,41 @@ jobs:
             SCOPE="broad"
             EFFECTIVE_TOPIC="startup news"
           fi
-          echo "cap=$CAP" >> "$GITHUB_OUTPUT"
-          echo "window=$WINDOW" >> "$GITHUB_OUTPUT"
-          echo "topic=$EFFECTIVE_TOPIC" >> "$GITHUB_OUTPUT"
-          echo "scope=$SCOPE" >> "$GITHUB_OUTPUT"
+          {
+            echo "cap=$CAP"
+            echo "window=$WINDOW"
+            echo "topic=$EFFECTIVE_TOPIC"
+            echo "scope=$SCOPE"
+            echo "run_timestamp=$RUN_TIMESTAMP"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Initialize run manifest
+        env:
+          RUN_TIMESTAMP: ${{ steps.inputs.outputs.run_timestamp }}
+          TOPIC_SCOPE: ${{ steps.inputs.outputs.scope }}
+          CAP: ${{ steps.inputs.outputs.cap }}
+          TIME_WINDOW: ${{ steps.inputs.outputs.window }}
+          TOPIC: ${{ steps.inputs.outputs.topic }}
+        run: |
+          set -euo pipefail
+          node scripts/run-manifest.mjs init \
+            "$RUN_TIMESTAMP" "$TOPIC_SCOPE" "$CAP" "$TIME_WINDOW" "$TOPIC"
 
       - name: Run Bizidea agent
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
+          RUN_TIMESTAMP: ${{ steps.inputs.outputs.run_timestamp }}
         run: |
           set -euo pipefail
-          copilot --yolo --autopilot --reasoning-effort xhigh --agent "Bizidea" -p "Run the full Bizidea pipeline for ${{ steps.inputs.outputs.window }}. topic: ${{ steps.inputs.outputs.topic }}. topicScope: ${{ steps.inputs.outputs.scope }}. cap: ${{ steps.inputs.outputs.cap }}. Use native custom-agent delegation. Every pipeline agent is explicitly pinned to GPT-6 Luna. Run News Triage once, generate and dedupe every selected champion, then process surviving folders through research -> business plan -> financial model -> reporter. Start each artifact's two-pass Chinese pipeline as soon as that English artifact validates: translation, strict validation and checkpoint, then source-anchored editing with deterministic rollback. Overlap it with the next English stage and wait for all five edited translations before final validation. Enforce champion-dimension, source-diversity, originality, semantic-deduplication, and translation-quality gates. Keep independent report folders concurrent, cap triage at 16 queries and 32 fetches, use a 24-36 page adaptive research budget, delete duplicate or failed current-run folders, and finish with full validation. Do not invoke Bizidea recursively or run git commands."
+          copilot --yolo --autopilot --reasoning-effort xhigh --agent "Bizidea" -p "Run the full Bizidea pipeline with runTimestamp: $RUN_TIMESTAMP for ${{ steps.inputs.outputs.window }}. topic: ${{ steps.inputs.outputs.topic }}. topicScope: ${{ steps.inputs.outputs.scope }}. cap: ${{ steps.inputs.outputs.cap }}. The workflow already initialized .bizidea-runs/$RUN_TIMESTAMP/manifest.json; update every specialist stage through scripts/run-manifest.mjs exactly as the agent contract requires. Use native custom-agent delegation. Every pipeline agent is explicitly pinned to GPT-6 Luna. Run News Triage once, generate and dedupe every selected champion, then process surviving folders through research -> business plan -> financial model -> reporter. Start each artifact's two-pass Chinese pipeline as soon as that English artifact validates: translation, strict validation and checkpoint, then source-anchored editing with deterministic rollback. Overlap it with the next English stage and wait for all five edited translations before final validation. Enforce champion-dimension, source-diversity, originality, semantic-deduplication, and translation-quality gates. Keep independent report folders concurrent, cap triage at 16 queries and 32 fetches, use a 24-36 page adaptive research budget, delete duplicate or failed current-run folders, and leave repository-wide validation to the workflow. Do not invoke Bizidea recursively, finish the workflow-owned manifest, or run git commands."
+
+      - name: Verify generation checkpoints
+        env:
+          RUN_TIMESTAMP: ${{ steps.inputs.outputs.run_timestamp }}
+        run: |
+          set -euo pipefail
+          node scripts/run-manifest.mjs assert-generation-complete "$RUN_TIMESTAMP"
+          node scripts/run-manifest.mjs mark "$RUN_TIMESTAMP" workflow generation passed
 
       - name: Repair YAML
         working-directory: website
@@ -162,23 +182,49 @@ jobs:
       - name: Validate reports
         run: npm run validate:all
 
-      - name: Commit & push
+      - name: Mark validated bundle
+        env:
+          RUN_TIMESTAMP: ${{ steps.inputs.outputs.run_timestamp }}
         run: |
           set -euo pipefail
-          git config user.name "bizidea-bot"
-          git config user.email "bizidea-bot@users.noreply.github.com"
-          git fetch origin "${{ github.ref_name }}"
-          git rebase --autostash "origin/${{ github.ref_name }}"
-          node scripts/build-ideas-index.mjs --strict
-          npm run validate:all
-          git add ideas/
-          if git diff --cached --quiet; then
-            echo "No new reports today."
-            exit 0
+          node scripts/run-manifest.mjs mark "$RUN_TIMESTAMP" workflow validation passed
+
+      - name: Create immutable publish bundle
+        env:
+          RUN_TIMESTAMP: ${{ steps.inputs.outputs.run_timestamp }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/bizidea-transfer
+          tar -czf /tmp/bizidea-transfer/generated-bundle.tgz \
+            ideas ".bizidea-runs/$RUN_TIMESTAMP"
+
+      - name: Upload validated publish bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-bundle-${{ github.run_id }}
+          path: /tmp/bizidea-transfer/generated-bundle.tgz
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 14
+
+      - name: Mark generation failure
+        if: failure()
+        env:
+          RUN_TIMESTAMP: ${{ steps.inputs.outputs.run_timestamp }}
+        run: |
+          if [ -n "${RUN_TIMESTAMP:-}" ] && [ -f ".bizidea-runs/$RUN_TIMESTAMP/manifest.json" ]; then
+            node scripts/run-manifest.mjs finish "$RUN_TIMESTAMP" failed "Generation or validation job failed."
           fi
-          STAMP="$(date -u +%F)"
-          git commit -m "chore(ideas): daily run $STAMP"
-          git push origin HEAD:${{ github.ref_name }}
+
+      - name: Upload generation manifest
+        if: always() && steps.inputs.outputs.run_timestamp != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-manifest-generation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .bizidea-runs/${{ steps.inputs.outputs.run_timestamp }}/manifest.json
+          if-no-files-found: ignore
+          include-hidden-files: true
+          retention-days: 30
 
       - name: Collect new ideas/ files
         if: failure()
@@ -224,3 +270,122 @@ jobs:
           path: /tmp/bizidea-snapshot/new-files
           if-no-files-found: ignore
           retention-days: 14
+
+  publish:
+    needs: generate
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Verify publish secret
+        env:
+          BIZIDEA_PAT: ${{ secrets.BIZIDEA_PAT }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BIZIDEA_PAT:-}" ]; then
+            echo "Missing required secret: BIZIDEA_PAT" >&2
+            exit 1
+          fi
+
+      - name: Checkout latest branch
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+          token: ${{ secrets.BIZIDEA_PAT }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: |
+            package-lock.json
+            website/package-lock.json
+
+      - name: Install root deps
+        run: npm ci --no-audit --no-fund
+
+      - name: Install website deps
+        working-directory: website
+        run: npm ci --no-audit --no-fund
+
+      - name: Download validated publish bundle
+        uses: actions/download-artifact@v5
+        with:
+          name: generated-bundle-${{ github.run_id }}
+          path: /tmp/bizidea-transfer
+
+      - name: Restore generated artifacts
+        env:
+          RUN_TIMESTAMP: ${{ needs.generate.outputs.run_timestamp }}
+        run: |
+          set -euo pipefail
+          tar -xzf /tmp/bizidea-transfer/generated-bundle.tgz -C "$GITHUB_WORKSPACE"
+          node scripts/run-manifest.mjs verify "$RUN_TIMESTAMP"
+          node scripts/run-manifest.mjs mark "$RUN_TIMESTAMP" workflow publish in_progress
+
+      - name: Revalidate publish bundle
+        run: |
+          set -euo pipefail
+          npm --prefix website run repair:yaml
+          node scripts/build-ideas-index.mjs --strict
+          npm run validate:all
+
+      - name: Commit & push
+        id: publish_result
+        run: |
+          set -euo pipefail
+          git config user.name "bizidea-bot"
+          git config user.email "bizidea-bot@users.noreply.github.com"
+          git fetch origin "${{ github.ref_name }}"
+          git rebase --autostash "origin/${{ github.ref_name }}"
+          node scripts/build-ideas-index.mjs --strict
+          npm run validate:all
+          git add ideas/
+          if git diff --cached --quiet; then
+            echo "No new reports to publish."
+            echo "result=no-output" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          STAMP="$(date -u +%F)"
+          git commit -m "chore(ideas): daily run $STAMP"
+          git push origin HEAD:${{ github.ref_name }}
+          echo "result=published" >> "$GITHUB_OUTPUT"
+
+      - name: Complete run manifest
+        env:
+          RUN_TIMESTAMP: ${{ needs.generate.outputs.run_timestamp }}
+          PUBLISH_RESULT: ${{ steps.publish_result.outputs.result }}
+        run: |
+          set -euo pipefail
+          node scripts/run-manifest.mjs mark "$RUN_TIMESTAMP" workflow publish passed
+          if [ "$PUBLISH_RESULT" = "no-output" ]; then
+            node scripts/run-manifest.mjs finish "$RUN_TIMESTAMP" no-output "Validated bundle contained no unpublished changes."
+          else
+            node scripts/run-manifest.mjs finish "$RUN_TIMESTAMP" completed "Validated reports published successfully."
+          fi
+
+      - name: Mark publish failure
+        if: failure()
+        env:
+          RUN_TIMESTAMP: ${{ needs.generate.outputs.run_timestamp }}
+        run: |
+          if [ -n "${RUN_TIMESTAMP:-}" ] && [ -f ".bizidea-runs/$RUN_TIMESTAMP/manifest.json" ]; then
+            node scripts/run-manifest.mjs mark "$RUN_TIMESTAMP" workflow publish failed "Publish job failed."
+            node scripts/run-manifest.mjs finish "$RUN_TIMESTAMP" failed "Publish job failed; the validated generation bundle can be reused."
+          fi
+
+      - name: Upload final run manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-manifest-final-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .bizidea-runs/${{ needs.generate.outputs.run_timestamp }}/manifest.json
+          if-no-files-found: ignore
+          include-hidden-files: true
+          retention-days: 30

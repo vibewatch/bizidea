@@ -33,13 +33,33 @@ Resolve:
 - `cap`: requested count, default `5`, maximum `5`.
 - `timeWindow`: inclusive `YYYY-MM-DD to YYYY-MM-DD`; default yesterday.
 - `timeWindowLabel`: original phrase or `null`.
-- `runTimestamp`: UTC `YYYYMMDDHHmmss`.
+- `runTimestamp`: use the workflow-supplied UTC `YYYYMMDDHHmmss`; derive the current UTC timestamp only for a local invocation that omitted it.
 - `historyIndexPath`: `<repo>/ideas/_index.yaml`.
 - `triageFolder`: `<repo>/ideas/_triage/<runTimestamp>/`.
+- `manifestPath`: `<repo>/.bizidea-runs/<runTimestamp>/manifest.json`. The workflow initializes it; for a local invocation, initialize it after resolving the run setup.
+
+## Durable run manifest
+
+Keep the workflow-owned manifest current so a failed run has an exact stage checkpoint. Use:
+
+```bash
+node scripts/run-manifest.mjs init <runTimestamp> <topicScope> <cap> "<timeWindow>" "<topic>"
+node scripts/run-manifest.mjs mark <runTimestamp> <target> <stage> <status> [message]
+```
+
+- Run `init` only when the manifest does not already exist. It is idempotent for an identical request.
+- Use target `triage` for the scan and the report folder basename for report stages.
+- Stage names are `triage`, `idea`, `dedupe`, `research`, `business-plan`, `financial-model`, `index`, `zh-idea`, `zh-research`, `zh-business-plan`, `zh-financial-model`, and `zh-index`.
+- Mark `in_progress` immediately before each specialist delegation. Mark `passed` only after its artifact passes the deterministic validator.
+- Mark `failed` before a retry or before removing a failed current-run folder. A retry starts with another `in_progress`, which increments the deterministic attempt count.
+- Mark `skipped` for a deduplicated idea or a translation stage intentionally omitted because its report was removed.
+- Keep failure messages short and never place source text, credentials, or fetched page content in the manifest.
+- Do not call `finish`; the workflow owns the terminal status after the isolated publish job succeeds or fails.
 
 ## Pipeline
 
 1. **Delegate triage once**
+   - Mark `triage/triage` `in_progress`.
    - Invoke `News Triage` with every run-setup value and exact paths.
    - Verify `<triageFolder>/triage.yaml` with:
 
@@ -47,14 +67,15 @@ Resolve:
      node scripts/validate-stage.mjs <triageFolder> triage
      ```
 
+   - Mark `triage/triage` `passed` after validation. On failure, mark it `failed` before the one allowed retry.
    - Read the validated file directly. If `selectedCount: 0`, finalize with no generated reports.
 
 2. **Generate every selected idea, then deduplicate**
    - Enumerate `clusters[]` where `selected: true` in source order.
    - For each cluster:
      1. Run `node scripts/create-report-dir.mjs <runTimestamp> <proposedSlug>`.
-     2. Delegate `Idea Generator` with `folder`, `triagePath`, `clusterId`, and `historyIndexPath`.
-     3. Verify with `node scripts/validate-stage.mjs <folder> idea`.
+     2. Mark the folder's `idea` stage `in_progress`, then delegate `Idea Generator` with `folder`, `triagePath`, `clusterId`, and `historyIndexPath`.
+     3. Verify with `node scripts/validate-stage.mjs <folder> idea`, then mark `idea` `passed`.
      4. Run:
 
         ```bash
@@ -63,10 +84,13 @@ Resolve:
 
         Exit `0` continues, `10` records a dedupe, and any other non-zero exit records a per-idea failure.
 
+        Mark `dedupe` `passed` for a survivor or `skipped` for a removed duplicate.
+
    - Finish generation and dedupe for all selected clusters before starting research. This prevents same-run concepts from racing past the history gate.
 
 3. **Run surviving report pipelines**
    - Different report folders may run concurrently.
+   - For every English or Chinese stage, mark the matching manifest stage `in_progress` before delegation and `passed` only after validation. Mark it `failed` before the one allowed retry.
    - Inside one folder, preserve this strict English-artifact order:
 
      ```text
@@ -133,13 +157,14 @@ Resolve:
      node scripts/build-ideas-index.mjs --strict
      ```
 
-   - Run:
+   - Confirm every delegated stage has a terminal manifest status:
 
      ```bash
-     npm run validate:all
+     node scripts/run-manifest.mjs assert-generation-complete <runTimestamp>
      ```
 
-   - If a folder-scoped failure identifies a current-run folder, remove only that folder, rebuild the index, and retry validation once. Never delete historical folders to hide a repository-scoped failure.
+   - The workflow performs repository-wide validation before creating the immutable publish bundle. Do not duplicate that full validation inside the agent.
+   - If a folder-scoped failure identifies a current-run folder, remove only that folder and rebuild the index. Never delete historical folders to hide a repository-scoped failure.
 
 ## Quality policy
 

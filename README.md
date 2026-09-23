@@ -133,7 +133,9 @@ In CI, [`deploy.yml`](.github/workflows/deploy.yml) restores `website/.astro` an
 
 ## Running the pipeline
 
-In CI, the Cloudflare scheduler dispatches the workflow daily. Every custom agent is explicitly pinned to GPT-6 Luna, and pipeline runs use `xhigh` reasoning. Local role benchmarks found that the strongest alternative improved blind-judge quality by less than 0.5/10 while using 13–21× more AI credits.
+In CI, the Cloudflare scheduler dispatches the workflow every eight hours. Every custom agent is explicitly pinned to GPT-6 Luna, and pipeline runs use `xhigh` reasoning. Local role benchmarks found that the strongest alternative improved blind-judge quality by less than 0.5/10 while using 13–21× more AI credits.
+
+The Action separates AI generation from publishing. The read-only `generate` job records stage attempts in an atomic run manifest, validates the complete repository, and uploads an immutable bundle. The write-enabled `publish` job downloads and revalidates that bundle before committing. A failed publish job can therefore be rerun without repeating any model calls. Generation and final manifests are retained as workflow artifacts for 30 days.
 
 Manual triggers:
 
@@ -152,7 +154,7 @@ Manual triggers:
 
 ### Cloudflare scheduler
 
-[cloudflare/worker.js](cloudflare/worker.js) dispatches [.github/workflows/bizidea.yml](.github/workflows/bizidea.yml) once per day at `07:00 UTC` via `workflow_dispatch`. The native GitHub Actions cron is commented out to prevent duplicate runs.
+[cloudflare/worker.js](cloudflare/worker.js) dispatches [.github/workflows/bizidea.yml](.github/workflows/bizidea.yml) every eight hours at `00:00`, `08:00`, and `16:00 UTC` via `workflow_dispatch`. The native GitHub Actions cron is commented out to prevent duplicate runs.
 
 Deploy from [cloudflare/](cloudflare/):
 
@@ -169,7 +171,7 @@ Optional vars in [cloudflare/wrangler.toml](cloudflare/wrangler.toml) override d
 | Secret | Used by | Purpose |
 |---|---|---|
 | `COPILOT_PAT` | `bizidea.yml` | Copilot-licensed PAT, passed as `COPILOT_GITHUB_TOKEN` to the Copilot CLI. |
-| `BIZIDEA_PAT` | `bizidea.yml` | Repo-write PAT used for checkout and the daily commit, so downstream deploy workflows trigger reliably. |
+| `BIZIDEA_PAT` | `bizidea.yml` | Repo-write PAT used only by the isolated publish job for checkout and commit, so downstream deploy workflows trigger reliably. |
 
 ## Optional repository variables
 

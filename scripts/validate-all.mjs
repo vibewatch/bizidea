@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 
 const checks = [
   { label: 'agent frontmatter', command: 'npm', args: ['run', 'check:agents'] },
+  { label: 'run manifest validation', command: 'npm', args: ['run', 'check:run-manifests'] },
   { label: 'historical triage validation', command: 'npm', args: ['run', 'check:triage'] },
   { label: 'ideas index freshness', command: 'npm', args: ['run', 'check:ideas-index'] },
   { label: 'near duplicate review', command: 'npm', args: ['run', 'check:duplicates'] },
