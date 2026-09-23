@@ -33,16 +33,6 @@ on:
         type: string
         required: false
         default: "yesterday"
-      model:
-        description: "Analysis model; Chinese translation uses GPT-6 Luna two-pass"
-        type: choice
-        options:
-          - "gpt-6-luna"
-          - "gpt-5.6-luna"
-          - "gpt-6-sol"
-          - "gpt-5.4"
-        required: false
-        default: "gpt-6-luna"
       topic:
         description: "Topic scope; leave blank for broad 'startup news'"
         type: string
@@ -123,17 +113,14 @@ jobs:
         env:
           RAW_CAP: ${{ github.event.inputs.cap }}
           RAW_WINDOW: ${{ github.event.inputs.timeWindow }}
-          RAW_MODEL: ${{ github.event.inputs.model }}
           RAW_TOPIC: ${{ github.event.inputs.topic }}
         run: |
           set -euo pipefail
           CAP="${RAW_CAP:-}"
           WINDOW="${RAW_WINDOW:-}"
-          MODEL="${RAW_MODEL:-}"
           TOPIC="${RAW_TOPIC:-}"
           if [ -z "$CAP" ]; then CAP="5"; fi
           if [ -z "$WINDOW" ]; then WINDOW="yesterday"; fi
-          if [ -z "$MODEL" ]; then MODEL="gpt-6-luna"; fi
           if ! [[ "$CAP" =~ ^[1-5]$ ]]; then
             echo "Invalid cap '$CAP'; expected an integer from 1 to 5." >&2
             exit 2
@@ -153,20 +140,8 @@ jobs:
             SCOPE="broad"
             EFFECTIVE_TOPIC="startup news"
           fi
-          case "$MODEL" in
-            gpt-6-luna)   EFFORT="xhigh" ;;
-            gpt-5.6-luna) EFFORT="xhigh" ;;
-            gpt-6-sol)    EFFORT="xhigh" ;;
-            gpt-5.4)      EFFORT="high" ;;
-            *)
-              echo "Invalid model '$MODEL'; allowed: gpt-6-luna, gpt-5.6-luna, gpt-6-sol, gpt-5.4." >&2
-              exit 2
-              ;;
-          esac
           echo "cap=$CAP" >> "$GITHUB_OUTPUT"
           echo "window=$WINDOW" >> "$GITHUB_OUTPUT"
-          echo "model=$MODEL" >> "$GITHUB_OUTPUT"
-          echo "effort=$EFFORT" >> "$GITHUB_OUTPUT"
           echo "topic=$EFFECTIVE_TOPIC" >> "$GITHUB_OUTPUT"
           echo "scope=$SCOPE" >> "$GITHUB_OUTPUT"
 
@@ -175,7 +150,7 @@ jobs:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
         run: |
           set -euo pipefail
-          copilot --yolo --autopilot --model "${{ steps.inputs.outputs.model }}" --reasoning-effort "${{ steps.inputs.outputs.effort }}" --agent "Bizidea" -p "Run the full Bizidea pipeline for ${{ steps.inputs.outputs.window }}. topic: ${{ steps.inputs.outputs.topic }}. topicScope: ${{ steps.inputs.outputs.scope }}. cap: ${{ steps.inputs.outputs.cap }}. Use native custom-agent delegation. Run News Triage once, generate and dedupe every selected champion, then process surviving folders through research -> business plan -> financial model -> reporter. Start each artifact's two-pass Chinese pipeline as soon as that English artifact validates: GPT-6 Luna translation, strict validation and checkpoint, then source-anchored GPT-6 Luna editing with deterministic rollback. Overlap it with the next English stage and wait for all five edited translations before final validation. Enforce champion-dimension, source-diversity, originality, semantic-deduplication, and translation-quality gates. Keep independent report folders concurrent, cap triage at 16 queries and 32 fetches, use a 24-36 page adaptive research budget, delete duplicate or failed current-run folders, and finish with full validation. Do not invoke Bizidea recursively or run git commands."
+          copilot --yolo --autopilot --reasoning-effort xhigh --agent "Bizidea" -p "Run the full Bizidea pipeline for ${{ steps.inputs.outputs.window }}. topic: ${{ steps.inputs.outputs.topic }}. topicScope: ${{ steps.inputs.outputs.scope }}. cap: ${{ steps.inputs.outputs.cap }}. Use native custom-agent delegation. Every pipeline agent is explicitly pinned to GPT-6 Luna. Run News Triage once, generate and dedupe every selected champion, then process surviving folders through research -> business plan -> financial model -> reporter. Start each artifact's two-pass Chinese pipeline as soon as that English artifact validates: translation, strict validation and checkpoint, then source-anchored editing with deterministic rollback. Overlap it with the next English stage and wait for all five edited translations before final validation. Enforce champion-dimension, source-diversity, originality, semantic-deduplication, and translation-quality gates. Keep independent report folders concurrent, cap triage at 16 queries and 32 fetches, use a 24-36 page adaptive research budget, delete duplicate or failed current-run folders, and finish with full validation. Do not invoke Bizidea recursively or run git commands."
 
       - name: Repair YAML
         working-directory: website

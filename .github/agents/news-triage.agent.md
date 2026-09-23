@@ -1,6 +1,7 @@
 ---
 description: "Use when: scanning startup news, clustering opportunities, scoring, and deduping before idea generation. Keywords: news triage, daily scan, candidate clusters, opportunity shortlist."
 name: "News Triage"
+model: "GPT-6 Luna (copilot)"
 user-invocable: false
 ---
 

@@ -133,14 +133,16 @@ In CI, [`deploy.yml`](.github/workflows/deploy.yml) restores `website/.astro` an
 
 ## Running the pipeline
 
-In CI, the Cloudflare scheduler dispatches the workflow daily. Manual triggers:
+In CI, the Cloudflare scheduler dispatches the workflow daily. Every custom agent is explicitly pinned to GPT-6 Luna, and pipeline runs use `xhigh` reasoning. Local role benchmarks found that the strongest alternative improved blind-judge quality by less than 0.5/10 while using 13–21× more AI credits.
 
-- **GitHub UI**: Actions → *Bizidea — triage, generate, and publish reports* → *Run workflow*. Inputs: `cap` (1–5), `timeWindow` (e.g. `yesterday`, `last 7 days`), and the analysis `model`. The default is GPT-6 Luna at `xhigh`; Chinese localization independently uses a GPT-6 Luna draft plus a source-anchored GPT-6 Luna editorial pass. Strict validators, a saved valid draft, and deterministic rollback provide the quality safety net.
+Manual triggers:
+
+- **GitHub UI**: Actions → *Bizidea — triage, generate, and publish reports* → *Run workflow*. Inputs: `cap` (1–5), `timeWindow` (e.g. `yesterday`, `last 7 days`), and optional `topic`. Chinese localization uses separate GPT-6 Luna draft and source-anchored editorial agents. Strict validators, a saved valid draft, and deterministic rollback provide the quality safety net.
 - **Local Copilot CLI** (requires a Copilot license):
 
   ```bash
   npm install -g @github/copilot
-  copilot --yolo --autopilot --model gpt-6-luna --reasoning-effort xhigh --agent Bizidea \
+  copilot --yolo --autopilot --reasoning-effort xhigh --agent Bizidea \
     -p "Scan yesterday's startup news and generate up to 5 non-duplicate startup reports."
   ```
 
@@ -160,7 +162,7 @@ npx wrangler secret put GITHUB_REPO    # vibewatch/bizidea
 npx wrangler deploy
 ```
 
-Optional vars in [cloudflare/wrangler.toml](cloudflare/wrangler.toml) override dispatch defaults: `BIZIDEA_CAP` (1–5, default `5`), `BIZIDEA_TIME_WINDOW` (default `yesterday`), `BIZIDEA_MODEL` (default `gpt-6-luna`; also `gpt-5.6-luna` / `gpt-6-sol` / `gpt-5.4` — effort derived automatically).
+Optional vars in [cloudflare/wrangler.toml](cloudflare/wrangler.toml) override dispatch defaults: `BIZIDEA_CAP` (1–5, default `5`) and `BIZIDEA_TIME_WINDOW` (default `yesterday`).
 
 ## Required secrets
 

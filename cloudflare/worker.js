@@ -13,16 +13,12 @@
  *   GITHUB_REF = "main"
  *   BIZIDEA_CAP = "5"
  *   BIZIDEA_TIME_WINDOW = "yesterday"
- *   BIZIDEA_MODEL = "gpt-6-luna"  (allowed: gpt-6-luna, gpt-5.6-luna, gpt-6-sol, gpt-5.4)
  */
 
 const WORKFLOW = "bizidea.yml";
 const DEFAULT_REF = "main";
 const DEFAULT_CAP = "5";
 const DEFAULT_TIME_WINDOW = "yesterday";
-const DEFAULT_MODEL = "gpt-6-luna";
-
-const ALLOWED_MODELS = ["gpt-6-luna", "gpt-5.6-luna", "gpt-6-sol", "gpt-5.4"];
 
 export default {
   async scheduled(event, env, _ctx) {
@@ -34,7 +30,7 @@ export default {
     assertRequired(env.GITHUB_REPO, "GITHUB_REPO");
 
     console.log(
-      `[${now.toISOString()}] Dispatching ${WORKFLOW} on ${ref}: cap=${inputs.cap}, timeWindow=${JSON.stringify(inputs.timeWindow)}, model=${inputs.model}`,
+      `[${now.toISOString()}] Dispatching ${WORKFLOW} on ${ref}: cap=${inputs.cap}, timeWindow=${JSON.stringify(inputs.timeWindow)}`,
     );
 
     await dispatchWorkflow(env.GITHUB_TOKEN, env.GITHUB_REPO, WORKFLOW, ref, inputs);
@@ -45,7 +41,6 @@ export default {
 function resolveInputs(env) {
   const cap = String(env.BIZIDEA_CAP || DEFAULT_CAP);
   const timeWindow = String(env.BIZIDEA_TIME_WINDOW || DEFAULT_TIME_WINDOW);
-  const model = String(env.BIZIDEA_MODEL || DEFAULT_MODEL);
 
   if (!/^[1-5]$/.test(cap)) {
     throw new Error(`Invalid BIZIDEA_CAP ${JSON.stringify(cap)}; expected 1-5`);
@@ -57,13 +52,7 @@ function resolveInputs(env) {
     );
   }
 
-  if (!ALLOWED_MODELS.includes(model)) {
-    throw new Error(
-      `Invalid BIZIDEA_MODEL ${JSON.stringify(model)}; allowed: ${ALLOWED_MODELS.join(", ")}`,
-    );
-  }
-
-  return { cap, timeWindow, model };
+  return { cap, timeWindow };
 }
 
 function assertRequired(value, name) {

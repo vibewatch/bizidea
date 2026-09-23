@@ -1,6 +1,7 @@
 ---
 description: "Use when: building financial-model.yaml from business-plan.yaml and research.yaml. Keywords: financial model, P&L, unit economics, CAC LTV, funding ask."
 name: "Financial Modeler"
+model: "GPT-6 Luna (copilot)"
 user-invocable: false
 ---
 

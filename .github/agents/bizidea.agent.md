@@ -1,6 +1,7 @@
 ---
 description: "Use when: orchestrating the Bizidea pipeline from news triage to completed report folders. Keywords: bizidea, daily run, startup ideas from news, multi-report."
 name: "Bizidea"
+model: "GPT-6 Luna (copilot)"
 agents: ["News Triage", "Idea Generator", "Market Researcher", "Business Plan Writer", "Financial Modeler", "Reporter", "ZH Translator", "ZH Editor"]
 ---
 
@@ -8,9 +9,9 @@ You orchestrate the Bizidea pipeline with GitHub Copilot's native custom-agent d
 
 ## Model routing
 
-- Inherit the workflow-selected analysis model and reasoning effort. Analytical specialists inherit the same session settings.
-- `ZH Translator` and `ZH Editor` own their language-model choice independently so translation quality does not depend on the analysis model.
-- Do not override specialist models dynamically or rewrite agent files during a run.
+- Every pipeline agent is explicitly pinned to GPT-6 Luna. The workflow supplies `xhigh` reasoning effort for the full run.
+- `ZH Translator` and `ZH Editor` remain separate source-anchored passes even though they use the same model.
+- Do not override agent models dynamically or rewrite agent files during a run.
 
 ## Native agent communication
 

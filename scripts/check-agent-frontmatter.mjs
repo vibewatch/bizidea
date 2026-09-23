@@ -12,6 +12,7 @@ import yaml from 'js-yaml';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const AGENTS_DIR = join(ROOT, '.github', 'agents');
 const ORCHESTRATOR_FILE = join(AGENTS_DIR, 'bizidea.agent.md');
+const EXPECTED_MODEL = 'GPT-6 Luna (copilot)';
 
 function readFrontmatter(filePath) {
   const raw = readFileSync(filePath, 'utf8');
@@ -23,6 +24,12 @@ function readFrontmatter(filePath) {
 const orchestrator = readFrontmatter(ORCHESTRATOR_FILE);
 if (!orchestrator || !Array.isArray(orchestrator.agents)) {
   console.error(`[check-agent-frontmatter] ${ORCHESTRATOR_FILE} is missing an \`agents:\` array in frontmatter`);
+  process.exit(1);
+}
+if (orchestrator.model !== EXPECTED_MODEL) {
+  console.error(
+    `[check-agent-frontmatter] ${ORCHESTRATOR_FILE} must pin \`model: "${EXPECTED_MODEL}"\``,
+  );
   process.exit(1);
 }
 
@@ -48,6 +55,9 @@ for (const file of specialistFiles) {
   }
   if (fm['user-invocable'] !== false) {
     errors.push(`${file}: specialist agents must set \`user-invocable: false\` for parent-only native delegation`);
+  }
+  if (fm.model !== EXPECTED_MODEL) {
+    errors.push(`${file}: must pin \`model: "${EXPECTED_MODEL}"\``);
   }
   if (/handoff-protocol|HANDOFF|status:\s*(ok|failed)/.test(raw)) {
     errors.push(`${file}: custom response protocols are forbidden; rely on native parent/child completion and artifact validation`);
@@ -82,4 +92,6 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-console.log(`[check-agent-frontmatter] ok: ${found.size} specialists match bizidea.agent.md \`agents:\``);
+console.log(
+  `[check-agent-frontmatter] ok: orchestrator and ${found.size} specialists use ${EXPECTED_MODEL}`,
+);
