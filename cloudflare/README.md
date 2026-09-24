@@ -1,10 +1,10 @@
-# Bizidea Cloudflare Scheduler
+# Retired Bizidea Cloudflare Dispatcher
 
-This Worker uses a Cloudflare Cron Trigger to dispatch the repository's Daily Bizidea run workflow through GitHub's `workflow_dispatch` API.
+GitHub Actions now owns the daily schedule in `.github/workflows/bizidea.yml`, running at `07:00 UTC`. This Worker is retained only as a reference implementation for explicitly dispatching the workflow through GitHub's `workflow_dispatch` API.
 
-The Worker runs every eight hours at `00:00`, `08:00`, and `16:00 UTC`. The GitHub Actions cron in `.github/workflows/bizidea.yml` is commented out so Cloudflare is the only automatic scheduler.
+`wrangler.toml` intentionally declares no Cron Trigger. If an older deployment still has the former `00:00`, `08:00`, and `16:00 UTC` triggers, redeploy the current configuration to remove them and prevent duplicate runs.
 
-## Deploy
+## Optional explicit deployment
 
 ```bash
 cd cloudflare
@@ -15,4 +15,4 @@ npx wrangler deploy
 
 Use `vibewatch/bizidea` for `GITHUB_REPO`. `GITHUB_TOKEN` should be a fine-grained GitHub PAT with `Actions: Read and write` access on this repository.
 
-Adjust `BIZIDEA_CAP`, `BIZIDEA_TIME_WINDOW`, or `GITHUB_REF` in `wrangler.toml` if the scheduled run should use different workflow inputs. Every custom agent is explicitly pinned to GPT-6 Luna, and pipeline runs use `xhigh` reasoning.
+Adjust `BIZIDEA_CAP`, `BIZIDEA_TIME_WINDOW`, or `GITHUB_REF` in `wrangler.toml` if this helper is reused. Every custom agent is explicitly pinned to GPT-6 Luna, and pipeline runs use `xhigh` reasoning.

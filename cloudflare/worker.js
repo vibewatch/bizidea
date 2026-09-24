@@ -1,9 +1,9 @@
 /**
- * Bizidea Scheduler - Cloudflare Worker
+ * Retired Bizidea Dispatcher - Cloudflare Worker
  *
- * A Cron Trigger dispatches the Daily Bizidea run workflow from outside
- * GitHub Actions. This keeps scheduling in Cloudflare while preserving the
- * existing workflow_dispatch path for manual runs.
+ * GitHub Actions owns the daily schedule. This scheduled-event handler is
+ * retained as a reference implementation for explicitly dispatching the
+ * workflow through GitHub's workflow_dispatch API.
  *
  * Required secrets (set via `wrangler secret put`):
  *   GITHUB_TOKEN - fine-grained PAT with Actions: Read & Write on the repo

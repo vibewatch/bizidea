@@ -1,6 +1,6 @@
 # Bizidea
 
-Bizidea is a daily, fully-automated startup-research factory. A Cloudflare Cron Worker dispatches a GitHub Actions workflow that invokes the **Bizidea** Copilot orchestrator: one **News Triage** scan, idea generation + dedupe, then per-idea report production. Each surviving topic becomes a folder of YAML artifacts (idea, market research, business plan, 3-year financial model, machine-readable index) plus Simplified Chinese siblings. The companion Astro site renders those YAMLs as an FT-style editorial reading experience and ships to GitHub Pages on every push.
+Bizidea is a daily, fully-automated startup-research factory. A scheduled GitHub Actions workflow invokes the **Bizidea** Copilot orchestrator: one **News Triage** scan, idea generation + dedupe, then per-idea report production. Each surviving topic becomes a folder of YAML artifacts (idea, market research, business plan, 3-year financial model, machine-readable index) plus Simplified Chinese siblings. The companion Astro site renders those YAMLs as an FT-style editorial reading experience and ships to GitHub Pages on every push.
 
 Live site: <https://bizidea.genisisiq.com>
 
@@ -12,7 +12,7 @@ A run is one orchestrator (`Bizidea`) delegating to eight specialists through Gi
 
 ```mermaid
 flowchart TD
-  cron([Cloudflare cron / manual dispatch]) --> wf[".github/workflows/bizidea.yml"]
+  cron([GitHub cron / manual dispatch]) --> wf[".github/workflows/bizidea.yml"]
     wf -->|"copilot --agent Bizidea"| orch{{"Bizidea<br/>orchestrator"}}
 
     orch -->|"once per run"| triage["News Triage<br/>web fetch · cluster · score · dedupe"]
@@ -85,9 +85,9 @@ Stage contracts are enforced deterministically by [scripts/validate-stage.mjs](s
 |---|---|
 | `ideas/` | Report folders (English + `*.zh.yaml`). `_index.yaml` = aggregated history. `_triage/<ts>/` = daily triage. `_`-prefixed paths ignored by Astro. |
 | `website/` | [Astro 6](https://astro.build) site that renders reports. |
-| `cloudflare/` | Cloudflare Worker scheduler. |
+| `cloudflare/` | Retired Cloudflare workflow-dispatch helper retained for reference. |
 | `.github/agents/` | Copilot agents: `Bizidea` orchestrator, the eight specialists above, and shared references (`sector-vocabulary.md`, `yaml-syntax.md`). |
-| `.github/workflows/` | `bizidea.yml` (Cloudflare-dispatched run) and `deploy.yml` (publishes the site on `main` pushes touching `website/**` or `ideas/**`). |
+| `.github/workflows/` | `bizidea.yml` (scheduled pipeline run) and `deploy.yml` (publishes the site on `main` pushes touching `website/**` or `ideas/**`). |
 | `scripts/` | Deterministic Node helpers for indexing, semantic dedupe, champion/source-quality gates, Chinese quality checks, measurement, and full validation. |
 | `.cache/` | Local-only digest manifests for incremental builds (gitignored; restored in CI via `actions/cache`). |
 | [AGENTS.md](AGENTS.md) | Coding-agent quick reference (commands, layout, YAML conventions). |
@@ -133,7 +133,7 @@ In CI, [`deploy.yml`](.github/workflows/deploy.yml) restores `website/.astro` an
 
 ## Running the pipeline
 
-In CI, the Cloudflare scheduler dispatches the workflow every eight hours. Every custom agent is explicitly pinned to GPT-6 Luna, and pipeline runs use `xhigh` reasoning. Local role benchmarks found that the strongest alternative improved blind-judge quality by less than 0.5/10 while using 13–21× more AI credits.
+In CI, GitHub Actions schedules the workflow once daily at `07:00 UTC`. Every custom agent is explicitly pinned to GPT-6 Luna, and pipeline runs use `xhigh` reasoning. Local role benchmarks found that the strongest alternative improved blind-judge quality by less than 0.5/10 while using 13–21× more AI credits.
 
 The Action separates AI generation from publishing. The read-only `generate` job records stage attempts in an atomic run manifest, validates the complete repository, and uploads an immutable bundle. The write-enabled `publish` job downloads and revalidates that bundle before committing. A failed publish job can therefore be rerun without repeating any model calls. Generation and final manifests are retained as workflow artifacts for 30 days.
 
@@ -152,19 +152,11 @@ Manual triggers:
 
 [`deploy.yml`](.github/workflows/deploy.yml) builds the Astro site and publishes to GitHub Pages on `main` pushes touching `website/**`, `ideas/**`, or the workflow itself. The custom domain `bizidea.genisisiq.com` is set via [website/public/CNAME](website/public/CNAME).
 
-### Cloudflare scheduler
+### Scheduling
 
-[cloudflare/worker.js](cloudflare/worker.js) dispatches [.github/workflows/bizidea.yml](.github/workflows/bizidea.yml) every eight hours at `00:00`, `08:00`, and `16:00 UTC` via `workflow_dispatch`. The native GitHub Actions cron is commented out to prevent duplicate runs.
+[.github/workflows/bizidea.yml](.github/workflows/bizidea.yml) is the authoritative scheduler and runs once daily at `07:00 UTC`. Manual `workflow_dispatch` runs remain available.
 
-Deploy from [cloudflare/](cloudflare/):
-
-```bash
-npx wrangler secret put GITHUB_TOKEN   # fine-grained PAT, Actions: Read & write
-npx wrangler secret put GITHUB_REPO    # vibewatch/bizidea
-npx wrangler deploy
-```
-
-Optional vars in [cloudflare/wrangler.toml](cloudflare/wrangler.toml) override dispatch defaults: `BIZIDEA_CAP` (1–5, default `5`) and `BIZIDEA_TIME_WINDOW` (default `yesterday`).
+The former Cloudflare dispatcher remains under [cloudflare/](cloudflare/) for reference, but its Wrangler configuration declares no cron trigger. Redeploy that configuration if retiring an older deployed Worker trigger.
 
 ## Required secrets
 
