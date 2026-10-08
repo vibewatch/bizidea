@@ -256,13 +256,13 @@ function validateTriage(parsed) {
       if (isIntegerInRange(cluster.evidenceConfidence, 1, 5) && cluster.evidenceConfidence < 3) errors.push(`${label}.selected requires evidenceConfidence >= 3`);
       if (isIntegerInRange(cluster.championScore, 1, 5) && cluster.championScore < 4) errors.push(`${label}.selected requires championScore >= 4`);
       if (cluster.frontierStatus !== 'non-dominated') errors.push(`${label}.selected requires frontierStatus: non-dominated`);
-      if (briefs.length < 4) errors.push(`${label}.selected requires at least 4 sourceBriefs`);
+      if (briefs.length < 3) errors.push(`${label}.selected requires at least 3 sourceBriefs`);
       if (isObject(cluster.sourceDiversity)) {
-        if (cluster.sourceDiversity.uniquePublishers < 3) errors.push(`${label}.selected requires at least 3 unique publishers`);
-        if (cluster.sourceDiversity.sourceTypeCount < 3) errors.push(`${label}.selected requires at least 3 source types`);
+        if (cluster.sourceDiversity.uniquePublishers < 2) errors.push(`${label}.selected requires at least 2 unique publishers`);
+        if (cluster.sourceDiversity.sourceTypeCount < 2) errors.push(`${label}.selected requires at least 2 source types`);
         if (cluster.sourceDiversity.primarySourceCount < 1) errors.push(`${label}.selected requires at least 1 primary source`);
         if (cluster.sourceDiversity.independentSourceCount < 1) errors.push(`${label}.selected requires at least 1 independent source`);
-        if (cluster.sourceDiversity.maxPublisherSharePct > 50) errors.push(`${label}.selected requires maxPublisherSharePct <= 50`);
+        if (cluster.sourceDiversity.maxPublisherSharePct > 67) errors.push(`${label}.selected requires maxPublisherSharePct <= 67`);
         if (cluster.sourceDiversity.diversityGap !== null) errors.push(`${label}.selected requires diversityGap: null`);
       }
     }
@@ -334,11 +334,11 @@ function isTriageEligible(cluster) {
     && isIntegerInRange(cluster?.evidenceConfidence, 3, 5)
     && isIntegerInRange(cluster?.championScore, 4, 5)
     && isObject(diversity)
-    && diversity.uniquePublishers >= 3
-    && diversity.sourceTypeCount >= 3
+    && diversity.uniquePublishers >= 2
+    && diversity.sourceTypeCount >= 2
     && diversity.primarySourceCount >= 1
     && diversity.independentSourceCount >= 1
-    && diversity.maxPublisherSharePct <= 50
+    && diversity.maxPublisherSharePct <= 67
     && diversity.diversityGap === null;
 }
 

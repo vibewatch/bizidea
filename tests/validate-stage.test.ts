@@ -233,6 +233,22 @@ describe('validate-stage triage v3', () => {
     expect(result.stdout).toContain('triage ok');
   });
 
+  it('accepts the three-source shortlist diversity floor', () => {
+    const folder = makeTriageFolder(validTriageYaml
+      .replace(/\n      - id: 4[\s\S]*?(?=    eventKeys:)/, '\n')
+      .replace('        publisher: Trade Journal\n', '        publisher: Example News\n')
+      .replace('        sourceType: trade-press\n', '        sourceType: tier-one-news\n')
+      .replace('    itemCount: 4\n', '    itemCount: 3\n')
+      .replace('      uniquePublishers: 4\n', '      uniquePublishers: 2\n')
+      .replace('      sourceTypeCount: 4\n', '      sourceTypeCount: 2\n')
+      .replace('      independentSourceCount: 3\n', '      independentSourceCount: 2\n')
+      .replace('      maxPublisherSharePct: 25\n', '      maxPublisherSharePct: 67\n'));
+    const result = runValidate(folder);
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('triage ok');
+  });
+
   it('rejects selected clusters below the score-4 shortlist threshold', () => {
     const folder = makeTriageFolder(validTriageYaml
       .replace('    creativePotential: 5\n', '    creativePotential: 3\n')

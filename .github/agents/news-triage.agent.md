@@ -96,14 +96,16 @@ In broad mode, select no more than 2 clusters with the same `championDimension`,
 
 ## Source diversity
 
-Selected clusters require at least 4 distinct useful `sourceBriefs` with:
+Selected triage clusters require at least 3 distinct useful `sourceBriefs` with:
 
-- at least 3 unique publishers;
-- at least 3 source types;
+- at least 2 unique publishers;
+- at least 2 source types;
 - at least 1 primary source;
 - at least 1 independent source;
-- no publisher above 50% of the cluster evidence;
+- no publisher above 67% of the cluster evidence;
 - `diversityGap: null`.
+
+This is a shortlist evidence floor, not the final publication standard. Market Research must still build and validate its 24–36-page evidence corpus before a report can advance.
 
 Allowed `sourceType` values:
 
