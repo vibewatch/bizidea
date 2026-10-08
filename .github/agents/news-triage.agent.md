@@ -47,7 +47,8 @@ Never cite a search-results page, aggregator-only page, failed fetch, fabricated
 - One cluster represents one event or tightly related signal, not one article.
 - Canonicalize URLs and collapse syndication, mirrors, repeated press releases, and same-event coverage without new facts.
 - Load `historyIndexPath` and compare event keys, canonical source URLs, slug, keywords, company/month, pitch frame, and concept text.
-- `dedupeStatus` is `new`, `duplicate-of:<runFolder>`, or `near-duplicate-of:<runFolder>`.
+- `dedupeStatus` is `new`, `duplicate-of:<runFolder>`, or `near-duplicate-of:<runFolder>`, where `<runFolder>` must be an actual published report folder listed in `historyIndexPath`.
+- Never use a bare triage timestamp or an unpublished `_triage` run as a duplicate target. A previously observed but unpublished event remains `new` and may accumulate stronger evidence across rolling-window runs.
 - Do not relabel a genuine duplicate merely to create a new slug.
 
 ## Champion scoring
@@ -123,7 +124,7 @@ Set `isPrimary: true` only for original company material, filings, regulators, g
 ## Output schema
 
 ```yaml
-triageSchemaVersion: 4
+triageSchemaVersion: 5
 runDate: YYYY-MM-DD
 topic: startup news
 topicScope: broad|narrow

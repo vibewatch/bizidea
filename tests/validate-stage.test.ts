@@ -268,6 +268,33 @@ describe('validate-stage triage v3', () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('queriesRun must not exceed 20');
   });
+
+  it('rejects triage-only duplicate targets in triage v5', () => {
+    const folder = makeTriageFolder(validTriageYaml
+      .replace('triageSchemaVersion: 3', 'triageSchemaVersion: 5')
+      .replace('selectedCount: 1', 'selectedCount: 0')
+      .replace('    dedupeStatus: new\n', '    dedupeStatus: duplicate-of:20261008071458\n')
+      .replace('    selected: true\n', '    selected: false\n'));
+    const result = runValidate(folder);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('must reference a published report folder');
+  });
+
+  it('accepts published report folders as duplicate targets in triage v5', () => {
+    const folder = makeTriageFolder(validTriageYaml
+      .replace('triageSchemaVersion: 3', 'triageSchemaVersion: 5')
+      .replace('selectedCount: 1', 'selectedCount: 0')
+      .replace(
+        '    dedupeStatus: new\n',
+        '    dedupeStatus: duplicate-of:20260923000053-clinical-workday-agent-stack\n',
+      )
+      .replace('    selected: true\n', '    selected: false\n'));
+    const result = runValidate(folder);
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('triage ok');
+  });
 });
 
 describe('validate-stage research v3', () => {

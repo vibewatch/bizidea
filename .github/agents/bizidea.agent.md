@@ -168,7 +168,7 @@ node scripts/run-manifest.mjs mark <runTimestamp> <target> <stage> <status> [mes
 
 ## Quality policy
 
-- New triage must use schema version `4`.
+- New triage must use schema version `5`, which permits duplicate targets only when they are published report folders from the history index.
 - Every selected triage cluster must be a cohort champion with at least `4` in `creativePotential`, `venturePotential`, or `whiteSpacePotential`, and must sit on the non-dominated frontier.
 - Every selected cluster must meet the source-diversity floor enforced by `validate-stage`.
 - New ideas must still use `qualityPolicyVersion: 2`, score an absolute `5` in their final champion dimension, avoid OS/copilot/control-plane naming, and pass the originality audit.
@@ -180,7 +180,7 @@ node scripts/run-manifest.mjs mark <runTimestamp> <target> <stage> <status> [mes
 
 - Let `News Triage` and `Market Researcher` use the runtime's fastest batched search provider; prefer AnySearch when available, otherwise native web search.
 - Run independent search lanes concurrently.
-- Triage v4 is capped at 20 search queries and 32 successful page fetches. Use no more than 8 queries for broad discovery and reserve at least 6 for source augmentation of provisional champions.
+- Triage v5 is capped at 20 search queries and 32 successful page fetches. Use no more than 8 queries for broad discovery and reserve at least 6 for source augmentation of provisional champions.
 - Stop research when the declared evidence questions are saturated. More pages are not automatically better.
 - Keep dependent English stages ordered, but overlap each validated artifact's translation with the next English stage.
 

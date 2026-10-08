@@ -91,8 +91,8 @@ function dominantEventType(cluster) {
 function validateTriage(parsed) {
   const errors = [];
 
-  if (![3, 4].includes(parsed.triageSchemaVersion)) {
-    errors.push('triageSchemaVersion must be 3 or 4');
+  if (![3, 4, 5].includes(parsed.triageSchemaVersion)) {
+    errors.push('triageSchemaVersion must be 3, 4, or 5');
   }
 
   if (!Number.isInteger(parsed.clustersFound)) {
@@ -124,12 +124,12 @@ function validateTriage(parsed) {
     if (typeof parsed.searchStrategy.saturationReached !== 'boolean') {
       errors.push('searchStrategy.saturationReached must be true or false');
     }
-    if (parsed.triageSchemaVersion === 4) {
+    if ([4, 5].includes(parsed.triageSchemaVersion)) {
       if (parsed.searchStrategy.queriesRun > 20) {
-        errors.push('triage v4 searchStrategy.queriesRun must not exceed 20');
+        errors.push(`triage v${parsed.triageSchemaVersion} searchStrategy.queriesRun must not exceed 20`);
       }
       if (parsed.searchStrategy.candidatesFetched > 32) {
-        errors.push('triage v4 searchStrategy.candidatesFetched must not exceed 32');
+        errors.push(`triage v${parsed.triageSchemaVersion} searchStrategy.candidatesFetched must not exceed 32`);
       }
     }
   }
@@ -248,6 +248,13 @@ function validateTriage(parsed) {
 
     if (cluster.selected !== true && cluster.selected !== false) {
       errors.push(`${label}.selected must be true or false`);
+    }
+    if (
+      parsed.triageSchemaVersion === 5
+      && cluster.dedupeStatus !== 'new'
+      && !/^(?:duplicate|near-duplicate)-of:\d{14}-[a-z0-9][a-z0-9-]*$/.test(cluster.dedupeStatus)
+    ) {
+      errors.push(`${label}.dedupeStatus must reference a published report folder, not a triage run`);
     }
     if (cluster.selected === true) {
       if (cluster.dedupeStatus !== 'new') errors.push(`${label}.selected requires dedupeStatus: new`);
