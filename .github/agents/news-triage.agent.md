@@ -34,10 +34,11 @@ Use the runtime's fastest batched search provider. Prefer AnySearch when availab
    - climate, health, industrial, fintech, consumer, and regional trade press;
    - non-US startup ecosystems and local-language sources;
    - contrarian or second-order effects around widely covered events.
-2. Run one batched query per lane first. Add a second query only when that lane found no useful evidence or a potential champion still has a source-diversity gap.
-3. In broad mode, target 30–50 candidate URLs and quick-fetch 20–32 useful pages. Hard-stop at 16 queries and 32 successful fetches.
-4. Stop once at least `max(4, cap + 3)` evidence-backed clusters exist, every active lane has useful evidence, and the last 6 fetches add fewer than 2 new clusters or material facts. Record `saturationReached`.
-5. Prefer primary and authoritative sources, but pair them with independent evidence. Do not let one publisher, geography, or press-release family dominate.
+2. Run one batched query per lane first, using no more than 8 discovery queries. Rank provisional non-dominated clusters before spending the remaining budget.
+3. Reserve at least 6 queries for targeted source augmentation of the strongest provisional clusters. Search specifically for each cluster's missing primary source, independent corroboration, publisher, or source type instead of continuing broad discovery.
+4. In broad mode, target 30–50 candidate URLs and quick-fetch 20–32 useful pages. Hard-stop at 20 queries and 32 successful fetches.
+5. Stop once at least `max(4, cap + 3)` evidence-backed clusters exist, every active lane has useful evidence, and the last 6 fetches add fewer than 2 new clusters or material facts. Record `saturationReached`.
+6. Prefer primary and authoritative sources, but pair them with independent evidence. Do not let one publisher, geography, or press-release family dominate.
 
 Never cite a search-results page, aggregator-only page, failed fetch, fabricated URL, or source outside `timeWindow`.
 
@@ -65,8 +66,8 @@ Use these anchors:
 
 | Score | Meaning |
 |---|---|
-| 5 | Cohort-defining evidence; specific, rare, and defensible. |
-| 4 | Strong and concrete, but not the strongest signal in the cohort. |
+| 5 | Exceptional dimension strength with a specific, rare mechanism or unusually strong venture signal; final defensibility may still require research. |
+| 4 | Strong, concrete, and worthy of idea generation when it is a cohort champion. |
 | 3 | Credible with meaningful inference still required. |
 | 2 | Thin, generic, or weakly connected. |
 | 1 | Hype, opinion, or no usable venture signal. |
@@ -79,10 +80,10 @@ An eligible cluster must have:
 - `painIntensity >= 3`;
 - `opportunityClarity >= 3`;
 - `evidenceConfidence >= 3`;
-- `championScore: 5`;
+- `championScore >= 4`;
 - source-diversity floors below.
 
-Compute Pareto dominance across `creativePotential`, `venturePotential`, `whiteSpacePotential`, and `evidenceConfidence`. Cluster A dominates B when A is no worse on every dimension and strictly better on at least one. Set `frontierStatus` to `non-dominated` or `dominated`.
+Compute selection-time Pareto dominance across eligible clusters using `creativePotential`, `venturePotential`, `whiteSpacePotential`, and `evidenceConfidence`. Cluster A dominates B when A is no worse on every dimension and strictly better on at least one. A cluster that fails the score or source-diversity eligibility gates must not block an otherwise eligible candidate. Set `frontierStatus` to `non-dominated` or `dominated`.
 
 Select only clusters that:
 
@@ -91,7 +92,7 @@ Select only clusters that:
 - tie the eligible cohort maximum for their declared `championDimension`;
 - meet portfolio diversity rules.
 
-In broad mode, select no more than 2 clusters with the same `championDimension`, sector, dominant event type, or best publisher. `cap` is a ceiling, never a quota. Zero selected clusters is a valid high-quality result.
+In broad mode, select no more than 2 clusters with the same `championDimension`, sector, dominant event type, or best publisher. `cap` is a ceiling, never a quota. Zero selected clusters is valid when no score-4-or-better cohort champion meets every evidence gate. Do not use zero selection merely because a qualifying score-4 champion has not yet completed full market research; that is the next stage's job.
 
 ## Source diversity
 

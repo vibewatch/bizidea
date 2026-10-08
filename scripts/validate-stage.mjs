@@ -125,8 +125,8 @@ function validateTriage(parsed) {
       errors.push('searchStrategy.saturationReached must be true or false');
     }
     if (parsed.triageSchemaVersion === 4) {
-      if (parsed.searchStrategy.queriesRun > 16) {
-        errors.push('triage v4 searchStrategy.queriesRun must not exceed 16');
+      if (parsed.searchStrategy.queriesRun > 20) {
+        errors.push('triage v4 searchStrategy.queriesRun must not exceed 20');
       }
       if (parsed.searchStrategy.candidatesFetched > 32) {
         errors.push('triage v4 searchStrategy.candidatesFetched must not exceed 32');
@@ -254,7 +254,7 @@ function validateTriage(parsed) {
       if (isIntegerInRange(cluster.painIntensity, 1, 5) && cluster.painIntensity < 3) errors.push(`${label}.selected requires painIntensity >= 3`);
       if (isIntegerInRange(cluster.opportunityClarity, 1, 5) && cluster.opportunityClarity < 3) errors.push(`${label}.selected requires opportunityClarity >= 3`);
       if (isIntegerInRange(cluster.evidenceConfidence, 1, 5) && cluster.evidenceConfidence < 3) errors.push(`${label}.selected requires evidenceConfidence >= 3`);
-      if (cluster.championScore !== 5) errors.push(`${label}.selected requires championScore: 5`);
+      if (isIntegerInRange(cluster.championScore, 1, 5) && cluster.championScore < 4) errors.push(`${label}.selected requires championScore >= 4`);
       if (cluster.frontierStatus !== 'non-dominated') errors.push(`${label}.selected requires frontierStatus: non-dominated`);
       if (briefs.length < 4) errors.push(`${label}.selected requires at least 4 sourceBriefs`);
       if (isObject(cluster.sourceDiversity)) {
@@ -272,7 +272,7 @@ function validateTriage(parsed) {
   });
 
   const eligibleClusters = parsed.clusters.filter(isTriageEligible);
-  for (const cluster of eligibleClusters) {
+  for (const cluster of selectedClusters) {
     const dominated = eligibleClusters.some((other) => other !== cluster && dominatesTriageCluster(other, cluster));
     const expected = dominated ? 'dominated' : 'non-dominated';
     if (cluster.frontierStatus !== expected) {
@@ -332,7 +332,7 @@ function isTriageEligible(cluster) {
     && isIntegerInRange(cluster?.painIntensity, 3, 5)
     && isIntegerInRange(cluster?.opportunityClarity, 3, 5)
     && isIntegerInRange(cluster?.evidenceConfidence, 3, 5)
-    && TRIAGE_CHAMPION_FIELDS.some((field) => cluster?.[field] === 5)
+    && isIntegerInRange(cluster?.championScore, 4, 5)
     && isObject(diversity)
     && diversity.uniquePublishers >= 3
     && diversity.sourceTypeCount >= 3

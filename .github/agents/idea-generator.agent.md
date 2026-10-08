@@ -20,7 +20,7 @@ Do not search the web. Use the selected cluster and history index only.
 
 ## Selection method: choose a champion, not an average
 
-1. Confirm the cluster is selected, new, non-dominated, and has `championScore: 5`.
+1. Confirm the cluster is selected, new, non-dominated, and has `championScore >= 4`. Triage score 4 is a shortlist signal, not permission to lower the final idea standard.
 2. Generate at least 6 private candidates spanning at least 4 genuinely different venture archetypes:
    - focused workflow product;
    - service-enabled software;
@@ -40,6 +40,7 @@ Do not search the web. Use the selected cluster and history index only.
    - `evidenceFit`.
 6. The winner must score exactly `5` in at least one of the first three dimensions. That field becomes `selectionLens.championDimension`. Do not average the dimensions.
 7. Accept and state one real tradeoff. A concept with no weakness is not credible.
+8. If no candidate reaches 5 after one focused refinement pass, do not write `idea.yaml`. Return a concise `no-final-champion` rejection so the orchestrator can remove the current-run folder and continue.
 
 ## Naming rules
 
@@ -100,7 +101,7 @@ sourceContext:
   evidenceConfidence: 1
   incumbentGravity: 1
   championDimension: creativePotential|venturePotential|whiteSpacePotential
-  championScore: 5
+  championScore: 4|5
   frontierStatus: non-dominated
   selectionRationale: string
   dedupeRationale: string

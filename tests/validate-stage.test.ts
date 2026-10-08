@@ -223,24 +223,34 @@ describe('validate-stage triage v3', () => {
     expect(result.stderr).toContain('selected requires evidenceConfidence >= 3');
   });
 
-  it('rejects selected clusters without an absolute champion score', () => {
+  it('accepts a score-4 cohort champion for idea-generation shortlisting', () => {
     const folder = makeTriageFolder(validTriageYaml
       .replace('    creativePotential: 5\n', '    creativePotential: 4\n')
       .replace('    championScore: 5\n', '    championScore: 4\n'));
     const result = runValidate(folder);
 
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('triage ok');
+  });
+
+  it('rejects selected clusters below the score-4 shortlist threshold', () => {
+    const folder = makeTriageFolder(validTriageYaml
+      .replace('    creativePotential: 5\n', '    creativePotential: 3\n')
+      .replace('    championScore: 5\n', '    championScore: 3\n'));
+    const result = runValidate(folder);
+
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain('selected requires championScore: 5');
+    expect(result.stderr).toContain('selected requires championScore >= 4');
   });
 
   it('enforces bounded search work for triage v4', () => {
     const folder = makeTriageFolder(validTriageYaml
       .replace('triageSchemaVersion: 3', 'triageSchemaVersion: 4')
-      .replace('  queriesRun: 8', '  queriesRun: 17'));
+      .replace('  queriesRun: 8', '  queriesRun: 21'));
     const result = runValidate(folder);
 
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain('queriesRun must not exceed 16');
+    expect(result.stderr).toContain('queriesRun must not exceed 20');
   });
 });
 

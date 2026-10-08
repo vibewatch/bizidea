@@ -133,7 +133,7 @@ In CI, [`deploy.yml`](.github/workflows/deploy.yml) restores `website/.astro` an
 
 ## Running the pipeline
 
-In CI, GitHub Actions schedules the workflow once daily at `07:00 UTC`. Every custom agent is explicitly pinned to GPT-6 Luna, and pipeline runs use `xhigh` reasoning. Local role benchmarks found that the strongest alternative improved blind-judge quality by less than 0.5/10 while using 13–21× more AI credits.
+In CI, GitHub Actions schedules the workflow once daily at `07:00 UTC`. Scheduled broad scans use a rolling seven-day window so promising events can accumulate enough primary and independent evidence; manual runs retain their explicit input. Triage may shortlist a non-dominated cohort champion scoring 4 or 5, but the generated idea must still score an absolute 5 before research and publication. Every custom agent is explicitly pinned to GPT-6 Luna, and pipeline runs use `xhigh` reasoning. Local role benchmarks found that the strongest alternative improved blind-judge quality by less than 0.5/10 while using 13–21× more AI credits.
 
 The Action separates AI generation from publishing. The read-only `generate` job records stage attempts in an atomic run manifest, validates the complete repository, and uploads an immutable bundle. The write-enabled `publish` job downloads and revalidates that bundle before committing. A failed publish job can therefore be rerun without repeating any model calls. Generation and final manifests are retained as workflow artifacts for 30 days.
 

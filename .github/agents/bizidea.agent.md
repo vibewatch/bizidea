@@ -75,7 +75,7 @@ node scripts/run-manifest.mjs mark <runTimestamp> <target> <stage> <status> [mes
    - For each cluster:
      1. Run `node scripts/create-report-dir.mjs <runTimestamp> <proposedSlug>`.
      2. Mark the folder's `idea` stage `in_progress`, then delegate `Idea Generator` with `folder`, `triagePath`, `clusterId`, and `historyIndexPath`.
-     3. Verify with `node scripts/validate-stage.mjs <folder> idea`, then mark `idea` `passed`.
+     3. If Idea Generator returns `no-final-champion` without `idea.yaml`, mark `idea` `skipped`, remove only that current-run folder, and continue. Otherwise verify with `node scripts/validate-stage.mjs <folder> idea`, then mark `idea` `passed`.
      4. Run:
 
         ```bash
@@ -169,9 +169,9 @@ node scripts/run-manifest.mjs mark <runTimestamp> <target> <stage> <status> [mes
 ## Quality policy
 
 - New triage must use schema version `4`.
-- Every selected cluster must be a cohort champion with an absolute `5` in `creativePotential`, `venturePotential`, or `whiteSpacePotential`, and must sit on the non-dominated frontier.
+- Every selected triage cluster must be a cohort champion with at least `4` in `creativePotential`, `venturePotential`, or `whiteSpacePotential`, and must sit on the non-dominated frontier.
 - Every selected cluster must meet the source-diversity floor enforced by `validate-stage`.
-- New ideas must use `qualityPolicyVersion: 2`, avoid OS/copilot/control-plane naming, and pass the originality audit.
+- New ideas must still use `qualityPolicyVersion: 2`, score an absolute `5` in their final champion dimension, avoid OS/copilot/control-plane naming, and pass the originality audit.
 - Research must use `researchPolicyVersion: 3`, a 24–36 page adaptive evidence budget, diverse sources, and saturation-based stopping instead of a 100-source quota.
 - `index.selectionLens` must mirror `idea.selectionLens`.
 - All five Chinese files must pass structural, numeric, untranslated-prose, terminology, protected-term, qualifier, semantic-compression, key-predicate, and translationese checks before editing. Invalid edits must roll back to the validated first pass.
@@ -180,7 +180,7 @@ node scripts/run-manifest.mjs mark <runTimestamp> <target> <stage> <status> [mes
 
 - Let `News Triage` and `Market Researcher` use the runtime's fastest batched search provider; prefer AnySearch when available, otherwise native web search.
 - Run independent search lanes concurrently.
-- Triage v4 is capped at 16 search queries and 32 successful page fetches. Expand a lane only when it lacks useful evidence or a potential champion has a source-diversity gap.
+- Triage v4 is capped at 20 search queries and 32 successful page fetches. Use no more than 8 queries for broad discovery and reserve at least 6 for source augmentation of provisional champions.
 - Stop research when the declared evidence questions are saturated. More pages are not automatically better.
 - Keep dependent English stages ordered, but overlap each validated artifact's translation with the next English stage.
 

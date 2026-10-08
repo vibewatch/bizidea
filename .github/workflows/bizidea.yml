@@ -106,6 +106,7 @@ jobs:
       - name: Resolve inputs
         id: inputs
         env:
+          RAW_EVENT: ${{ github.event_name }}
           RAW_CAP: ${{ github.event.inputs.cap }}
           RAW_WINDOW: ${{ github.event.inputs.timeWindow }}
           RAW_TOPIC: ${{ github.event.inputs.topic }}
@@ -115,7 +116,13 @@ jobs:
           WINDOW="${RAW_WINDOW:-}"
           TOPIC="${RAW_TOPIC:-}"
           if [ -z "$CAP" ]; then CAP="5"; fi
-          if [ -z "$WINDOW" ]; then WINDOW="yesterday"; fi
+          if [ -z "$WINDOW" ]; then
+            if [ "$RAW_EVENT" = "schedule" ]; then
+              WINDOW="last 7 days"
+            else
+              WINDOW="yesterday"
+            fi
+          fi
           RUN_TIMESTAMP="$(date -u +%Y%m%d%H%M%S)"
           if ! [[ "$CAP" =~ ^[1-5]$ ]]; then
             echo "Invalid cap '$CAP'; expected an integer from 1 to 5." >&2
@@ -162,7 +169,7 @@ jobs:
           RUN_TIMESTAMP: ${{ steps.inputs.outputs.run_timestamp }}
         run: |
           set -euo pipefail
-          copilot --yolo --autopilot --reasoning-effort xhigh --agent "Bizidea" -p "Run the full Bizidea pipeline with runTimestamp: $RUN_TIMESTAMP for ${{ steps.inputs.outputs.window }}. topic: ${{ steps.inputs.outputs.topic }}. topicScope: ${{ steps.inputs.outputs.scope }}. cap: ${{ steps.inputs.outputs.cap }}. The workflow already initialized .bizidea-runs/$RUN_TIMESTAMP/manifest.json; update every specialist stage through scripts/run-manifest.mjs exactly as the agent contract requires. Use native custom-agent delegation. Every pipeline agent is explicitly pinned to GPT-6 Luna. Run News Triage once, generate and dedupe every selected champion, then process surviving folders through research -> business plan -> financial model -> reporter. Start each artifact's two-pass Chinese pipeline as soon as that English artifact validates: translation, strict validation and checkpoint, then source-anchored editing with deterministic rollback. Overlap it with the next English stage and wait for all five edited translations before final validation. Enforce champion-dimension, source-diversity, originality, semantic-deduplication, and translation-quality gates. Keep independent report folders concurrent, cap triage at 16 queries and 32 fetches, use a 24-36 page adaptive research budget, delete duplicate or failed current-run folders, and leave repository-wide validation to the workflow. Do not invoke Bizidea recursively, finish the workflow-owned manifest, or run git commands."
+          copilot --yolo --autopilot --reasoning-effort xhigh --agent "Bizidea" -p "Run the full Bizidea pipeline with runTimestamp: $RUN_TIMESTAMP for ${{ steps.inputs.outputs.window }}. topic: ${{ steps.inputs.outputs.topic }}. topicScope: ${{ steps.inputs.outputs.scope }}. cap: ${{ steps.inputs.outputs.cap }}. The workflow already initialized .bizidea-runs/$RUN_TIMESTAMP/manifest.json; update every specialist stage through scripts/run-manifest.mjs exactly as the agent contract requires. Use native custom-agent delegation. Every pipeline agent is explicitly pinned to GPT-6 Luna. Run News Triage once, generate and dedupe every selected champion, then process surviving folders through research -> business plan -> financial model -> reporter. Start each artifact's two-pass Chinese pipeline as soon as that English artifact validates: translation, strict validation and checkpoint, then source-anchored editing with deterministic rollback. Overlap it with the next English stage and wait for all five edited translations before final validation. Enforce champion-dimension, source-diversity, originality, semantic-deduplication, and translation-quality gates. Keep independent report folders concurrent, cap triage at 20 queries and 32 fetches, use a 24-36 page adaptive research budget, delete duplicate or failed current-run folders, and leave repository-wide validation to the workflow. Do not invoke Bizidea recursively, finish the workflow-owned manifest, or run git commands."
 
       - name: Verify generation checkpoints
         env:
