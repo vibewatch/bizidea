@@ -13,11 +13,15 @@ function makeTriageFolder(yaml: string) {
   return folder;
 }
 
-function runValidate(folder: string) {
-  return spawnSync(process.execPath, ['scripts/validate-stage.mjs', folder, 'triage'], {
+function runValidateStage(folder: string, stage: string) {
+  return spawnSync(process.execPath, ['scripts/validate-stage.mjs', folder, stage], {
     cwd: process.cwd(),
     encoding: 'utf8',
   });
+}
+
+function runValidate(folder: string) {
+  return runValidateStage(folder, 'triage');
 }
 
 function makeResearchFolder(sourceBudgetMax: number, searchedQueries: unknown[] = ['fixture market query']) {
@@ -76,6 +80,29 @@ function makeResearchFolder(sourceBudgetMax: number, searchedQueries: unknown[] 
     })),
   };
   writeFileSync(join(folder, 'research.yaml'), JSON.stringify(research));
+  return folder;
+}
+
+function makeIndexFolder(indexLensOverrides: Record<string, unknown> = {}) {
+  const folder = mkdtempSync(join(tmpdir(), 'bizidea-index-'));
+  tempDirs.push(folder);
+  const selectionLens = {
+    championDimension: 'creativeNovelty',
+    championScore: 5,
+    whyThisWins: 'Exact source sentence.',
+    acceptedTradeoff: 'Exact tradeoff sentence.',
+  };
+  writeFileSync(join(folder, 'idea.yaml'), JSON.stringify({ selectionLens }));
+  writeFileSync(join(folder, 'index.yaml'), JSON.stringify({
+    slug: 'fixture-index',
+    date: '2026-05-11',
+    pitch: 'Fixture pitch.',
+    rating: {},
+    selectionLens: { ...selectionLens, ...indexLensOverrides },
+    files: {},
+    financials: {},
+    topRisks: ['One', 'Two', 'Three'],
+  }));
   return folder;
 }
 
@@ -329,5 +356,24 @@ describe('validate-stage research v3', () => {
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('searchedQueries must be a non-empty list of strings');
+  });
+});
+
+describe('validate-stage index', () => {
+  it('accepts an exact idea selectionLens mirror', () => {
+    const result = runValidateStage(makeIndexFolder(), 'index');
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('index ok');
+  });
+
+  it('rejects a rewritten selectionLens field', () => {
+    const result = runValidateStage(
+      makeIndexFolder({ whyThisWins: 'Shortened source sentence.' }),
+      'index',
+    );
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('selectionLens.whyThisWins must exactly match idea.yaml');
   });
 });

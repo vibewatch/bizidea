@@ -61,6 +61,7 @@ for (const folder of listReportFolders()) {
       indexLens?.championDimension !== sourceLens?.championDimension
       || indexLens?.championScore !== sourceLens?.championScore
       || indexLens?.whyThisWins !== sourceLens?.whyThisWins
+      || indexLens?.acceptedTradeoff !== sourceLens?.acceptedTradeoff
     ) {
       failures.push(`${folder}: index.selectionLens must mirror idea.selectionLens`);
     }

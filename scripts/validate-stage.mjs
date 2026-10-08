@@ -54,10 +54,11 @@ const STAGES = {
   },
   index: {
     file: 'index.yaml',
-    requiredKeys: ['slug', 'date', 'pitch', 'rating', 'files', 'financials'],
+    requiredKeys: ['slug', 'date', 'pitch', 'rating', 'selectionLens', 'files', 'financials'],
     requiredArrays: [
       [['topRisks'], 3, 3],
     ],
+    validate: validateIndex,
   },
 };
 
@@ -510,6 +511,30 @@ function validateResearch(parsed) {
   return errors;
 }
 
+function validateIndex(parsed, folder) {
+  const errors = [];
+  const ideaPath = join(folder, 'idea.yaml');
+  if (!existsSync(ideaPath)) {
+    return ['index validation requires idea.yaml in the same folder'];
+  }
+
+  let idea;
+  try {
+    idea = yaml.load(readFileSync(ideaPath, 'utf8'));
+  } catch (error) {
+    return [`cannot read idea.yaml for selectionLens comparison: ${error.message}`];
+  }
+
+  const sourceLens = idea?.selectionLens;
+  const indexLens = parsed.selectionLens;
+  for (const field of ['championDimension', 'championScore', 'whyThisWins', 'acceptedTradeoff']) {
+    if (indexLens?.[field] !== sourceLens?.[field]) {
+      errors.push(`selectionLens.${field} must exactly match idea.yaml`);
+    }
+  }
+  return errors;
+}
+
 function usage() {
   const stages = Object.keys(STAGES).join(', ');
   console.error(`Usage: node scripts/validate-stage.mjs <reportFolder> <stage>`);
@@ -613,7 +638,7 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
-const semanticErrors = spec.validate?.(parsed) ?? [];
+const semanticErrors = spec.validate?.(parsed, folder) ?? [];
 if (semanticErrors.length > 0) {
   console.error(`[validate-stage] ${filePath} failed semantic checks: ${semanticErrors.join(', ')}`);
   process.exit(1);
