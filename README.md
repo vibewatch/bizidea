@@ -144,7 +144,8 @@ Manual triggers:
 
   ```bash
   npm install -g @github/copilot
-  copilot --yolo --autopilot --reasoning-effort xhigh --agent Bizidea \
+  copilot --yolo --autopilot --max-autopilot-continues 30 \
+    --reasoning-effort xhigh --agent Bizidea \
     -p "Scan yesterday's startup news and generate up to 5 non-duplicate startup reports."
   ```
 

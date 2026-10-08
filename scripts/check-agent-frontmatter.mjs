@@ -12,7 +12,9 @@ import yaml from 'js-yaml';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const AGENTS_DIR = join(ROOT, '.github', 'agents');
 const ORCHESTRATOR_FILE = join(AGENTS_DIR, 'bizidea.agent.md');
+const WORKFLOW_FILE = join(ROOT, '.github', 'workflows', 'bizidea.yml');
 const EXPECTED_MODEL = 'GPT-6 Luna (copilot)';
+const MIN_AUTOPILOT_CONTINUES = 30;
 
 function readFrontmatter(filePath) {
   const raw = readFileSync(filePath, 'utf8');
@@ -70,6 +72,15 @@ if (/handoff-protocol|HANDOFF|status:\s*(ok|failed)/.test(orchestratorRaw)) {
   errors.push(`${ORCHESTRATOR_FILE}: custom response protocols are forbidden; rely on native agent delegation`);
 }
 
+const workflowRaw = readFileSync(WORKFLOW_FILE, 'utf8');
+const autopilotContinues = workflowRaw.match(/--max-autopilot-continues\s+(\d+)/);
+if (!autopilotContinues || Number(autopilotContinues[1]) < MIN_AUTOPILOT_CONTINUES) {
+  errors.push(
+    `${WORKFLOW_FILE}: Bizidea requires --max-autopilot-continues ${MIN_AUTOPILOT_CONTINUES} or higher ` +
+      'because the CLI default can exit while delegated stages are still active',
+  );
+}
+
 const orphanInOrchestrator = orchestrator.agents.filter((n) => !found.has(n));
 const orphanSpecialists = [...found.keys()].filter((n) => !declared.has(n));
 
@@ -93,5 +104,6 @@ if (errors.length > 0) {
 }
 
 console.log(
-  `[check-agent-frontmatter] ok: orchestrator and ${found.size} specialists use ${EXPECTED_MODEL}`,
+  `[check-agent-frontmatter] ok: orchestrator and ${found.size} specialists use ${EXPECTED_MODEL}; ` +
+    `workflow allows ${autopilotContinues[1]} autopilot continuations`,
 );
