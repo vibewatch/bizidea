@@ -1,0 +1,830 @@
+slug: neural-load-replay-bench
+date: "2026-10-10"
+currency: USD
+modelStartMonth: "2026-10"
+assumptions:
+  - id: A1
+    name: Model horizon
+    value: "36 months from 2026-10 through 2029-09"
+    unit: calendar months
+    source: "[business-plan.yaml date; three-year forecast convention requested for this model]"
+  - id: A2
+    name: Initial pre-seed financing
+    value: 1.2
+    unit: USD millions
+    source: >-
+      [business-plan.yaml fundingAsk.targetFundingRangeUsd and runwayMonths: modeler selects
+      $1.2M within the provisional $1M-$2M band for a lean, gated 18-month validation plan;
+      this is a planning choice, not an investor commitment or supplier-quoted budget]
+  - id: A3
+    name: Fee per completed campaign
+    value: 25.0
+    unit: USD thousands per campaign
+    source: >-
+      [business-plan.yaml gtm.pricing tests $15K-$30K and research.yaml reportMemo.willingnessToPay
+      uses $25K for unverified sizing; no paid purchase, public tariff, quote, or tender establishes
+      this fee, so it remains an operator hypothesis]
+  - id: A4
+    name: Base paid-campaign and customer ramp
+    value: >-
+      Y1: "3 campaigns from 3 first-time accounts; Y2: 4 campaigns, including 2 repeats and"
+      2 new accounts, reaching 5 cumulative paid accounts; Y3: 5 campaigns, including 3 repeats
+      and 2 new accounts, reaching 7 cumulative paid accounts. Y1 campaigns are recognized in
+      M5, M6, and M11; Y2 has 1 campaign in each quarter; Y3 has 2 in Q1 and 1 in each later
+      quarter. No license revenue is assumed.
+    unit: campaign deliveries and cumulative unique paying accounts
+    source: >-
+      [business-plan.yaml gtm.funnelTargets, product.sixMonth, milestones, and 24-month five-account
+      gate: explicit modeler forecast, not observed demand; the plan requires at least two paid
+      pilots by M6 and three campaigns by M12]
+  - id: A5
+    name: Repeat purchase and churn proxy
+    value: >-
+      Two of the first three accounts (67%) repeat or formally budget a second campaign within
+      12 months; equivalent monthly churn is 3.32%, and reciprocal expected customer life is
+      30.1 months. This is a cohort heuristic for a lumpy project service, not measured retention.
+    unit: annual repeat rate, monthly churn percent, and months
+    source: >-
+      [business-plan.yaml investorMemo.mustBeTrue and gtm.funnelTargets set the 2-of-3 repeat
+      target; monthly churn and lifetime are mathematical conversions of that unvalidated target]
+  - id: A6
+    name: Direct campaign cost and gross margin
+    value: >-
+      Base campaign fee $25K; target gross margin 70%; direct cost 30% or $7.5K per campaign,
+      comprising 80 delivery-engineering hours at a loaded $50/hour ($4K) plus $3.5K of direct
+      calibration, consumables, shipping, and external-lab cost. Direct labor is allocated from
+      payroll into COGS, not counted again in operating expense.
+    unit: USD thousands and percent per campaign
+    source: >-
+      [business-plan.yaml businessModel.targetGrossMarginPct is 70 and strategyMap.killCriteria
+      requires direct repeat-delivery costs at or below 30% of realized fees by campaign three;
+      hours and direct-cost split are modeler estimates pending pilot time logs]
+  - id: A7
+    name: Team, hiring gate, and loaded compensation
+    value: >-
+      Technical founder and commercial founder/CEO start M0; one test and quality engineer starts
+      M7 only after two paid pilots by M6. No further hires are planned through Y3. Fully loaded
+      compensation is budgeted at $100K per FTE-year for each role; Y1 payroll is $250.2K after
+      monthly rounding, and annualized payroll snapshots are $200K, $200K, $300K, $300K, $300K,
+      and $300K.
+    unit: FTE and USD thousands
+    source: >-
+      [business-plan.yaml team and strategicChoices.sequencingRationale provide role timing and
+      the two-paid-pilot gate; $100K/FTE-year is a named modeler planning heuristic for lean
+      pre-seed loaded compensation, not a salary survey or quote]
+  - id: A8
+    name: Non-payroll sales and marketing spend
+    value: >-
+      Y1 monthly M1-M3 $2K, M4-M6 $3K, M7-M9 $4K, M10-M12 $5K; Y2 $15K per quarter; Y3 $15K
+      per quarter. Payroll is excluded.
+    unit: USD thousands
+    source: >-
+      [business-plan.yaml gtm.channels and experimentRoadmap support founder-led technical outreach,
+      incubator referrals, and scoped proposals; amounts are a modeler travel, account-development,
+      and partner-work budget heuristic, not historical spend]
+  - id: A9
+    name: Non-payroll R&D and validation spend
+    value: >-
+      Y1 monthly M1-M3 $18K, M4-M6 $14K, M7-M12 $10K; Y2 $30K per quarter; Y3 $25K per quarter.
+      Payroll, direct campaign COGS, and the separately shown initial bench capex are excluded.
+    unit: USD thousands
+    source: >-
+      [business-plan.yaml product, operations, experimentRoadmap, and milestones require method
+      development, calibration, repeatability work, and controlled reports; this is a modeler
+      rented-lab, external calibration, fixture, and validation budget estimate, not a quote]
+  - id: A10
+    name: Non-payroll general and administrative spend
+    value: >-
+      Y1 monthly M1-M6 $8K and M7-M12 $10K; Y2 $22.5K per quarter; Y3 $22.5K per quarter.
+      Payroll is excluded.
+    unit: USD thousands
+    source: >-
+      [business-plan.yaml operations and risk mitigations require insurance, legal review,
+      confidentiality, sample custody, and supplier controls; amounts are modeler planning
+      heuristics, not vendor quotes]
+  - id: A11
+    name: Minimum bench equipment capex
+    value: "USD 60K in M7, after the two paid-pilot gate; no additional capex is assumed"
+    unit: USD thousands
+    source: >-
+      [business-plan.yaml sequencingRationale and fundingAsk.useOfFundsSummary require only a
+      minimum calibrated bench after demand evidence; $60K is an unquoted planning placeholder,
+      with partner-lab rental as the fallback]
+  - id: A12
+    name: Conditional follow-on financing
+    value: >-
+      Base case includes a separate, uncommitted $1.0M seed financing inflow in Q1Y3 (M25),
+      conditional on the 24-month proof gates; this is additional to, and not part of, the
+      current $1.2M pre-seed ask. Downside assumes it does not close.
+    unit: USD thousands and month
+    source: >-
+      [business-plan.yaml milestones for 12-24 months and 24-36 months require five accounts,
+      repeat demand, delivery-cost proof, and a financing reassessment; timing and amount are
+      modeler financing assumptions and are not committed]
+  - id: A13
+    name: Cash and accounting convention
+    value: >-
+      Initial $1.2M financing arrives in M1; the conditional $1.0M follow-on arrives in Q1Y3;
+      campaign revenue is collected in its delivery period; cashEopK equals prior cash plus
+      EBITDA less capex plus financing inflows. No taxes, debt, depreciation, working-capital
+      delay, or additional financing is modeled.
+    unit: USD thousands and modeling convention
+    source: "[modeler cash-flow convention; business-plan.yaml describes a lean, equity-funded pre-seed plan]"
+  - id: A14
+    name: Initial use-of-funds allocation and buffer
+    value: >-
+      Engineering $480K (40%), GTM $180K (15%), G&A $240K (20%), and six-month buffer $300K (25%),
+      totaling the $1.2M ask. The buffer is a ring-fenced planning reserve; actual draw timing
+      depends on paid-pilot and equipment gates.
+    unit: USD thousands and percent
+    source: >-
+      [business-plan.yaml fundingAsk.useOfFundsSummary specifies an 18-month lean validation plan
+      and a provisional $1M-$2M band; allocations are modeler judgments, not approved budgets]
+  - id: A15
+    name: Fully loaded customer acquisition cost
+    value: >-
+      Three-year modeled CAC is ($162K non-payroll S&M plus $75K, equal to 25% of three years
+      of CEO loaded compensation) divided by 7 newly paying accounts, or $33.9K per new account.
+      CEO payroll is already in salaryK and is not added twice to cash expense.
+    unit: USD thousands per new account
+    source: >-
+      [business-plan.yaml gtm.channels and founder-led selling plan; S&M cadence is assumption A8,
+      compensation is assumption A7, and 7-logo count is assumption A4; no observed CAC exists]
+  - id: A16
+    name: Downside operating case
+    value: >-
+      Campaign volumes fall to 1, 2, and 2 in Y1-Y3, realized fee is $20K, the test/quality hire
+      and $60K equipment purchase are not made, and no follow-on round closes; founders continue
+      with partner-lab support at reduced two-FTE payroll.
+    unit: scenario case
+    source: >-
+      [business-plan.yaml pricing hypothesis is $15K-$30K and strategyMap.killCriteria gates hiring
+      and equipment on paid demand; values are a stress case, not a prediction]
+  - id: A17
+    name: Upside operating case
+    value: >-
+      Y1 follows base; Y2 reaches 5 campaigns; Y3 reaches 8 campaigns at $30K per campaign and
+      75% gross margin as common fixture work lowers direct cost; the conditional $1.0M round
+      closes as in base.
+    unit: scenario case
+    source: >-
+      [business-plan.yaml pricing range, 24-month five-account milestone, and conditional fixture
+      reuse thesis; upper fee, volume, and margin remain unvalidated hypotheses]
+  - id: A18
+    name: Sensitivity shocks
+    value: >-
+      Downside shocks versus base: fee $20K; one fewer repeat campaign in Y3; two Y3 campaigns
+      delayed beyond the horizon; gross margin 55%; one extra FTE from M13; or no $1.0M follow-on.
+      Cash impacts below are changes to Y3 ending cash versus base, holding other assumptions
+      constant unless the case explicitly removes the follow-on.
+    unit: scenario changes and USD thousands
+    source: >-
+      [business-plan.yaml topRisks, strategyMap.killCriteria, milestone gates, and research.yaml
+      reportMemo.sensitivityCases identify pricing, repeat demand, custom setup, hiring, and
+      financing as uncertainties; shock sizes are explicit modeler stress tests]
+headcount:
+  - role: Technical founder, analog and systems engineering
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Commercial founder / CEO
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Test and quality engineer
+    q1y1: 0
+    q2y1: 0
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 2
+  q2y1: 2
+  q3y1: 3
+  q4y1: 3
+  q4y2: 3
+  q4y3: 3
+headcountAnnualizedPayrollK:
+  q1y1: 200.0
+  q2y1: 200.0
+  q3y1: 300.0
+  q4y1: 300.0
+  q4y2: 300.0
+  q4y3: 300.0
+headcountBasis:
+  assumptionRefs:
+    - A7
+  description: >-
+    Annualized payroll is FTE multiplied by the $100K loaded annual budget. Actual salaryK is
+    period payroll; directLaborK is a subset of salaryK moved into COGS and removed from opexK
+    so compensation is counted exactly once.
+revenueModel:
+  assumptionRefs:
+    - A3
+    - A4
+  customerDefinition: >-
+    customersEop is the number of billable campaign-customer equivalents delivered in that
+    reporting period, not cumulative unique logos or subscribed MRR; one delivered campaign
+    counts as one. newCustomers counts first-time buying accounts, and uniqueCustomersEop tracks
+    cumulative paying accounts separately.
+  formula: >-
+    In every period revenueK = customersEop x campaign fee (A3); each campaign is $25K in base.
+    Revenue is recognized and collected when the agreed campaign report is delivered. Y1 has
+    three first-time buyers, Y2 has two new buyers and two repeat campaigns, and Y3 has two new
+    buyers and three repeat campaigns.
+  exclusion: >-
+    No license, annual calibration, clinical testing, chip fabrication, or cross-customer data
+    revenue is included because the business plan gates licensing on repeat demand and the research
+    found no validated willingness to pay for any of these offers.
+pnlMethodology:
+  assumptionRefs:
+    - A3
+    - A6
+    - A7
+    - A8
+    - A9
+    - A10
+  description: >-
+    cogsK equals directLaborK plus other direct campaign costs; grossProfitK equals revenueK
+    minus cogsK; opexK equals salaryK minus directLaborK plus salesMarketingK,
+    researchDevelopmentK, and generalAdministrativeK; ebitdaK equals grossProfitK minus opexK.
+    Payroll is included once, and capital equipment is below EBITDA.
+cashFlowMethodology:
+  assumptionRefs:
+    - A2
+    - A11
+    - A12
+    - A13
+  description: >-
+    Period cashEopK equals prior cash plus ebitdaK less capexK plus fundingInflowK. Q4Y2 cash is
+    the base-case trough at $164.3K before the conditional Q1Y3 seed inflow; without that uncommitted
+    round, base-case Y3 ending cash would be negative $278.2K.
+y1Monthly:
+  - month: M1
+    campaignsDelivered: 0
+    customersEop: 0
+    newCustomers: 0
+    uniqueCustomersEop: 0
+    repeatCommitmentsEop: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    directLaborK: 0.0
+    grossProfitK: 0.0
+    salaryK: 16.7
+    salesMarketingK: 2.0
+    researchDevelopmentK: 18.0
+    generalAdministrativeK: 8.0
+    opexK: 44.7
+    ebitdaK: -44.7
+    fundingInflowK: 1200.0
+    capexK: 0.0
+    cashEopK: 1155.3
+  - month: M2
+    campaignsDelivered: 0
+    customersEop: 0
+    newCustomers: 0
+    uniqueCustomersEop: 0
+    repeatCommitmentsEop: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    directLaborK: 0.0
+    grossProfitK: 0.0
+    salaryK: 16.7
+    salesMarketingK: 2.0
+    researchDevelopmentK: 18.0
+    generalAdministrativeK: 8.0
+    opexK: 44.7
+    ebitdaK: -44.7
+    fundingInflowK: 0.0
+    capexK: 0.0
+    cashEopK: 1110.6
+  - month: M3
+    campaignsDelivered: 0
+    customersEop: 0
+    newCustomers: 0
+    uniqueCustomersEop: 0
+    repeatCommitmentsEop: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    directLaborK: 0.0
+    grossProfitK: 0.0
+    salaryK: 16.7
+    salesMarketingK: 2.0
+    researchDevelopmentK: 18.0
+    generalAdministrativeK: 8.0
+    opexK: 44.7
+    ebitdaK: -44.7
+    fundingInflowK: 0.0
+    capexK: 0.0
+    cashEopK: 1065.9
+  - month: M4
+    campaignsDelivered: 0
+    customersEop: 0
+    newCustomers: 0
+    uniqueCustomersEop: 0
+    repeatCommitmentsEop: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    directLaborK: 0.0
+    grossProfitK: 0.0
+    salaryK: 16.7
+    salesMarketingK: 3.0
+    researchDevelopmentK: 14.0
+    generalAdministrativeK: 8.0
+    opexK: 41.7
+    ebitdaK: -41.7
+    fundingInflowK: 0.0
+    capexK: 0.0
+    cashEopK: 1024.2
+  - month: M5
+    campaignsDelivered: 1
+    customersEop: 1
+    newCustomers: 1
+    uniqueCustomersEop: 1
+    repeatCommitmentsEop: 0
+    revenueK: 25.0
+    cogsK: 7.5
+    directLaborK: 4.0
+    grossProfitK: 17.5
+    salaryK: 16.7
+    salesMarketingK: 3.0
+    researchDevelopmentK: 14.0
+    generalAdministrativeK: 8.0
+    opexK: 37.7
+    ebitdaK: -20.2
+    fundingInflowK: 0.0
+    capexK: 0.0
+    cashEopK: 1004.0
+  - month: M6
+    campaignsDelivered: 1
+    customersEop: 1
+    newCustomers: 1
+    uniqueCustomersEop: 2
+    repeatCommitmentsEop: 0
+    revenueK: 25.0
+    cogsK: 7.5
+    directLaborK: 4.0
+    grossProfitK: 17.5
+    salaryK: 16.7
+    salesMarketingK: 3.0
+    researchDevelopmentK: 14.0
+    generalAdministrativeK: 8.0
+    opexK: 37.7
+    ebitdaK: -20.2
+    fundingInflowK: 0.0
+    capexK: 0.0
+    cashEopK: 983.8
+  - month: M7
+    campaignsDelivered: 0
+    customersEop: 0
+    newCustomers: 0
+    uniqueCustomersEop: 2
+    repeatCommitmentsEop: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    directLaborK: 0.0
+    grossProfitK: 0.0
+    salaryK: 25.0
+    salesMarketingK: 4.0
+    researchDevelopmentK: 10.0
+    generalAdministrativeK: 10.0
+    opexK: 49.0
+    ebitdaK: -49.0
+    fundingInflowK: 0.0
+    capexK: 60.0
+    cashEopK: 874.8
+  - month: M8
+    campaignsDelivered: 0
+    customersEop: 0
+    newCustomers: 0
+    uniqueCustomersEop: 2
+    repeatCommitmentsEop: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    directLaborK: 0.0
+    grossProfitK: 0.0
+    salaryK: 25.0
+    salesMarketingK: 4.0
+    researchDevelopmentK: 10.0
+    generalAdministrativeK: 10.0
+    opexK: 49.0
+    ebitdaK: -49.0
+    fundingInflowK: 0.0
+    capexK: 0.0
+    cashEopK: 825.8
+  - month: M9
+    campaignsDelivered: 0
+    customersEop: 0
+    newCustomers: 0
+    uniqueCustomersEop: 2
+    repeatCommitmentsEop: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    directLaborK: 0.0
+    grossProfitK: 0.0
+    salaryK: 25.0
+    salesMarketingK: 4.0
+    researchDevelopmentK: 10.0
+    generalAdministrativeK: 10.0
+    opexK: 49.0
+    ebitdaK: -49.0
+    fundingInflowK: 0.0
+    capexK: 0.0
+    cashEopK: 776.8
+  - month: M10
+    campaignsDelivered: 0
+    customersEop: 0
+    newCustomers: 0
+    uniqueCustomersEop: 2
+    repeatCommitmentsEop: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    directLaborK: 0.0
+    grossProfitK: 0.0
+    salaryK: 25.0
+    salesMarketingK: 5.0
+    researchDevelopmentK: 10.0
+    generalAdministrativeK: 10.0
+    opexK: 50.0
+    ebitdaK: -50.0
+    fundingInflowK: 0.0
+    capexK: 0.0
+    cashEopK: 726.8
+  - month: M11
+    campaignsDelivered: 1
+    customersEop: 1
+    newCustomers: 1
+    uniqueCustomersEop: 3
+    repeatCommitmentsEop: 0
+    revenueK: 25.0
+    cogsK: 7.5
+    directLaborK: 4.0
+    grossProfitK: 17.5
+    salaryK: 25.0
+    salesMarketingK: 5.0
+    researchDevelopmentK: 10.0
+    generalAdministrativeK: 10.0
+    opexK: 46.0
+    ebitdaK: -28.5
+    fundingInflowK: 0.0
+    capexK: 0.0
+    cashEopK: 698.3
+  - month: M12
+    campaignsDelivered: 0
+    customersEop: 0
+    newCustomers: 0
+    uniqueCustomersEop: 3
+    repeatCommitmentsEop: 2
+    revenueK: 0.0
+    cogsK: 0.0
+    directLaborK: 0.0
+    grossProfitK: 0.0
+    salaryK: 25.0
+    salesMarketingK: 5.0
+    researchDevelopmentK: 10.0
+    generalAdministrativeK: 10.0
+    opexK: 50.0
+    ebitdaK: -50.0
+    fundingInflowK: 0.0
+    capexK: 0.0
+    cashEopK: 648.3
+y2y3Quarterly:
+  - quarter: Q1Y2
+    campaignsDelivered: 1
+    customersEop: 1
+    newCustomers: 0
+    uniqueCustomersEop: 3
+    revenueK: 25.0
+    cogsK: 7.5
+    directLaborK: 4.0
+    grossProfitK: 17.5
+    salaryK: 75.0
+    salesMarketingK: 15.0
+    researchDevelopmentK: 30.0
+    generalAdministrativeK: 22.5
+    opexK: 138.5
+    ebitdaK: -121.0
+    fundingInflowK: 0.0
+    capexK: 0.0
+    cashEopK: 527.3
+  - quarter: Q2Y2
+    campaignsDelivered: 1
+    customersEop: 1
+    newCustomers: 0
+    uniqueCustomersEop: 3
+    revenueK: 25.0
+    cogsK: 7.5
+    directLaborK: 4.0
+    grossProfitK: 17.5
+    salaryK: 75.0
+    salesMarketingK: 15.0
+    researchDevelopmentK: 30.0
+    generalAdministrativeK: 22.5
+    opexK: 138.5
+    ebitdaK: -121.0
+    fundingInflowK: 0.0
+    capexK: 0.0
+    cashEopK: 406.3
+  - quarter: Q3Y2
+    campaignsDelivered: 1
+    customersEop: 1
+    newCustomers: 1
+    uniqueCustomersEop: 4
+    revenueK: 25.0
+    cogsK: 7.5
+    directLaborK: 4.0
+    grossProfitK: 17.5
+    salaryK: 75.0
+    salesMarketingK: 15.0
+    researchDevelopmentK: 30.0
+    generalAdministrativeK: 22.5
+    opexK: 138.5
+    ebitdaK: -121.0
+    fundingInflowK: 0.0
+    capexK: 0.0
+    cashEopK: 285.3
+  - quarter: Q4Y2
+    campaignsDelivered: 1
+    customersEop: 1
+    newCustomers: 1
+    uniqueCustomersEop: 5
+    revenueK: 25.0
+    cogsK: 7.5
+    directLaborK: 4.0
+    grossProfitK: 17.5
+    salaryK: 75.0
+    salesMarketingK: 15.0
+    researchDevelopmentK: 30.0
+    generalAdministrativeK: 22.5
+    opexK: 138.5
+    ebitdaK: -121.0
+    fundingInflowK: 0.0
+    capexK: 0.0
+    cashEopK: 164.3
+  - quarter: Q1Y3
+    campaignsDelivered: 2
+    customersEop: 2
+    newCustomers: 1
+    uniqueCustomersEop: 6
+    revenueK: 50.0
+    cogsK: 15.0
+    directLaborK: 8.0
+    grossProfitK: 35.0
+    salaryK: 75.0
+    salesMarketingK: 15.0
+    researchDevelopmentK: 25.0
+    generalAdministrativeK: 22.5
+    opexK: 129.5
+    ebitdaK: -94.5
+    fundingInflowK: 1000.0
+    capexK: 0.0
+    cashEopK: 1069.8
+  - quarter: Q2Y3
+    campaignsDelivered: 1
+    customersEop: 1
+    newCustomers: 1
+    uniqueCustomersEop: 7
+    revenueK: 25.0
+    cogsK: 7.5
+    directLaborK: 4.0
+    grossProfitK: 17.5
+    salaryK: 75.0
+    salesMarketingK: 15.0
+    researchDevelopmentK: 25.0
+    generalAdministrativeK: 22.5
+    opexK: 133.5
+    ebitdaK: -116.0
+    fundingInflowK: 0.0
+    capexK: 0.0
+    cashEopK: 953.8
+  - quarter: Q3Y3
+    campaignsDelivered: 1
+    customersEop: 1
+    newCustomers: 0
+    uniqueCustomersEop: 7
+    revenueK: 25.0
+    cogsK: 7.5
+    directLaborK: 4.0
+    grossProfitK: 17.5
+    salaryK: 75.0
+    salesMarketingK: 15.0
+    researchDevelopmentK: 25.0
+    generalAdministrativeK: 22.5
+    opexK: 133.5
+    ebitdaK: -116.0
+    fundingInflowK: 0.0
+    capexK: 0.0
+    cashEopK: 837.8
+  - quarter: Q4Y3
+    campaignsDelivered: 1
+    customersEop: 1
+    newCustomers: 0
+    uniqueCustomersEop: 7
+    revenueK: 25.0
+    cogsK: 7.5
+    directLaborK: 4.0
+    grossProfitK: 17.5
+    salaryK: 75.0
+    salesMarketingK: 15.0
+    researchDevelopmentK: 25.0
+    generalAdministrativeK: 22.5
+    opexK: 133.5
+    ebitdaK: -116.0
+    fundingInflowK: 0.0
+    capexK: 0.0
+    cashEopK: 721.8
+totals:
+  y1:
+    revenueK: 75.0
+    cogsK: 22.5
+    grossProfitK: 52.5
+    salaryK: 250.2
+    directLaborK: 12.0
+    salesMarketingK: 42.0
+    researchDevelopmentK: 156.0
+    generalAdministrativeK: 108.0
+    opexK: 544.2
+    ebitdaK: -491.7
+    fundingInflowK: 1200.0
+    capexK: 60.0
+    cashEopK: 648.3
+  y2:
+    revenueK: 100.0
+    cogsK: 30.0
+    grossProfitK: 70.0
+    salaryK: 300.0
+    directLaborK: 16.0
+    salesMarketingK: 60.0
+    researchDevelopmentK: 120.0
+    generalAdministrativeK: 90.0
+    opexK: 554.0
+    ebitdaK: -484.0
+    fundingInflowK: 0.0
+    capexK: 0.0
+    cashEopK: 164.3
+  y3:
+    revenueK: 125.0
+    cogsK: 37.5
+    grossProfitK: 87.5
+    salaryK: 300.0
+    directLaborK: 20.0
+    salesMarketingK: 60.0
+    researchDevelopmentK: 100.0
+    generalAdministrativeK: 90.0
+    opexK: 530.0
+    ebitdaK: -442.5
+    fundingInflowK: 1000.0
+    capexK: 0.0
+    cashEopK: 721.8
+unitEconomics:
+  arpuAnnualK: 25.0
+  grossMarginPct: 70.0
+  cacK: 33.9
+  monthlyChurnPct: 3.3
+  avgCustomerLifeMonths: 30.1
+  ltvK: 43.9
+  ltvCacRatio: 1.3
+  cacPaybackMonths: 23.2
+unitEconomicsMethodology:
+  assumptionRefs:
+    - A3
+    - A5
+    - A6
+    - A15
+  description: >-
+    Annual ARPU assumes one $25K campaign per paying account-year. LTV equals annual ARPU times
+    gross margin times 30.1 months divided by 12; CAC is $33.9K; payback is CAC divided by
+    monthly gross profit. These ratios are indicative only because service purchases are discrete,
+    repeat behavior is unvalidated, and CAC is estimated from planned spend.
+fundingAsk:
+  round: pre-seed
+  amountM: 1.2
+  runwayMonths: 18
+  milestone: >-
+    Fund an 18-month validation plan with a six-month cash reserve to secure at least two paid
+    pilots at $15K or more by M6, complete blinded repeatability testing across three front ends
+    and two supported profiles, deliver three controlled campaigns, document decision impact
+    and repeat-delivery cost at or below 30% of fees, and prepare the month-24 financing gate.
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 480000
+      percentage: 40
+    - bucket: GTM
+      amountUsd: 180000
+      percentage: 15
+    - bucket: "G&A"
+      amountUsd: 240000
+      percentage: 20
+    - bucket: "Buffer (6 mo)"
+      amountUsd: 300000
+      percentage: 25
+scenarios:
+  downside:
+    description: >-
+      Low demand and fee case misses the two-pilot gate, avoids the dedicated test hire and bench
+      purchase, receives no follow-on, and reaches a modeled $136K cash deficit by Y3 if founders
+      continue instead of stopping or restructuring.
+    y3RevenueK: 40.0
+    y3EbitdaK: -414.0
+    cashLowPointK: -136.0
+    keyAssumptionChanges:
+      - "Campaigns fall to 1, 2, and 2 in Y1-Y3 at a $20K fee."
+      - "The test and quality engineer remains unfilled and the $60K bench capex is avoided."
+      - "The conditional $1.0M Q1Y3 seed does not close; cash is not replenished."
+  base:
+    description: >-
+      The main case assumes the unvalidated paid-campaign ramp is achieved and a separate
+      $1.0M seed closes in M25 after the 24-month proof gates; the follow-on is not committed.
+    y3RevenueK: 125.0
+    y3EbitdaK: -442.5
+    cashLowPointK: 164.3
+    keyAssumptionChanges:
+      - "Three, four, and five paid campaigns are completed in Y1-Y3 at $25K each."
+      - "Two of the first three accounts repeat or budget a second campaign by M12."
+      - "A conditional $1.0M seed closes in Q1Y3 after five cumulative accounts and repeat-cost proof."
+  upside:
+    description: >-
+      Higher conversion, the top of the proposed fee range, and reuse that lowers direct cost
+      improve contribution, but the model remains EBITDA-negative because the validated market
+      is too small to justify rapid fixed-cost expansion.
+    y3RevenueK: 240.0
+    y3EbitdaK: -338.0
+    cashLowPointK: 185.8
+    keyAssumptionChanges:
+      - "Y2 reaches five campaigns and Y3 reaches eight campaigns at a $30K campaign fee."
+      - "Y3 gross margin reaches 75% through repeatable fixture modules."
+      - "The conditional $1.0M seed closes at the same time as base."
+sensitivity:
+  - variable: ARPU
+    downsideCase: "$20K fee per campaign"
+    baseCase: "$25K fee per campaign"
+    upsideCase: "$30K fee per campaign"
+    y3RevenueImpactK: -25.0
+    cashImpactK: -42.0
+  - variable: customer retention
+    downsideCase: "50% annual repeat rate; one fewer Y3 repeat campaign"
+    baseCase: "67% annual repeat proxy"
+    upsideCase: "80% annual repeat rate"
+    y3RevenueImpactK: -25.0
+    cashImpactK: -17.5
+  - variable: sales cycle
+    downsideCase: "Two Y3 campaigns slip beyond the forecast horizon"
+    baseCase: "Five Y3 campaigns delivered on schedule"
+    upsideCase: "One campaign is pulled forward from Q1Y4"
+    y3RevenueImpactK: -50.0
+    cashImpactK: -35.0
+  - variable: gross margin
+    downsideCase: "55% gross margin"
+    baseCase: "70% gross margin"
+    upsideCase: "75% gross margin"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -45.0
+  - variable: hiring pace
+    downsideCase: "One additional FTE starts M13, adding $200K payroll through Y3"
+    baseCase: "Three FTE from M7, then no further hires"
+    upsideCase: "Test and quality hire is deferred three months, saving about $25K"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -200.0
+  - variable: follow-on financing
+    downsideCase: "No $1.0M seed closes in M25"
+    baseCase: "$1.0M seed closes in M25 after proof gates"
+    upsideCase: "$1.0M seed closes in Q4Y2"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -1000.0
+modelDiagram:
+  title: unit economics and cash flow
+  mermaid: |
+    flowchart LR
+      Accounts["Qualified UK/EU device accounts"] --> Campaigns["Paid load-replay campaigns"]
+      Campaigns --> Reports["Accepted engineering reports"]
+      Reports --> Revenue["Campaign count x $25K fee"]
+      Revenue --> GrossProfit["70% target gross margin"]
+      GrossProfit --> Cash["Cash after payroll, opex, capex, and funding"]
+modelSanity:
+  - checkName: Revenue engine
+    finding: "Base revenue is 3, 4, and 5 accepted $25K campaigns in Y1-Y3, with no license revenue."
+  - checkName: Must go right
+    finding: "At least two pilots must close by M6 and repeat delivery must stay within the 30% direct-cost ceiling to support five paid accounts by M24."
+  - checkName: Model breaks if
+    finding: "If the downside ramp of 1, 2, and 2 campaigns at $20K prevents the conditional $1M seed, modeled Y3 cash is negative $136K."
+  - checkName: Next-round proof
+    finding: "The M25 seed should proceed only after five paying accounts, two pilot repeats, blinded repeatability evidence, and direct delivery cost at or below 30% are documented."
+sanityChecks:
+  ruleOf40: "Y3 revenue growth 25% + EBITDA margin -354% = -329%; direction is materially below a healthy recurring-growth profile."
+  burnMultiple: "19.4x proxy: $484K Y2 EBITDA burn divided by $25K incremental campaign revenue; one-off service revenue makes SaaS burn multiples a poor fit."
+  revenuePerFte: "Y3 revenue is $41.7K per FTE ($125K divided by 3 FTE), consistent with a subscale validation-stage service rather than a proven platform."
+  flags:
+    - "No paid demand, campaign quote, or willingness-to-pay is established; all modeled orders and the $25K fee are hypotheses."
+    - "The $0.5M UK/EU SAM scenario, eligible account count, one-campaign-per-year cadence, and repeat rate are unverified."
+    - "70% gross margin requires direct delivery cost to fall to $7.5K per campaign; engineer hours and fixture reuse have not been demonstrated."
+    - "Indicative LTV/CAC is only 1.3x and CAC payback is 23.2 months; the lumpy project model may make both lifetime and payback overstated."
+    - "EBITDA remains negative in all three years, and Y3 revenue growth plus margin produces a negative rule-of-40 direction."
+    - "Base cash reaches a $164.3K trough before an uncommitted $1.0M M25 seed; without that financing, base Y3 ending cash is negative $278.2K."
+    - "No instrument-license or calibration revenue is included; the business remains a narrow, labor-intensive service unless repeat demand is proven."
