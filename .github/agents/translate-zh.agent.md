@@ -31,6 +31,7 @@ Run this pipeline for the requested file. The revision pass is **mandatory** —
 - Keep the same top-level field structure as the English files.
 - Translate all narrative text into Simplified Chinese. No English clauses, sentences, or stray words may remain inside narrative values.
 - Do **not** alter numbers, units, dates, URLs, identifiers, scores, filenames, or enum keys (see `Identifiers and enums to preserve` below).
+- Copy `deduplication.duplicateClusters[].removedUrls[]` verbatim, without Chinese labels, notes, or fullwidth substitutions. Translate the sibling `reason` instead.
 - Preserve array/object ordering where possible.
 - If a source field is null/empty, keep it null/empty.
 - Do not fetch web content and do not invent facts.

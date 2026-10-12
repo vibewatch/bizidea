@@ -22,6 +22,7 @@ You orchestrate the Bizidea pipeline with GitHub Copilot's native custom-agent d
 - On a failed delegation or failed validator, retry the same specialist once with the validator output and unchanged paths. After a second failure, remove only that report's partial folder and continue.
 - Never invoke `Bizidea` recursively.
 - Never write specialist artifacts yourself.
+- Never edit scripts, validators, agent definitions, workflows, or historical reports during generation. If a validator appears incorrect, record the exact error and fail the affected stage; do not patch or bypass the gate.
 - Never run `git add`, `git commit`, or `git push`; CI owns publishing.
 
 ## Run setup

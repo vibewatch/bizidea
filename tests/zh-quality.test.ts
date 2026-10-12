@@ -98,6 +98,48 @@ describe('advanced Chinese translation quality checks', () => {
     expect(result.stdout).toContain('R6-value-drift');
   });
 
+  it('preserves deduplicated URLs in normal and strict validation', () => {
+    const folder = makeFolder('这道切口帮运营团队把审核周期从 10 天压到 2 天。');
+    const research = `
+slug: review-cycle-wedge
+deduplication:
+  duplicateClusters:
+    - removedUrls:
+        - https://example.com/news/raises-9m-to-scale-high-precision-membrane-solution
+`;
+    writeFileSync(join(folder, 'research.yaml'), research);
+    writeFileSync(join(folder, 'research.zh.yaml'), research);
+
+    expect(run(folder).status).toBe(0);
+    expect(runStrictPair(folder, 'research').status).toBe(0);
+  });
+
+  it.each([
+    '已移除：https://example.com/news/raises-9m-to-scale-high-precision-membrane-solution',
+    'https://example.com/news/raises-9m-to-scale-high-precision-membrane-solution（同题报道）',
+    'https://example.com/news/raises-9ｍ-to-scale-high-precision-membrane-solution',
+    'https://example.com/news/a-different-source',
+  ])('rejects modified deduplicated URL %s', (translatedUrl) => {
+    const folder = makeFolder('这道切口帮运营团队把审核周期从 10 天压到 2 天。');
+    const research = (url: string) => `
+slug: review-cycle-wedge
+deduplication:
+  duplicateClusters:
+    - removedUrls:
+        - ${url}
+`;
+    writeFileSync(join(folder, 'research.yaml'), research(
+      'https://example.com/news/raises-9m-to-scale-high-precision-membrane-solution',
+    ));
+    writeFileSync(join(folder, 'research.zh.yaml'), research(translatedUrl));
+
+    for (const result of [run(folder), runStrictPair(folder, 'research')]) {
+      expect(result.status).toBe(1);
+      expect(result.stdout).toContain('R6-value-drift');
+      expect(result.stdout).toContain('deduplication.duplicateClusters[0].removedUrls[0]');
+    }
+  });
+
   it('rejects English month shorthand inside Chinese prose', () => {
     const result = run(makeFolder('这道切口帮运营团队把审核周期从 10m 压到 2m。'));
     expect(result.status).toBe(1);

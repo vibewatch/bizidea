@@ -137,6 +137,8 @@ In CI, GitHub Actions schedules the workflow once daily at `07:00 UTC`. Schedule
 
 The Action separates AI generation from publishing. The read-only `generate` job records stage attempts in an atomic run manifest, validates the complete repository, and uploads an immutable bundle. The write-enabled `publish` job downloads and revalidates that bundle before committing. A failed publish job can therefore be rerun without repeating any model calls. Generation and final manifests are retained as workflow artifacts for 30 days.
 
+The CLI's background-task wait limit is set to 3,600 seconds so delegated triage and research can finish beyond its 600-second default; the generate job retains its 330-minute overall deadline. Generation agents must not edit validation code or historical reports. All URL fields, including deduplication `removedUrls`, remain byte-for-byte identical in Chinese artifacts; explanatory notes belong in narrative fields such as `reason`.
+
 Manual triggers:
 
 - **GitHub UI**: Actions → *Bizidea — triage, generate, and publish reports* → *Run workflow*. Inputs: `cap` (1–5), `timeWindow` (e.g. `yesterday`, `last 7 days`), and optional `topic`. Chinese localization uses separate GPT-6 Luna draft and source-anchored editorial agents. Strict validators, a saved valid draft, and deterministic rollback provide the quality safety net.
@@ -144,7 +146,8 @@ Manual triggers:
 
   ```bash
   npm install -g @github/copilot
-  copilot --yolo --autopilot --max-autopilot-continues 30 \
+  COPILOT_TASK_WAIT_TIMEOUT_SECONDS=3600 \
+    copilot --yolo --autopilot --max-autopilot-continues 30 \
     --reasoning-effort xhigh --agent Bizidea \
     -p "Scan yesterday's startup news and generate up to 5 non-duplicate startup reports."
   ```

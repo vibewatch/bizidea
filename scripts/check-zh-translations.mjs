@@ -228,6 +228,7 @@ const VERBATIM_PATH_PATTERNS = [
   /(^|\.)fundingAsk\.round$/,
   /(^|\.)primaryCompanies\[\d+\]$/,
   /(^|\.)topSourceUrls\[\d+\]$/,
+  /(^|\.)removedUrls\[\d+\]$/,
   /(^|\.)eventKeys\[\d+\]$/,
   /(^|\.)archetypesConsidered\[\d+\]$/,
   /(^|\.)nearestHistoricalIdeas\[\d+\]\.(slug|similarity)$/,

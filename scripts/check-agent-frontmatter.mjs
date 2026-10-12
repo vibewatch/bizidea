@@ -15,6 +15,7 @@ const ORCHESTRATOR_FILE = join(AGENTS_DIR, 'bizidea.agent.md');
 const WORKFLOW_FILE = join(ROOT, '.github', 'workflows', 'bizidea.yml');
 const EXPECTED_MODEL = 'GPT-6 Luna (copilot)';
 const MIN_AUTOPILOT_CONTINUES = 30;
+const MIN_TASK_WAIT_TIMEOUT_SECONDS = 3600;
 
 function readFrontmatter(filePath) {
   const raw = readFileSync(filePath, 'utf8');
@@ -73,6 +74,18 @@ if (/handoff-protocol|HANDOFF|status:\s*(ok|failed)/.test(orchestratorRaw)) {
 }
 
 const workflowRaw = readFileSync(WORKFLOW_FILE, 'utf8');
+const workflow = yaml.load(workflowRaw);
+const agentStep = workflow.jobs.generate.steps.find((step) => step.name === 'Run Bizidea agent');
+const taskWaitTimeout = Number(agentStep?.env?.COPILOT_TASK_WAIT_TIMEOUT_SECONDS);
+if (!Number.isInteger(taskWaitTimeout) || taskWaitTimeout < MIN_TASK_WAIT_TIMEOUT_SECONDS) {
+  errors.push(
+    `${WORKFLOW_FILE}: Run Bizidea agent requires COPILOT_TASK_WAIT_TIMEOUT_SECONDS ` +
+      `${MIN_TASK_WAIT_TIMEOUT_SECONDS} or higher because delegated research can exceed the CLI's 600-second default`,
+  );
+}
+if (taskWaitTimeout >= workflow.jobs.generate['timeout-minutes'] * 60) {
+  errors.push(`${WORKFLOW_FILE}: background task wait timeout must remain below the generate job timeout`);
+}
 const autopilotContinues = workflowRaw.match(/--max-autopilot-continues\s+(\d+)/);
 if (!autopilotContinues || Number(autopilotContinues[1]) < MIN_AUTOPILOT_CONTINUES) {
   errors.push(
@@ -105,5 +118,5 @@ if (errors.length > 0) {
 
 console.log(
   `[check-agent-frontmatter] ok: orchestrator and ${found.size} specialists use ${EXPECTED_MODEL}; ` +
-    `workflow allows ${autopilotContinues[1]} autopilot continuations`,
+    `workflow allows ${autopilotContinues[1]} autopilot continuations and ${taskWaitTimeout}s background task waits`,
 );
