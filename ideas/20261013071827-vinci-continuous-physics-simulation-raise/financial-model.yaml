@@ -1,0 +1,574 @@
+slug: physics-change-test-gate
+date: "2026-10-13"
+currency: USD
+modelStartMonth: "2026-11"
+assumptions:
+  - id: A1
+    name: Model period
+    value: "M1 is 2026-11; the 36-month forecast ends in 2029-10."
+    unit: calendar
+    source: "business-plan.yaml date; model timing is an operator planning convention."
+  - id: A2
+    name: Pre-seed opening cash
+    value: "$2,000,000 funded before M1; lower end of the business plan's $2–4M pre-seed target range; no follow-on proceeds are included."
+    unit: USD
+    source: "business-plan.yaml.fundingAsk.targetFundingRangeUsd and round; this is a planning ask, not a costed or committed raise."
+  - id: A3
+    name: Annual recurring revenue per program
+    value: "$25,000 per year for one hardware program and one solver connection; midpoint of the BP's unvalidated $15,000–$30,000 pricing hypothesis."
+    unit: USD/program-year
+    source: "business-plan.yaml.gtm.pricing and research.yaml.market; research explicitly reports no quoted price or verified willingness to pay."
+  - id: A4
+    name: Base gross paid-program starts
+    value: "M1–M11=0; M12=1; M15=1; M18=1; M21=1; M24=1; M26=1; M28=1; M30=1; M32=1; M34=1; M36=1; 11 gross starts total."
+    unit: "program subscriptions by model month"
+    source: "business-plan.yaml milestones and gtm.funnelTargets; a conservative, unvalidated conversion ramp, not current traction."
+  - id: A5
+    name: Monthly paid-program churn
+    value: "1.0% monthly expected logo churn; customer counts are expected program equivalents and can be fractional."
+    unit: "% monthly"
+    source: "Startup-finance planning heuristic for annual program subscriptions; no churn evidence exists in the BP or research."
+  - id: A6
+    name: Subscription revenue timing
+    value: "Monthly revenueK = ((prior-month EOP customers × (1 − 1.0% churn)) + current-month EOP customers) ÷ 2 × $25K ÷ 12; new starts are treated as mid-month. Paid pilot and setup fees are excluded."
+    unit: formula
+    source: "business-plan.yaml.businessModel and gtm.pricing; recurring program subscription only, using assumptions A3–A5."
+  - id: A7
+    name: Direct cost and gross margin
+    value: "COGS equals 30% of subscription revenue, yielding a 70% gross margin before operating expenses."
+    unit: "% revenue"
+    source: "business-plan.yaml.businessModel.targetGrossMarginPct; 30% direct support, hosting, and outsourced validation costs are a planning estimate."
+  - id: A8
+    name: Loaded annual cash compensation
+    value: "Founder/CEO $120K; founding engineer $168K; founding thermal simulation engineer $156K; solutions engineer $144K; commercial lead $150K per full-time role."
+    unit: "USD/FTE-year"
+    source: "Startup-finance heuristic set for this model; neither BP nor research provides compensation data. Figures are fully loaded cash payroll, not equity."
+  - id: A9
+    name: Hiring sequence and steady-state team
+    value: "Founder/CEO, founding engineer, and founding thermal simulation engineer start M1; solutions engineer starts M5 after stack/design-partner selection; commercial lead starts M19 after two annual-program starts; no additional hires through M36 pending repeatable onboarding."
+    unit: "FTE and hire month"
+    source: "business-plan.yaml.team and strategicChoices.sequencingRationale; start dates are conservative operating assumptions and preserve the one-stack, thermal-only constraint."
+  - id: A10
+    name: Non-payroll sales and marketing
+    value: "Monthly spend: $3K in M1–M3; $5K in M4–M12; $7K in M13–M24; $9K in M25–M36."
+    unit: "USD thousands/month"
+    source: "Startup-finance planning heuristic for founder-led technical selling, limited travel, and later commercial activity; channels and conversion remain unproven in the BP/research."
+  - id: A11
+    name: Non-payroll research and development
+    value: "Monthly spend: $15K in M1–M12; $16K in M13–M24; $19K in M25–M36."
+    unit: "USD thousands/month"
+    source: "Startup-finance planning heuristic for one customer-controlled connector, test infrastructure, and external thermal validation; scope follows business-plan.yaml.product and operations."
+  - id: A12
+    name: Non-payroll general and administrative
+    value: "Monthly spend: $8K in M1–M12; $9K in M13–M24; $10K in M25–M36."
+    unit: "USD thousands/month"
+    source: "Startup-finance planning heuristic for legal, security, export screening, insurance, and accounting; needs bottom-up validation before fundraising."
+  - id: A13
+    name: Cash flow mechanics
+    value: "M1 opening cash is $2,000K; monthly ending cash equals prior cash plus EBITDA. No capex, tax, debt service, working-capital movement, or financing after the pre-seed is modeled."
+    unit: formula
+    source: "business-plan.yaml.fundingAsk; cash is approximated by EBITDA because no balance-sheet or cash-conversion data was provided."
+  - id: A14
+    name: Funding ask and allocation
+    value: "$2.0M pre-seed for 18 months: a 12-month evidence milestone plus six months of buffer; allocate $1.0M Engineering, $300K GTM, $200K G&A, and $500K six-month buffer."
+    unit: USD
+    source: "business-plan.yaml.fundingAsk and milestones; amount is the lower edge of the $2–4M planning band and allocations are modeler estimates."
+  - id: A15
+    name: CAC and LTV formulas
+    value: "Y3 CAC = ($108K non-payroll S&M + $150K commercial-lead payroll + 25% of $120K CEO payroll) ÷ 6 Y3 gross starts = $48K; average life = 1 ÷ 1.0% monthly churn = 100 months; LTV = $25K annual ARPU × 70% gross margin × 100 ÷ 12."
+    unit: formula
+    source: "Derived from assumptions A3, A5, A7–A10 and A4; founder sales allocation is an explicit planning heuristic and CAC is not observed."
+  - id: A16
+    name: Downside scenario
+    value: "Annual program price $15K; monthly churn 2%; starts only in M12, M20, M23, M30, and M36; all fixed costs and hiring stay at base."
+    unit: "scenario inputs"
+    source: "business-plan.yaml.gtm.pricing lower bound, kill criteria, and research.yaml.researchCoverage.coverageGap; downside conversion and churn are stress assumptions."
+  - id: A17
+    name: Upside scenario
+    value: "Annual program price $30K; monthly churn 0.5%; the same 11 starts arrive one month earlier than base; gross margin is 75% if packs become more reusable."
+    unit: "scenario inputs"
+    source: "business-plan.yaml.gtm.pricing and research.yaml.market $30K sizing case; earlier conversion, lower churn, and 75% margin are unvalidated upside assumptions."
+  - id: A18
+    name: Sensitivity convention
+    value: >-
+      One-variable cases versus base: ARPU $15K/$25K/$30K; paid starts 5/11/11 with the monthly schedules shown;
+      churn 2.0%/1.0%/0.5%; gross margin 55%/70%/75%; CAC $60K/$48K/$40K at a fixed GTM budget; and
+      commercial-lead hire M15/M19/M25. Revenue impact is Y3 revenue change and cash impact is M36 ending-cash
+      change versus base; M36 is the cash low point in all cases.
+    unit: formula
+    source: "Price bounds from business-plan.yaml.gtm.pricing; remaining downside/upside shocks are labeled startup-finance operating heuristics applied to assumptions A3–A13."
+  - id: A19
+    name: Preserved operating constraints
+    value: "One qualified CAD/solver stack, thermal-only, customer-controlled licensed solver execution, shadow mode and fail-closed escalation before customer approval; no broad physics or controlled-technology expansion is assumed."
+    unit: operating constraint
+    source: "business-plan.yaml.strategicChoices, product, operations, and risks; research.yaml.regulatoryTechnicalConstraints."
+  - id: A20
+    name: Directional operating checks
+    value: "Rule of 40 = Y3 revenue growth plus Y3 EBITDA margin; burn multiple = Y3 operating cash burn divided by net new ARR; revenue per FTE = Y3 revenue divided by 5 average FTE."
+    unit: formula
+    source: "Derived from the forecast in this file using assumptions A3–A13 and A15; no mature-stage SaaS benchmark is imposed."
+headcount:
+  - role: "Founder/CEO"
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: "Founding eng"
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: "Founding thermal simulation engineer"
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: "Solutions engineer"
+    q1y1: 0
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: "Commercial lead"
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 4
+  q3y1: 4
+  q4y1: 4
+  q4y2: 5
+  q4y3: 5
+headcountAnnualizedPayrollK:
+  q1y1: 444.0
+  q2y1: 588.0
+  q3y1: 588.0
+  q4y1: 588.0
+  q4y2: 738.0
+  q4y3: 738.0
+y1Monthly:
+  - month: M1
+    customersEop: 0.0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 37.0
+    salesMarketingK: 3.0
+    researchDevelopmentK: 15.0
+    generalAdministrativeK: 8.0
+    opexK: 63.0
+    ebitdaK: -63.0
+    cashEopK: 1937.0
+  - month: M2
+    customersEop: 0.0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 37.0
+    salesMarketingK: 3.0
+    researchDevelopmentK: 15.0
+    generalAdministrativeK: 8.0
+    opexK: 63.0
+    ebitdaK: -63.0
+    cashEopK: 1874.0
+  - month: M3
+    customersEop: 0.0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 37.0
+    salesMarketingK: 3.0
+    researchDevelopmentK: 15.0
+    generalAdministrativeK: 8.0
+    opexK: 63.0
+    ebitdaK: -63.0
+    cashEopK: 1811.0
+  - month: M4
+    customersEop: 0.0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 37.0
+    salesMarketingK: 5.0
+    researchDevelopmentK: 15.0
+    generalAdministrativeK: 8.0
+    opexK: 65.0
+    ebitdaK: -65.0
+    cashEopK: 1746.0
+  - month: M5
+    customersEop: 0.0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 49.0
+    salesMarketingK: 5.0
+    researchDevelopmentK: 15.0
+    generalAdministrativeK: 8.0
+    opexK: 77.0
+    ebitdaK: -77.0
+    cashEopK: 1669.0
+  - month: M6
+    customersEop: 0.0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 49.0
+    salesMarketingK: 5.0
+    researchDevelopmentK: 15.0
+    generalAdministrativeK: 8.0
+    opexK: 77.0
+    ebitdaK: -77.0
+    cashEopK: 1592.0
+  - month: M7
+    customersEop: 0.0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 49.0
+    salesMarketingK: 5.0
+    researchDevelopmentK: 15.0
+    generalAdministrativeK: 8.0
+    opexK: 77.0
+    ebitdaK: -77.0
+    cashEopK: 1515.0
+  - month: M8
+    customersEop: 0.0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 49.0
+    salesMarketingK: 5.0
+    researchDevelopmentK: 15.0
+    generalAdministrativeK: 8.0
+    opexK: 77.0
+    ebitdaK: -77.0
+    cashEopK: 1438.0
+  - month: M9
+    customersEop: 0.0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 49.0
+    salesMarketingK: 5.0
+    researchDevelopmentK: 15.0
+    generalAdministrativeK: 8.0
+    opexK: 77.0
+    ebitdaK: -77.0
+    cashEopK: 1361.0
+  - month: M10
+    customersEop: 0.0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 49.0
+    salesMarketingK: 5.0
+    researchDevelopmentK: 15.0
+    generalAdministrativeK: 8.0
+    opexK: 77.0
+    ebitdaK: -77.0
+    cashEopK: 1284.0
+  - month: M11
+    customersEop: 0.0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 49.0
+    salesMarketingK: 5.0
+    researchDevelopmentK: 15.0
+    generalAdministrativeK: 8.0
+    opexK: 77.0
+    ebitdaK: -77.0
+    cashEopK: 1207.0
+  - month: M12
+    customersEop: 1.0
+    newCustomers: 1
+    revenueK: 1.04
+    cogsK: 0.31
+    grossProfitK: 0.73
+    salaryK: 49.0
+    salesMarketingK: 5.0
+    researchDevelopmentK: 15.0
+    generalAdministrativeK: 8.0
+    opexK: 77.0
+    ebitdaK: -76.27
+    cashEopK: 1130.73
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 1.97
+    newCustomers: 1
+    revenueK: 7.16
+    cogsK: 2.15
+    grossProfitK: 5.01
+    salaryK: 147.0
+    salesMarketingK: 21.0
+    researchDevelopmentK: 48.0
+    generalAdministrativeK: 27.0
+    opexK: 243.0
+    ebitdaK: -237.99
+    cashEopK: 892.74
+  - quarter: Q2Y2
+    customersEop: 2.91
+    newCustomers: 1
+    revenueK: 13.1
+    cogsK: 3.94
+    grossProfitK: 9.16
+    salaryK: 147.0
+    salesMarketingK: 21.0
+    researchDevelopmentK: 48.0
+    generalAdministrativeK: 27.0
+    opexK: 243.0
+    ebitdaK: -233.84
+    cashEopK: 658.9
+  - quarter: Q3Y2
+    customersEop: 3.83
+    newCustomers: 1
+    revenueK: 18.89
+    cogsK: 5.67
+    grossProfitK: 13.22
+    salaryK: 184.5
+    salesMarketingK: 21.0
+    researchDevelopmentK: 48.0
+    generalAdministrativeK: 27.0
+    opexK: 280.5
+    ebitdaK: -267.28
+    cashEopK: 391.62
+  - quarter: Q4Y2
+    customersEop: 4.71
+    newCustomers: 1
+    revenueK: 24.47
+    cogsK: 7.34
+    grossProfitK: 17.13
+    salaryK: 184.5
+    salesMarketingK: 21.0
+    researchDevelopmentK: 48.0
+    generalAdministrativeK: 27.0
+    opexK: 280.5
+    ebitdaK: -263.37
+    cashEopK: 128.25
+  - quarter: Q1Y3
+    customersEop: 5.56
+    newCustomers: 1
+    revenueK: 31.97
+    cogsK: 9.6
+    grossProfitK: 22.37
+    salaryK: 184.5
+    salesMarketingK: 27.0
+    researchDevelopmentK: 57.0
+    generalAdministrativeK: 30.0
+    opexK: 298.5
+    ebitdaK: -276.13
+    cashEopK: -147.88
+  - quarter: Q2Y3
+    customersEop: 7.38
+    newCustomers: 2
+    revenueK: 40.26
+    cogsK: 12.08
+    grossProfitK: 28.18
+    salaryK: 184.5
+    salesMarketingK: 27.0
+    researchDevelopmentK: 57.0
+    generalAdministrativeK: 30.0
+    opexK: 298.5
+    ebitdaK: -270.32
+    cashEopK: -418.2
+  - quarter: Q3Y3
+    customersEop: 8.15
+    newCustomers: 1
+    revenueK: 48.28
+    cogsK: 14.48
+    grossProfitK: 33.8
+    salaryK: 184.5
+    salesMarketingK: 27.0
+    researchDevelopmentK: 57.0
+    generalAdministrativeK: 30.0
+    opexK: 298.5
+    ebitdaK: -264.7
+    cashEopK: -682.9
+  - quarter: Q4Y3
+    customersEop: 9.89
+    newCustomers: 2
+    revenueK: 56.1
+    cogsK: 16.84
+    grossProfitK: 39.26
+    salaryK: 184.5
+    salesMarketingK: 27.0
+    researchDevelopmentK: 57.0
+    generalAdministrativeK: 30.0
+    opexK: 298.5
+    ebitdaK: -259.24
+    cashEopK: -942.14
+totals:
+  y1:
+    revenueK: 1.04
+    cogsK: 0.31
+    grossProfitK: 0.73
+    salaryK: 540.0
+    salesMarketingK: 54.0
+    researchDevelopmentK: 180.0
+    generalAdministrativeK: 96.0
+    opexK: 870.0
+    ebitdaK: -869.27
+    cashEopK: 1130.73
+  y2:
+    revenueK: 63.62
+    cogsK: 19.1
+    grossProfitK: 44.52
+    salaryK: 663.0
+    salesMarketingK: 84.0
+    researchDevelopmentK: 192.0
+    generalAdministrativeK: 108.0
+    opexK: 1047.0
+    ebitdaK: -1002.48
+    cashEopK: 128.25
+  y3:
+    revenueK: 176.61
+    cogsK: 53.0
+    grossProfitK: 123.61
+    salaryK: 738.0
+    salesMarketingK: 108.0
+    researchDevelopmentK: 228.0
+    generalAdministrativeK: 120.0
+    opexK: 1194.0
+    ebitdaK: -1070.39
+    cashEopK: -942.14
+unitEconomics:
+  arpuAnnualK: 25.0
+  grossMarginPct: 70.0
+  cacK: 48.0
+  monthlyChurnPct: 1.0
+  avgCustomerLifeMonths: 100.0
+  ltvK: 145.83
+  ltvCacRatio: 3.04
+  cacPaybackMonths: 32.91
+fundingAsk:
+  round: pre-seed
+  amountM: 2.0
+  runwayMonths: 18
+  milestone: "Reach the month-12 proof milestone—one customer-approved 100-revision shadow replay, one secure customer-controlled runner, repeat-use pilot evidence, paid conversion proposal, and pack effort measured—with six months of buffer through month 18."
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 1000000
+      percentage: 50
+    - bucket: GTM
+      amountUsd: 300000
+      percentage: 15
+    - bucket: "G&A"
+      amountUsd: 200000
+      percentage: 10
+    - bucket: "Buffer (6 mo)"
+      amountUsd: 500000
+      percentage: 25
+scenarios:
+  downside:
+    description: "The $15K annual price floor, slower paid conversion, and 2% monthly churn expose the funding risk while preserving base hiring and operating costs."
+    y3RevenueK: 43.69
+    y3EbitdaK: -1163.42
+    cashLowPointK: -1065.71
+    keyAssumptionChanges:
+      - "Annual subscription price falls to $15K."
+      - "Gross paid starts fall from 11 to 5 across the 36-month horizon."
+      - "Monthly churn rises from 1% to 2%; hiring and fixed opex remain at base."
+  base:
+    description: "Base case uses the $25K annual program subscription, 11 staged starts, 1% monthly churn, 70% gross margin, and only conditional hires."
+    y3RevenueK: 176.61
+    y3EbitdaK: -1070.39
+    cashLowPointK: -942.14
+    keyAssumptionChanges:
+      - "No scenario adjustment; reconciles to totals.y3."
+  upside:
+    description: "The upper-end $30K price, earlier starts, 0.5% monthly churn, and more reusable packs lift revenue but do not make the business profitable by Y3."
+    y3RevenueK: 235.75
+    y3EbitdaK: -1017.19
+    cashLowPointK: -865.59
+    keyAssumptionChanges:
+      - "Annual subscription price rises to $30K."
+      - "The same 11 starts arrive one month earlier."
+      - "Monthly churn falls to 0.5% and gross margin reaches 75%."
+sensitivity:
+  - variable: ARPU
+    downsideCase: "$15K annual program price"
+    baseCase: "$25K annual program price"
+    upsideCase: "$30K annual program price"
+    y3RevenueImpactK: -70.64
+    cashImpactK: -67.53
+  - variable: "Paid starts / sales cycle"
+    downsideCase: "5 gross starts; M12, M20, M23, M30, M36"
+    baseCase: "11 gross starts; M12, M15, M18, M21, M24, M26, M28, M30, M32, M34, M36"
+    upsideCase: "Same 11 starts, each one month earlier"
+    y3RevenueImpactK: -95.98
+    cashImpactK: -86.71
+  - variable: "Monthly churn"
+    downsideCase: "2.0% monthly"
+    baseCase: "1.0% monthly"
+    upsideCase: "0.5% monthly"
+    y3RevenueImpactK: -15.12
+    cashImpactK: -12.58
+  - variable: "Gross margin / direct pack cost"
+    downsideCase: "55% gross margin"
+    baseCase: "70% gross margin"
+    upsideCase: "75% gross margin"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -36.18
+  - variable: CAC
+    downsideCase: "$60K CAC; Y3 gross starts scale to 4.8 at fixed GTM budget"
+    baseCase: "$48K CAC; 6 Y3 gross starts"
+    upsideCase: "$40K CAC; Y3 gross starts scale to 7.2 at fixed GTM budget"
+    y3RevenueImpactK: -13.25
+    cashImpactK: -9.27
+  - variable: "Hiring pace"
+    downsideCase: "Commercial lead starts M15, four months earlier than base"
+    baseCase: "Commercial lead starts M19 after two paid program starts"
+    upsideCase: "Commercial lead is deferred to M25; founders continue selling"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -50.0
+modelDiagram:
+  title: "Unit economics flow"
+  mermaid: |
+    flowchart LR
+      Revision["Approved CAD revision"] --> Selector["Fail-closed change-to-test map"]
+      Selector --> Runner["Customer-licensed thermal solver"]
+      Runner --> Evidence["Approved test-pack result"]
+      Evidence --> Subscription["Program subscription"]
+      Subscription --> GrossProfit["Gross profit after direct support"]
+      GrossProfit --> Cash["Cash after operating burn"]
+modelSanity:
+  - checkName: Revenue engine
+    finding: "The base case monetizes annual subscriptions per validated program at $25K and reaches 9.89 expected paying programs at Y3 close for $176.61K of recognized Y3 revenue."
+  - checkName: Must go right
+    finding: "The model depends on one customer-controlled solver path, a customer-approved 100-revision shadow replay with no missed critical regression, and at least two paid program starts before commercial hiring."
+  - checkName: Model breaks if
+    finding: "If only five starts arrive at the $15K price floor with 2% monthly churn, downside Y3 revenue falls to $43.69K and the no-follow-on cash low point reaches -$1,065.71K."
+  - checkName: Next-round proof
+    finding: "The $2M pre-seed funds a month-12 evidence milestone plus six months of buffer, but the base case turns cash-negative in M26 so a follow-on or cost reset is needed before the buffer is consumed."
+sanityChecks:
+  ruleOf40: "Y3 revenue growth 178% plus EBITDA margin -606% equals a directional Rule-of-40 score of -428%; the business is pre-scale and far below a healthy operating profile."
+  burnMultiple: "8.3x Y3 operating cash burn divided by net new ARR; poor early efficiency, based on a very small subscription base."
+  revenuePerFte: "Y3 revenue $176.61K divided by 5.0 average FTE = $35.3K per FTE; pre-scale and not a mature SaaS benchmark."
+  flags:
+    - "The $25K base subscription price is only a midpoint of an unvalidated $15K–$30K hypothesis; no customer interview, signed pilot, buyer budget, or observed conversion rate supports the forecast."
+    - "Cash falls below zero in M26 and reaches -$942.14K in M36 without a follow-on; a new raise or scope and hiring cuts are needed before the six-month reserve is exhausted."
+    - "The 70% gross margin assumes pack delivery becomes repeatable despite the BP's explicit 80-hour setup and 8-hour monthly maintenance thresholds; missed thresholds would make the service burden and direct costs higher."
+    - "The selective test gate remains conditional on 100-revision customer-approved shadow validation, zero missed critical regressions, and fail-closed full-run or human escalation; no blocking workflow is assumed before approval."
+    - "Cash uses EBITDA as a proxy and omits taxes, capex, working capital, financing after the pre-seed, and pilot/setup revenue; actual liquidity and total capital need may differ materially."
