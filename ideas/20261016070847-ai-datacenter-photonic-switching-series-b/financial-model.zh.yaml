@@ -1,0 +1,905 @@
+slug: "verified-accelerator-hours"
+date: "2026-10-16"
+currency: USD
+modelStartMonth: "2026-11"
+assumptions:
+  - id: A1
+    name: 预测起始时间
+    value: "2026-11"
+    unit: YYYY-MM
+    source: "管理层规划口径：预测从商业计划日期后的首月开始；模型不含历史期间。"
+  - id: A2
+    name: 期初客户与业务进展
+    value: "0"
+    unit: customers
+    source: "[business-plan.yaml executiveSummary and investorMemo; research.yaml coverageGap] 目前没有宣称已有付费客户、合同、客户级节省结果或客户牵引力。"
+  - id: A3
+    name: 固定调试项目费用
+    value: "300"
+    unit: USD K per campaign
+    source: "[business-plan.yaml gtm.pricing and research.yaml market.bottomUpSizingDrivers] 规划值取自假设性的固定费用等价项目区间 $250K-$500K；不是公开定价、正式报价或经过验证的付费意愿。"
+  - id: A4
+    name: 项目交付周期
+    value: "4"
+    unit: months
+    source: "[business-plan.yaml investorMemo.firstCustomer.initialContract] 采用规划区间 8-16 周的上限；合同期限尚未验证。"
+  - id: A5
+    name: 固定费用收入确认
+    value: "75"
+    unit: USD K / 每个活跃项目月
+    source: "按 A3/A4 逐月平均确认收入；直线法确认收入只是规划口径，并非客户实际账单安排。"
+  - id: A6
+    name: 基准付费项目排期
+    value: "6 个项目：Y1 M9；Y2 M13、M19；Y3 M25、M29、M33"
+    unit: campaigns by start month
+    source: "[business-plan.yaml milestones, gtm.funnelTargets, market.som; research.yaml market.som] 预测目标依据第 9 个月的试点关口，以及近期 SOM 估算中的 2-3 个客户；不代表销售管线或已签项目，也不构成转化率主张。"
+  - id: A7
+    name: 模型假设中的首次签约客户
+    value: "共 3 个：M9、M13、M29"
+    unit: new logos
+    source: "[business-plan.yaml milestones and sequencingRationale; research.yaml market.som] 规划目标是在 Y3 时覆盖三个不同客户账户，达到近期 SOM 估算上限；不代表任何客户账户已落实。"
+  - id: A8
+    name: 复购项目签约
+    value: "3 个复购项目"
+    unit: campaigns
+    source: "[business-plan.yaml businessModel.expansionLevers and milestones] 假设验证成功后会有复购或第二个集群项目；复购需求尚未验证，也不能算作客户牵引力。"
+  - id: A9
+    name: 基准结果挂钩费
+    value: "0"
+    unit: USD K per campaign
+    source: "[business-plan.yaml operatingAssumptions and gtm.pricing; research.yaml coverageGap] 在买方接受结果挂钩计费公式、且收益得到独立验证之前，基准收入不计入这项费用。"
+  - id: A10
+    name: 示例性上行情景结果挂钩费上限
+    value: "30"
+    unit: USD K per verified campaign
+    source: "仅用于管理层敏感性分析：按 A3 的 10% 计费，设有上限，并以买方认可的净收益为前提；没有公开费率，也不假设已签费用、转化率或节省金额。"
+  - id: A11
+    name: 目标毛利率
+    value: "60"
+    unit: percent
+    source: "[business-plan.yaml businessModel.targetGrossMarginPct] 这是计划目标，不是实测交付毛利率。"
+  - id: A12
+    name: 交付薪酬分摊
+    value: "20"
+    unit: percent of revenue
+    source: "内部初创公司财务规划经验值，按商业计划中的 60% 目标毛利率校准；这是模型中的交付薪酬分摊，不是工时记录证据。"
+  - id: A13
+    name: 其他项目直接成本
+    value: "20"
+    unit: percent of revenue
+    source: "内部初创公司财务规划经验值，用于估算测试接入、差旅和项目专属承包商成本；未找到供应商报价或客户专属成本。"
+  - id: A14
+    name: 创始工程师年度全成本薪酬
+    value: "150"
+    unit: USD K per FTE-year
+    source: "[business-plan.yaml team] 内部初创公司财务规划估算，包含雇主承担的额外成本；未采用外部薪酬调查。"
+  - id: A15
+    name: CEO 与企业级 GTM 创始人年度全成本薪酬
+    value: "135"
+    unit: USD K per FTE-year
+    source: "[business-plan.yaml team] 创始人主导模式下的内部现金薪酬规划估算，包含雇主承担的额外成本；未采用外部薪酬调查。"
+  - id: A16
+    name: AI 集群性能工程师年度全成本薪酬
+    value: "165"
+    unit: USD K per FTE-year
+    source: "[business-plan.yaml team] 内部初创公司财务规划估算，包含雇主承担的额外成本；未采用外部薪酬调查。"
+  - id: A17
+    name: 解决方案与可靠性工程师年度全成本薪酬
+    value: "155"
+    unit: USD K per FTE-year
+    source: "[business-plan.yaml team] 内部初创公司财务规划估算，包含雇主承担的额外成本；未采用外部薪酬调查。"
+  - id: A18
+    name: 招聘触发条件与时间
+    value: "创始团队 M1 在岗；首个付费项目落地后，集群工程师 M9 到岗；出现复购需求后，解决方案/可靠性工程师 M19 到岗"
+    unit: hiring schedule
+    source: "[business-plan.yaml team, sequencingRationale, operatingAssumptions, and milestones] 招聘按阶段设门槛，安排较保守；3 年基准情景不计划单独招聘销售。"
+  - id: A19
+    name: 非薪酬销售与营销开支
+    value: "M1-M6 每月 4；M7-M12 每月 6；Y2 每月 8；Y3 每月 10"
+    unit: USD K per month
+    source: "内部初创公司财务规划估算，用于创始人主导的客户挖掘、差旅和方案撰写；不主张任何 CAC 或转化基准。"
+  - id: A20
+    name: 非薪酬研发与测试框架开支
+    value: "M1-M8 每月 15；M9-M12 每月 18；Y2 每月 15；Y3 每月 18"
+    unit: USD K per month
+    source: "[business-plan.yaml product, operations, and fundingAsk] 内部规划估算，用于工具、安全测试接入和可复用的测量流程；不是硬件报价。"
+  - id: A21
+    name: 非薪酬综合管理开支
+    value: "Y1 每月 10；Y2 每月 12；Y3 每月 15"
+    unit: USD K per month
+    source: "[business-plan.yaml operations and fundingAsk] 内部初创公司财务规划估算，用于法律、安全、保险、采购和会计开支；不假设需要客户专属的合规认证。"
+  - id: A22
+    name: 期初现金与首轮融资
+    value: "期初现金 0；M1 融资 2000"
+    unit: USD K
+    source: "[business-plan.yaml fundingAsk] 采用暂定 $2M-$3M 融资目标区间的下限；融资只是模型中的筹资假设，并非承诺。"
+  - id: A23
+    name: 收付款时间
+    value: "与收入和费用在同一个月确认"
+    unit: timing convention
+    source: "初创公司现金规划经验值；模型未计应收/应付账期、税费、利息、资本开支或其他融资，因此营运资金状况可能偏乐观。"
+  - id: A24
+    name: 六个月零收入运营缓冲金
+    value: "512.5"
+    unit: USD K
+    source: "按基准情景 M19-M24 的薪酬及非薪酬运营开支计算，假设收入为零、可变 COGS 为零；所得缓冲金向上取整至资金用途中的 $550K。"
+  - id: A25
+    name: 基准客户关系期限
+    value: "24"
+    unit: months
+    source: "[business-plan.yaml businessModel.expansionLevers and research.yaml market.sam] 为间歇型买方设定的规划代理值，假设先有初始项目、再评估复购；尚无留存数据。"
+  - id: A26
+    name: 单位经济模型中的项目频次
+    value: "1"
+    unit: 项目 / 客户账户年
+    source: "[research.yaml market.sam and market.som; business-plan.yaml businessModel] 用于年化客户账户收入的规划单位；项目具有间歇性，并非订阅 ARR。"
+  - id: A27
+    name: CAC 计算样本
+    value: "3 个新客户，3 年内预订 6 个项目"
+    unit: 模型客户数与项目数
+    source: "依据 A6-A8 及基准情景 S&M 开支计划计算；这是未经验证的预测代理值，不是历史获客数据。"
+  - id: A28
+    name: 下行情景项目与招聘路径
+    value: "Y1 无项目；Y2 在 M19 启动一个项目，Y3 在 M25 和 M31 各启动一个项目；M19 招聘集群工程师；不招聘解决方案/可靠性工程师"
+    unit: downside scenario
+    source: "[business-plan.yaml killCriteria, sequencingRationale, and team] 付费项目延迟和冻结招聘属于下行情景，并非对已签项目的预测。"
+  - id: A29
+    name: 资金用途分配
+    value: "工程 1000；GTM 250；G&A 200；六个月缓冲金 550"
+    unit: USD K
+    source: "[business-plan.yaml fundingAsk.useOfFundsSummary] 内部预算分配合计为模型中的 $2M 融资额；各项包括需过关后才能动用的储备，不是供应商报价。"
+modelBasis:
+  sourcedFacts:
+    - "商业计划给出假设性的 $250K-$500K 固定费用等价项目区间、60% 目标毛利率，以及为期 18 个月的创始人主导阶段暂定 $2M-$3M 融资需求。"
+    - "商业计划中的销售漏斗数量只是规划假设；计划未报告付费合同或经过验证的客户结果。"
+    - "研究估算近期服务 SOM 年规模为 $0.5M-$1.5M，基于 2-3 个客户且每个客户一个项目，并明确排除不确定的结果挂钩费用。"
+    - "研究没有公开服务定价，也没有独立付费调试合同、客户工作负载节省数据或获认可的加速器运行时长成功费公式。"
+  forecastDefinitions:
+    - "customersEop 表示期末活跃付费项目客户等价数，不是累计独立客户数；newCustomers 统计首次签约客户，newCampaigns 还包括复购项目。"
+    - "Y1 月收入按活跃付费项目客户等价数乘以 $75K 月度项目 ARPU 计算；季度收入按平均活跃项目客户等价数乘以 $225K 季度 ARPU 计算。"
+    - "基准固定费用收入在四个月内平均确认；基准情景不计结果挂钩费用，只有在有条件的上行情景中才会出现。"
+    - "全成本薪酬按各岗位 FTE 和 A14-A18 计算；salaryK = salaryInCogsK + salaryInOpexK，且 salaryInOpexK 计入各职能运营费用。"
+    - "COGS 包含 A12 交付薪酬和 A13 其他直接成本；毛利 = 收入 - COGS，OPEX = 销售与营销 + R&D + G&A，EBITDA = 毛利 - OPEX。"
+    - "现金余额按期初现金加融资和当月客户回款，再扣除 COGS 与 OPEX 逐期滚动；这一简化口径未计税费、利息、资本开支或营运资金时点。"
+  fundingCalculation: >-
+    基准情景截至 M18 的净现金消耗为 $667K。此后按 M19-M24 招聘完成后的零收入成本水平再运营六个月，需要 $512.5K；据此估算，达到模型里程碑并保留缓冲金至少需要约 $1.18M。$2.0M 融资额采用计划目标区间下限，超出部分作为需过关后动用的储备，应对接入、安全、采购及回款延迟；这笔储备不代表已承诺支出。
+headcount:
+  - role: 创始工程
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: CEO / 企业级 GTM 创始人
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: AI 集群性能工程师
+    q1y1: 0
+    q2y1: 0
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 解决方案与可靠性工程师
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 2
+  q2y1: 2
+  q3y1: 3
+  q4y1: 3
+  q4y2: 4
+  q4y3: 4
+headcountAnnualizedPayrollK:
+  q1y1: 285.0
+  q2y1: 285.0
+  q3y1: 450.0
+  q4y1: 450.0
+  q4y2: 605.0
+  q4y3: 605.0
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    newCampaigns: 0
+    activeCampaignMonths: 0
+    monthlyArpuK: 75.0
+    fixedPilotRevenueK: 0.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    salaryK: 23.75
+    salaryInCogsK: 0.0
+    salaryInOpexK: 23.75
+    grossProfitK: 0.0
+    salesMarketingK: 15.25
+    researchDevelopmentK: 27.5
+    generalAdministrativeK: 10.0
+    opexK: 52.75
+    ebitdaK: -52.75
+    fundingInflowK: 2000.0
+    cashReceiptsK: 0.0
+    cashOutflowK: 52.75
+    cashNetChangeK: 1947.25
+    cashEopK: 1947.25
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    newCampaigns: 0
+    activeCampaignMonths: 0
+    monthlyArpuK: 75.0
+    fixedPilotRevenueK: 0.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    salaryK: 23.75
+    salaryInCogsK: 0.0
+    salaryInOpexK: 23.75
+    grossProfitK: 0.0
+    salesMarketingK: 15.25
+    researchDevelopmentK: 27.5
+    generalAdministrativeK: 10.0
+    opexK: 52.75
+    ebitdaK: -52.75
+    fundingInflowK: 0.0
+    cashReceiptsK: 0.0
+    cashOutflowK: 52.75
+    cashNetChangeK: -52.75
+    cashEopK: 1894.5
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    newCampaigns: 0
+    activeCampaignMonths: 0
+    monthlyArpuK: 75.0
+    fixedPilotRevenueK: 0.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    salaryK: 23.75
+    salaryInCogsK: 0.0
+    salaryInOpexK: 23.75
+    grossProfitK: 0.0
+    salesMarketingK: 15.25
+    researchDevelopmentK: 27.5
+    generalAdministrativeK: 10.0
+    opexK: 52.75
+    ebitdaK: -52.75
+    fundingInflowK: 0.0
+    cashReceiptsK: 0.0
+    cashOutflowK: 52.75
+    cashNetChangeK: -52.75
+    cashEopK: 1841.75
+  - month: M4
+    customersEop: 0
+    newCustomers: 0
+    newCampaigns: 0
+    activeCampaignMonths: 0
+    monthlyArpuK: 75.0
+    fixedPilotRevenueK: 0.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    salaryK: 23.75
+    salaryInCogsK: 0.0
+    salaryInOpexK: 23.75
+    grossProfitK: 0.0
+    salesMarketingK: 15.25
+    researchDevelopmentK: 27.5
+    generalAdministrativeK: 10.0
+    opexK: 52.75
+    ebitdaK: -52.75
+    fundingInflowK: 0.0
+    cashReceiptsK: 0.0
+    cashOutflowK: 52.75
+    cashNetChangeK: -52.75
+    cashEopK: 1789.0
+  - month: M5
+    customersEop: 0
+    newCustomers: 0
+    newCampaigns: 0
+    activeCampaignMonths: 0
+    monthlyArpuK: 75.0
+    fixedPilotRevenueK: 0.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    salaryK: 23.75
+    salaryInCogsK: 0.0
+    salaryInOpexK: 23.75
+    grossProfitK: 0.0
+    salesMarketingK: 15.25
+    researchDevelopmentK: 27.5
+    generalAdministrativeK: 10.0
+    opexK: 52.75
+    ebitdaK: -52.75
+    fundingInflowK: 0.0
+    cashReceiptsK: 0.0
+    cashOutflowK: 52.75
+    cashNetChangeK: -52.75
+    cashEopK: 1736.25
+  - month: M6
+    customersEop: 0
+    newCustomers: 0
+    newCampaigns: 0
+    activeCampaignMonths: 0
+    monthlyArpuK: 75.0
+    fixedPilotRevenueK: 0.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    salaryK: 23.75
+    salaryInCogsK: 0.0
+    salaryInOpexK: 23.75
+    grossProfitK: 0.0
+    salesMarketingK: 15.25
+    researchDevelopmentK: 27.5
+    generalAdministrativeK: 10.0
+    opexK: 52.75
+    ebitdaK: -52.75
+    fundingInflowK: 0.0
+    cashReceiptsK: 0.0
+    cashOutflowK: 52.75
+    cashNetChangeK: -52.75
+    cashEopK: 1683.5
+  - month: M7
+    customersEop: 0
+    newCustomers: 0
+    newCampaigns: 0
+    activeCampaignMonths: 0
+    monthlyArpuK: 75.0
+    fixedPilotRevenueK: 0.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    salaryK: 23.75
+    salaryInCogsK: 0.0
+    salaryInOpexK: 23.75
+    grossProfitK: 0.0
+    salesMarketingK: 17.25
+    researchDevelopmentK: 27.5
+    generalAdministrativeK: 10.0
+    opexK: 54.75
+    ebitdaK: -54.75
+    fundingInflowK: 0.0
+    cashReceiptsK: 0.0
+    cashOutflowK: 54.75
+    cashNetChangeK: -54.75
+    cashEopK: 1628.75
+  - month: M8
+    customersEop: 0
+    newCustomers: 0
+    newCampaigns: 0
+    activeCampaignMonths: 0
+    monthlyArpuK: 75.0
+    fixedPilotRevenueK: 0.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    salaryK: 23.75
+    salaryInCogsK: 0.0
+    salaryInOpexK: 23.75
+    grossProfitK: 0.0
+    salesMarketingK: 17.25
+    researchDevelopmentK: 27.5
+    generalAdministrativeK: 10.0
+    opexK: 54.75
+    ebitdaK: -54.75
+    fundingInflowK: 0.0
+    cashReceiptsK: 0.0
+    cashOutflowK: 54.75
+    cashNetChangeK: -54.75
+    cashEopK: 1574.0
+  - month: M9
+    customersEop: 1
+    newCustomers: 1
+    newCampaigns: 1
+    activeCampaignMonths: 1
+    monthlyArpuK: 75.0
+    fixedPilotRevenueK: 75.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 75.0
+    cogsK: 30.0
+    salaryK: 37.5
+    salaryInCogsK: 15.0
+    salaryInOpexK: 22.5
+    grossProfitK: 45.0
+    salesMarketingK: 17.25
+    researchDevelopmentK: 29.25
+    generalAdministrativeK: 10.0
+    opexK: 56.5
+    ebitdaK: -11.5
+    fundingInflowK: 0.0
+    cashReceiptsK: 75.0
+    cashOutflowK: 86.5
+    cashNetChangeK: -11.5
+    cashEopK: 1562.5
+  - month: M10
+    customersEop: 1
+    newCustomers: 0
+    newCampaigns: 0
+    activeCampaignMonths: 1
+    monthlyArpuK: 75.0
+    fixedPilotRevenueK: 75.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 75.0
+    cogsK: 30.0
+    salaryK: 37.5
+    salaryInCogsK: 15.0
+    salaryInOpexK: 22.5
+    grossProfitK: 45.0
+    salesMarketingK: 17.25
+    researchDevelopmentK: 29.25
+    generalAdministrativeK: 10.0
+    opexK: 56.5
+    ebitdaK: -11.5
+    fundingInflowK: 0.0
+    cashReceiptsK: 75.0
+    cashOutflowK: 86.5
+    cashNetChangeK: -11.5
+    cashEopK: 1551.0
+  - month: M11
+    customersEop: 1
+    newCustomers: 0
+    newCampaigns: 0
+    activeCampaignMonths: 1
+    monthlyArpuK: 75.0
+    fixedPilotRevenueK: 75.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 75.0
+    cogsK: 30.0
+    salaryK: 37.5
+    salaryInCogsK: 15.0
+    salaryInOpexK: 22.5
+    grossProfitK: 45.0
+    salesMarketingK: 17.25
+    researchDevelopmentK: 29.25
+    generalAdministrativeK: 10.0
+    opexK: 56.5
+    ebitdaK: -11.5
+    fundingInflowK: 0.0
+    cashReceiptsK: 75.0
+    cashOutflowK: 86.5
+    cashNetChangeK: -11.5
+    cashEopK: 1539.5
+  - month: M12
+    customersEop: 1
+    newCustomers: 0
+    newCampaigns: 0
+    activeCampaignMonths: 1
+    monthlyArpuK: 75.0
+    fixedPilotRevenueK: 75.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 75.0
+    cogsK: 30.0
+    salaryK: 37.5
+    salaryInCogsK: 15.0
+    salaryInOpexK: 22.5
+    grossProfitK: 45.0
+    salesMarketingK: 17.25
+    researchDevelopmentK: 29.25
+    generalAdministrativeK: 10.0
+    opexK: 56.5
+    ebitdaK: -11.5
+    fundingInflowK: 0.0
+    cashReceiptsK: 75.0
+    cashOutflowK: 86.5
+    cashNetChangeK: -11.5
+    cashEopK: 1528.0
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 1
+    averageCustomers: 1.0
+    newCustomers: 1
+    newCampaigns: 1
+    activeCampaignMonths: 3
+    quarterlyArpuK: 225.0
+    fixedPilotRevenueK: 225.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 225.0
+    cogsK: 90.0
+    salaryK: 112.5
+    salaryInCogsK: 45.0
+    salaryInOpexK: 67.5
+    grossProfitK: 135.0
+    salesMarketingK: 57.75
+    researchDevelopmentK: 78.75
+    generalAdministrativeK: 36.0
+    opexK: 172.5
+    ebitdaK: -37.5
+    fundingInflowK: 0.0
+    cashReceiptsK: 225.0
+    cashOutflowK: 262.5
+    cashNetChangeK: -37.5
+    cashEopK: 1490.5
+  - quarter: Q2Y2
+    customersEop: 0
+    averageCustomers: 0.333333
+    newCustomers: 0
+    newCampaigns: 0
+    activeCampaignMonths: 1
+    quarterlyArpuK: 225.0
+    fixedPilotRevenueK: 75.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 75.0
+    cogsK: 30.0
+    salaryK: 112.5
+    salaryInCogsK: 15.0
+    salaryInOpexK: 97.5
+    grossProfitK: 45.0
+    salesMarketingK: 57.75
+    researchDevelopmentK: 108.75
+    generalAdministrativeK: 36.0
+    opexK: 202.5
+    ebitdaK: -157.5
+    fundingInflowK: 0.0
+    cashReceiptsK: 75.0
+    cashOutflowK: 232.5
+    cashNetChangeK: -157.5
+    cashEopK: 1333.0
+  - quarter: Q3Y2
+    customersEop: 1
+    averageCustomers: 1.0
+    newCustomers: 0
+    newCampaigns: 1
+    activeCampaignMonths: 3
+    quarterlyArpuK: 225.0
+    fixedPilotRevenueK: 225.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 225.0
+    cogsK: 90.0
+    salaryK: 151.25
+    salaryInCogsK: 45.0
+    salaryInOpexK: 106.25
+    grossProfitK: 135.0
+    salesMarketingK: 57.75
+    researchDevelopmentK: 117.5
+    generalAdministrativeK: 36.0
+    opexK: 211.25
+    ebitdaK: -76.25
+    fundingInflowK: 0.0
+    cashReceiptsK: 225.0
+    cashOutflowK: 301.25
+    cashNetChangeK: -76.25
+    cashEopK: 1256.75
+  - quarter: Q4Y2
+    customersEop: 0
+    averageCustomers: 0.333333
+    newCustomers: 0
+    newCampaigns: 0
+    activeCampaignMonths: 1
+    quarterlyArpuK: 225.0
+    fixedPilotRevenueK: 75.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 75.0
+    cogsK: 30.0
+    salaryK: 151.25
+    salaryInCogsK: 15.0
+    salaryInOpexK: 136.25
+    grossProfitK: 45.0
+    salesMarketingK: 57.75
+    researchDevelopmentK: 147.5
+    generalAdministrativeK: 36.0
+    opexK: 241.25
+    ebitdaK: -196.25
+    fundingInflowK: 0.0
+    cashReceiptsK: 75.0
+    cashOutflowK: 271.25
+    cashNetChangeK: -196.25
+    cashEopK: 1060.5
+  - quarter: Q1Y3
+    customersEop: 1
+    averageCustomers: 1.0
+    newCustomers: 0
+    newCampaigns: 1
+    activeCampaignMonths: 3
+    quarterlyArpuK: 225.0
+    fixedPilotRevenueK: 225.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 225.0
+    cogsK: 90.0
+    salaryK: 151.25
+    salaryInCogsK: 45.0
+    salaryInOpexK: 106.25
+    grossProfitK: 135.0
+    salesMarketingK: 63.75
+    researchDevelopmentK: 126.5
+    generalAdministrativeK: 45.0
+    opexK: 235.25
+    ebitdaK: -100.25
+    fundingInflowK: 0.0
+    cashReceiptsK: 225.0
+    cashOutflowK: 325.25
+    cashNetChangeK: -100.25
+    cashEopK: 960.25
+  - quarter: Q2Y3
+    customersEop: 1
+    averageCustomers: 1.0
+    newCustomers: 1
+    newCampaigns: 1
+    activeCampaignMonths: 3
+    quarterlyArpuK: 225.0
+    fixedPilotRevenueK: 225.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 225.0
+    cogsK: 90.0
+    salaryK: 151.25
+    salaryInCogsK: 45.0
+    salaryInOpexK: 106.25
+    grossProfitK: 135.0
+    salesMarketingK: 63.75
+    researchDevelopmentK: 126.5
+    generalAdministrativeK: 45.0
+    opexK: 235.25
+    ebitdaK: -100.25
+    fundingInflowK: 0.0
+    cashReceiptsK: 225.0
+    cashOutflowK: 325.25
+    cashNetChangeK: -100.25
+    cashEopK: 860.0
+  - quarter: Q3Y3
+    customersEop: 1
+    averageCustomers: 1.0
+    newCustomers: 0
+    newCampaigns: 1
+    activeCampaignMonths: 3
+    quarterlyArpuK: 225.0
+    fixedPilotRevenueK: 225.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 225.0
+    cogsK: 90.0
+    salaryK: 151.25
+    salaryInCogsK: 45.0
+    salaryInOpexK: 106.25
+    grossProfitK: 135.0
+    salesMarketingK: 63.75
+    researchDevelopmentK: 126.5
+    generalAdministrativeK: 45.0
+    opexK: 235.25
+    ebitdaK: -100.25
+    fundingInflowK: 0.0
+    cashReceiptsK: 225.0
+    cashOutflowK: 325.25
+    cashNetChangeK: -100.25
+    cashEopK: 759.75
+  - quarter: Q4Y3
+    customersEop: 1
+    averageCustomers: 1.0
+    newCustomers: 0
+    newCampaigns: 0
+    activeCampaignMonths: 3
+    quarterlyArpuK: 225.0
+    fixedPilotRevenueK: 225.0
+    measuredOutcomeFeeRevenueK: 0.0
+    revenueK: 225.0
+    cogsK: 90.0
+    salaryK: 151.25
+    salaryInCogsK: 45.0
+    salaryInOpexK: 106.25
+    grossProfitK: 135.0
+    salesMarketingK: 63.75
+    researchDevelopmentK: 126.5
+    generalAdministrativeK: 45.0
+    opexK: 235.25
+    ebitdaK: -100.25
+    fundingInflowK: 0.0
+    cashReceiptsK: 225.0
+    cashOutflowK: 325.25
+    cashNetChangeK: -100.25
+    cashEopK: 659.5
+totals:
+  y1:
+    newCustomers: 1
+    newCampaigns: 1
+    activeCampaignMonths: 4
+    revenueK: 300.0
+    fixedPilotRevenueK: 300.0
+    measuredOutcomeFeeRevenueK: 0.0
+    cogsK: 120.0
+    grossProfitK: 180.0
+    salaryK: 340.0
+    salaryInCogsK: 60.0
+    salaryInOpexK: 280.0
+    salesMarketingK: 195.0
+    researchDevelopmentK: 337.0
+    generalAdministrativeK: 120.0
+    opexK: 652.0
+    ebitdaK: -472.0
+    operatingCashFlowK: -472.0
+    fundingInflowK: 2000.0
+    cashEopK: 1528.0
+  y2:
+    newCustomers: 1
+    newCampaigns: 2
+    activeCampaignMonths: 8
+    revenueK: 600.0
+    fixedPilotRevenueK: 600.0
+    measuredOutcomeFeeRevenueK: 0.0
+    cogsK: 240.0
+    grossProfitK: 360.0
+    salaryK: 527.5
+    salaryInCogsK: 120.0
+    salaryInOpexK: 407.5
+    salesMarketingK: 231.0
+    researchDevelopmentK: 452.5
+    generalAdministrativeK: 144.0
+    opexK: 827.5
+    ebitdaK: -467.5
+    operatingCashFlowK: -467.5
+    fundingInflowK: 0.0
+    cashEopK: 1060.5
+  y3:
+    newCustomers: 1
+    newCampaigns: 3
+    activeCampaignMonths: 12
+    revenueK: 900.0
+    fixedPilotRevenueK: 900.0
+    measuredOutcomeFeeRevenueK: 0.0
+    cogsK: 360.0
+    grossProfitK: 540.0
+    salaryK: 605.0
+    salaryInCogsK: 180.0
+    salaryInOpexK: 425.0
+    salesMarketingK: 255.0
+    researchDevelopmentK: 506.0
+    generalAdministrativeK: 180.0
+    opexK: 941.0
+    ebitdaK: -401.0
+    operatingCashFlowK: -401.0
+    fundingInflowK: 0.0
+    cashEopK: 659.5
+unitEconomics:
+  arpuAnnualK: 300.0
+  grossMarginPct: 60.0
+  cacK: 227.0
+  monthlyChurnPct: 4.17
+  avgCustomerLifeMonths: 24.0
+  ltvK: 360.0
+  ltvCacRatio: 1.59
+  cacPaybackMonths: 15.13
+  notes: >-
+    这些是按项目计费的规划代理值，不是 SaaS 指标：年度 ARPU 假设每个客户每年购买一个 $300K 项目；LTV = 年度 ARPU x 60% 毛利率 x 24 个月 / 12；CAC = 模型中的三年销售与营销费用 $681K / 预测的首次签约客户数（三家）；月流失率取假设的 24 个月客户关系期限的倒数。以上均非实测，复购频次尚未得到验证。
+fundingAsk:
+  round: pre-seed
+  amountM: 2.0
+  runwayMonths: 24
+  milestone: "截至第18个月，完成一个付费项目，取得可重复验证且买方认可的工作负载结果，并签下一个复购项目或第二位买方带来的项目；同时保留六个月零收入运营缓冲金。"
+  minimumModeledNeedM: 1.1795
+  gatedReserveAboveMinimumM: 0.8205
+  runwayBasis: "这里的 24 个月指规划中的 18 个月创始人主导验证阶段加六个月缓冲；基准现金计划截至第 36 个月仍为正，因此这是融资窗口，而非预计现金耗尽时间。"
+  useOfFunds:
+    - bucket: 工程与交付
+      amountUsd: 1000000
+      percentage: 50.0
+    - bucket: GTM（市场拓展）
+      amountUsd: 250000
+      percentage: 12.5
+    - bucket: "G&A（综合管理）"
+      amountUsd: 200000
+      percentage: 10.0
+    - bucket: "缓冲金（6 个月）"
+      amountUsd: 550000
+      percentage: 27.5
+scenarios:
+  downside:
+    description: "付费项目落地晚于计划中的第 9 个月关口；团队暂停招聘第二位工程师，直到后续付费项目出现；不计任何结果挂钩费用，也不招聘解决方案/可靠性工程师。"
+    y3RevenueK: 600.0
+    y3EbitdaK: -486.0
+    cashLowPointK: 309.5
+    keyAssumptionChanges:
+      - "Y1 不签付费项目；Y2 在 M19 启动一个项目，Y3 启动两个项目。"
+      - "延迟项目拿到资金后，集群性能工程师才入职；解决方案与可靠性工程师的招聘推迟到模型期之后。"
+      - "项目费用仍为 $300K 规划值，结果挂钩费用仍为零。"
+  base:
+    description: "Y1、Y2、Y3 分别签下一个、两个、三个固定收费付费项目；模型假设有三个首次签约客户和复购项目，不计结果挂钩费用。"
+    y3RevenueK: 900.0
+    y3EbitdaK: -401.0
+    cashLowPointK: 659.5
+    keyAssumptionChanges:
+      - "项目分别从 M9、M13、M19、M25、M29、M33 启动，每个收费 $300K，收入按四个月摊销确认。"
+      - "三个首次签约客户和三个复购项目只是目标，并非已签工作，也不是转化预测。"
+      - "模型将 60% 目标毛利率拆为 20% 交付薪酬和 20% 其他直接成本。"
+      - "买方认可的结果得到验证前，不确认结果挂钩费用。"
+  upside:
+    description: "基准项目量和团队配置不变；Y3 的三个项目均达到买方认可的结果门槛，并收取假设的封顶费用。"
+    y3RevenueK: 990.0
+    y3EbitdaK: -347.0
+    cashLowPointK: 713.5
+    keyAssumptionChanges:
+      - "Y3 的三个项目各自达到有条件的 $30K 结果挂钩费上限；这不是成功率估算或节省金额主张。"
+      - "基准固定项目费用、招聘排期和其他运营开支均不变。"
+sensitivity:
+  - variable: 项目数量
+    downsideCase: "Y3 为两个项目而非三个；一个项目推迟至 M36 之后。"
+    baseCase: "Y3 有三个项目，每个收费 $300K。"
+    upsideCase: "Y3 有四个项目，每个收费 $300K，团队配置不变，毛利率为 60%。"
+    y3RevenueImpactK: -300.0
+    cashImpactK: -180.0
+    impactBasis: "下行情景相对基准情景；假设毛利率为 60%，且不增加固定招聘。"
+    upsideY3RevenueImpactK: 300.0
+    upsideCashImpactK: 180.0
+  - variable: 固定项目费用
+    downsideCase: "Y3 每个项目收费 $250K；前两年定价不变。"
+    baseCase: "Y3 每个项目收费 $300K。"
+    upsideCase: "Y3 每个项目收费 $350K；前两年定价不变。"
+    y3RevenueImpactK: -150.0
+    cashImpactK: -90.0
+    impactBasis: "仅比较 Y3 项目的下行情景与基准情景；前两年费用假设不变。"
+    upsideY3RevenueImpactK: 150.0
+    upsideCashImpactK: 90.0
+  - variable: 结果挂钩费用
+    downsideCase: "没有买方接受或验证结果挂钩费用；收入为零。"
+    baseCase: "证据和合同条款获接受前，结果挂钩费用为零。"
+    upsideCase: "Y3 的三个项目每个都收取假设的 $30K 上限。"
+    y3RevenueImpactK: 0.0
+    cashImpactK: 0.0
+    impactBasis: "下行情景相对基准情景的影响为零；上行增量单独列示，并假设 Y3 每个项目都达到有条件的费用上限。"
+    upsideY3RevenueImpactK: 90.0
+    upsideCashImpactK: 54.0
+  - variable: 毛利率
+    downsideCase: "Y3 毛利率为 50%；收入不变。"
+    baseCase: "Y3 毛利率为 60%。"
+    upsideCase: "项目交付成本下降使 Y3 毛利率达到 65%；收入不变。"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -90.0
+    impactBasis: "下行情景相对基准情景按 50% 毛利率计算；上行敏感性另行列示。"
+    upsideY3RevenueImpactK: 0.0
+    upsideCashImpactK: 45.0
+  - variable: 销售签约时间
+    downsideCase: "一个 $300K 项目从 M29 延至 M37，超出预测期。"
+    baseCase: "Y3 项目仍从 M25、M29、M33 开始。"
+    upsideCase: "不假设基准排期之外还有额外的时间收益。"
+    y3RevenueImpactK: -300.0
+    cashImpactK: -180.0
+    impactBasis: "下行情景相对基准情景；假设一个完整项目延期至 M36 之后，贡献毛利率为 60%。"
+    upsideY3RevenueImpactK: 0.0
+    upsideCashImpactK: 0.0
+  - variable: 招聘节奏
+    downsideCase: "在 M13 而非 M19 招聘解决方案/可靠性工程师；增加六个月、$77.5K 薪酬，不假设新增收入。"
+    baseCase: "确认出现复购付费项目后，于 M19 招聘。"
+    upsideCase: "将招聘推迟至 M25；若三人团队仍能交付计划项目，可节省 $77.5K。"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -77.5
+    impactBasis: "下行情景比较现金影响；上行现金增量假设三个 FTE 仍能交付计划项目。"
+    upsideY3RevenueImpactK: 0.0
+    upsideCashImpactK: 77.5
+modelDiagram:
+  title: "单位经济模型流程"
+  mermaid: |
+    flowchart LR
+      ICP[Qualified operator] --> Campaign[Paid commissioning campaign]
+      Campaign --> FixedFee[Fixed pilot fee]
+      Campaign --> Evidence[Buyer-approved paired workload evidence]
+      Evidence --> OutcomeFee[Capped measured-outcome fee if verified]
+      FixedFee --> GrossProfit[Gross profit after delivery cost]
+      OutcomeFee --> GrossProfit
+      GrossProfit --> Cash[Cash after operating expenses]
+modelSanity:
+  - checkName: 收入引擎
+    finding: "基准情景在 Y1 签下一个为期四个月、固定费用 $300K 的项目，Y2 签下两个，Y3 签下三个；只有买方认可的收益得到验证后，结果挂钩费用才会增加收入，基准情景目前不计这项收入。"
+  - checkName: 必须跑通的条件
+    finding: "模型要求获得三个首次签约客户，并按 $300K 规划费用签下复购项目；Y3 收入达到 $900K，接近近期 SOM 年规模估算 $0.5M-$1.5M 的上沿。"
+  - checkName: 模型失效条件
+    finding: "如果付费试点延期且复购未能落地，下行情景 Y3 的两个项目只能带来 $600K 收入，现金最低点为 $309.5K，且没有结果挂钩费用提供缓冲。"
+  - checkName: 下一轮融资所需验证
+    finding: "截至第18个月，证明重新配置后仍能持续取得买方认可的工作负载净收益；签下复购项目或第二位买方的付费项目；并将实测交付毛利率做到接近 60% 计划目标。"
+sanityChecks:
+  ruleOf40: "Y3 收入增长率 50.0% + EBITDA 利润率 -44.6% = 5.4%，远低于 40%；增长起点只是很小的项目收入基数。"
+  burnMultiple: "1.34x 代理指标 = Y3 EBITDA 现金消耗 $401K / Y3 增量收入 $300K；收入来自间歇性服务，因此这不是 SaaS 净消耗倍数。"
+  revenuePerFte: "Y3 年末每个 FTE 对应收入 $225K = $900K / 4 个 FTE；项目收入不是经常性 ARR。"
+  flags:
+    - "目前没有经过验证的客户、已签工作范围、公开定价、买方认可的成功费条款或独立测得的节省额；所有项目数量和费用都是预测假设。"
+    - "基准情景 Y3 项目量达到三个，累计模型客户数也达到三个，接近 2-3 个客户的 SOM 估算上限；底层服务市场规模仍只是未经验证的情景。"
+    - "60% 毛利率目标依赖将收入的 20% 分配给交付薪酬、另 20% 分配给其他直接成本；实际用工强度、接入成本和利用率都可能大幅压低毛利率。"
+    - "按项目测算的 LTV/CAC 仅为 1.59x，模型回收期为 15.13 个月，并假设客户关系持续 24 个月且期间有复购；留存和获客经济性都尚未实测。"
+    - "$2M 融资额高于约 $1.18M 的基准里程碑加缓冲金最低需求；超出部分是应对接入、采购、安全和回款风险、需过关后才能动用的应急储备，不是经过验证的支出需求。"
+    - "模型假设收入在确认当月收回，且未计税费、利息、资本开支和营运资金账期；因此现金余额对企业客户延迟付款较敏感。"
