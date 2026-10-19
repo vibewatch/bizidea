@@ -1,0 +1,718 @@
+slug: provider-outage-restore-reserve
+date: "2026-10-19"
+currency: USD
+modelStartMonth: "2026-11"
+assumptions:
+  - id: A1
+    name: 模型起始月份
+    value: "2026-11"
+    unit: YYYY-MM
+    source: "[BP 日期 2026-10-19；模型从下一个完整日历月开始]"
+  - id: A2
+    name: 起始付费 MSP 账户数
+    value: "0"
+    unit: MSP accounts
+    source: "[BP 里程碑与 GTM 销售漏斗目标；模型启动时尚未产生收入]"
+  - id: A3
+    name: 客户与价值计量单位定义
+    value: "一个客户指一家付费 MSP；成熟期的典型客户账户覆盖 10 个受保护租户，每个租户有 50 个席位"
+    unit: account definition
+    source: "[BP businessModel.unitOfValue；BP market.SOM；模型口径]"
+  - id: A4
+    name: 定价与可触达市场上限背景
+    value: "为期 90 天、最多覆盖 10 个租户的试点收费 $2.5K-$5K；覆盖 10 个租户的年度账户收费 $9K-$18K，按每个受保护席位每月 $1.50-$3.00 计价；14 家 MSPs 是早期可触达客户群的示例规模"
+    unit: USD/account/year（市场背景）
+    source: "[BP investorMemo.firstCustomer.initialContract；BP gtm.pricing；research.yaml market.bottomUpSizingDrivers 与 market.SOM；付费意愿尚未验证]"
+  - id: A5
+    name: Y1 新增 MSP 客户
+    value: "0,0,0,1,0,1,0,0,0,1,0,0"
+    unit: 每月净新增 MSP 客户数
+    source: "[BP gtm.funnelTargets 与 product.sixMonth；到 M6 时有两个付费试点，到 M12 时有三个；已完成的试点中，至少一半在 M12 前转化]"
+  - id: A6
+    name: Y2 MSP 客户增长
+    value: "4,6,8,10"
+    unit: 季度末 MSP 客户数
+    source: "[BP 12-24 个月里程碑；只有试点续约，才能在 M24 达到 10 家付费 MSP 和 100 个受保护租户]"
+  - id: A7
+    name: Y3 MSP 客户增长
+    value: "11,12,13,14"
+    unit: 季度末 MSP 客户数
+    source: "[BP market.SOM 与 24-36 个月里程碑；14 家 MSPs 是情景上限，并非经验证的需求]"
+  - id: A8
+    name: MSP 客户账户混合年收入
+    value: "Y1 10；Y2 15；Y3 18"
+    unit: USDK/account/year
+    source: "[BP 初始合同区间与席位单价测试；收入由年度订阅、设置服务和定期恢复演练组合构成；$18K 对应 10 个租户 x 每个租户 50 个席位 x 每席每月 $3 x 12]"
+  - id: A9
+    name: 新签 MSPs 的首期收入确认比例
+    value: "50"
+    unit: pct of a full period
+    source: "[初创企业财务经验假设：新客户在签约所在月份或季度的中点上线]"
+  - id: A10
+    name: 商业计划目标毛利率
+    value: "70"
+    unit: pct
+    source: "[BP businessModel.targetGrossMarginPct；仅为目标，并非实际观测到的毛利率]"
+  - id: A11
+    name: 云、存储与传输 COGS 率
+    value: "Y1 15；Y2 12；Y3 10"
+    unit: pct of revenue
+    source: "[BP strategicChoices.wedgeRationale 与 risks 提到存储和传输成本可能重复；在实测租户成本前暂按初创企业财务经验估算]"
+  - id: A12
+    name: 计入交付 COGS 的恢复运营薪酬
+    value: "Y1 50；Y2 50；Y3 40"
+    unit: 恢复运营全口径薪酬的百分比
+    source: "[BP operatingAssumptions 与 milestones 要求实测服务人力和自动化水平；模型中的分摊比例是初创企业财务经验假设，并非实测结果]"
+  - id: A13
+    name: 招聘顺序与六期 FTE 快照
+    value: "M0 招聘创始人/CEO 和创始工程师；两个付费试点之后，于 M9 招聘恢复运营人员；服务流程具备可重复性后，于 Q3Y2 招聘第二名工程师；客户组合得到验证后，于 Q3Y3 招聘渠道合作/GTM 负责人；FTE 总数依次为 2,2,3,3,4,5"
+    unit: hires and FTE at q1y1,q2y1,q3y1,q4y1,q4y2,q4y3
+    source: "[BP 团队；BP strategicChoices.sequencingRationale；BP 里程碑；验证通过后的招聘安排属于精益扩张经验假设]"
+  - id: A14
+    name: 创始人和 CEO 全口径现金薪酬
+    value: "120"
+    unit: USDK/FTE/year
+    source: "[种子前轮创始人薪资及薪酬附加成本的初创企业财务经验假设]"
+  - id: A15
+    name: 产品与工程全口径现金薪酬
+    value: "165"
+    unit: USDK/FTE/year
+    source: "[资深 SaaS 与 Microsoft 365 集成工程师薪资及薪酬附加成本的初创企业财务经验假设]"
+  - id: A16
+    name: 恢复运营全口径现金薪酬
+    value: "125"
+    unit: USDK/FTE/year
+    source: "[早期恢复运营负责人薪资及薪酬附加成本的初创企业财务经验假设]"
+  - id: A17
+    name: 渠道合作与 GTM 全口径现金薪酬
+    value: "130"
+    unit: USDK/FTE/year
+    source: "[首位渠道与合作伙伴负责人薪资及薪酬附加成本的初创企业财务经验假设；待验证通过后再招聘]"
+  - id: A18
+    name: Y1 月度非薪酬研发预算
+    value: "10,10,10,10,12,12,12,12,12,12,12,12"
+    unit: USDK/month
+    source: "[用于 BP 中的 MVP、API/安全验证和恢复保真度工作；云端测试租户、工程工具及专业承包商支出按初创企业财务经验估算]"
+  - id: A19
+    name: Y1 月度非薪酬销售与营销预算
+    value: "2,2,2,2,3,3,3,3,3,3,3,4"
+    unit: USDK/month
+    source: "[BP 中创始人主导外联，转介绍渠道尚未得到验证；差旅和试点销售支出按初创企业财务经验估算]"
+  - id: A20
+    name: Y1 月度非薪酬 G&A 预算
+    value: "7,7,7,7,8,8,8,8,8,8,8,8"
+    unit: USDK/month
+    source: "[用于 BP 运营和客户 DPA/安全审查；兼职法律顾问、保险、会计、行政支出按初创企业财务经验估算]"
+  - id: A21
+    name: Y2 季度非薪酬预算
+    value: "R&D 30,32,34,36；S&M 12,15,18,20；G&A 18,18,19,20"
+    unit: USDK/quarter
+    source: "[BP 设定的标准化客户导入、付费试点和合作伙伴验证里程碑；预算按精益运营经验估算]"
+  - id: A22
+    name: Y3 季度非薪酬预算
+    value: "R&D 32,34,36,38；S&M 20,22,24,28；G&A 20,20,22,22"
+    unit: USDK/quarter
+    source: "[BP 仅在 M365 验证通过后才扩展客户组合；预算按精益运营经验估算]"
+  - id: A23
+    name: 单位经济模型中的月度客户流失率
+    value: "1.5"
+    unit: pct/month
+    source: "[面向中端市场、客户黏性较高的业务连续性软件的初创企业财务经验假设；目前没有该产品的留存数据]"
+  - id: A24
+    name: CAC 销售工时分摊
+    value: "CEO 30；渠道合作/GTM 招聘人员 50"
+    unit: pct of loaded payroll
+    source: "[BP 由创始人主导 GTM，渠道招聘延后；销售工时分摊比例按初创企业财务经验估算]"
+  - id: A25
+    name: 全口径混合 CAC
+    value: "23.75"
+    unit: USDK/new MSP account
+    source: "[用 3 年非薪酬 S&M 支出及 A24 中 CEO、GTM 人员的销售工时分摊计算，再除以 A5-A7 中净增的 14 家 MSP 客户]"
+  - id: A26
+    name: 模型启动时的种子前轮融资
+    value: "1.5"
+    unit: USDM
+    source: "[BP fundingAsk.targetFundingRangeUsd 为 $1.5M-$2.5M；模型采用区间低端，并在预计 18 个月现金消耗和现金缓冲之外留出应急资金]"
+  - id: A27
+    name: 六个月现金缓冲
+    value: "302"
+    unit: USDK
+    source: "[根据 Q1Y2 和 Q2Y2 的模型净现金消耗推算；18 个月验证期结束后，约可覆盖六个月]"
+  - id: A28
+    name: 有条件的后续种子轮融资
+    value: "在 Q3Y2 开始时投入 2.0，前提是通过里程碑门槛"
+    unit: USDM and timing
+    source: "[BP 12-24 个月里程碑与 18 个月种子前轮资金跑道；验证通过后以有条件的种子轮融资支持验证和增长，属于初创企业财务经验假设]"
+  - id: A29
+    name: EBITDA 转现金比例
+    value: "100"
+    unit: pct
+    source: "[初创企业财务经验假设：模型未计入债务、大额资本开支或营运资本时点差异；现金余额按 EBITDA 加已列示融资流入滚动计算]"
+  - id: A30
+    name: 下行情景
+    value: "销售延迟两个季度；到 Q4Y2 达到 7 家 MSPs，Y3 各季度依次为 8,9,10,11 家，Y3 ARPU 为 $12K；M18 后维持 3 名 FTE、年度非薪酬支出 $145K；不进行后续融资；测算得 Y3 收入 $108K、EBITDA -$463.2K，Q4Y3 现金最低点为 -$95.56K"
+    unit: scenario
+    source: "[BP operatingAssumptions、milestones、killCriteria 与客户转化的不确定性；基于暂停/继续决策的成本控制经验假设]"
+  - id: A31
+    name: 上行情景
+    value: "到 Q4Y2 达到 14 家 MSPs，并在整个 Y3 保持这一客户数，单家 MSP 年收入为 $21K；直接恢复人力成本占运营团队薪酬的 47%，云成本占收入的 10%，毛利率达到 70%；测算得 Y3 收入 $294K、EBITDA -$702.2K，M18 现金最低点约为 $636K"
+    unit: scenario
+    source: "[BP market.SOM、席位单价区间、设置服务和恢复演练费用及 70% 毛利率目标；乐观的渠道与自动化情景]"
+  - id: A32
+    name: SaaS 每 FTE 年收入对比
+    value: "200-400"
+    unit: USDK/FTE/year
+    source: "[规模化 SaaS 团队的初创企业财务经验基准；仅作方向性对比，并非公司特定目标]"
+  - id: A33
+    name: 指标计算口径
+    value: "LTV 按 Y3 单家 MSP 年收入 x Y3 毛利率 / 月流失率计算；烧钱倍数按 EBITDA 现金消耗 / 净新增 ARR 计算；40 法则为 Y3 收入增速加 Y3 EBITDA 利润率"
+    unit: calculation method
+    source: "[初创企业财务经验指标定义；月流失率计入 LTV，不另行从净客户增长预测中扣减]"
+  - id: A34
+    name: 薪酬列示与直接人力成本重分类
+    value: "salaryK 是员工全口径薪酬总额；deliveryPayrollCogsK 是已计入 salaryK 的恢复运营直接人力成本部分，从 opexK 中扣除，以免重复计算"
+    unit: accounting convention
+    source: "[模型口径；直接交付成本分摊见 A12，薪酬总额与员工人数及 A14-A17 相互核对]"
+  - id: A35
+    name: 种子前轮资金用途分配
+    value: "工程 50；GTM 15；G&A 15；六个月现金缓冲 20"
+    unit: pct of current round
+    source: "[BP useOfFundsSummary 优先级与初创企业财务经验假设；金额与 A26 中 $1.5M 种子前轮融资相符]"
+  - id: A36
+    name: 敏感性情景
+    value: "ARPU $12K/$18K/$21K；CAC $35K/$23.75K/$18K；月流失率 2.5%/1.5%/1.0%；销售周期 9-12/6-9/4-5 个月；毛利率 50%/66.8%/70%；招聘提前/基准/延后"
+    unit: downside/base/upside
+    source: "[BP 定价假设、销售漏斗与止损标准；尚未验证的初创企业财务敏感性参数，按模型中的客户增长节奏校准]"
+  - id: A37
+    name: 种子前轮覆盖里程碑期及现金缓冲所需资金
+    value: "18 个月模型期内净现金支出 877.23；六个月现金缓冲 302；合计 1179.23；申请 $1.5M 融资后约留有 320.77 应急资金"
+    unit: USDK
+    source: "[根据 Y1 及 Y2 前两个季度的 EBITDA/现金表推算；BP fundingAsk.runwayMonths 为 18]"
+  - id: A38
+    name: 敏感性影响测算
+    value: "ARPU：收入影响 -$72K、现金影响 -$64.8K；CAC：客户数固定为 14 家时，销售现金支出增加 +$157.5K；流失率：收入影响 -$18K、现金影响 -$16.2K；销售周期：收入影响 -$72K、现金影响 -$64.8K；毛利率：现金影响 -$36.4K；提前招聘：现金影响 -$74K"
+    unit: Y3 收入和模型现金影响，USDK
+    source: "[根据 A5-A25 与 A36 推算；除非下行情景明确说明不融资，否则现金影响不计入额外融资变化]"
+headcount:
+  - role: 创始人/CEO
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 产品与工程
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 2
+    q4y3: 2
+  - role: 恢复运营
+    q1y1: 0
+    q2y1: 0
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: 渠道合作/GTM
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 0
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 2
+  q2y1: 2
+  q3y1: 3
+  q4y1: 3
+  q4y2: 4
+  q4y3: 5
+headcountAnnualizedPayrollK:
+  q1y1: 285.0
+  q2y1: 285.0
+  q3y1: 410.0
+  q4y1: 410.0
+  q4y2: 575.0
+  q4y3: 705.0
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.00
+    cloudCogsK: 0.00
+    deliveryPayrollCogsK: 0.00
+    cogsK: 0.00
+    grossProfitK: 0.00
+    salaryK: 23.75
+    salesMarketingK: 2.00
+    researchDevelopmentK: 10.00
+    generalAdministrativeK: 7.00
+    opexK: 42.75
+    ebitdaK: -42.75
+    financingInflowK: 0.00
+    cashEopK: 1457.25
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.00
+    cloudCogsK: 0.00
+    deliveryPayrollCogsK: 0.00
+    cogsK: 0.00
+    grossProfitK: 0.00
+    salaryK: 23.75
+    salesMarketingK: 2.00
+    researchDevelopmentK: 10.00
+    generalAdministrativeK: 7.00
+    opexK: 42.75
+    ebitdaK: -42.75
+    financingInflowK: 0.00
+    cashEopK: 1414.50
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.00
+    cloudCogsK: 0.00
+    deliveryPayrollCogsK: 0.00
+    cogsK: 0.00
+    grossProfitK: 0.00
+    salaryK: 23.75
+    salesMarketingK: 2.00
+    researchDevelopmentK: 10.00
+    generalAdministrativeK: 7.00
+    opexK: 42.75
+    ebitdaK: -42.75
+    financingInflowK: 0.00
+    cashEopK: 1371.75
+  - month: M4
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 0.42
+    cloudCogsK: 0.06
+    deliveryPayrollCogsK: 0.00
+    cogsK: 0.06
+    grossProfitK: 0.36
+    salaryK: 23.75
+    salesMarketingK: 2.00
+    researchDevelopmentK: 10.00
+    generalAdministrativeK: 7.00
+    opexK: 42.75
+    ebitdaK: -42.39
+    financingInflowK: 0.00
+    cashEopK: 1329.36
+  - month: M5
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 0.83
+    cloudCogsK: 0.12
+    deliveryPayrollCogsK: 0.00
+    cogsK: 0.12
+    grossProfitK: 0.71
+    salaryK: 23.75
+    salesMarketingK: 3.00
+    researchDevelopmentK: 12.00
+    generalAdministrativeK: 8.00
+    opexK: 46.75
+    ebitdaK: -46.04
+    financingInflowK: 0.00
+    cashEopK: 1283.32
+  - month: M6
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 1.25
+    cloudCogsK: 0.19
+    deliveryPayrollCogsK: 0.00
+    cogsK: 0.19
+    grossProfitK: 1.06
+    salaryK: 23.75
+    salesMarketingK: 3.00
+    researchDevelopmentK: 12.00
+    generalAdministrativeK: 8.00
+    opexK: 46.75
+    ebitdaK: -45.69
+    financingInflowK: 0.00
+    cashEopK: 1237.63
+  - month: M7
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 1.67
+    cloudCogsK: 0.25
+    deliveryPayrollCogsK: 0.00
+    cogsK: 0.25
+    grossProfitK: 1.42
+    salaryK: 23.75
+    salesMarketingK: 3.00
+    researchDevelopmentK: 12.00
+    generalAdministrativeK: 8.00
+    opexK: 46.75
+    ebitdaK: -45.33
+    financingInflowK: 0.00
+    cashEopK: 1192.30
+  - month: M8
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 1.67
+    cloudCogsK: 0.25
+    deliveryPayrollCogsK: 0.00
+    cogsK: 0.25
+    grossProfitK: 1.42
+    salaryK: 23.75
+    salesMarketingK: 3.00
+    researchDevelopmentK: 12.00
+    generalAdministrativeK: 8.00
+    opexK: 46.75
+    ebitdaK: -45.33
+    financingInflowK: 0.00
+    cashEopK: 1146.97
+  - month: M9
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 1.67
+    cloudCogsK: 0.25
+    deliveryPayrollCogsK: 5.21
+    cogsK: 5.46
+    grossProfitK: -3.79
+    salaryK: 34.17
+    salesMarketingK: 3.00
+    researchDevelopmentK: 12.00
+    generalAdministrativeK: 8.00
+    opexK: 51.96
+    ebitdaK: -55.75
+    financingInflowK: 0.00
+    cashEopK: 1091.22
+  - month: M10
+    customersEop: 3
+    newCustomers: 1
+    revenueK: 2.08
+    cloudCogsK: 0.31
+    deliveryPayrollCogsK: 5.21
+    cogsK: 5.52
+    grossProfitK: -3.44
+    salaryK: 34.17
+    salesMarketingK: 3.00
+    researchDevelopmentK: 12.00
+    generalAdministrativeK: 8.00
+    opexK: 51.96
+    ebitdaK: -55.40
+    financingInflowK: 0.00
+    cashEopK: 1035.82
+  - month: M11
+    customersEop: 3
+    newCustomers: 0
+    revenueK: 2.50
+    cloudCogsK: 0.38
+    deliveryPayrollCogsK: 5.21
+    cogsK: 5.59
+    grossProfitK: -3.09
+    salaryK: 34.17
+    salesMarketingK: 3.00
+    researchDevelopmentK: 12.00
+    generalAdministrativeK: 8.00
+    opexK: 51.96
+    ebitdaK: -55.05
+    financingInflowK: 0.00
+    cashEopK: 980.77
+  - month: M12
+    customersEop: 3
+    newCustomers: 0
+    revenueK: 2.50
+    cloudCogsK: 0.38
+    deliveryPayrollCogsK: 5.21
+    cogsK: 5.59
+    grossProfitK: -3.09
+    salaryK: 34.17
+    salesMarketingK: 4.00
+    researchDevelopmentK: 12.00
+    generalAdministrativeK: 8.00
+    opexK: 52.96
+    ebitdaK: -56.05
+    financingInflowK: 0.00
+    cashEopK: 924.72
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 4
+    newCustomers: 1
+    revenueK: 13.13
+    cloudCogsK: 1.58
+    deliveryPayrollCogsK: 15.63
+    cogsK: 17.21
+    grossProfitK: -4.08
+    salaryK: 102.50
+    salesMarketingK: 12.00
+    researchDevelopmentK: 30.00
+    generalAdministrativeK: 18.00
+    opexK: 146.87
+    ebitdaK: -150.95
+    financingInflowK: 0.00
+    cashEopK: 773.77
+  - quarter: Q2Y2
+    customersEop: 6
+    newCustomers: 2
+    revenueK: 18.75
+    cloudCogsK: 2.25
+    deliveryPayrollCogsK: 15.63
+    cogsK: 17.88
+    grossProfitK: 0.87
+    salaryK: 102.50
+    salesMarketingK: 15.00
+    researchDevelopmentK: 32.00
+    generalAdministrativeK: 18.00
+    opexK: 151.87
+    ebitdaK: -151.00
+    financingInflowK: 0.00
+    cashEopK: 622.77
+  - quarter: Q3Y2
+    customersEop: 8
+    newCustomers: 2
+    revenueK: 26.25
+    cloudCogsK: 3.15
+    deliveryPayrollCogsK: 15.63
+    cogsK: 18.78
+    grossProfitK: 7.47
+    salaryK: 143.75
+    salesMarketingK: 18.00
+    researchDevelopmentK: 34.00
+    generalAdministrativeK: 19.00
+    opexK: 199.12
+    ebitdaK: -191.65
+    financingInflowK: 2000.00
+    cashEopK: 2431.12
+  - quarter: Q4Y2
+    customersEop: 10
+    newCustomers: 2
+    revenueK: 33.75
+    cloudCogsK: 4.05
+    deliveryPayrollCogsK: 15.63
+    cogsK: 19.68
+    grossProfitK: 14.07
+    salaryK: 143.75
+    salesMarketingK: 20.00
+    researchDevelopmentK: 36.00
+    generalAdministrativeK: 20.00
+    opexK: 204.12
+    ebitdaK: -190.05
+    financingInflowK: 0.00
+    cashEopK: 2241.07
+  - quarter: Q1Y3
+    customersEop: 11
+    newCustomers: 1
+    revenueK: 47.25
+    cloudCogsK: 4.73
+    deliveryPayrollCogsK: 12.50
+    cogsK: 17.23
+    grossProfitK: 30.02
+    salaryK: 143.75
+    salesMarketingK: 20.00
+    researchDevelopmentK: 32.00
+    generalAdministrativeK: 20.00
+    opexK: 203.25
+    ebitdaK: -173.23
+    financingInflowK: 0.00
+    cashEopK: 2067.84
+  - quarter: Q2Y3
+    customersEop: 12
+    newCustomers: 1
+    revenueK: 51.75
+    cloudCogsK: 5.18
+    deliveryPayrollCogsK: 12.50
+    cogsK: 17.68
+    grossProfitK: 34.07
+    salaryK: 143.75
+    salesMarketingK: 22.00
+    researchDevelopmentK: 34.00
+    generalAdministrativeK: 20.00
+    opexK: 207.25
+    ebitdaK: -173.18
+    financingInflowK: 0.00
+    cashEopK: 1894.66
+  - quarter: Q3Y3
+    customersEop: 13
+    newCustomers: 1
+    revenueK: 56.25
+    cloudCogsK: 5.63
+    deliveryPayrollCogsK: 12.50
+    cogsK: 18.13
+    grossProfitK: 38.12
+    salaryK: 176.25
+    salesMarketingK: 24.00
+    researchDevelopmentK: 36.00
+    generalAdministrativeK: 22.00
+    opexK: 245.75
+    ebitdaK: -207.63
+    financingInflowK: 0.00
+    cashEopK: 1687.03
+  - quarter: Q4Y3
+    customersEop: 14
+    newCustomers: 1
+    revenueK: 60.75
+    cloudCogsK: 6.08
+    deliveryPayrollCogsK: 12.50
+    cogsK: 18.58
+    grossProfitK: 42.17
+    salaryK: 176.25
+    salesMarketingK: 28.00
+    researchDevelopmentK: 38.00
+    generalAdministrativeK: 22.00
+    opexK: 251.75
+    ebitdaK: -209.58
+    financingInflowK: 0.00
+    cashEopK: 1477.45
+totals:
+  y1:
+    revenueK: 14.59
+    cogsK: 23.03
+    grossProfitK: -8.44
+    salaryK: 326.68
+    deliveryPayrollCogsK: 20.84
+    salesMarketingK: 33.00
+    researchDevelopmentK: 136.00
+    generalAdministrativeK: 92.00
+    opexK: 566.84
+    ebitdaK: -575.28
+    financingInflowK: 0.00
+    cashEopK: 924.72
+  y2:
+    revenueK: 91.88
+    cogsK: 73.55
+    grossProfitK: 18.33
+    salaryK: 492.50
+    deliveryPayrollCogsK: 62.52
+    salesMarketingK: 65.00
+    researchDevelopmentK: 132.00
+    generalAdministrativeK: 75.00
+    opexK: 701.98
+    ebitdaK: -683.65
+    financingInflowK: 2000.00
+    cashEopK: 2241.07
+  y3:
+    revenueK: 216.00
+    cogsK: 71.62
+    grossProfitK: 144.38
+    salaryK: 640.00
+    deliveryPayrollCogsK: 50.00
+    salesMarketingK: 94.00
+    researchDevelopmentK: 140.00
+    generalAdministrativeK: 84.00
+    opexK: 908.00
+    ebitdaK: -763.62
+    financingInflowK: 0.00
+    cashEopK: 1477.45
+unitEconomics:
+  arpuAnnualK: 18.00
+  grossMarginPct: 66.8
+  cacK: 23.75
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 66.7
+  ltvK: 66.84
+  ltvCacRatio: 2.81
+  cacPaybackMonths: 23.7
+fundingAsk:
+  round: pre-seed
+  amountM: 1.5
+  runwayMonths: 18
+  milestone: "验证一条可接受且独立的 Microsoft 365 权限与恢复路径，拿下至少两个付费 MSP 试点；完成可重复的恢复演练，约定对象恢复率至少达到 95%；已完成试点中至少一半转为年度合同；并在有条件启动种子轮融资前，拿出毛利率超过 50% 的可行路径。"
+  useOfFunds:
+    - bucket: 工程
+      amountUsd: 750000
+      percentage: 50
+    - bucket: GTM（市场拓展）
+      amountUsd: 225000
+      percentage: 15
+    - bucket: "G&A（综合管理）"
+      amountUsd: 225000
+      percentage: 15
+    - bucket: "现金缓冲（6 个月）"
+      amountUsd: 300000
+      percentage: 20
+scenarios:
+  downside:
+    description: "销售延迟两个季度，到 Q4Y3 公司有 11 家 MSPs；团队暂停 M18 之后的招聘和可自由支配支出，且模型未计入后续融资。"
+    y3RevenueK: 108.00
+    y3EbitdaK: -463.20
+    cashLowPointK: -95.56
+    keyAssumptionChanges:
+      - "A30：Y3 ARPU 降至 $12K，客户数增长最终停在 11 家 MSPs。"
+      - "A30：不进行原计划有条件启动的 Q3Y2 种子轮融资；M18 后冻结招聘，团队维持 3 名 FTE。"
+  base:
+    description: "基准情景到 Q4Y2 达到 10 家 MSPs、约 100 个受保护租户，之后到 Q4Y3 达到 14 家 MSPs；有条件的种子轮融资到账前，现金最低点是 M18 时的种子前轮余额。"
+    y3RevenueK: 216.00
+    y3EbitdaK: -763.62
+    cashLowPointK: 622.77
+    keyAssumptionChanges:
+      - "A5-A29 中的客户增长、定价、毛利率相关成本分摊和有条件融资安排均不变。"
+  upside:
+    description: "合作伙伴转介绍加快，到 Q4Y2 达到 14 家 MSPs；设置服务和恢复演练增购将单家 MSP 年收入推至 $21K，Y3 毛利率达到 70%。"
+    y3RevenueK: 294.00
+    y3EbitdaK: -702.20
+    cashLowPointK: 636.00
+    keyAssumptionChanges:
+      - "A31：到 Q4Y2 达到 14 家 MSPs，并在整个 Y3 保持这一客户数。"
+      - "A31：席位定价取区间上限，并叠加设置服务和定期恢复演练费用，使 ARPU 升至 $21K。"
+      - "A31：自动化降低交付和云成本，使毛利率达到 70%。"
+sensitivity:
+  - variable: ARPU
+    downsideCase: "Y3 单家 MSP 年收入降至 $12K。"
+    baseCase: "Y3 单家 MSP 年收入为 $18K。"
+    upsideCase: "叠加设置服务和恢复演练增购后，Y3 单家 MSP 年收入达到 $21K。"
+    y3RevenueImpactK: -72.00
+    cashImpactK: -64.80
+  - variable: CAC
+    downsideCase: "全口径 CAC 升至每家 MSP $35K；若要维持 14 家客户目标，还需增加约 $158K 销售现金支出。"
+    baseCase: "全口径 CAC 为每家 MSP $23.75K。"
+    upsideCase: "合作伙伴转介绍将每家 MSP 的 CAC 降至 $18K。"
+    y3RevenueImpactK: 0.00
+    cashImpactK: -157.50
+  - variable: 客户流失率
+    downsideCase: "MSP 客户月流失率升至 2.5%。"
+    baseCase: "MSP 客户月流失率为 1.5%。"
+    upsideCase: "将恢复证据写入操作手册后，MSP 客户月流失率降至 1.0%。"
+    y3RevenueImpactK: -18.00
+    cashImpactK: -16.20
+  - variable: 销售周期
+    downsideCase: "从合格线索到签下年度合同拉长至 9-12 个月，数家 Y3 客户因此落在预测期之外，也可能错过后续融资门槛。"
+    baseCase: "从合格线索到签下年度合同需要 6-9 个月。"
+    upsideCase: "客户恢复评审将周期缩短至 4-5 个月。"
+    y3RevenueImpactK: -72.00
+    cashImpactK: -64.80
+  - variable: 毛利率
+    downsideCase: "交付人力及云/传输成本使毛利率维持在 50% 左右。"
+    baseCase: "Y3 毛利率达到 66.8%，低于 BP 70% 的目标。"
+    upsideCase: "自动化与合作伙伴交付使毛利率达到 70% 目标。"
+    y3RevenueImpactK: 0.00
+    cashImpactK: -36.40
+  - variable: 招聘节奏
+    downsideCase: "第二名工程师和 GTM 人员都在里程碑门槛达成前提前一个季度入职。"
+    baseCase: "第二名工程师和 GTM 人员按 A13 的分阶段验证计划入职。"
+    upsideCase: "客户导入自动化接手更多工作，因此一项计划中的招聘延后一个季度。"
+    y3RevenueImpactK: 0.00
+    cashImpactK: -74.00
+modelDiagram:
+  title: MSP 恢复保障储备服务的单位经济模型
+  mermaid: |
+    flowchart LR
+      Leads[Qualified MSP leads] --> Pilots[Paid tenant pilots]
+      Pilots --> MSPs[Paying MSP accounts]
+      MSPs --> Tenants[Protected tenants and restore drills]
+      Tenants --> Revenue[Subscription setup and drill revenue]
+      Revenue --> GrossProfit[Gross profit after delivery labor and cloud]
+      GrossProfit --> Cash[Cash after operating costs and financing]
+modelSanity:
+  - checkName: 收入引擎
+    finding: "基准情景下，Y1 有 3 家 MSP、单家 ARPU 为 $10K；Y2 增至 10 家、ARPU 为 $15K；Y3 达到 14 家、ARPU 为 $18K，带来 $216K 的 Y3 收入。"
+  - checkName: 关键前提
+    finding: "试点转化和客户导入自动化必须把 Y3 毛利率推至 66.8%；验证通过后，还要完成有条件启动的 Q3Y2 $2.0M 种子轮融资。"
+  - checkName: 模型失效条件
+    finding: "销售延迟两个季度，会使 Y3 收入减少约 $72K、融资前模型现金减少 $64.8K；若未达到种子轮门槛，下行情景现金最低点将接近负 $96K。"
+  - checkName: 下一轮融资验证门槛
+    finding: "$1.5M 种子前轮融资可支撑 18 个月，用于验证权限、签下付费试点、证明恢复保真度至少达到 95%、推动已完成试点中的一半转化，并测出毛利率超过 50% 的路径。"
+sanityChecks:
+  ruleOf40: "Y3 收入增速 135.1% + EBITDA 利润率 -353.5% = -218.4%；以当前收入基数看，这一指标不能作为规模化阶段 SaaS 效率的信号。"
+  burnMultiple: "Y2 为 5.7x（$684K EBITDA 现金消耗 / $120K 净新增 ARR），Y3 为 7.5x（$764K / $102K）；两个年度的成本基础都远超收入，公司尚未进入规模化阶段。"
+  revenuePerFte: "Q4Y3 的 5 名 FTE 在 Y3 人均贡献 $43K 收入，低于规模化 SaaS 团队 $200K-$400K 的方向性基准。"
+  flags:
+    - "Y3 收入仅为 $216K，对照示例性的 $240K SOM 类别支出情景仍偏低；14 家 MSP 的上限和客户对恢复储备服务的专项付费意愿都尚未验证。"
+    - "Y3 毛利率为 66.8%，低于 BP 70% 的目标；客户导入流程尚未跑顺前，Y1-Y2 还要承担恢复运营人力成本。"
+    - "40 法则为 -218.4%，烧钱倍数从 5.7x 升至 7.5x，Y3 每名 FTE 收入仅 $43K；这是一份先验证、再决定继续还是止损的计划，并非已证明可规模化的模型。"
+    - "Y3 期末现金 $1.48M 包含有条件的 Q3Y2 $2.0M 种子轮融资；若未能融资，下行情景将出现 $95.56K 现金缺口，必须停止项目或进一步削减成本。"
+    - "Y1/Y2 将 50% 的恢复运营薪酬分摊至交付成本、云成本率逐步下降，都只是规划假设；实际存储、数据外传、演练人力和 API 限流成本必须在试点中测清。"
