@@ -1,0 +1,746 @@
+slug: bankruptcy-notice-escrow
+date: "2026-10-20"
+currency: USD
+modelStartMonth: "2026-11"
+assumptions:
+  - id: A1
+    name: Model start month
+    value: "2026-11"
+    unit: YYYY-MM
+    source: "[business-plan.yaml date 2026-10-20; model convention: start in the next full calendar month]"
+  - id: A2
+    name: Paying customer definition
+    value: "One customer-equivalent is one active paid case portfolio under a continuity pilot or annual retainer; fractional customer-equivalents represent probability-weighted churn and ramp, not fractional legal entities."
+    unit: portfolio equivalents
+    source: "[business-plan.yaml businessModel.unitOfValue and gtm.pricing; model convention for low-volume expected customer counts]"
+  - id: A3
+    name: Annual revenue per active portfolio
+    value: "Y1 annualized active-portfolio ARPU 7.5; Y2 12; Y3 15; no separate setup, activation, or pass-through postage revenue is modeled."
+    unit: USDK per portfolio-year
+    source: "[business-plan.yaml gtm.pricing and investorMemo.firstCustomer.initialContract; Y1 is within the $5K-$10K pilot range and later years within the $5K-$20K retainer range; rates are annualized planning assumptions, not validated pricing]"
+  - id: A4
+    name: Revenue recognition and collection timing
+    value: "Monthly revenue equals average of beginning and ending customer-equivalents multiplied by annual ARPU divided by 12; quarterly revenue equals average monthly customer-equivalents multiplied by annual ARPU divided by 4; a pilot is modeled as monthly coverage revenue, not as an upfront fixed fee, and customer receipts and expenses are assumed in the recognition period."
+    unit: calculation and timing convention
+    source: "[business-plan.yaml businessModel and gtm.pricing; startup-finance planning convention; no contract billing or collection history exists]"
+  - id: A5
+    name: Paying customer ramp
+    value: "0 at model start; 1 new paid pilot in M10, assumed to convert to an annual portfolio retainer by M18; quarter-end active portfolio-equivalents 1.2, 2.0, 2.4, and 3.0 in Y2; 3.5, 4.0, 4.5, and 5.0 in Y3."
+    unit: active portfolio-equivalents
+    source: "[business-plan.yaml gtm.funnelTargets, milestones, and killCriteria; research.yaml market.sam, market.som, and bottomUpSizingDrivers; forecast targets only, not pipeline or signed customers]"
+  - id: A6
+    name: Monthly customer churn
+    value: "1.5"
+    unit: percent per month
+    source: "Startup-finance heuristic for an unvalidated, recurring B2B continuity service; research.yaml reportMemo.customerAndBuyer confirms no retention evidence, so churn is not observed."
+  - id: A7
+    name: Gross margin and direct cost rate
+    value: "70% base gross margin; variable partner, secure-storage, and case-level delivery COGS equal 30% of revenue."
+    unit: percent of revenue
+    source: "[business-plan.yaml businessModel.targetGrossMarginPct and operations; 30% COGS is the derived complement, not a measured vendor cost]"
+  - id: A8
+    name: Opening cash and current pre-seed financing
+    value: "0 opening cash; 1250 financing in M1"
+    unit: USDK
+    source: "[business-plan.yaml fundingAsk.targetFundingRangeUsd of $1M-$2M; model selects $1.25M from the stated range based on A21; financing is not committed]"
+  - id: A9
+    name: Hiring sequence and six-column FTE plan
+    value: "CEO and founding engineer start M1; implementation and dispatch-partnerships lead starts M10 after the first paid pilot; second engineer starts M22 after repeatability; customer implementation lead starts M31 after four portfolio-equivalents; snapshots are 2, 2, 2, 3, 4, and 5 FTE at q1y1, q2y1, q3y1, q4y1, q4y2, and q4y3."
+    unit: FTE and hiring schedule
+    source: "[business-plan.yaml team, strategicChoices.sequencingRationale, product.sixMonth, and milestones; later hires are gated planning assumptions, not commitments]"
+  - id: A10
+    name: Founder and CEO loaded cash compensation
+    value: "120"
+    unit: USDK per FTE-year
+    source: "Startup-finance planning heuristic for a lean pre-seed founder salary including employer burden; no compensation survey was used."
+  - id: A11
+    name: Founding engineer loaded cash compensation
+    value: "150"
+    unit: USDK per FTE-year
+    source: "[business-plan.yaml team founding engineer role; internal startup-finance planning estimate including employer burden, not a market survey]"
+  - id: A12
+    name: Implementation and dispatch-partnerships lead loaded cash compensation
+    value: "115"
+    unit: USDK per FTE-year
+    source: "[business-plan.yaml team implementation and dispatch-partnerships lead; internal startup-finance planning estimate including employer burden, not a market survey]"
+  - id: A13
+    name: Second engineer loaded cash compensation
+    value: "150"
+    unit: USDK per FTE-year
+    source: "[business-plan.yaml product and security milestones; internal startup-finance planning estimate for a gated engineering hire including employer burden]"
+  - id: A14
+    name: Customer implementation lead loaded cash compensation
+    value: "105"
+    unit: USDK per FTE-year
+    source: "[business-plan.yaml twelve-month and twenty-four-month onboarding goals; internal startup-finance planning estimate for a gated customer-operations hire including employer burden]"
+  - id: A15
+    name: Payroll allocation and salary presentation
+    value: "CEO salary allocation: 25% S&M, 10% R&D, 65% G&A; founding and second engineers: 100% R&D; implementation-partnerships lead: 50% S&M, 50% G&A; customer implementation lead: 30% S&M, 70% G&A; salaryK is total loaded payroll, already included in functional OPEX."
+    unit: allocation convention
+    source: "[business-plan.yaml team and founder-led GTM; internal expense-allocation convention; salaryK is a memorandum line and is not added twice to OPEX]"
+  - id: A16
+    name: Nonpayroll sales and marketing budget
+    value: "Y1 2 per month; Y2 5 per quarter; Y3 7.5 per quarter"
+    unit: USDK per period
+    source: "[business-plan.yaml gtm.channels, gtm.funnelTargets, and strategicChoices.sequencingRationale; lean founder-led outreach and travel planning heuristic, not a measured CAC budget]"
+  - id: A17
+    name: Nonpayroll research and development budget
+    value: "Y1 10 per month; Y2 30 per quarter; Y3 35 per quarter"
+    unit: USDK per period
+    source: "[business-plan.yaml product.mvp, product.sixMonth, operations, and security milestones; internal planning estimate for secure file workflow, test tooling, and specialist support]"
+  - id: A18
+    name: Nonpayroll general and administrative budget
+    value: "Y1 8 per month; Y2 22.5 per quarter; Y3 25 per quarter"
+    unit: USDK per period
+    source: "[business-plan.yaml operations and operatingAssumptions; internal planning estimate for outside bankruptcy counsel, security review, insurance, accounting, and administration]"
+  - id: A19
+    name: Fully loaded customer acquisition cost
+    value: "Total three-year nonpayroll S&M of 74K plus 116.4375K attributed selling payroll, divided by 5.9859 gross new portfolio-equivalents, yields CAC of 31.8141K; selling payroll attribution is CEO 10%, partnerships lead 25%, and customer implementation lead 30% of loaded compensation."
+    unit: USDK per new portfolio-equivalent
+    source: "[business-plan.yaml founder-led GTM and team; derived from A5, A10-A16; sales-time shares are startup-finance heuristics and payroll is already in OPEX]"
+  - id: A20
+    name: Unit-economics formulas
+    value: "Average life equals 1 divided by monthly churn; LTV equals Y3 annual ARPU divided by 12, multiplied by gross margin and divided by monthly churn; CAC payback equals CAC divided by monthly gross profit per portfolio; base outputs are 66.67 months life, 58.33K LTV, 1.83x LTV:CAC, and 36.36 months payback."
+    unit: formula and derived metrics
+    source: "Startup-finance unit-economics convention applied to A3, A6, A7, and A19; no product retention or acquisition history exists."
+  - id: A21
+    name: Pre-seed ask through the proof milestone and six-month buffer
+    value: "Modeled net operating burn through M18 is 840.319K; M19-M24 net burn is 335.548K; the 18-month milestone plus six-month buffer requires about 1,175.867K, so the 1.25M ask leaves approximately 74.133K at M24 before a conditional follow-on."
+    unit: USDK
+    source: "[business-plan.yaml fundingAsk.runwayMonths and useOfFundsSummary; derived from A3-A9 and A15-A18; six-month buffer is explicitly reserved for post-milestone execution risk]"
+  - id: A22
+    name: Current pre-seed use-of-funds allocation
+    value: "Engineering 43%; GTM 15%; G&A 15%; six-month buffer 27%, totaling 1.25M."
+    unit: percent and USDM
+    source: "[business-plan.yaml fundingAsk.useOfFundsSummary priorities; internal budget allocation heuristic reconciled to A8 and A21]"
+  - id: A23
+    name: Conditional seed financing after proof
+    value: "1500 financing at the start of M25, conditional on the M24 source-authority, paid-portfolio, and renewal milestones; not part of the current funding ask and not committed."
+    unit: USDK and timing
+    source: "[business-plan.yaml milestones for months 12-24 and 24-36; startup-finance follow-on planning heuristic; the downside case assumes no follow-on]"
+  - id: A24
+    name: Cash roll-forward convention
+    value: "Cash EOP equals cash BOP plus EBITDA plus financing inflows; no debt, taxes, capex, working-capital timing, or financing fees are modeled."
+    unit: calculation convention
+    source: "Startup-finance planning convention; no balance-sheet or financing-fee data is provided in business-plan.yaml or research.yaml."
+  - id: A25
+    name: Downside case
+    value: "First paid pilot slips to M18; 2 portfolio-equivalents by M24 and 3 by M36; annual ARPU stays 10K, gross margin is 60%, the implementation lead starts M19, later hires are deferred, nonpayroll S&M and R&D are cut after M18, and no seed is raised; derived Y3 revenue 22.09K, EBITDA -551.746K, and cash low point -365.857K."
+    unit: scenario
+    source: "[business-plan.yaml killCriteria, operatingAssumptions, and milestones; conservative stop/go response to no paid pilot and no renewal]"
+  - id: A26
+    name: Upside case
+    value: "Pilot begins M9; portfolio-equivalents reach 8 by M36; annual ARPU reaches 20K and gross margin 75% in Y3; hiring stays on the base schedule and the conditional M25 seed closes; derived Y3 revenue 128.097K, EBITDA -761.427K, and cash low point 91.013K."
+    unit: scenario
+    source: "[business-plan.yaml gtm.pricing, businessModel.targetGrossMarginPct, market.som, and milestones; optimistic but bounded sensitivity, not validated demand]"
+  - id: A27
+    name: Sensitivity case conventions
+    value: "One variable changes at a time; downside impacts are measured against the base forecast; sales cycle moves the customer schedule by one quarter; churn holds gross additions fixed; CAC holds acquisitions fixed; hiring shifts all gated hires by one quarter; cash impact is the modeled ending-cash difference through M36."
+    unit: sensitivity method
+    source: "Model calculation convention using A5-A24; sensitivity values are planning tests, not observed outcomes."
+  - id: A28
+    name: Sanity metric definitions and directional heuristics
+    value: "Rule of 40 is Y3 revenue growth plus Y3 EBITDA margin; burn multiple is Y3 EBITDA cash burn divided by net new exit ARR; revenue per FTE uses Q4Y3 FTE; generic early SaaS planning heuristics are 3x LTV:CAC, under 18-month CAC payback, and 200K-400K annual revenue per FTE."
+    unit: formulas and directional benchmarks
+    source: "Named generic startup-finance heuristics only; no web research or company-specific benchmark is claimed."
+headcount:
+  - role: Founder / CEO
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Founding Engineer
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Implementation & Dispatch Partnerships Lead
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Product / Security Engineer
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 1
+    q4y3: 1
+  - role: Customer Implementation Lead
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 0
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 2
+  q2y1: 2
+  q3y1: 2
+  q4y1: 3
+  q4y2: 4
+  q4y3: 5
+headcountAnnualizedPayrollK:
+  q1y1: 270.0
+  q2y1: 270.0
+  q3y1: 270.0
+  q4y1: 385.0
+  q4y2: 535.0
+  q4y3: 640.0
+y1Monthly:
+  - month: M1
+    customersBop: 0.0
+    customersEop: 0.0
+    newCustomers: 0.0
+    churnedCustomers: 0.0
+    averageCustomers: 0.0
+    arpuAnnualK: 7.5
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 22.5
+    salesMarketingK: 4.5
+    researchDevelopmentK: 23.5
+    generalAdministrativeK: 14.5
+    opexK: 42.5
+    ebitdaK: -42.5
+    cashBopK: 0.0
+    financingInflowK: 1250.0
+    cashEopK: 1207.5
+  - month: M2
+    customersBop: 0.0
+    customersEop: 0.0
+    newCustomers: 0.0
+    churnedCustomers: 0.0
+    averageCustomers: 0.0
+    arpuAnnualK: 7.5
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 22.5
+    salesMarketingK: 4.5
+    researchDevelopmentK: 23.5
+    generalAdministrativeK: 14.5
+    opexK: 42.5
+    ebitdaK: -42.5
+    cashBopK: 1207.5
+    financingInflowK: 0.0
+    cashEopK: 1165.0
+  - month: M3
+    customersBop: 0.0
+    customersEop: 0.0
+    newCustomers: 0.0
+    churnedCustomers: 0.0
+    averageCustomers: 0.0
+    arpuAnnualK: 7.5
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 22.5
+    salesMarketingK: 4.5
+    researchDevelopmentK: 23.5
+    generalAdministrativeK: 14.5
+    opexK: 42.5
+    ebitdaK: -42.5
+    cashBopK: 1165.0
+    financingInflowK: 0.0
+    cashEopK: 1122.5
+  - month: M4
+    customersBop: 0.0
+    customersEop: 0.0
+    newCustomers: 0.0
+    churnedCustomers: 0.0
+    averageCustomers: 0.0
+    arpuAnnualK: 7.5
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 22.5
+    salesMarketingK: 4.5
+    researchDevelopmentK: 23.5
+    generalAdministrativeK: 14.5
+    opexK: 42.5
+    ebitdaK: -42.5
+    cashBopK: 1122.5
+    financingInflowK: 0.0
+    cashEopK: 1080.0
+  - month: M5
+    customersBop: 0.0
+    customersEop: 0.0
+    newCustomers: 0.0
+    churnedCustomers: 0.0
+    averageCustomers: 0.0
+    arpuAnnualK: 7.5
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 22.5
+    salesMarketingK: 4.5
+    researchDevelopmentK: 23.5
+    generalAdministrativeK: 14.5
+    opexK: 42.5
+    ebitdaK: -42.5
+    cashBopK: 1080.0
+    financingInflowK: 0.0
+    cashEopK: 1037.5
+  - month: M6
+    customersBop: 0.0
+    customersEop: 0.0
+    newCustomers: 0.0
+    churnedCustomers: 0.0
+    averageCustomers: 0.0
+    arpuAnnualK: 7.5
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 22.5
+    salesMarketingK: 4.5
+    researchDevelopmentK: 23.5
+    generalAdministrativeK: 14.5
+    opexK: 42.5
+    ebitdaK: -42.5
+    cashBopK: 1037.5
+    financingInflowK: 0.0
+    cashEopK: 995.0
+  - month: M7
+    customersBop: 0.0
+    customersEop: 0.0
+    newCustomers: 0.0
+    churnedCustomers: 0.0
+    averageCustomers: 0.0
+    arpuAnnualK: 7.5
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 22.5
+    salesMarketingK: 4.5
+    researchDevelopmentK: 23.5
+    generalAdministrativeK: 14.5
+    opexK: 42.5
+    ebitdaK: -42.5
+    cashBopK: 995.0
+    financingInflowK: 0.0
+    cashEopK: 952.5
+  - month: M8
+    customersBop: 0.0
+    customersEop: 0.0
+    newCustomers: 0.0
+    churnedCustomers: 0.0
+    averageCustomers: 0.0
+    arpuAnnualK: 7.5
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 22.5
+    salesMarketingK: 4.5
+    researchDevelopmentK: 23.5
+    generalAdministrativeK: 14.5
+    opexK: 42.5
+    ebitdaK: -42.5
+    cashBopK: 952.5
+    financingInflowK: 0.0
+    cashEopK: 910.0
+  - month: M9
+    customersBop: 0.0
+    customersEop: 0.0
+    newCustomers: 0.0
+    churnedCustomers: 0.0
+    averageCustomers: 0.0
+    arpuAnnualK: 7.5
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 22.5
+    salesMarketingK: 4.5
+    researchDevelopmentK: 23.5
+    generalAdministrativeK: 14.5
+    opexK: 42.5
+    ebitdaK: -42.5
+    cashBopK: 910.0
+    financingInflowK: 0.0
+    cashEopK: 867.5
+  - month: M10
+    customersBop: 0.0
+    customersEop: 1.0
+    newCustomers: 1.0
+    churnedCustomers: 0.0
+    averageCustomers: 0.5
+    arpuAnnualK: 7.5
+    revenueK: 0.3125
+    cogsK: 0.0938
+    grossProfitK: 0.2187
+    salaryK: 32.0833
+    salesMarketingK: 9.2917
+    researchDevelopmentK: 23.5
+    generalAdministrativeK: 19.2916
+    opexK: 52.0833
+    ebitdaK: -51.8646
+    cashBopK: 867.5
+    financingInflowK: 0.0
+    cashEopK: 815.6354
+  - month: M11
+    customersBop: 1.0
+    customersEop: 0.985
+    newCustomers: 0.0
+    churnedCustomers: 0.015
+    averageCustomers: 0.9925
+    arpuAnnualK: 7.5
+    revenueK: 0.6203
+    cogsK: 0.1861
+    grossProfitK: 0.4342
+    salaryK: 32.0833
+    salesMarketingK: 9.2917
+    researchDevelopmentK: 23.5
+    generalAdministrativeK: 19.2916
+    opexK: 52.0833
+    ebitdaK: -51.6491
+    cashBopK: 815.6354
+    financingInflowK: 0.0
+    cashEopK: 763.9863
+  - month: M12
+    customersBop: 0.985
+    customersEop: 0.9702
+    newCustomers: 0.0
+    churnedCustomers: 0.0148
+    averageCustomers: 0.9776
+    arpuAnnualK: 7.5
+    revenueK: 0.611
+    cogsK: 0.1833
+    grossProfitK: 0.4277
+    salaryK: 32.0833
+    salesMarketingK: 9.2917
+    researchDevelopmentK: 23.5
+    generalAdministrativeK: 19.2916
+    opexK: 52.0833
+    ebitdaK: -51.6556
+    cashBopK: 763.9863
+    financingInflowK: 0.0
+    cashEopK: 712.3307
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersBop: 0.9702
+    customersEop: 1.2
+    newCustomers: 0.2728
+    churnedCustomers: 0.043
+    averageCustomers: 0.994
+    arpuAnnualK: 12.0
+    revenueK: 2.982
+    cogsK: 0.8946
+    grossProfitK: 2.0874
+    salaryK: 96.2499
+    salesMarketingK: 26.8749
+    researchDevelopmentK: 70.5
+    generalAdministrativeK: 56.3751
+    opexK: 153.75
+    ebitdaK: -151.6626
+    cashBopK: 712.3307
+    financingInflowK: 0.0
+    cashEopK: 560.6681
+  - quarter: Q2Y2
+    customersBop: 1.2
+    customersEop: 2.0
+    newCustomers: 0.8532
+    churnedCustomers: 0.0532
+    averageCustomers: 1.3154
+    arpuAnnualK: 12.0
+    revenueK: 3.9462
+    cogsK: 1.1839
+    grossProfitK: 2.7623
+    salaryK: 96.2499
+    salesMarketingK: 26.8749
+    researchDevelopmentK: 70.5
+    generalAdministrativeK: 56.3751
+    opexK: 153.75
+    ebitdaK: -150.9877
+    cashBopK: 560.6681
+    financingInflowK: 0.0
+    cashEopK: 409.6804
+  - quarter: Q3Y2
+    customersBop: 2.0
+    customersEop: 2.4
+    newCustomers: 0.4887
+    churnedCustomers: 0.0887
+    averageCustomers: 2.0368
+    arpuAnnualK: 12.0
+    revenueK: 6.1104
+    cogsK: 1.8331
+    grossProfitK: 4.2773
+    salaryK: 96.2499
+    salesMarketingK: 26.8749
+    researchDevelopmentK: 70.5
+    generalAdministrativeK: 56.3751
+    opexK: 153.75
+    ebitdaK: -149.4727
+    cashBopK: 409.6804
+    financingInflowK: 0.0
+    cashEopK: 260.2077
+  - quarter: Q4Y2
+    customersBop: 2.4
+    customersEop: 3.0
+    newCustomers: 0.7064
+    churnedCustomers: 0.1064
+    averageCustomers: 2.4642
+    arpuAnnualK: 12.0
+    revenueK: 7.3926
+    cogsK: 2.2178
+    grossProfitK: 5.1748
+    salaryK: 133.7499
+    salesMarketingK: 26.8749
+    researchDevelopmentK: 108.0
+    generalAdministrativeK: 56.3751
+    opexK: 191.25
+    ebitdaK: -186.0752
+    cashBopK: 260.2077
+    financingInflowK: 0.0
+    cashEopK: 74.1325
+  - quarter: Q1Y3
+    customersBop: 3.0
+    customersEop: 3.5
+    newCustomers: 0.633
+    churnedCustomers: 0.133
+    averageCustomers: 3.0385
+    arpuAnnualK: 15.0
+    revenueK: 11.3944
+    cogsK: 3.4183
+    grossProfitK: 7.9761
+    salaryK: 133.7499
+    salesMarketingK: 29.3751
+    researchDevelopmentK: 113.0001
+    generalAdministrativeK: 58.8747
+    opexK: 201.2499
+    ebitdaK: -193.2738
+    cashBopK: 74.1325
+    financingInflowK: 1500.0
+    cashEopK: 1380.8587
+  - quarter: Q2Y3
+    customersBop: 3.5
+    customersEop: 4.0
+    newCustomers: 0.6551
+    churnedCustomers: 0.1551
+    averageCustomers: 3.5311
+    arpuAnnualK: 15.0
+    revenueK: 13.2416
+    cogsK: 3.9725
+    grossProfitK: 9.2691
+    salaryK: 133.7499
+    salesMarketingK: 29.3751
+    researchDevelopmentK: 113.0001
+    generalAdministrativeK: 58.8747
+    opexK: 201.2499
+    ebitdaK: -191.9808
+    cashBopK: 1380.8587
+    financingInflowK: 0.0
+    cashEopK: 1188.8779
+  - quarter: Q3Y3
+    customersBop: 4.0
+    customersEop: 4.5
+    newCustomers: 0.6773
+    churnedCustomers: 0.1773
+    averageCustomers: 4.0236
+    arpuAnnualK: 15.0
+    revenueK: 15.0885
+    cogsK: 4.5266
+    grossProfitK: 10.5619
+    salaryK: 159.9999
+    salesMarketingK: 37.2501
+    researchDevelopmentK: 113.0001
+    generalAdministrativeK: 77.2497
+    opexK: 227.4999
+    ebitdaK: -216.938
+    cashBopK: 1188.8779
+    financingInflowK: 0.0
+    cashEopK: 971.9399
+  - quarter: Q4Y3
+    customersBop: 4.5
+    customersEop: 5.0
+    newCustomers: 0.6995
+    churnedCustomers: 0.1995
+    averageCustomers: 4.5162
+    arpuAnnualK: 15.0
+    revenueK: 16.9358
+    cogsK: 5.0807
+    grossProfitK: 11.8551
+    salaryK: 159.9999
+    salesMarketingK: 37.2501
+    researchDevelopmentK: 113.0001
+    generalAdministrativeK: 77.2497
+    opexK: 227.4999
+    ebitdaK: -215.6448
+    cashBopK: 971.9399
+    financingInflowK: 0.0
+    cashEopK: 756.2951
+totals:
+  y1:
+    revenueK: 1.5438
+    cogsK: 0.4632
+    grossProfitK: 1.0806
+    salaryK: 298.7499
+    salesMarketingK: 68.3751
+    researchDevelopmentK: 282.0
+    generalAdministrativeK: 188.3748
+    opexK: 538.7499
+    ebitdaK: -537.6693
+    financingInflowK: 1250.0
+    cashEopK: 712.3307
+  y2:
+    revenueK: 20.4312
+    cogsK: 6.1294
+    grossProfitK: 14.3018
+    salaryK: 422.4996
+    salesMarketingK: 107.4996
+    researchDevelopmentK: 319.5
+    generalAdministrativeK: 225.5004
+    opexK: 652.5
+    ebitdaK: -638.1982
+    financingInflowK: 0.0
+    cashEopK: 74.1325
+  y3:
+    revenueK: 56.6603
+    cogsK: 16.9981
+    grossProfitK: 39.6622
+    salaryK: 587.4996
+    salesMarketingK: 133.2504
+    researchDevelopmentK: 452.0004
+    generalAdministrativeK: 272.2488
+    opexK: 857.4996
+    ebitdaK: -817.8374
+    financingInflowK: 1500.0
+    cashEopK: 756.2951
+unitEconomics:
+  arpuAnnualK: 15.0
+  grossMarginPct: 70.0
+  cacK: 31.8141
+  monthlyChurnPct: 1.5
+  avgCustomerLifeMonths: 66.67
+  ltvK: 58.33
+  ltvCacRatio: 1.83
+  cacPaybackMonths: 36.36
+fundingAsk:
+  round: pre-seed
+  amountM: 1.25
+  runwayMonths: 18
+  milestone: "M18 proof gate: two paid portfolio-equivalents, first-pilot conversion, authorized source coverage, and an approved tabletop; the six-month buffer carries the plan through M24 proof of three portfolios and a paid renewal."
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 537500
+      percentage: 43
+    - bucket: GTM
+      amountUsd: 187500
+      percentage: 15
+    - bucket: "G&A"
+      amountUsd: 187500
+      percentage: 15
+    - bucket: "Buffer (6 mo)"
+      amountUsd: 337500
+      percentage: 27
+scenarios:
+  downside:
+    description: "A delayed paid pilot, slower portfolio conversion, lower ARPU and margin, gated hiring, cost reductions, and no follow-on leave the business cash-negative by Y3."
+    y3RevenueK: 22.09
+    y3EbitdaK: -551.746
+    cashLowPointK: -365.857
+    keyAssumptionChanges:
+      - "First paid pilot slips from M10 to M18; customer-equivalents reach 2 by M24 and 3 by M36."
+      - "Annual ARPU is 10K and gross margin is 60% in Y3."
+      - "The implementation lead starts only after the delayed pilot; later hires are deferred and nonpayroll S&M and R&D are reduced after M18."
+      - "No M25 seed financing closes."
+  base:
+    description: "The base plan reaches five active portfolio-equivalents by Q4Y3 at 15K annual ARPU, but remains EBITDA-negative and relies on a conditional M25 seed."
+    y3RevenueK: 56.6603
+    y3EbitdaK: -817.8374
+    cashLowPointK: 74.1325
+    keyAssumptionChanges:
+      - "M10 first paid pilot, three active portfolio-equivalents by M24, and five by M36."
+      - "Annual ARPU increases from 7.5K in Y1 to 12K in Y2 and 15K in Y3 at 70% gross margin."
+      - "A conditional 1.5M seed closes at M25 only after authority, renewal, and portfolio proof."
+  upside:
+    description: "Earlier paid demand, eight active portfolio-equivalents by Q4Y3, higher pricing, and better direct-cost efficiency improve revenue but do not yet produce EBITDA breakeven."
+    y3RevenueK: 128.097
+    y3EbitdaK: -761.427
+    cashLowPointK: 91.013
+    keyAssumptionChanges:
+      - "The paid pilot starts in M9 and customer-equivalents reach eight by M36."
+      - "Y3 annual ARPU reaches 20K and gross margin reaches 75%."
+      - "Base hiring and the conditional M25 1.5M seed are retained."
+sensitivity:
+  - variable: ARPU
+    downsideCase: "Y3 annual ARPU 10K; Y3 revenue falls by 18.887K and ending cash by 13.221K."
+    baseCase: "Y3 annual ARPU 15K."
+    upsideCase: "Y3 annual ARPU 20K; Y3 revenue increases by 18.887K and ending cash by 13.221K."
+    y3RevenueImpactK: -18.887
+    cashImpactK: -13.221
+  - variable: CAC
+    downsideCase: "CAC 45K per new portfolio-equivalent at the same acquisition count; cash use increases by 78.930K."
+    baseCase: "CAC 31.814K per new portfolio-equivalent."
+    upsideCase: "CAC 22K per new portfolio-equivalent; cash use declines by 58.747K."
+    y3RevenueImpactK: 0.0
+    cashImpactK: -78.93
+  - variable: churn
+    downsideCase: "Monthly churn 2.5% with gross additions fixed; Y3 revenue falls by 5.257K and ending cash by 4.442K."
+    baseCase: "Monthly churn 1.5%."
+    upsideCase: "Monthly churn 0.8%; Y3 revenue increases by 4.138K and ending cash by 3.464K."
+    y3RevenueImpactK: -5.257
+    cashImpactK: -4.442
+  - variable: sales cycle
+    downsideCase: "Portfolio additions slip by one quarter; Y3 revenue falls by 7.695K and ending cash by 9.913K."
+    baseCase: "Acquisition schedule shown in y1Monthly and y2y3Quarterly."
+    upsideCase: "Portfolio additions move one quarter earlier; Y3 revenue increases by 6.937K and ending cash by 10.454K."
+    y3RevenueImpactK: -7.695
+    cashImpactK: -9.913
+  - variable: gross margin
+    downsideCase: "Gross margin falls to 60%; Y3 revenue is unchanged and cumulative cash falls by 7.864K."
+    baseCase: "Gross margin is 70%."
+    upsideCase: "Gross margin reaches 75%; Y3 revenue is unchanged and cumulative cash improves by 3.932K."
+    y3RevenueImpactK: 0.0
+    cashImpactK: -7.864
+  - variable: hiring pace
+    downsideCase: "All gated hires are pulled forward by one quarter; cash use increases by 92.5K."
+    baseCase: "Hires start at M10, M22, and M31."
+    upsideCase: "All gated hires are deferred by one quarter; cash use declines by 92.5K, assuming no capacity-related revenue effect."
+    y3RevenueImpactK: 0.0
+    cashImpactK: -92.5
+modelDiagram:
+  title: unit economics flow
+  mermaid: |
+    flowchart LR
+      Sources[Authorized recipient sources] --> Portfolio[Paid portfolio pilot or retainer]
+      Portfolio --> Customers[Average active portfolio equivalents]
+      Customers --> Revenue[Annual ARPU times active customers]
+      Revenue --> COGS[Partner and secure-storage costs]
+      Revenue --> GrossProfit[Gross profit]
+      COGS --> GrossProfit
+      GrossProfit --> EBITDA[EBITDA after payroll and operating expenses]
+      Financing[Conditional financing] --> Cash[Cash balance]
+      EBITDA --> Cash
+modelSanity:
+  - checkName: Revenue engine
+    finding: "Base revenue reaches $56.7K in Y3 from five year-end paid portfolio-equivalents at $15K annual ARPU, with no activation or pass-through fees modeled."
+  - checkName: Must go right
+    finding: "Two paid portfolio-equivalents by M18, three by M24, an approved tabletop, and at least one paid renewal must support the conditional M25 seed."
+  - checkName: Model breaks if
+    finding: "If authority or renewal gates fail, the M25 seed is unavailable and the downside cash low point is negative $365.9K, while hiring one quarter early consumes another $92.5K."
+  - checkName: Next-round proof
+    finding: "Before assuming the M25 seed, prove lawful complete source exports, a case-approved tabletop, three paying portfolios, and one paid renewal by M24."
+sanityChecks:
+  ruleOf40: "Y3 revenue growth 177.3% + EBITDA margin -1,443.4% = -1,266.1%; the growth rate is from a very small base."
+  burnMultiple: "21.0x = $817.8K Y3 EBITDA burn divided by $39.0K net new exit ARR; this is highly adverse and noisy at the modeled scale."
+  revenuePerFte: "$11.3K Y3 revenue per Q4Y3 FTE (5), versus a generic $200K-$400K scaled-SaaS planning heuristic."
+  flags:
+    - "Research found no continuity-specific price, budget, paid contract, or buyer interview; ARPU and churn remain unvalidated assumptions."
+    - "Y3 base revenue of $56.7K is below the research illustrative $0.2M SOM and depends on five portfolio-equivalents in a narrow market."
+    - "LTV:CAC is only 1.83x and CAC payback is 36.36 months, weaker than the generic 3x and under-18-month startup-finance heuristics."
+    - "Y3 rule-of-40 is deeply negative and burn multiple is 21.0x; the high percentage growth does not make the current economics venture-scale."
+    - "Cash falls to $74.1K at M24 before a conditional, uncommitted $1.5M seed; the no-seed downside reaches negative $365.9K."
+    - "The cash schedule assumes same-period receipts, excludes an upfront fixed pilot fee, and omits taxes, working capital, debt, capex, and financing fees, so actual revenue timing and runway may differ."
+    - "Y3 revenue per year-end FTE is only $11.3K; this signals low utilization and is based on a very small forecast."
+modelBasis:
+  revenueFormula: "Average customers multiplied by annual ARPU and divided by 12 monthly or 4 quarterly; see A2-A5."
+  customerRollForward: "customersEop equals customersBop plus newCustomers less churnedCustomers; fractional values are probability-weighted portfolio-equivalents; see A5-A6."
+  payrollAndOpex: "salaryK sums loaded role payroll from A9-A14; functional expenses include that payroll allocation plus nonpayroll budgets from A15-A18 and sum to opexK."
+  cashFormula: "cashEopK equals cashBopK plus ebitdaK plus financingInflowK; see A8 and A21-A24."
