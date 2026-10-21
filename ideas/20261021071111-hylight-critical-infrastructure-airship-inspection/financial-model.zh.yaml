@@ -1,0 +1,648 @@
+slug: methane-repair-closeout-proof
+date: "2026-10-21"
+currency: USD
+modelStartMonth: "2026-10"
+assumptions:
+  - id: A1
+    name: "预测起始月"
+    value: "2026-10"
+    unit: YYYY-MM
+    source: "business-plan.yaml 的 date 字段；模型从报告月份开始。"
+  - id: A2
+    name: "EUR 兑 USD 规划换算率"
+    value: "€1 = $1.10"
+    unit: "汇率"
+    source: "仅用于将 EUR 监测项目定价换算为 USD 的明确规划假设；未使用实时 FX 报价或网络研究，融资或签约前应更新。"
+  - id: A3
+    name: "基准监测项目费用"
+    value: "€17,500 或 $19.25K"
+    unit: "USD/每个固定收费监测项目"
+    source: "business-plan.yaml.gtm.pricing 给出的 €10,000–€25,000 是未经验证的测试区间；business-plan.yaml.market 和 research.yaml.market.tam 将 €17,500 用于情景测算，并非已公布价目或已观察到的付费意愿；USD 换算采用 A2。"
+  - id: A4
+    name: "每个活跃 TSO 客户年对应的监测项目数"
+    value: "2"
+    unit: "每个 TSO 客户年对应的监测项目数"
+    source: "research.yaml.market.sam 和 som 的情景测算假设每个账户年开展两次监测项目；这是未经验证的频次假设，不是客户承诺。"
+  - id: A5
+    name: "每个活跃客户的年收入"
+    value: "$38.5K"
+    unit: "USD/每个 TSO 客户年"
+    source: "按 A3 × A4 计算；收入来自监测项目，不是订阅 ARR。"
+  - id: A6
+    name: "基准付费客户获取时间"
+    value: "M10 新增一个客户，M16 再增一个，M25 再增一个"
+    unit: "新增 TSO 客户数"
+    source: "基于 business-plan.yaml 的里程碑假设：最迟到 12个月时拿下一个付费监测项目，最迟到 24个月时拥有两家付费 TSOs；第三家客户是对 research.yaml 假设的八家 SAM 的低置信度延伸，需求尚未验证。"
+  - id: A7
+    name: "月度客户流失率"
+    value: "1.0%"
+    unit: "每月百分比"
+    source: "初创企业财务规划中的经验假设，并非留存实测值；用固定月度流失风险率估算实际监测项目续约客户批次出现前的预期活跃客户等效数。"
+  - id: A8
+    name: "基准毛利率"
+    value: "60%"
+    unit: "收入占比"
+    source: "取自 business-plan.yaml.businessModel.targetGrossMarginPct；相当于合作方航测与直接交付成本占收入的 40%，目前尚无有约束力的合作方报价支撑。"
+  - id: A9
+    name: "CEO / 商业创始人年化全口径成本"
+    value: "$75,000"
+    unit: "USD/每 FTE 年"
+    source: "精益种子前创始团队的初创企业薪酬经验假设；按含雇主负担的年化现金成本建模，并非市场报价。"
+  - id: A10
+    name: "现场甲烷测量负责人年化全口径成本"
+    value: "$90,000"
+    unit: "USD/每 FTE 年"
+    source: "专业岗位早期招聘的初创企业薪酬经验假设；按含雇主负担的年化现金成本建模，并非市场报价。"
+  - id: A11
+    name: "创始产品工程师年化全口径成本"
+    value: "$90,000"
+    unit: "USD/每 FTE 年"
+    source: "精简早期产品团队招聘的初创企业薪酬经验假设；按含雇主负担的年化现金成本建模，并非市场报价。"
+  - id: A12
+    name: "合作方运营负责人年化全口径成本"
+    value: "$75,000"
+    unit: "USD/每 FTE 年"
+    source: "早期运营岗位招聘的初创企业薪酬经验假设；按含雇主负担的年化现金成本建模，并非市场报价。"
+  - id: A13
+    name: "合作方运营岗位招聘时间"
+    value: "M3，且仅在签下试点路径后"
+    unit: "启动月份与门槛"
+    source: "business-plan.yaml.team 设定的招聘门槛；基准情景假设这项未经验证的门槛最迟到 3个月时达成。"
+  - id: A14
+    name: "非薪酬销售与市场预算"
+    value: "Y1 $45K、Y2 $45K、Y3 $55K"
+    unit: "每年 USD 千元"
+    source: "为创始人主导的 TSO 拓展、合作方筛选和采购差旅设置的初创企业预算经验值；不含薪酬，也未按实测 CAC 制定。"
+  - id: A15
+    name: "非薪酬研发预算"
+    value: "Y1 $65K、Y2 $45K、Y3 $40K"
+    unit: "每年 USD 千元"
+    source: "为协议测试、独立测量支持和精简证据包工具预留的初创企业预算经验值；未假设购买飞机或甲烷传感器。"
+  - id: A16
+    name: "非薪酬管理与行政预算"
+    value: "Y1 $40K、Y2 $40K、Y3 $45K"
+    unit: "每年 USD 千元"
+    source: "为单一国家内的法律、保险、采购、会计和行政支出设置的初创企业预算经验值；未参考供应商报价。"
+  - id: A17
+    name: "种子前轮融资目标"
+    value: "$950K"
+    unit: USD
+    source: "business-plan.yaml.fundingAsk.targetFundingRangeUsd 为 $0.75–1.0M；模型取上限，用于覆盖 18 个月验证期和约六个月的运营储备。"
+  - id: A18
+    name: "附条件的后续种子轮融资"
+    value: "$1.25M，Q4Y2（第 22 个月）"
+    unit: "USD 千元与时点"
+    source: "仅为初创企业融资规划假设；business-plan.yaml 中没有后续融资承诺。现金预测要求在付费试点、证据验收、客户复购和毛利率门槛通过后再融一轮；这笔融资不计入 fundingAsk.amountM。"
+  - id: A19
+    name: "现金收付与资本开支"
+    value: "收入当期收款，供应商款项当期支付；资本开支、债务、税费、利息和营运资金变动均按 $0 计。"
+    unit: "现金流口径"
+    source: "与 business-plan.yaml 的合作方交付、无需持有飞机的策略一致的简化现金流假设；实际采购、付款和纳税时点都可能让现金状况更差。"
+  - id: A20
+    name: "收入确认与账户等效数计算法"
+    value: "每月收入按平均活跃账户数 × A5 / 12 计算"
+    unit: "计算口径"
+    source: "固定收费监测项目的简化模型：按假设的年度项目调用节奏，把收入平滑摊到各月，并按 A19 当期收款；实际监测项目收入会有波峰波谷，取决于获批的工作范围和交付情况。"
+  - id: A21
+    name: "全口径 CAC"
+    value: "$70.8K/每个新增客户"
+    unit: "USD/每个 TSO 客户"
+    source: "按 A14 的三年非薪酬 S&M 支出（$145K）加上 A9 中 CEO 薪酬的 30%（$67.5K），再除以 A6 的三家新增客户计算；CEO 成本分摊只是规划假设，不会再次计入 P&L 费用。"
+  - id: A22
+    name: "种子前轮资金用途分配"
+    value: "工程研发 $360K；GTM $195K；G&A $170K；六个月缓冲资金 $225K"
+    unit: USD
+    source: "基于 A9–A16 的管理层预算分配经验值；合计 $950K，并留出接近六个月的储备，覆盖第 18 个月验证里程碑之后的模型净运营消耗。"
+  - id: A23
+    name: "下行情景参数"
+    value: "M16 新增一个付费客户；单个监测项目收费 €15K；每年一个项目；毛利率 40%；不融种子轮；M16 招聘运营人员"
+    unit: "情景参数"
+    source: "压力情景采用 business-plan.yaml 未验证监测项目定价区间的下半段，并以 40% 的最低试点毛利率作为止损门槛；不代表已有买方需求，且全额维持计划中的非薪酬支出，以暴露现金下行风险。"
+  - id: A24
+    name: "上行情景参数"
+    value: "M8、M14、M20、M26 各新增一个客户；单个监测项目收费 €20K；每个客户每年 2.5 个项目；月流失率 0.5%；毛利率 65%"
+    unit: "情景参数"
+    source: "仅作敏感性分析的假设，落在 business-plan.yaml 定价区间和 research.yaml 中央监测项目频次情景内；新增客户、毛利率和购买频次都未经验证，不是市场数据。"
+  - id: A25
+    name: "监测项目价格敏感性"
+    value: "下行情景 €15K、基准 €17.5K、上行情景 €25K"
+    unit: "EUR/每个监测项目"
+    source: "见 business-plan.yaml.gtm.pricing；两端价格均为未经验证的测试价，换算采用 A2。"
+  - id: A26
+    name: "客户流失敏感性"
+    value: "下行情景 2.0%、基准 1.0%、上行情景 0.5%"
+    unit: "每月百分比"
+    source: "围绕 A7 设置的初创企业财务情景区间；尚无服务客户留存证据。"
+  - id: A27
+    name: "CAC 敏感性"
+    value: "下行情景 $90K、基准 $70.8K、上行情景 $50K"
+    unit: "USD/每个 TSO 客户"
+    source: "围绕 A21 设定的规划压力区间；下行情景把超出 CAC 的部分作为基准预算之外的额外 GTM 现金支出，客户数固定时收入不变。"
+  - id: A28
+    name: "销售周期敏感性"
+    value: "基准客户签约时间均延后六个月；种子轮融资在 36 个月预测期内未能完成"
+    unit: "情景时间"
+    source: "针对 business-plan.yaml 所述 TSO 采购高度集中的风险做压力测试；种子轮融资失败是融资后果，不是有来源的市场统计。"
+  - id: A29
+    name: "毛利率敏感性"
+    value: "下行情景 40%、基准 60%、上行情景 65%"
+    unit: "收入占比"
+    source: "40% 下限和 60% 目标来自 business-plan.yaml 的策略和止损标准；65% 是假设重复批次密度提高后的规划值，并非合作方报价。"
+  - id: A30
+    name: "招聘时间敏感性"
+    value: "合作方运营岗位招聘时间：下行情景 M1、基准 M3、上行情景 M4"
+    unit: "启动月份"
+    source: "business-plan.yaml.team 将该岗位的招聘门槛设在第 3 个月；提前招聘用于测试现金风险，若合作方承担物流，延后一个月则是更精简的情景。"
+headcount:
+  - role: "CEO / 商业创始人"
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: "现场甲烷测量负责人"
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: "创始产品工程师"
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: "合作方运营负责人"
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 4
+  q2y1: 4
+  q3y1: 4
+  q4y1: 4
+  q4y2: 4
+  q4y3: 4
+headcountAnnualizedPayrollK:
+  q1y1: 330.0
+  q2y1: 330.0
+  q3y1: 330.0
+  q4y1: 330.0
+  q4y2: 330.0
+  q4y3: 330.0
+y1Monthly:
+  - month: M1
+    customersEop: 0.0
+    newCustomers: 0
+    avgCustomers: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 21.25
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 33.75
+    ebitdaK: -33.75
+    financingInflowK: 950.0
+    cashEopK: 916.25
+  - month: M2
+    customersEop: 0.0
+    newCustomers: 0
+    avgCustomers: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 21.25
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 33.75
+    ebitdaK: -33.75
+    financingInflowK: 0.0
+    cashEopK: 882.5
+  - month: M3
+    customersEop: 0.0
+    newCustomers: 0
+    avgCustomers: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -40.0
+    financingInflowK: 0.0
+    cashEopK: 842.5
+  - month: M4
+    customersEop: 0.0
+    newCustomers: 0
+    avgCustomers: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -40.0
+    financingInflowK: 0.0
+    cashEopK: 802.5
+  - month: M5
+    customersEop: 0.0
+    newCustomers: 0
+    avgCustomers: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -40.0
+    financingInflowK: 0.0
+    cashEopK: 762.5
+  - month: M6
+    customersEop: 0.0
+    newCustomers: 0
+    avgCustomers: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -40.0
+    financingInflowK: 0.0
+    cashEopK: 722.5
+  - month: M7
+    customersEop: 0.0
+    newCustomers: 0
+    avgCustomers: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -40.0
+    financingInflowK: 0.0
+    cashEopK: 682.5
+  - month: M8
+    customersEop: 0.0
+    newCustomers: 0
+    avgCustomers: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -40.0
+    financingInflowK: 0.0
+    cashEopK: 642.5
+  - month: M9
+    customersEop: 0.0
+    newCustomers: 0
+    avgCustomers: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -40.0
+    financingInflowK: 0.0
+    cashEopK: 602.5
+  - month: M10
+    customersEop: 1.0
+    newCustomers: 1
+    avgCustomers: 0.5
+    revenueK: 1.6
+    cogsK: 0.64
+    grossProfitK: 0.96
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -39.04
+    financingInflowK: 0.0
+    cashEopK: 563.46
+  - month: M11
+    customersEop: 0.99
+    newCustomers: 0
+    avgCustomers: 0.995
+    revenueK: 3.19
+    cogsK: 1.28
+    grossProfitK: 1.91
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -38.09
+    financingInflowK: 0.0
+    cashEopK: 525.37
+  - month: M12
+    customersEop: 0.98
+    newCustomers: 0
+    avgCustomers: 0.98505
+    revenueK: 3.16
+    cogsK: 1.26
+    grossProfitK: 1.9
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -38.1
+    financingInflowK: 0.0
+    cashEopK: 487.27
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 0.951
+    newCustomers: 0
+    avgCustomers: 0.96548
+    revenueK: 9.3
+    cogsK: 3.72
+    grossProfitK: 5.58
+    salaryK: 82.5
+    salesMarketingK: 11.25
+    researchDevelopmentK: 11.25
+    generalAdministrativeK: 9.99
+    opexK: 114.99
+    ebitdaK: -109.41
+    financingInflowK: 0.0
+    cashEopK: 377.86
+  - quarter: Q2Y2
+    customersEop: 1.903
+    newCustomers: 1
+    avgCustomers: 1.763488
+    revenueK: 16.98
+    cogsK: 6.8
+    grossProfitK: 10.18
+    salaryK: 82.5
+    salesMarketingK: 11.25
+    researchDevelopmentK: 11.25
+    generalAdministrativeK: 9.99
+    opexK: 114.99
+    ebitdaK: -104.81
+    financingInflowK: 0.0
+    cashEopK: 273.05
+  - quarter: Q3Y2
+    customersEop: 1.846
+    newCustomers: 0
+    avgCustomers: 1.87446
+    revenueK: 18.03
+    cogsK: 7.21
+    grossProfitK: 10.82
+    salaryK: 82.5
+    salesMarketingK: 11.25
+    researchDevelopmentK: 11.25
+    generalAdministrativeK: 9.99
+    opexK: 114.99
+    ebitdaK: -104.17
+    financingInflowK: 0.0
+    cashEopK: 168.88
+  - quarter: Q4Y2
+    customersEop: 1.791
+    newCustomers: 0
+    avgCustomers: 1.818787
+    revenueK: 17.51
+    cogsK: 7.01
+    grossProfitK: 10.5
+    salaryK: 82.5
+    salesMarketingK: 11.25
+    researchDevelopmentK: 11.25
+    generalAdministrativeK: 9.99
+    opexK: 114.99
+    ebitdaK: -104.49
+    financingInflowK: 1250.0
+    cashEopK: 1314.39
+  - quarter: Q1Y3
+    customersEop: 2.718
+    newCustomers: 1
+    avgCustomers: 2.59145
+    revenueK: 24.94
+    cogsK: 9.98
+    grossProfitK: 14.96
+    salaryK: 82.5
+    salesMarketingK: 13.74
+    researchDevelopmentK: 9.99
+    generalAdministrativeK: 11.25
+    opexK: 117.48
+    ebitdaK: -102.52
+    financingInflowK: 0.0
+    cashEopK: 1211.87
+  - quarter: Q2Y3
+    customersEop: 2.638
+    newCustomers: 0
+    avgCustomers: 2.677832
+    revenueK: 25.78
+    cogsK: 10.31
+    grossProfitK: 15.47
+    salaryK: 82.5
+    salesMarketingK: 13.74
+    researchDevelopmentK: 9.99
+    generalAdministrativeK: 11.25
+    opexK: 117.48
+    ebitdaK: -102.01
+    financingInflowK: 0.0
+    cashEopK: 1109.86
+  - quarter: Q3Y3
+    customersEop: 2.559
+    newCustomers: 0
+    avgCustomers: 2.598298
+    revenueK: 25.01
+    cogsK: 10.01
+    grossProfitK: 15.0
+    salaryK: 82.5
+    salesMarketingK: 13.74
+    researchDevelopmentK: 9.99
+    generalAdministrativeK: 11.25
+    opexK: 117.48
+    ebitdaK: -102.48
+    financingInflowK: 0.0
+    cashEopK: 1007.38
+  - quarter: Q4Y3
+    customersEop: 2.483
+    newCustomers: 0
+    avgCustomers: 2.521125
+    revenueK: 24.27
+    cogsK: 9.71
+    grossProfitK: 14.56
+    salaryK: 82.5
+    salesMarketingK: 13.74
+    researchDevelopmentK: 9.99
+    generalAdministrativeK: 11.25
+    opexK: 117.48
+    ebitdaK: -102.92
+    financingInflowK: 0.0
+    cashEopK: 904.46
+totals:
+  y1:
+    revenueK: 7.95
+    cogsK: 3.18
+    grossProfitK: 4.77
+    salaryK: 317.5
+    opexK: 467.5
+    ebitdaK: -462.73
+    financingInflowK: 950.0
+    cashEopK: 487.27
+  y2:
+    revenueK: 61.82
+    cogsK: 24.74
+    grossProfitK: 37.08
+    salaryK: 330.0
+    opexK: 459.96
+    ebitdaK: -422.88
+    financingInflowK: 1250.0
+    cashEopK: 1314.39
+  y3:
+    revenueK: 100.0
+    cogsK: 40.01
+    grossProfitK: 59.99
+    salaryK: 330.0
+    opexK: 469.92
+    ebitdaK: -409.93
+    financingInflowK: 0.0
+    cashEopK: 904.46
+unitEconomics:
+  arpuAnnualK: 38.5
+  grossMarginPct: 60.0
+  cacK: 70.8
+  monthlyChurnPct: 1.0
+  avgCustomerLifeMonths: 100.0
+  ltvK: 192.5
+  ltvCacRatio: 2.7
+  cacPaybackMonths: 36.8
+fundingAsk:
+  round: pre-seed
+  amountM: 0.95
+  runwayMonths: 18
+  milestone: "到第 18 个月时，需跑通一套获运营方认可的证据协议，拿下一个付费监测项目；条件允许时至少完成 10 次符合条件的尝试；取得书面合作方报价，支撑试点毛利率至少达到 40%；并打通复购或第二家 TSO 的采购路径。只有这些门槛全部达成后，才寻求附条件的种子轮融资。"
+  useOfFunds:
+    - bucket: "工程研发"
+      amountUsd: 360000
+      percentage: 37.9
+    - bucket: GTM
+      amountUsd: 195000
+      percentage: 20.5
+    - bucket: "G&A"
+      amountUsd: 170000
+      percentage: 17.9
+    - bucket: "缓冲资金（6 个月）"
+      amountUsd: 225000
+      percentage: 23.7
+scenarios:
+  downside:
+    description: "严重验证失败情景，不是预测：一个客户以较低价格在较晚时点签约，每年仅复购一次监测项目，毛利率按试点最低门槛计算；运营岗位等到出现付费路径后再招聘，创始团队仍按计划支出，但没有种子轮融资到账。"
+    y3RevenueK: 14.33
+    y3EbitdaK: -464.19
+    cashLowPointK: -355.89
+    keyAssumptionChanges:
+      - "仅在 M16 拿下一个付费 TSO 客户，基准情景则拿下三家。"
+      - "单个监测项目收费 €15,000；每个客户年开展一个项目；毛利率 40%。"
+      - "Q4Y2 不融资 $1.25M 种子轮；作为压力测试，仍维持全部计划中的非薪酬支出。"
+  base:
+    description: "假设情景：M10、M16、M25 各新增一家客户，每个客户年开展两次监测项目，毛利率 60%；Q4Y2 的种子轮融资附条件且尚未承诺。"
+    y3RevenueK: 100.0
+    y3EbitdaK: -409.93
+    cashLowPointK: 168.88
+    keyAssumptionChanges:
+      - "采用 €17,500 的中位规划价格、每年两个监测项目，以及每月 1% 的客户流失率。"
+      - "计入 Q4Y2 的 $1.25M 后续种子轮融资，与 $0.95M 的种子前轮融资目标分开计算。"
+  upside:
+    description: "仅作敏感性分析，不代表有来源支持的需求：更早拿下四家 TSO 客户并提高复购项目密度，带动收入和毛利率上升；同时假设同一笔后续融资能够完成。"
+    y3RevenueK: 199.35
+    y3EbitdaK: -340.34
+    cashLowPointK: 202.96
+    keyAssumptionChanges:
+      - "M8、M14、M20、M26 各新增一家客户，月流失率 0.5%。"
+      - "单个监测项目收费 €20,000；每个客户年开展 2.5 个项目；毛利率 65%。"
+sensitivity:
+  - variable: "销售周期"
+    downsideCase: "基准情景下每笔客户签约均延后六个月；截至 Y3 结束，后续种子轮融资仍未完成。"
+    baseCase: "M10、M16、M25 获客；附条件的 $1.25M 种子轮于 Q4Y2 完成。"
+    upsideCase: "基准客户签约没有延误，且附条件的种子轮按计划完成。"
+    y3RevenueImpactK: -13.74
+    cashImpactK: -1279.56
+  - variable: "ARPU"
+    downsideCase: "每个监测项目收费 €15K × 每个客户年 2 次；年化 ARPU 为 $33.0K。"
+    baseCase: "每个监测项目收费 €17.5K × 每个客户年 2 次；年化 ARPU 为 $38.5K。"
+    upsideCase: "每个监测项目收费 €25K × 每个客户年 2 次；年化 ARPU 为 $55.0K。"
+    y3RevenueImpactK: -14.3
+    cashImpactK: -14.52
+  - variable: "CAC"
+    downsideCase: "每家客户的 CAC 为 $90K；签下三家客户需额外投入 GTM 现金 $57.51K。"
+    baseCase: "每家客户的 CAC 为 $70.8K，其中计入分摊的 CEO 销售时间。"
+    upsideCase: "每家客户的 CAC 为 $50K，仍按三家客户计算。"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -57.51
+  - variable: "客户流失率"
+    downsideCase: "每月客户流失率 2.0%。"
+    baseCase: "每月客户流失率 1.0%。"
+    upsideCase: "每月客户流失率 0.5%。"
+    y3RevenueImpactK: -11.88
+    cashImpactK: -9.36
+  - variable: "毛利率"
+    downsideCase: "毛利率 40%。"
+    baseCase: "毛利率 60%。"
+    upsideCase: "毛利率 65%。"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -33.91
+  - variable: "招聘节奏"
+    downsideCase: "M1 招聘合作方运营人员，比设有门槛的 M3 计划提前两个月。"
+    baseCase: "仅在签署试点路径后，于 M3 招聘合作方运营人员。"
+    upsideCase: "若航测合作方承担物流，将合作方运营岗位延至 M4。"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -12.5
+modelDiagram:
+  title: "单位经济模型流程"
+  mermaid: |
+    flowchart LR
+      QualifiedTSO[Qualified TSO account] --> RepairBatch[Eligible repair batch]
+      RepairBatch --> PartnerFlight[Partner repeat flight]
+      PartnerFlight --> EvidencePacket[Accepted or inconclusive evidence packet]
+      EvidencePacket --> CampaignFee[Fixed campaign fee]
+      CampaignFee --> GrossProfit[Gross profit after partner delivery cost]
+      GrossProfit --> Cash[Cash after operating burn]
+modelSanity:
+  - checkName: "收入引擎"
+    finding: "基准收入按预期客户月数 × $38.5K 年化 ARPU 计算；只有 M10、M16、M25 三家未经验证的 TSO 新客户都签约，且每家每年调用两次监测项目时，Y3 收入才会达到 $100.0K。"
+  - checkName: "必须跑通的环节"
+    finding: "模型要成立，必须拿到审核人员的书面认可、完成一个付费试点、让合作方交付经济性接近 60% 毛利率目标、验证复购需求，并在 Q4Y2 完成附条件的 $1.25M 种子轮融资。"
+  - checkName: "模型失效情形"
+    finding: "如果销售周期延后六个月，导致后续融资无法完成，下行情景的 Y3 收入将只剩 $14.3K，现金最低点将降至 -$355.9K。"
+  - checkName: "下一轮融资验证门槛"
+    finding: "最迟到 24个月时，需拿下付费监测项目、通过证据协议验收、试点毛利率至少达到 40%，并打通复购或第二家客户的采购路径；满足这些条件后，Q4Y2 种子轮才有依据。"
+sanityChecks:
+  ruleOf40: "仅供方向性参考：Y3 收入增长率 61.8% + EBITDA 利润率 -409.9% = -348.1%；按监测项目收费的服务不适合用它作 KPI。"
+  burnMultiple: "Y3 净消耗 $409.9K 除以年新增净收入 $38.2K，烧钱倍数为 10.7x；服务收入不是 ARR，因此该指标只能作方向性参考，且表现很差。"
+  revenuePerFte: "Y3 收入摊到年末 4.0 名 FTE 后，每名 FTE 对应 $25.0K；规模化公司看，这个水平偏低，但验证阶段的服务业务不能直接和成熟 SaaS 比。"
+  flags:
+    - "目前尚未验证独立买方、采购订单或空中证据验收标准是否存在；模型中的三家客户签约只是假设，并非有来源支撑的需求。"
+    - "在 Q4Y2 那笔尚未承诺的 $1.25M 种子轮到账前，基准情景的现金最低点只有 $168.88K；若该轮未能完成，模型预测的 Y3 期末现金将为负。"
+    - "60% 毛利率目标尚无有约束力的合作方报价支撑；business-plan.yaml 要求试点毛利率至少达到 40% 后才能扩大规模。"
+    - "CAC 回收期为 36.8 个月，LTV/CAC 为 2.7x；客户流失率只是经验假设，且尚无服务续约数据，因此这两个指标都不稳。"
+    - "Y3 EBITDA 仍为 -$409.93K，收入仅 $100.0K；招聘和支出都应设门槛，不应把这视为已证明具备风险投资级规模的业务。"
+    - "模型把监测项目收入平滑摊开，并假设当期收付款、不计营运资金、税费或资本开支需求；实际飞行安排和付款条款都可能进一步压缩现金跑道。"

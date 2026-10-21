@@ -1,0 +1,722 @@
+slug: methane-repair-closeout-proof
+date: "2026-10-21"
+currency: USD
+modelStartMonth: "2026-10"
+assumptions:
+  - id: A1
+    name: Forecast start
+    value: "2026-10"
+    unit: YYYY-MM
+    source: "business-plan.yaml date; model begins in the report month."
+  - id: A2
+    name: EUR to USD planning conversion
+    value: "€1 = $1.10"
+    unit: exchange rate
+    source: >-
+      Explicit planning heuristic only, used to translate EUR campaign pricing into USD; no live FX quote or
+      web research was used, so refresh before financing or contracting.
+  - id: A3
+    name: Base campaign fee
+    value: "€17,500 or $19.25K"
+    unit: USD per fixed-fee campaign
+    source: >-
+      business-plan.yaml.gtm.pricing gives an unvalidated €10,000–€25,000 test range; business-plan.yaml.market
+      and research.yaml.market.tam use €17,500 as scenario math, not a published tariff or observed willingness
+      to pay; USD conversion uses A2.
+  - id: A4
+    name: Campaigns per active account-year
+    value: "2"
+    unit: campaigns per TSO account-year
+    source: >-
+      research.yaml.market.sam and som scenario math assume two campaigns per account-year; this is an
+      unvalidated frequency hypothesis, not a customer commitment.
+  - id: A5
+    name: Annual revenue per active account
+    value: "$38.5K"
+    unit: USD per TSO account-year
+    source: "Calculated from A3 × A4; revenue is campaign-based, not subscription ARR."
+  - id: A6
+    name: Base paid-account acquisition timing
+    value: "One account in M10, one in M16, and one in M25"
+    unit: new TSO accounts
+    source: >-
+      Hypothesis anchored to business-plan.yaml milestones targeting one paid campaign by month 12 and two
+      paying TSOs by month 24; the third account is a low-confidence extension of research.yaml's assumed
+      eight-account SAM and is not verified demand.
+  - id: A7
+    name: Monthly account attrition
+    value: "1.0%"
+    unit: percent per month
+    source: >-
+      Startup-finance planning heuristic, not observed retention; a constant monthly hazard is used to calculate
+      expected active-account equivalents until actual campaign renewal cohorts exist.
+  - id: A8
+    name: Base gross margin
+    value: "60%"
+    unit: percent of revenue
+    source: >-
+      business-plan.yaml.businessModel.targetGrossMarginPct; equivalent to 40% partner-flight and direct
+      delivery cost of revenue, not yet supported by binding partner quotes.
+  - id: A9
+    name: CEO / commercial founder annual loaded cost
+    value: "$75,000"
+    unit: USD per FTE-year
+    source: >-
+      Startup-finance salary heuristic for a lean pre-seed founding team; modeled as loaded annual cash cost
+      including employer burden, not a market quote.
+  - id: A10
+    name: Field methane measurement lead annual loaded cost
+    value: "$90,000"
+    unit: USD per FTE-year
+    source: >-
+      Startup-finance salary heuristic for a specialist early-stage hire; modeled as loaded annual cash cost
+      including employer burden, not a market quote.
+  - id: A11
+    name: Founding product engineer annual loaded cost
+    value: "$90,000"
+    unit: USD per FTE-year
+    source: >-
+      Startup-finance salary heuristic for a lean early-stage product hire; modeled as loaded annual cash cost
+      including employer burden, not a market quote.
+  - id: A12
+    name: Partner operations lead annual loaded cost
+    value: "$75,000"
+    unit: USD per FTE-year
+    source: >-
+      Startup-finance salary heuristic for an early operations hire; modeled as loaded annual cash cost
+      including employer burden, not a market quote.
+  - id: A13
+    name: Partner operations hire timing
+    value: "M3, only after a signed pilot path"
+    unit: start month and gate
+    source: "business-plan.yaml.team; the base case assumes this unverified gate is met by month 3."
+  - id: A14
+    name: Non-payroll sales and marketing budget
+    value: "$45K in Y1, $45K in Y2, and $55K in Y3"
+    unit: USD thousands per year
+    source: >-
+      Startup-finance budget heuristic for founder-led TSO outreach, partner qualification, and procurement
+      travel; excludes salaries and is not based on observed CAC.
+  - id: A15
+    name: Non-payroll research and development budget
+    value: "$65K in Y1, $45K in Y2, and $40K in Y3"
+    unit: USD thousands per year
+    source: >-
+      Startup-finance budget heuristic for protocol testing, independent measurement support, and minimal
+      evidence-packet tooling; no aircraft or methane sensor purchase is assumed.
+  - id: A16
+    name: Non-payroll general and administrative budget
+    value: "$40K in Y1, $40K in Y2, and $45K in Y3"
+    unit: USD thousands per year
+    source: >-
+      Startup-finance budget heuristic for legal, insurance, procurement, accounting, and administration in
+      one country; not based on vendor quotes.
+  - id: A17
+    name: Pre-seed funding ask
+    value: "$950K"
+    unit: USD
+    source: >-
+      business-plan.yaml.fundingAsk.targetFundingRangeUsd is $0.75–1.0M; the model selects the upper end to
+      fund 18 months of validation plus an approximately six-month operating reserve.
+  - id: A18
+    name: Conditional follow-on seed financing
+    value: "$1.25M in Q4Y2, month 22"
+    unit: USD thousands and timing
+    source: >-
+      Startup-finance planning assumption only; no follow-on commitment is in the business plan. The cash
+      forecast requires a new round after the paid-pilot, evidence-acceptance, repeat-account, and margin gates;
+      it is excluded from fundingAsk.amountM.
+  - id: A19
+    name: Cash conversion and capital expenditure
+    value: "Same-period collections and supplier payments; $0 capex, debt, tax, interest, and working-capital change"
+    unit: cash flow convention
+    source: >-
+      Simplifying startup-finance heuristic consistent with business-plan.yaml's partner-delivered, no-aircraft
+      strategy; actual procurement, payment, and tax timing can worsen cash.
+  - id: A20
+    name: Revenue recognition and account-equivalent method
+    value: "Average active accounts × A5 / 12 each month"
+    unit: calculation convention
+    source: >-
+      Model simplification for fixed-fee campaigns: revenue is smoothed across the assumed annual call-off
+      cadence, with same-period collection per A19; actual campaign revenue will be lumpy and depends on
+      accepted scope and delivery.
+  - id: A21
+    name: Fully loaded CAC
+    value: "$70.8K per acquired account"
+    unit: USD per TSO account
+    source: >-
+      Calculated as three-year non-payroll S&M from A14 ($145K) plus 30% of CEO salary from A9 ($67.5K),
+      divided by the three new accounts in A6; CEO allocation is a planning heuristic and is not added again
+      to P&L expense.
+  - id: A22
+    name: Pre-seed use-of-funds allocation
+    value: "Engineering $360K; GTM $195K; G&A $170K; six-month buffer $225K"
+    unit: USD
+    source: >-
+      Management budget allocation heuristic based on A9–A16; totals $950K and assigns a reserve close to
+      six months of modeled net operating burn after the month-18 proof period.
+  - id: A23
+    name: Downside scenario inputs
+    value: "One paid account in M16; €15K fee; one campaign per year; 40% gross margin; no seed; ops hire M16"
+    unit: scenario parameters
+    source: >-
+      Stress case using the lower half of business-plan.yaml's unvalidated campaign-price range and its 40%
+      minimum pilot-margin kill threshold; no buyer demand is asserted, and full planned non-payroll spend
+      continues to expose downside cash risk.
+  - id: A24
+    name: Upside scenario inputs
+    value: "Four accounts in M8, M14, M20, and M26; €20K fee; 2.5 campaigns per year; 0.5% monthly attrition; 65% gross margin"
+    unit: scenario parameters
+    source: >-
+      Sensitivity-only hypothesis within the business-plan.yaml pricing range and research.yaml central
+      campaign-frequency scenario; account wins, margin, and purchase frequency are unverified, not market data.
+  - id: A25
+    name: Campaign-price sensitivity
+    value: "€15K downside, €17.5K base, and €25K upside"
+    unit: EUR per campaign
+    source: "business-plan.yaml.gtm.pricing; endpoints are unvalidated test prices, with A2 used for conversion."
+  - id: A26
+    name: Attrition sensitivity
+    value: "2.0% downside, 1.0% base, and 0.5% upside"
+    unit: percent per month
+    source: "Startup-finance scenario range around A7; no service-account retention evidence was found."
+  - id: A27
+    name: CAC sensitivity
+    value: "$90K downside, $70.8K base, and $50K upside"
+    unit: USD per TSO account
+    source: >-
+      Planning stress range around A21; downside treats excess CAC as additional cash GTM spend above
+      the base budget, with no revenue change at fixed logo count.
+  - id: A28
+    name: Sales-cycle sensitivity
+    value: "Delay each base win by six months; seed does not close within the 36-month horizon"
+    unit: scenario timing
+    source: >-
+      Stress test of business-plan.yaml's concentrated TSO procurement risk; seed failure is a financing
+      consequence, not a sourced market statistic.
+  - id: A29
+    name: Gross-margin sensitivity
+    value: "40% downside, 60% base, and 65% upside"
+    unit: percent of revenue
+    source: >-
+      The 40% floor and 60% target come from business-plan.yaml strategy and kill criteria; 65% is a
+      planning heuristic for denser repeat batches, not a partner quote.
+  - id: A30
+    name: Hiring-timing sensitivity
+    value: "M1 downside, M3 base, and M4 upside for partner operations"
+    unit: start month
+    source: >-
+      business-plan.yaml.team gates the role at month 3; earlier hiring is a cash-risk stress and a one-month
+      deferral is a leaner scenario if the partner handles logistics.
+headcount:
+  - role: CEO / commercial founder
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Field methane measurement lead
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Founding product engineer
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Partner operations lead
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 4
+  q2y1: 4
+  q3y1: 4
+  q4y1: 4
+  q4y2: 4
+  q4y3: 4
+headcountAnnualizedPayrollK:
+  q1y1: 330.0
+  q2y1: 330.0
+  q3y1: 330.0
+  q4y1: 330.0
+  q4y2: 330.0
+  q4y3: 330.0
+y1Monthly:
+  - month: M1
+    customersEop: 0.0
+    newCustomers: 0
+    avgCustomers: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 21.25
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 33.75
+    ebitdaK: -33.75
+    financingInflowK: 950.0
+    cashEopK: 916.25
+  - month: M2
+    customersEop: 0.0
+    newCustomers: 0
+    avgCustomers: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 21.25
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 33.75
+    ebitdaK: -33.75
+    financingInflowK: 0.0
+    cashEopK: 882.5
+  - month: M3
+    customersEop: 0.0
+    newCustomers: 0
+    avgCustomers: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -40.0
+    financingInflowK: 0.0
+    cashEopK: 842.5
+  - month: M4
+    customersEop: 0.0
+    newCustomers: 0
+    avgCustomers: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -40.0
+    financingInflowK: 0.0
+    cashEopK: 802.5
+  - month: M5
+    customersEop: 0.0
+    newCustomers: 0
+    avgCustomers: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -40.0
+    financingInflowK: 0.0
+    cashEopK: 762.5
+  - month: M6
+    customersEop: 0.0
+    newCustomers: 0
+    avgCustomers: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -40.0
+    financingInflowK: 0.0
+    cashEopK: 722.5
+  - month: M7
+    customersEop: 0.0
+    newCustomers: 0
+    avgCustomers: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -40.0
+    financingInflowK: 0.0
+    cashEopK: 682.5
+  - month: M8
+    customersEop: 0.0
+    newCustomers: 0
+    avgCustomers: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -40.0
+    financingInflowK: 0.0
+    cashEopK: 642.5
+  - month: M9
+    customersEop: 0.0
+    newCustomers: 0
+    avgCustomers: 0.0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -40.0
+    financingInflowK: 0.0
+    cashEopK: 602.5
+  - month: M10
+    customersEop: 1.0
+    newCustomers: 1
+    avgCustomers: 0.5
+    revenueK: 1.6
+    cogsK: 0.64
+    grossProfitK: 0.96
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -39.04
+    financingInflowK: 0.0
+    cashEopK: 563.46
+  - month: M11
+    customersEop: 0.99
+    newCustomers: 0
+    avgCustomers: 0.995
+    revenueK: 3.19
+    cogsK: 1.28
+    grossProfitK: 1.91
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -38.09
+    financingInflowK: 0.0
+    cashEopK: 525.37
+  - month: M12
+    customersEop: 0.98
+    newCustomers: 0
+    avgCustomers: 0.98505
+    revenueK: 3.16
+    cogsK: 1.26
+    grossProfitK: 1.9
+    salaryK: 27.5
+    salesMarketingK: 3.75
+    researchDevelopmentK: 5.42
+    generalAdministrativeK: 3.33
+    opexK: 40.0
+    ebitdaK: -38.1
+    financingInflowK: 0.0
+    cashEopK: 487.27
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 0.951
+    newCustomers: 0
+    avgCustomers: 0.96548
+    revenueK: 9.3
+    cogsK: 3.72
+    grossProfitK: 5.58
+    salaryK: 82.5
+    salesMarketingK: 11.25
+    researchDevelopmentK: 11.25
+    generalAdministrativeK: 9.99
+    opexK: 114.99
+    ebitdaK: -109.41
+    financingInflowK: 0.0
+    cashEopK: 377.86
+  - quarter: Q2Y2
+    customersEop: 1.903
+    newCustomers: 1
+    avgCustomers: 1.763488
+    revenueK: 16.98
+    cogsK: 6.8
+    grossProfitK: 10.18
+    salaryK: 82.5
+    salesMarketingK: 11.25
+    researchDevelopmentK: 11.25
+    generalAdministrativeK: 9.99
+    opexK: 114.99
+    ebitdaK: -104.81
+    financingInflowK: 0.0
+    cashEopK: 273.05
+  - quarter: Q3Y2
+    customersEop: 1.846
+    newCustomers: 0
+    avgCustomers: 1.87446
+    revenueK: 18.03
+    cogsK: 7.21
+    grossProfitK: 10.82
+    salaryK: 82.5
+    salesMarketingK: 11.25
+    researchDevelopmentK: 11.25
+    generalAdministrativeK: 9.99
+    opexK: 114.99
+    ebitdaK: -104.17
+    financingInflowK: 0.0
+    cashEopK: 168.88
+  - quarter: Q4Y2
+    customersEop: 1.791
+    newCustomers: 0
+    avgCustomers: 1.818787
+    revenueK: 17.51
+    cogsK: 7.01
+    grossProfitK: 10.5
+    salaryK: 82.5
+    salesMarketingK: 11.25
+    researchDevelopmentK: 11.25
+    generalAdministrativeK: 9.99
+    opexK: 114.99
+    ebitdaK: -104.49
+    financingInflowK: 1250.0
+    cashEopK: 1314.39
+  - quarter: Q1Y3
+    customersEop: 2.718
+    newCustomers: 1
+    avgCustomers: 2.59145
+    revenueK: 24.94
+    cogsK: 9.98
+    grossProfitK: 14.96
+    salaryK: 82.5
+    salesMarketingK: 13.74
+    researchDevelopmentK: 9.99
+    generalAdministrativeK: 11.25
+    opexK: 117.48
+    ebitdaK: -102.52
+    financingInflowK: 0.0
+    cashEopK: 1211.87
+  - quarter: Q2Y3
+    customersEop: 2.638
+    newCustomers: 0
+    avgCustomers: 2.677832
+    revenueK: 25.78
+    cogsK: 10.31
+    grossProfitK: 15.47
+    salaryK: 82.5
+    salesMarketingK: 13.74
+    researchDevelopmentK: 9.99
+    generalAdministrativeK: 11.25
+    opexK: 117.48
+    ebitdaK: -102.01
+    financingInflowK: 0.0
+    cashEopK: 1109.86
+  - quarter: Q3Y3
+    customersEop: 2.559
+    newCustomers: 0
+    avgCustomers: 2.598298
+    revenueK: 25.01
+    cogsK: 10.01
+    grossProfitK: 15.0
+    salaryK: 82.5
+    salesMarketingK: 13.74
+    researchDevelopmentK: 9.99
+    generalAdministrativeK: 11.25
+    opexK: 117.48
+    ebitdaK: -102.48
+    financingInflowK: 0.0
+    cashEopK: 1007.38
+  - quarter: Q4Y3
+    customersEop: 2.483
+    newCustomers: 0
+    avgCustomers: 2.521125
+    revenueK: 24.27
+    cogsK: 9.71
+    grossProfitK: 14.56
+    salaryK: 82.5
+    salesMarketingK: 13.74
+    researchDevelopmentK: 9.99
+    generalAdministrativeK: 11.25
+    opexK: 117.48
+    ebitdaK: -102.92
+    financingInflowK: 0.0
+    cashEopK: 904.46
+totals:
+  y1:
+    revenueK: 7.95
+    cogsK: 3.18
+    grossProfitK: 4.77
+    salaryK: 317.5
+    opexK: 467.5
+    ebitdaK: -462.73
+    financingInflowK: 950.0
+    cashEopK: 487.27
+  y2:
+    revenueK: 61.82
+    cogsK: 24.74
+    grossProfitK: 37.08
+    salaryK: 330.0
+    opexK: 459.96
+    ebitdaK: -422.88
+    financingInflowK: 1250.0
+    cashEopK: 1314.39
+  y3:
+    revenueK: 100.0
+    cogsK: 40.01
+    grossProfitK: 59.99
+    salaryK: 330.0
+    opexK: 469.92
+    ebitdaK: -409.93
+    financingInflowK: 0.0
+    cashEopK: 904.46
+unitEconomics:
+  arpuAnnualK: 38.5
+  grossMarginPct: 60.0
+  cacK: 70.8
+  monthlyChurnPct: 1.0
+  avgCustomerLifeMonths: 100.0
+  ltvK: 192.5
+  ltvCacRatio: 2.7
+  cacPaybackMonths: 36.8
+fundingAsk:
+  round: pre-seed
+  amountM: 0.95
+  runwayMonths: 18
+  milestone: >-
+    Reach month 18 with an operator-approved evidence protocol, one paid campaign and at least 10 eligible
+    attempts where available, documented partner quotes supporting at least 40% pilot gross margin, and a
+    repeat or second-TSO procurement path; only then pursue the conditional seed round.
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 360000
+      percentage: 37.9
+    - bucket: GTM
+      amountUsd: 195000
+      percentage: 20.5
+    - bucket: "G&A"
+      amountUsd: 170000
+      percentage: 17.9
+    - bucket: "Buffer (6 mo)"
+      amountUsd: 225000
+      percentage: 23.7
+scenarios:
+  downside:
+    description: >-
+      Severe validation failure case, not a forecast: one lower-priced account closes late, only one campaign
+      repeats per year at the minimum pilot margin, the operations hire waits for a paid path, and no seed
+      financing closes while the founding team continues planned spending.
+    y3RevenueK: 14.33
+    y3EbitdaK: -464.19
+    cashLowPointK: -355.89
+    keyAssumptionChanges:
+      - "Only one paid TSO account, acquired in M16, versus three base-case wins."
+      - "Campaign price is €15,000 with one campaign per account-year and 40% gross margin."
+      - "The $1.25M Q4Y2 seed is not raised; full planned non-payroll spend continues as a stress test."
+  base:
+    description: >-
+      Hypothesis case: three account additions occur in M10, M16, and M25 at two campaigns per account-year,
+      with 60% gross margin and a conditional, uncommitted seed round in Q4Y2.
+    y3RevenueK: 100.0
+    y3EbitdaK: -409.93
+    cashLowPointK: 168.88
+    keyAssumptionChanges:
+      - "Uses the €17,500 central planning fee, two annual campaigns, and 1% monthly account attrition."
+      - "Includes $1.25M of follow-on seed financing in Q4Y2, separate from the $0.95M pre-seed ask."
+  upside:
+    description: >-
+      Sensitivity-only case, not sourced demand: four earlier TSO wins and denser repeat campaigns improve
+      revenue and gross margin, while the same follow-on financing is assumed to close.
+    y3RevenueK: 199.35
+    y3EbitdaK: -340.34
+    cashLowPointK: 202.96
+    keyAssumptionChanges:
+      - "Four new accounts arrive in M8, M14, M20, and M26, with 0.5% monthly attrition."
+      - "Campaign price is €20,000, frequency is 2.5 campaigns per account-year, and gross margin is 65%."
+sensitivity:
+  - variable: "sales cycle"
+    downsideCase: "Delay each base account win by six months; the follow-on seed does not close by Y3."
+    baseCase: "Account wins in M10, M16, and M25; conditional $1.25M seed closes in Q4Y2."
+    upsideCase: "No delay to base wins and the conditional seed closes on schedule."
+    y3RevenueImpactK: -13.74
+    cashImpactK: -1279.56
+  - variable: "ARPU"
+    downsideCase: "€15K per campaign × 2 per account-year; annual ARPU is $33.0K."
+    baseCase: "€17.5K per campaign × 2 per account-year; annual ARPU is $38.5K."
+    upsideCase: "€25K per campaign × 2 per account-year; annual ARPU is $55.0K."
+    y3RevenueImpactK: -14.3
+    cashImpactK: -14.52
+  - variable: "CAC"
+    downsideCase: "$90K per logo, requiring $57.51K incremental GTM cash for three logos."
+    baseCase: "$70.8K per logo, including allocated CEO sales time."
+    upsideCase: "$50K per logo, with the same three-logo count."
+    y3RevenueImpactK: 0.0
+    cashImpactK: -57.51
+  - variable: "churn"
+    downsideCase: "2.0% monthly account attrition."
+    baseCase: "1.0% monthly account attrition."
+    upsideCase: "0.5% monthly account attrition."
+    y3RevenueImpactK: -11.88
+    cashImpactK: -9.36
+  - variable: "gross margin"
+    downsideCase: "40% gross margin."
+    baseCase: "60% gross margin."
+    upsideCase: "65% gross margin."
+    y3RevenueImpactK: 0.0
+    cashImpactK: -33.91
+  - variable: "hiring pace"
+    downsideCase: "Hire partner operations in M1, two months ahead of the gated M3 plan."
+    baseCase: "Hire partner operations in M3 only after a signed pilot path."
+    upsideCase: "Defer the operations hire to M4 if the flight partner handles logistics."
+    y3RevenueImpactK: 0.0
+    cashImpactK: -12.5
+modelDiagram:
+  title: unit economics flow
+  mermaid: |
+    flowchart LR
+      QualifiedTSO[Qualified TSO account] --> RepairBatch[Eligible repair batch]
+      RepairBatch --> PartnerFlight[Partner repeat flight]
+      PartnerFlight --> EvidencePacket[Accepted or inconclusive evidence packet]
+      EvidencePacket --> CampaignFee[Fixed campaign fee]
+      CampaignFee --> GrossProfit[Gross profit after partner delivery cost]
+      GrossProfit --> Cash[Cash after operating burn]
+modelSanity:
+  - checkName: Revenue engine
+    finding: >-
+      Base revenue is expected account-months multiplied by $38.5K annual ARPU, reaching $100.0K in Y3 only if
+      three unverified TSO additions land in M10, M16, and M25 and each calls off two campaigns annually.
+  - checkName: Must go right
+    finding: >-
+      The model requires written reviewer acceptance, one paid pilot, partner economics near the 60% target,
+      repeat demand, and the conditional $1.25M seed closing in Q4Y2.
+  - checkName: Model breaks if
+    finding: >-
+      A six-month sales delay that prevents the follow-on round leaves $14.3K Y3 revenue and a $355.9K negative
+      cash low point in the downside case.
+  - checkName: Next-round proof
+    finding: >-
+      The Q4Y2 seed is justified only by a paid campaign, an accepted evidence protocol, at least 40% pilot gross
+      margin, and a repeat or second-account procurement path by month 24.
+sanityChecks:
+  ruleOf40: "Directional only: Y3 revenue growth 61.8% + EBITDA margin -409.9% = -348.1%; not a suitable KPI for a campaign-based service."
+  burnMultiple: "10.7x Y3 net burn ($409.9K) divided by net-new annual revenue ($38.2K); service revenue is not ARR, so this is directional and poor."
+  revenuePerFte: "Y3 revenue is $25.0K per 4.0 year-end FTE; low for scale but not directly comparable to mature SaaS because this is a validation-stage service."
+  flags:
+    - "No standalone buyer, purchase order, or aerial-evidence acceptance standard has been verified; the three modeled customer wins are hypotheses, not sourced demand."
+    - "The base cash low point is only $168.88K before an uncommitted $1.25M seed in Q4Y2; without that round, modeled Y3 ending cash is negative."
+    - "The 60% gross-margin target has no binding partner quote behind it; business-plan.yaml requires at least 40% pilot margin before scaling."
+    - "CAC payback is 36.8 months and LTV/CAC is 2.7x, both fragile because churn is a heuristic and service renewals are not observed."
+    - "Y3 EBITDA remains negative at $409.93K and revenue is only $100.0K; keep hiring and spend gated, and do not describe this as venture-scale proof."
+    - "Campaign revenue is smoothed and cash is assumed to settle in-period with no working-capital, tax, or capex needs; actual flight timing and payment terms can worsen the runway."
