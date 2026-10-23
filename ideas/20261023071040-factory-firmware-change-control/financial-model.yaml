@@ -1,0 +1,625 @@
+slug: inventory-firmware-recovery
+date: "2026-10-23"
+currency: USD
+modelStartMonth: "2026-10"
+assumptions:
+  - id: A0
+    name: Model period and calendar
+    value: "M1 is October 2026; the 36-month period runs through September 2029. Y1 is October 2026–September 2027, Y2 is October 2027–September 2028, and Y3 is October 2028–September 2029."
+    unit: calendar months
+    source: "[business-plan.yaml date and requested three-year model convention]"
+  - id: A1
+    name: Initial pre-seed financing
+    value: "USD 3.2M received in M1; within the plan's USD 2–4M pre-seed range. The round is sized for an 18-month proof plan, a six-month reserve, and unquoted security, insurance, partner-qualification, and collection risk."
+    unit: USD millions
+    source: "[business-plan.yaml fundingAsk.targetFundingRangeUsd and fundingAsk.runwayMonths; USD 3.2M is a modeler-selected scenario, not committed capital]"
+  - id: A2
+    name: Paid customer-program ramp
+    value: "One paid OEM-CM program begins in M6, a second in M16, and a third in M25; no pipeline prospects are counted as customers. The plan targets one paid pilot, a same-site repeat, and up to three qualified CM nodes by month 36."
+    unit: paid customer-program start month
+    source: "[business-plan.yaml product.sixMonth, product.twelveMonth, product.twentyFourMonth, milestones, and team sequencing; timing and conversion are unvalidated model assumptions]"
+  - id: A3
+    name: Campaign pricing
+    value: "USD 20 per serial accepted after the OEM-defined test, plus a USD 20K one-time site/product/test-profile setup fee for each new customer program. The per-serial fee is the research sizing assumption; setup fee is an explicit quote hypothesis."
+    unit: USD per passing serial and USD thousands per new program
+    source: "[business-plan.yaml gtm.pricing and businessModel.revenueStreams; research.yaml market.tam, market.sam, market.som, and bottomUpSizingDrivers disclose USD 20 as hypothetical, not observed pricing]"
+  - id: A4
+    name: Passing volume and service ARPU
+    value: "Base service activity is 1.5 eligible jobs per active site per year and 5,000 passing serials per job, yielding USD 150K annual service ARPU (1.5 × 5,000 × USD 20); setup fees are additional. The 5,000-unit batch is an illustrative research sizing input, not a validated typical batch."
+    unit: jobs per site-year; passing serials per job; USD thousands per customer-year
+    source: "[business-plan.yaml operatingAssumptions; research.yaml bottomUpSizingDrivers and market.som; recurrence, passing rate, batch size, and price remain unverified]"
+  - id: A5
+    name: Revenue recognition and customer reconciliation
+    value: "Recognize expected service billings evenly at USD 12.5K per active customer-month (USD 150K annual ARPU ÷ 12), plus the USD 20K setup fee in each new-program month. Active paid customer-months are 7 in Y1, 21 in Y2, and 36 in Y3; revenue is respectively USD 107.5K, USD 282.5K, and USD 470K. Monthly smoothing represents expected campaign activity, not a recurring subscription."
+    unit: customer-months and USD thousands
+    source: "[Derived from A2–A4; business-plan.yaml charges setup plus passing-serial fees and does not validate monthly recurring revenue. Monthly recognition is a forecast convention for lumpy campaign work]"
+  - id: A6
+    name: Funnel and fully loaded CAC
+    value: "Funnel targets imply 30% qualified-pair-to-review × 25% review-to-paid-pilot = 7.5% qualified-pair-to-paid conversion, or about 13.3 qualified pairs per win. Fully loaded CAC is USD 180K per new paid program: USD 540K acquisition-cost allocation across three wins, comprising USD 502K modeled non-payroll sales/marketing plus USD 38K attributed founder payroll; these costs are already in P&L and are not added again."
+    unit: percent; qualified pairs per win; USD thousands per customer
+    source: "[business-plan.yaml gtm.funnelTargets; CAC and payroll allocation are explicit high-touch industrial B2B planning heuristics because no observed CAC or sales-cycle data is available]"
+  - id: A7
+    name: Customer life and churn for LTV
+    value: "Use 2.8% monthly churn and 35.7 expected customer-life months (1 ÷ 2.8%) solely for unit economics; this is a planning proxy for an unproven repeat-campaign relationship. Base customer counts are retained through the modeled milestone horizon and do not apply stochastic churn."
+    unit: percent monthly and months
+    source: "[business-plan.yaml gtm.funnelTargets and investorMemo.mustBeTrue establish repeat-rate uncertainty; 2.8% monthly churn / 35.7-month life is a named modeler startup-finance heuristic, not observed retention]"
+  - id: A8
+    name: Gross margin and direct costs
+    value: "COGS is 45% of revenue in Y1 (55% gross margin during the first high-touch pilot), 35% in Y2 (65% margin as the first repeat is reused), and 30% in Y3 (70% margin on standardized repeat work)."
+    unit: percent of revenue
+    source: "[business-plan.yaml businessModel.targetGrossMarginPct is 70% and milestones target above 70% only on standardized repeat jobs; earlier-year margin ramp is a modeler heuristic for partner labor, travel, and campaign support]"
+  - id: A9
+    name: Team, start dates, and loaded compensation
+    value: "CEO/commercial lead USD 150K, founding engineer USD 210K, field operations/quality lead USD 162K, integration engineer USD 204K, and partner-operations coordinator USD 150K fully loaded annual cost. Start dates are M1 for founders, M3 for field operations, M7 for integration after the paid pilot, M22 for a second field operator after repeat evidence, and M31 for a third-node field operator plus partner coordinator. Fractional counsel is external G&A, not FTE."
+    unit: USD thousands per loaded FTE-year and model month
+    source: "[business-plan.yaml team, sequencingRationale, experimentRoadmap, and milestones; compensation is a named startup-finance planning heuristic, not a salary survey or quote]"
+  - id: A10
+    name: Non-payroll operating expenses
+    value: "Y1 monthly S&M/R&D/G&A are USD K: M1–M3 6/18/20, M4–M6 8/25/25, M7–M12 10/30/30. Y2 quarterly S&M is 35/40/45/50, R&D 65/70/75/80, and G&A 65/70/75/80. Y3 quarterly S&M is 50/55/60/65, R&D 70/75/80/85, and G&A 75/80/85/90."
+    unit: USD thousands per month in Y1 and per quarter in Y2–Y3
+    source: "[business-plan.yaml gtm, product, operations, team, and experimentRoadmap; expense cadence is a modeler operating heuristic for founder-led selling, secure workflow, pilot integration, counsel, and insurance, not vendor quotes]"
+  - id: A11
+    name: Cash-flow boundary
+    value: "Opening cash is zero; receive A1 financing in M1; no follow-on round is modeled. Cash EOP = prior cash + funding inflow + EBITDA; assume same-period collections and payments, no taxes, interest, working-capital change, owned-station capex, or depreciation."
+    unit: USD thousands and modeling convention
+    source: "[business-plan.yaml explicitly defers owned stations and requests an 18-month proof round; same-period cash conversion and excluded balance-sheet items are simplifying modeler assumptions]"
+  - id: A12
+    name: Funding use and six-month reserve
+    value: "Allocate USD 1.40M Engineering, USD 0.65M GTM, USD 0.45M G&A, and USD 0.70M Buffer (6 mo), totaling USD 3.20M. The USD 0.70M reserve approximates six months at roughly USD 117K monthly net cash use near the proof period; the round includes additional contingency for unquoted approvals and delivery."
+    unit: USD millions
+    source: "[business-plan.yaml fundingAsk.useOfFundsSummary and 18-month runway; allocations are modeler planning judgments, not approved budgets]"
+  - id: A13
+    name: Scenario and sensitivity shocks
+    value: "Downside: only two programs by M36, 60% Y3 gross margin, and all planned Y3 hires remain committed. Upside: two existing programs each achieve two jobs in Y3 and standardized-job gross margin reaches 72%. Downside sensitivities versus base test 1.0 rather than 1.5 jobs/site-year, USD 16 rather than USD 20 per passing serial, two rather than three programs, a six-month sales delay, 60% rather than 70% gross margin, and two gated hires six months early."
+    unit: scenario assumptions
+    source: "[business-plan.yaml risks, killCriteria, milestones, and operatingAssumptions identify authorization, repeat volume, margin, and hiring gates; shock sizes are modeler stress-test assumptions]"
+headcount:
+  - role: CEO / OEM commercial lead
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Founding engineer
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Field operations and quality lead
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 2
+    q4y3: 3
+  - role: Integration engineer
+    q1y1: 0
+    q2y1: 0
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: Partner-operations coordinator
+    q1y1: 0
+    q2y1: 0
+    q3y1: 0
+    q4y1: 0
+    q4y2: 0
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 3
+  q2y1: 3
+  q3y1: 4
+  q4y1: 4
+  q4y2: 5
+  q4y3: 7
+headcountAnnualizedPayrollK:
+  q1y1: 522.0
+  q2y1: 522.0
+  q3y1: 726.0
+  q4y1: 726.0
+  q4y2: 888.0
+  q4y3: 1200.0
+headcountBasis:
+  assumptionRefs:
+    - A9
+  description: "Annualized payroll is loaded FTE cost multiplied by quarter-end headcount; the actual period payroll is salaryK and is included in opexK. Y1 FTE snapshots are 3/3/4/4, then 5 at Q4Y2 and 7 at Q4Y3."
+revenueModel:
+  assumptionRefs:
+    - A2
+    - A3
+    - A4
+    - A5
+  customerDefinition: "customersEop is the count of paid OEM-CM customer programs retained at period end, not prospects, serials, or individual campaign jobs; newCustomers counts program starts."
+  formula: "Monthly Y1 revenue = active customer programs × USD 12.5K expected service billings + USD 20K setup in each new-program month. Quarterly Y2/Y3 revenue is the sum of the same monthly formula. Annual service revenue reconciles to customer-months ÷ 12 × USD 150K ARPU, plus setup fees: Y1 7/12 × 150 + 20 = 107.5K; Y2 21/12 × 150 + 20 = 282.5K; Y3 36/12 × 150 + 20 = 470K."
+  limitation: "Campaign work is lumpy and billed only for accepted serials; monthly smoothing and same-period cash collection are forecasts, not contracted recurring revenue or demonstrated billing behavior."
+annualRevenueReconciliation:
+  y1:
+    activeCustomerMonths: 7
+    serviceArpuK: 150.0
+    setupFeesK: 20.0
+    revenueK: 107.5
+  y2:
+    activeCustomerMonths: 21
+    serviceArpuK: 150.0
+    setupFeesK: 20.0
+    revenueK: 282.5
+  y3:
+    activeCustomerMonths: 36
+    serviceArpuK: 150.0
+    setupFeesK: 20.0
+    revenueK: 470.0
+pnlMethodology:
+  assumptionRefs:
+    - A3
+    - A4
+    - A8
+    - A9
+    - A10
+    - A11
+  description: "cogsK = revenueK × the annual COGS rate; grossProfitK = revenueK − cogsK; salaryK is fully loaded payroll; opexK = salaryK + salesMarketingK + researchDevelopmentK + generalAdministrativeK; ebitdaK = grossProfitK − opexK."
+cashFlowMethodology:
+  assumptionRefs:
+    - A1
+    - A11
+  description: "Y1 M1 includes the only modeled financing inflow of USD 3,200K. Thereafter cashEopK rolls forward from prior cash plus EBITDA and any funding inflow; no follow-on financing is assumed, so negative balances indicate an unfunded cash need, not available liquidity."
+y1Monthly:
+  - month: M1
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 30.0
+    salesMarketingK: 6.0
+    researchDevelopmentK: 18.0
+    generalAdministrativeK: 20.0
+    opexK: 74.0
+    ebitdaK: -74.0
+    fundingInflowK: 3200.0
+    cashEopK: 3126.0
+  - month: M2
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 30.0
+    salesMarketingK: 6.0
+    researchDevelopmentK: 18.0
+    generalAdministrativeK: 20.0
+    opexK: 74.0
+    ebitdaK: -74.0
+    fundingInflowK: 0.0
+    cashEopK: 3052.0
+  - month: M3
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 43.5
+    salesMarketingK: 6.0
+    researchDevelopmentK: 18.0
+    generalAdministrativeK: 20.0
+    opexK: 87.5
+    ebitdaK: -87.5
+    fundingInflowK: 0.0
+    cashEopK: 2964.5
+  - month: M4
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 43.5
+    salesMarketingK: 8.0
+    researchDevelopmentK: 25.0
+    generalAdministrativeK: 25.0
+    opexK: 101.5
+    ebitdaK: -101.5
+    fundingInflowK: 0.0
+    cashEopK: 2863.0
+  - month: M5
+    customersEop: 0
+    newCustomers: 0
+    revenueK: 0.0
+    cogsK: 0.0
+    grossProfitK: 0.0
+    salaryK: 43.5
+    salesMarketingK: 8.0
+    researchDevelopmentK: 25.0
+    generalAdministrativeK: 25.0
+    opexK: 101.5
+    ebitdaK: -101.5
+    fundingInflowK: 0.0
+    cashEopK: 2761.5
+  - month: M6
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 32.5
+    cogsK: 14.625
+    grossProfitK: 17.875
+    salaryK: 43.5
+    salesMarketingK: 8.0
+    researchDevelopmentK: 25.0
+    generalAdministrativeK: 25.0
+    opexK: 101.5
+    ebitdaK: -83.625
+    fundingInflowK: 0.0
+    cashEopK: 2677.875
+  - month: M7
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 12.5
+    cogsK: 5.625
+    grossProfitK: 6.875
+    salaryK: 60.5
+    salesMarketingK: 10.0
+    researchDevelopmentK: 30.0
+    generalAdministrativeK: 30.0
+    opexK: 130.5
+    ebitdaK: -123.625
+    fundingInflowK: 0.0
+    cashEopK: 2554.25
+  - month: M8
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 12.5
+    cogsK: 5.625
+    grossProfitK: 6.875
+    salaryK: 60.5
+    salesMarketingK: 10.0
+    researchDevelopmentK: 30.0
+    generalAdministrativeK: 30.0
+    opexK: 130.5
+    ebitdaK: -123.625
+    fundingInflowK: 0.0
+    cashEopK: 2430.625
+  - month: M9
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 12.5
+    cogsK: 5.625
+    grossProfitK: 6.875
+    salaryK: 60.5
+    salesMarketingK: 10.0
+    researchDevelopmentK: 30.0
+    generalAdministrativeK: 30.0
+    opexK: 130.5
+    ebitdaK: -123.625
+    fundingInflowK: 0.0
+    cashEopK: 2307.0
+  - month: M10
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 12.5
+    cogsK: 5.625
+    grossProfitK: 6.875
+    salaryK: 60.5
+    salesMarketingK: 10.0
+    researchDevelopmentK: 30.0
+    generalAdministrativeK: 30.0
+    opexK: 130.5
+    ebitdaK: -123.625
+    fundingInflowK: 0.0
+    cashEopK: 2183.375
+  - month: M11
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 12.5
+    cogsK: 5.625
+    grossProfitK: 6.875
+    salaryK: 60.5
+    salesMarketingK: 10.0
+    researchDevelopmentK: 30.0
+    generalAdministrativeK: 30.0
+    opexK: 130.5
+    ebitdaK: -123.625
+    fundingInflowK: 0.0
+    cashEopK: 2059.75
+  - month: M12
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 12.5
+    cogsK: 5.625
+    grossProfitK: 6.875
+    salaryK: 60.5
+    salesMarketingK: 10.0
+    researchDevelopmentK: 30.0
+    generalAdministrativeK: 30.0
+    opexK: 130.5
+    ebitdaK: -123.625
+    fundingInflowK: 0.0
+    cashEopK: 1936.125
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersEop: 1
+    newCustomers: 0
+    revenueK: 37.5
+    cogsK: 13.125
+    grossProfitK: 24.375
+    salaryK: 181.5
+    salesMarketingK: 35.0
+    researchDevelopmentK: 65.0
+    generalAdministrativeK: 65.0
+    opexK: 346.5
+    ebitdaK: -322.125
+    fundingInflowK: 0.0
+    cashEopK: 1614.0
+  - quarter: Q2Y2
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 95.0
+    cogsK: 33.25
+    grossProfitK: 61.75
+    salaryK: 181.5
+    salesMarketingK: 40.0
+    researchDevelopmentK: 70.0
+    generalAdministrativeK: 70.0
+    opexK: 361.5
+    ebitdaK: -299.75
+    fundingInflowK: 0.0
+    cashEopK: 1314.25
+  - quarter: Q3Y2
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 75.0
+    cogsK: 26.25
+    grossProfitK: 48.75
+    salaryK: 181.5
+    salesMarketingK: 45.0
+    researchDevelopmentK: 75.0
+    generalAdministrativeK: 75.0
+    opexK: 376.5
+    ebitdaK: -327.75
+    fundingInflowK: 0.0
+    cashEopK: 986.5
+  - quarter: Q4Y2
+    customersEop: 2
+    newCustomers: 0
+    revenueK: 75.0
+    cogsK: 26.25
+    grossProfitK: 48.75
+    salaryK: 222.0
+    salesMarketingK: 50.0
+    researchDevelopmentK: 80.0
+    generalAdministrativeK: 80.0
+    opexK: 432.0
+    ebitdaK: -383.25
+    fundingInflowK: 0.0
+    cashEopK: 603.25
+  - quarter: Q1Y3
+    customersEop: 3
+    newCustomers: 1
+    revenueK: 132.5
+    cogsK: 39.75
+    grossProfitK: 92.75
+    salaryK: 222.0
+    salesMarketingK: 50.0
+    researchDevelopmentK: 70.0
+    generalAdministrativeK: 75.0
+    opexK: 417.0
+    ebitdaK: -324.25
+    fundingInflowK: 0.0
+    cashEopK: 279.0
+  - quarter: Q2Y3
+    customersEop: 3
+    newCustomers: 0
+    revenueK: 112.5
+    cogsK: 33.75
+    grossProfitK: 78.75
+    salaryK: 222.0
+    salesMarketingK: 55.0
+    researchDevelopmentK: 75.0
+    generalAdministrativeK: 80.0
+    opexK: 432.0
+    ebitdaK: -353.25
+    fundingInflowK: 0.0
+    cashEopK: -74.25
+  - quarter: Q3Y3
+    customersEop: 3
+    newCustomers: 0
+    revenueK: 112.5
+    cogsK: 33.75
+    grossProfitK: 78.75
+    salaryK: 300.0
+    salesMarketingK: 60.0
+    researchDevelopmentK: 80.0
+    generalAdministrativeK: 85.0
+    opexK: 525.0
+    ebitdaK: -446.25
+    fundingInflowK: 0.0
+    cashEopK: -520.5
+  - quarter: Q4Y3
+    customersEop: 3
+    newCustomers: 0
+    revenueK: 112.5
+    cogsK: 33.75
+    grossProfitK: 78.75
+    salaryK: 300.0
+    salesMarketingK: 65.0
+    researchDevelopmentK: 85.0
+    generalAdministrativeK: 90.0
+    opexK: 540.0
+    ebitdaK: -461.25
+    fundingInflowK: 0.0
+    cashEopK: -981.75
+totals:
+  y1:
+    customersEop: 1
+    newCustomers: 1
+    revenueK: 107.5
+    cogsK: 48.375
+    grossProfitK: 59.125
+    salaryK: 597.0
+    salesMarketingK: 102.0
+    researchDevelopmentK: 309.0
+    generalAdministrativeK: 315.0
+    opexK: 1323.0
+    ebitdaK: -1263.875
+    fundingInflowK: 3200.0
+    cashBeginningK: 0.0
+    netCashMovementK: 1936.125
+    cashEopK: 1936.125
+  y2:
+    customersEop: 2
+    newCustomers: 1
+    revenueK: 282.5
+    cogsK: 98.875
+    grossProfitK: 183.625
+    salaryK: 766.5
+    salesMarketingK: 170.0
+    researchDevelopmentK: 290.0
+    generalAdministrativeK: 290.0
+    opexK: 1516.5
+    ebitdaK: -1332.875
+    fundingInflowK: 0.0
+    cashBeginningK: 1936.125
+    netCashMovementK: -1332.875
+    cashEopK: 603.25
+  y3:
+    customersEop: 3
+    newCustomers: 1
+    revenueK: 470.0
+    cogsK: 141.0
+    grossProfitK: 329.0
+    salaryK: 1044.0
+    salesMarketingK: 230.0
+    researchDevelopmentK: 310.0
+    generalAdministrativeK: 330.0
+    opexK: 1914.0
+    ebitdaK: -1585.0
+    fundingInflowK: 0.0
+    cashBeginningK: 603.25
+    netCashMovementK: -1585.0
+    cashEopK: -981.75
+unitEconomics:
+  arpuAnnualK: 150.0
+  grossMarginPct: 70.0
+  cacK: 180.0
+  monthlyChurnPct: 2.8
+  avgCustomerLifeMonths: 35.7
+  ltvK: 312.5
+  ltvCacRatio: 1.74
+  cacPaybackMonths: 20.6
+fundingAsk:
+  round: pre-seed
+  amountM: 3.2
+  runwayMonths: 24
+  milestone: "By month 18, secure OEM and CM written authorization, complete a paid single-site pilot and same-site repeat, and document positive contribution and cost/release-time advantage; retain six months of reserve while deciding whether to expand to a second node."
+  useOfFunds:
+    - bucket: Engineering
+      amountUsd: 1400000
+      percentage: 43.75
+    - bucket: GTM
+      amountUsd: 650000
+      percentage: 20.31
+    - bucket: "G&A"
+      amountUsd: 450000
+      percentage: 14.06
+    - bucket: "Buffer (6 mo)"
+      amountUsd: 700000
+      percentage: 21.88
+scenarios:
+  downside:
+    description: "The third program does not close, repeat activity is limited to the two existing programs, early pilot-like margins persist, and planned Y3 hires remain committed."
+    y3RevenueK: 300.0
+    y3EbitdaK: -1734.0
+    cashLowPointK: -1130.75
+    keyAssumptionChanges:
+      - "Only two paid customer programs remain active, each generating 1.5 expected jobs and USD 150K service ARPU; the new-program setup and service revenue are absent."
+      - "Y3 gross margin is 60% rather than the 70% base assumption."
+      - "The third-node field and partner hires remain on payroll despite the missed sale; no follow-on financing is modeled."
+  base:
+    description: "Three paid customer programs start in M6, M16, and M25; expected service activity is smoothed monthly and the third-node hires start only after the program is signed."
+    y3RevenueK: 470.0
+    y3EbitdaK: -1585.0
+    cashLowPointK: -981.75
+    keyAssumptionChanges:
+      - "Base-case Y3 revenue, EBITDA, and cash low point reconcile to totals.y3."
+      - "Three customer-years at USD 150K service ARPU plus one USD 20K setup fee produce USD 470K revenue."
+  upside:
+    description: "The two existing programs each generate two campaigns in Y3 and repeat-job execution reaches a 72% gross margin, with no additional team beyond the base plan."
+    y3RevenueK: 570.0
+    y3EbitdaK: -1503.6
+    cashLowPointK: -900.35
+    keyAssumptionChanges:
+      - "Two existing programs deliver two 5,000-serial jobs each at USD 20 per passing serial, versus 1.5 expected jobs in the base case."
+      - "The new third program contributes one full year of expected service activity plus its setup fee."
+      - "Y3 gross margin improves to 72%; no future financing is assumed."
+sensitivity:
+  - variable: accepted serial volume / jobs per site
+    downsideCase: "1.0 job/site-year"
+    baseCase: "1.5 jobs/site-year"
+    upsideCase: "2.0 jobs/site-year"
+    y3RevenueImpactK: -150.0
+    cashImpactK: -105.0
+  - variable: per-serial price
+    downsideCase: "USD 16 per passing serial"
+    baseCase: "USD 20 per passing serial"
+    upsideCase: "USD 24 per passing serial"
+    y3RevenueImpactK: -90.0
+    cashImpactK: -63.0
+  - variable: paid customer conversion
+    downsideCase: "2 paid programs by M36"
+    baseCase: "3 paid programs by M36"
+    upsideCase: "4 paid programs by M36"
+    y3RevenueImpactK: -170.0
+    cashImpactK: -119.0
+  - variable: sales cycle
+    downsideCase: "Third customer starts M31 instead of M25"
+    baseCase: "Third customer starts M25"
+    upsideCase: "Third customer starts M22"
+    y3RevenueImpactK: -75.0
+    cashImpactK: -52.5
+  - variable: gross margin
+    downsideCase: "60%"
+    baseCase: "70%"
+    upsideCase: "75%"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -47.0
+  - variable: hiring pace
+    downsideCase: "Third-node field and partner hires start M25, six months early"
+    baseCase: "Both hires start M31 after the paid program"
+    upsideCase: "Both hires are deferred until M37"
+    y3RevenueImpactK: 0.0
+    cashImpactK: -156.0
+sensitivityMethodology:
+  assumptionRefs:
+    - A13
+  description: "Impact fields show the downside change from the base case; cash impacts apply the base 70% gross margin to revenue shocks and include direct payroll or margin effects where specified."
+modelDiagram:
+  title: unit economics flow
+  mermaid: |
+    flowchart LR
+      Leads[Qualified OEM-CM pairs] --> Approval[Written OEM and CM approval]
+      Approval --> Customers[Paid customer programs]
+      Customers --> Jobs[1.5 jobs per site-year]
+      Jobs --> Serials[5,000 passing serials per job]
+      Serials --> Revenue[Setup fee plus USD 20 per passing serial]
+      Revenue --> GrossProfit[70% repeat gross margin]
+      GrossProfit --> Cash[Cash runway and next-round need]
+modelSanity:
+  - checkName: Revenue engine
+    finding: "Three customer-years at USD 150K service ARPU plus one USD 20K setup fee drive the base to USD 470K Y3 revenue."
+  - checkName: Must go right
+    finding: "Written OEM/CM authorization, a same-site paid repeat, and a 70% standardized-job gross margin must arrive before additional field and partner hiring."
+  - checkName: Model breaks if
+    finding: "If the third program or repeat activity fails, the downside cash low point is -USD 1,130.75K, while even the base case ends at -USD 981.75K without follow-on funding."
+  - checkName: Next-round proof
+    finding: "The next financing requires month-18 evidence of an authorized paid pilot, same-site repeat, positive contribution, and reusable approval at another CM, while the USD 3.2M pre-seed carries a six-month reserve."
+sanityChecks:
+  ruleOf40: "Y3 revenue growth 66.4% + Y3 EBITDA margin -337.2% = -270.8%; directionally negative and not a meaningful SaaS benchmark at this early service scale."
+  burnMultiple: "Y3 EBITDA/cash burn USD 1,585K ÷ incremental revenue USD 187.5K = 8.45x; weak efficiency, with no follow-on included."
+  revenuePerFte: "USD 78.3K Y3 revenue per average 6.0 FTE (USD 470K ÷ 6); low because the model is still a service-led proof stage."
+  flags:
+    - "No named customer, validated per-serial price, typical batch size, eligible-event frequency, renewal history, or post-pilot ROI was established in the inputs; nearly all revenue drivers remain hypotheses."
+    - "The model assumes monthly smoothed campaign billings and same-period collection even though the actual service is lumpy and revenue is earned only on passing serials."
+    - "Base cash turns negative in Q2Y3 and ends at -USD 981.75K because no follow-on is modeled; a financing or cost reset is required before cash depletion."
+    - "Y3 EBITDA is -USD 1,585K, the Rule-of-40 direction is -270.8%, burn multiple is 8.45x, and revenue is only USD 78.3K per average FTE."
+    - "The 1.74x LTV/CAC ratio and 20.6-month payback depend on unvalidated three-year customer life and a USD 180K CAC; they are not yet scale-ready unit economics."
+    - "The 70% gross margin is a Y3 standardized-repeat target, not demonstrated economics; security approval, partner utilization, and incumbent competition remain gating risks."
