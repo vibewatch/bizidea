@@ -1,0 +1,595 @@
+slug: robot-cell-safety-warranty
+date: "2026-10-24"
+currency: USD
+modelStartMonth: "2026-10"
+assumptions:
+  - id: A0
+    name: "模型周期与时间安排"
+    value: "共 36 个月，覆盖 Oct 2026 至 Sep 2029；Y1 按月建模，Y2-Y3 按季度建模"
+    unit: "日历月"
+    source: "[business-plan.yaml 日期及三年模型格式要求；模型月份 M1-M12 覆盖 Oct 2026-Sep 2027，随后按季度延续八个季度至 Sep 2029]"
+  - id: A1
+    name: "种子前轮融资额与计划现金跑道"
+    value: "M1 到账 $2.4M，处于商业计划 $2-4M 融资区间内；用于支持 18 个月验证计划，另留六个月应急现金跑道"
+    unit: "USD 百万元及月数"
+    source: "[business-plan.yaml fundingAsk：$2-4M 规划区间和 18 个月验证计划；模型选取 $2.4M 作为规划情景，并留出六个月储备；不假设已有现金或 FORT 融资]"
+  - id: A2
+    name: "付费单元新增签约与试点范围"
+    value: "期初客户数为 0；M6 新增签约 1 个付费单元，随后 Y2 各季度新增 1/1/1/2 个、Y3 各季度新增 3/3/3/4 个；截至 M36 累计新增签约 19 个"
+    unit: "新增付费单元签约总数"
+    source: "[business-plan.yaml 的 product.sixMonth、product.twelveMonth、gtm.funnelTargets、milestones 和 experimentRoadmap：截至第 6个月，完成一个付费单元试点；第 1 年完成一到两个试点；第 12-24 个月在不超过三个场地覆盖 5-10 个活跃且已纳入保障的单元；第 36 个月达到 15-25 个——这些都是目标，并非已观察到的需求。首个单场地、单集成商、单机器人型号试点完成后，后续签约按建模者设定的阶段门逐步爬坡]"
+  - id: A3
+    name: "公司服务收入 ARPU"
+    value: "每个活跃单元每年确认 $12.0K 公司服务收入；合作方定价的整改保障保费不计入公司收入，也不假设该保费会转嫁给公司"
+    unit: "每活跃单元年对应的 USD 千元"
+    source: "[business-plan.yaml 的 gtm.pricing、businessModel.revenueStreams、investorMemo.firstCustomer.initialContract，以及 research.yaml 的 market.sam：$15K 仅是服务与保障合并口径的测算/验证锚点，并非报价；将 $12K 作为公司服务收入是建模者采取的保守拆分，保费、佣金、管理费和付费意愿均未得到验证]"
+  - id: A4
+    name: "客户留存与生命周期"
+    value: "按几何流失率近似，月流失率 2.7778% 对应 36 个月的预期客户生命周期"
+    unit: "每月百分比及月数"
+    source: "[business-plan.yaml 的 operatingAssumptions 和 investorMemo：目前没有留存或续约数据；36 个月生命周期及其倒数月流失率，是明确采用的初创融资规划经验值；customersEop 中的小数代表预期活跃付费单元当量，newCustomers 表示新增签约总数]"
+  - id: A5
+    name: "外部直接交付成本与毛利率"
+    value: "COGS 占公司收入的比例为 Y1 的 70%、Y2 的 48%、Y3 的 42%；对应的外部成本毛利率分别为 30%、52%、58%"
+    unit: "占收入的百分比"
+    source: "[business-plan.yaml 的 businessModel.targetGrossMarginPct 和 killCriteria：重复交付最终应超过 70% 毛利率，前五个单元的直接毛利率应避免低于 50%；相关比例是建模者对外包独立见证、现场差旅及合作方或外部审核成本的估算，尚未验证，首个试点刻意采用服务密集型交付；受薪员工成本仍计入 salaryK 和 opexK]"
+  - id: A6
+    name: "招聘与全口径薪酬成本"
+    value: "2 位创始人于 M1 入职；只有通过 M6 付费试点门槛后，才在 M7 招聘 1 位现场评估负责人；CEO、创始工程师和现场评估负责人的全口径年薪分别为 $120K、$150K 和 $120K；六个时点的 FTE 快照依次为 2、2、3、3、3、3"
+    unit: "FTE 数及每 FTE 年对应的 USD 千元薪酬"
+    source: "[business-plan.yaml 的 team 和 strategicChoices.sequencingRationale：创始人从第 0 个月开始，只有出现付费使用后才招聘现场评估负责人；全口径薪酬是早期初创融资的经验估算，并非来自薪资报价；独立评估人员和保险法律顾问均为合同人员，不计入 FTE]"
+  - id: A7
+    name: "非薪酬运营费用计划"
+    value: "Y1 月度 S&M（$K）：2,2,3,3,4,4,4,5,5,6,6,7；R&D：12,12,13,14,14,15,16,16,17,18,19,20；G&A：18,18,18,20,22,24,18,18,20,20,22,24。Y2 季度 S&M/R&D/G&A（$K）：12/24/28、15/26/28、18/28/30、20/30/32。Y3：20/30/34、22/32/36、24/34/38、26/36/40。"
+    unit: "Y1 按月、Y2-Y3 按季度的 USD 千元"
+    source: "[business-plan.yaml 的 product、operations、gtm.channels、team 和 experimentRoadmap：预算用于精简的证据工作流研发、创始人主导的买方/合作方拓展、法律与监管准备、安全数据处理及公司管理开支；这些是建模者估算，并非供应商报价，且不含合作方风险保费]"
+  - id: A8
+    name: "全口径获客成本"
+    value: "Y3 CAC =（$92K 非薪酬 S&M + CEO $120K 全口径薪酬的 35%）/ Y3 付费单元新增签约 13 个 = 每个单元 $10.3077K"
+    unit: "每笔新增付费单元签约对应的 USD 千元"
+    source: "[business-plan.yaml 的 gtm.channels 和 sequencingRationale：销售继续由创始人主导，不专设销售岗位；CEO 投入 35% 时间是建模假设；Y3 S&M 取自 A7，新增签约数取自 A2；CAC 按模型费用分摊，不作为额外费用计入 P&L]"
+  - id: A9
+    name: "情景设定"
+    value: "下行情景：服务 ARPU 为 $9.6K，Y3 各季度新增签约 3/3/2/3 个；基准情景：$12K、3/3/3/4 个；上行情景：$14.4K、3/3/4/5 个；所有情景的团队人数和非薪酬预算均不变"
+    unit: "每活跃单元年对应的 USD 千元及各季度新增单元签约数"
+    source: "[business-plan.yaml 的 gtm.funnelTargets、product.twelveMonth、milestones、operatingAssumptions，以及 research.yaml 的 coverageGap：价格、合作方产能和客户转化率均未验证；ARPU +/-20% 以及 Y3 新增签约减少或增加两个，是透明列示的建模压力情景，并非预测]"
+  - id: A10
+    name: "敏感性冲击"
+    value: "全期 ARPU +/-20%；Y3 的 Q3-Q4 合计少签约两个；月流失率 +1 个百分点；各年度外部交付毛利率 -10 个百分点；全期非薪酬 S&M +25%"
+    unit: "百分比、百分点及单元签约数"
+    source: "[business-plan.yaml 的顶层 risks、killCriteria、strategicChoices.sequencingRationale 和 operatingAssumptions 指出，价格、销售周期、留存、合作方/交付成本及招聘均存在不确定性；冲击幅度由建模者选作压力测试参数]"
+  - id: A11
+    name: "资金分配与储备"
+    value: "$840K 用于工程（35%）；$480K 用于 GTM 和试点交付（20%）；$480K 用于 G&A（含法律与监管工作，20%）；$600K 用作六个月缓冲资金（25%）；合计 $2.4M"
+    unit: "USD 金额及占种子前轮融资额的百分比"
+    source: "[business-plan.yaml 的 fundingAsk.useOfFundsSummary 和 operations：资金用于搭建最精简的证据工作流、开展一到三个付费单元试点、设计持牌合作方合作结构及法律安排、独立见证和应急储备；各类别的分配是建模者的规划判断，并非已批准预算]"
+  - id: A12
+    name: "现金与会计口径"
+    value: "期初现金为 $0；$2.4M 于 M1 到账；期末现金 = 上期期末现金 + 融资流入 + EBITDA；模型不计后续融资、税费、营运资本变动、资本开支、债务偿付、合作方保费或尚未绑定保障的收入"
+    unit: "USD 千元及建模口径"
+    source: "[business-plan.yaml 的 fundingAsk 和 operatingAssumptions：未披露现有现金、已签合同、已绑定保障或融资；客户向公司支付模型中的服务费，合作方定价的风险保费不计入；由于其他现金项目尚无法量化，模型以 EBITDA 作为经营现金流]"
+headcount:
+  - role: "创始人 / CEO，负责企业销售与风险合作"
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: "创始工程师，证据工作流"
+    q1y1: 1
+    q2y1: 1
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+  - role: "现场评估负责人"
+    q1y1: 0
+    q2y1: 0
+    q3y1: 1
+    q4y1: 1
+    q4y2: 1
+    q4y3: 1
+headcountTotalsFte:
+  q1y1: 2
+  q2y1: 2
+  q3y1: 3
+  q4y1: 3
+  q4y2: 3
+  q4y3: 3
+headcountAnnualizedPayrollK:
+  q1y1: 270.0
+  q2y1: 270.0
+  q3y1: 390.0
+  q4y1: 390.0
+  q4y2: 390.0
+  q4y3: 390.0
+headcountBasis:
+  assumptionRefs:
+    - A6
+  description: "年化薪酬成本 = 快照 FTE 人数 × 各岗位全口径薪酬；两位创始人的实际 salaryK 为每月 22.5K，现场评估负责人 M7 入职后为每月 32.5K；所有员工薪酬只计入一次，列在 salaryK 并纳入 opexK。合同评估人员和法律顾问不计入 FTE，相关费用不属于员工薪酬。"
+revenueModel:
+  assumptionRefs:
+    - A2
+    - A3
+    - A4
+  customerDefinition: "customersEop 表示预期活跃付费单元当量，而非按运营商客户去重的客户数；newCustomers 表示新增付费单元签约总数。首个付费试点限定在一个 3PL 场地、一家集成商和一种机器人型号；后续增加单元须以试点结果和合作方证据为前提。"
+  formula: "每个月或季度的 revenueK，按 customersBop 与 customersEop 的平均值乘以年化服务 ARPU，再分别除以 12 或 4 计算。流失率作用于期初活跃单元；新增签约按期间中点法分摊。"
+  exclusion: "模型只计公司服务收入；合作方留存或单独收取的整改保障保费，以及任何未经批准的佣金/管理费，均不计入。模型不假设与 FORT 已建立合作、不假设存在客户需求或报价，也不假设保单已绑定。"
+pnlMethodology:
+  assumptionRefs:
+    - A5
+    - A6
+    - A7
+    - A12
+  description: "cogsK 是各年度适用的外部直接交付成本率；grossProfitK = revenueK - cogsK；salaryK 是员工全口径薪酬；opexK = salaryK + salesMarketingK + researchDevelopmentK + generalAdministrativeK；ebitdaK = grossProfitK - opexK；现金按融资流入加 EBITDA 逐期结转。模型列示的毛利率未计入受薪交付人员薪酬；这部分仍列在 salaryK 中，因此全成本贡献毛利率更低。"
+y1Monthly:
+  - month: M1
+    customersBop: 0.000000
+    customersEop: 0.000000
+    newCustomers: 0
+    revenueK: 0.000000
+    cogsK: 0.000000
+    grossProfitK: 0.000000
+    salaryK: 22.500000
+    salesMarketingK: 2.000000
+    researchDevelopmentK: 12.000000
+    generalAdministrativeK: 18.000000
+    opexK: 54.500000
+    ebitdaK: -54.500000
+    fundingInflowK: 2400.000000
+    cashEopK: 2345.500000
+  - month: M2
+    customersBop: 0.000000
+    customersEop: 0.000000
+    newCustomers: 0
+    revenueK: 0.000000
+    cogsK: 0.000000
+    grossProfitK: 0.000000
+    salaryK: 22.500000
+    salesMarketingK: 2.000000
+    researchDevelopmentK: 12.000000
+    generalAdministrativeK: 18.000000
+    opexK: 54.500000
+    ebitdaK: -54.500000
+    fundingInflowK: 0.000000
+    cashEopK: 2291.000000
+  - month: M3
+    customersBop: 0.000000
+    customersEop: 0.000000
+    newCustomers: 0
+    revenueK: 0.000000
+    cogsK: 0.000000
+    grossProfitK: 0.000000
+    salaryK: 22.500000
+    salesMarketingK: 3.000000
+    researchDevelopmentK: 13.000000
+    generalAdministrativeK: 18.000000
+    opexK: 56.500000
+    ebitdaK: -56.500000
+    fundingInflowK: 0.000000
+    cashEopK: 2234.500000
+  - month: M4
+    customersBop: 0.000000
+    customersEop: 0.000000
+    newCustomers: 0
+    revenueK: 0.000000
+    cogsK: 0.000000
+    grossProfitK: 0.000000
+    salaryK: 22.500000
+    salesMarketingK: 3.000000
+    researchDevelopmentK: 14.000000
+    generalAdministrativeK: 20.000000
+    opexK: 59.500000
+    ebitdaK: -59.500000
+    fundingInflowK: 0.000000
+    cashEopK: 2175.000000
+  - month: M5
+    customersBop: 0.000000
+    customersEop: 0.000000
+    newCustomers: 0
+    revenueK: 0.000000
+    cogsK: 0.000000
+    grossProfitK: 0.000000
+    salaryK: 22.500000
+    salesMarketingK: 4.000000
+    researchDevelopmentK: 14.000000
+    generalAdministrativeK: 22.000000
+    opexK: 62.500000
+    ebitdaK: -62.500000
+    fundingInflowK: 0.000000
+    cashEopK: 2112.500000
+  - month: M6
+    customersBop: 0.000000
+    customersEop: 1.000000
+    newCustomers: 1
+    revenueK: 0.500000
+    cogsK: 0.350000
+    grossProfitK: 0.150000
+    salaryK: 22.500000
+    salesMarketingK: 4.000000
+    researchDevelopmentK: 15.000000
+    generalAdministrativeK: 24.000000
+    opexK: 65.500000
+    ebitdaK: -65.350000
+    fundingInflowK: 0.000000
+    cashEopK: 2047.150000
+  - month: M7
+    customersBop: 1.000000
+    customersEop: 0.972222
+    newCustomers: 0
+    revenueK: 0.986111
+    cogsK: 0.690278
+    grossProfitK: 0.295833
+    salaryK: 32.500000
+    salesMarketingK: 4.000000
+    researchDevelopmentK: 16.000000
+    generalAdministrativeK: 18.000000
+    opexK: 70.500000
+    ebitdaK: -70.204167
+    fundingInflowK: 0.000000
+    cashEopK: 1976.945833
+  - month: M8
+    customersBop: 0.972222
+    customersEop: 0.945216
+    newCustomers: 0
+    revenueK: 0.958719
+    cogsK: 0.671103
+    grossProfitK: 0.287616
+    salaryK: 32.500000
+    salesMarketingK: 5.000000
+    researchDevelopmentK: 16.000000
+    generalAdministrativeK: 18.000000
+    opexK: 71.500000
+    ebitdaK: -71.212384
+    fundingInflowK: 0.000000
+    cashEopK: 1905.733449
+  - month: M9
+    customersBop: 0.945216
+    customersEop: 0.918960
+    newCustomers: 0
+    revenueK: 0.932088
+    cogsK: 0.652462
+    grossProfitK: 0.279626
+    salaryK: 32.500000
+    salesMarketingK: 5.000000
+    researchDevelopmentK: 17.000000
+    generalAdministrativeK: 20.000000
+    opexK: 74.500000
+    ebitdaK: -74.220374
+    fundingInflowK: 0.000000
+    cashEopK: 1831.513075
+  - month: M10
+    customersBop: 0.918960
+    customersEop: 0.893433
+    newCustomers: 0
+    revenueK: 0.906197
+    cogsK: 0.634338
+    grossProfitK: 0.271859
+    salaryK: 32.500000
+    salesMarketingK: 6.000000
+    researchDevelopmentK: 18.000000
+    generalAdministrativeK: 20.000000
+    opexK: 76.500000
+    ebitdaK: -76.228141
+    fundingInflowK: 0.000000
+    cashEopK: 1755.284935
+  - month: M11
+    customersBop: 0.893433
+    customersEop: 0.868616
+    newCustomers: 0
+    revenueK: 0.881025
+    cogsK: 0.616717
+    grossProfitK: 0.264307
+    salaryK: 32.500000
+    salesMarketingK: 6.000000
+    researchDevelopmentK: 19.000000
+    generalAdministrativeK: 22.000000
+    opexK: 79.500000
+    ebitdaK: -79.235693
+    fundingInflowK: 0.000000
+    cashEopK: 1676.049242
+  - month: M12
+    customersBop: 0.868616
+    customersEop: 0.844488
+    newCustomers: 0
+    revenueK: 0.856552
+    cogsK: 0.599586
+    grossProfitK: 0.256966
+    salaryK: 32.500000
+    salesMarketingK: 7.000000
+    researchDevelopmentK: 20.000000
+    generalAdministrativeK: 24.000000
+    opexK: 83.500000
+    ebitdaK: -83.243034
+    fundingInflowK: 0.000000
+    cashEopK: 1592.806207
+y2y3Quarterly:
+  - quarter: Q1Y2
+    customersBop: 0.844488
+    customersEop: 1.776050
+    newCustomers: 1
+    revenueK: 3.930807
+    cogsK: 1.886787
+    grossProfitK: 2.044020
+    salaryK: 97.500000
+    salesMarketingK: 12.000000
+    researchDevelopmentK: 24.000000
+    generalAdministrativeK: 28.000000
+    opexK: 161.500000
+    ebitdaK: -159.455980
+    fundingInflowK: 0.000000
+    cashEopK: 1433.350227
+  - quarter: Q2Y2
+    customersBop: 1.776050
+    customersEop: 2.632119
+    newCustomers: 1
+    revenueK: 6.612254
+    cogsK: 3.173882
+    grossProfitK: 3.438372
+    salaryK: 97.500000
+    salesMarketingK: 15.000000
+    researchDevelopmentK: 26.000000
+    generalAdministrativeK: 28.000000
+    opexK: 166.500000
+    ebitdaK: -163.061628
+    fundingInflowK: 0.000000
+    cashEopK: 1270.288599
+  - quarter: Q3Y2
+    customersBop: 2.632119
+    customersEop: 3.418812
+    newCustomers: 1
+    revenueK: 9.076398
+    cogsK: 4.356671
+    grossProfitK: 4.719727
+    salaryK: 97.500000
+    salesMarketingK: 18.000000
+    researchDevelopmentK: 28.000000
+    generalAdministrativeK: 30.000000
+    opexK: 173.500000
+    ebitdaK: -168.780273
+    fundingInflowK: 0.000000
+    cashEopK: 1101.508326
+  - quarter: Q4Y2
+    customersBop: 3.418812
+    customersEop: 5.141752
+    newCustomers: 2
+    revenueK: 12.840847
+    cogsK: 6.163606
+    grossProfitK: 6.677240
+    salaryK: 97.500000
+    salesMarketingK: 20.000000
+    researchDevelopmentK: 30.000000
+    generalAdministrativeK: 32.000000
+    opexK: 179.500000
+    ebitdaK: -172.822760
+    fundingInflowK: 0.000000
+    cashEopK: 928.685566
+  - quarter: Q1Y3
+    customersBop: 5.141752
+    customersEop: 7.725065
+    newCustomers: 3
+    revenueK: 19.300225
+    cogsK: 8.106095
+    grossProfitK: 11.194131
+    salaryK: 97.500000
+    salesMarketingK: 20.000000
+    researchDevelopmentK: 30.000000
+    generalAdministrativeK: 34.000000
+    opexK: 181.500000
+    ebitdaK: -170.305869
+    fundingInflowK: 0.000000
+    cashEopK: 758.379697
+  - quarter: Q2Y3
+    customersBop: 7.725065
+    customersEop: 10.099026
+    newCustomers: 3
+    revenueK: 26.736136
+    cogsK: 11.229177
+    grossProfitK: 15.506959
+    salaryK: 97.500000
+    salesMarketingK: 22.000000
+    researchDevelopmentK: 32.000000
+    generalAdministrativeK: 36.000000
+    opexK: 187.500000
+    ebitdaK: -171.993041
+    fundingInflowK: 0.000000
+    cashEopK: 586.386656
+  - quarter: Q3Y3
+    customersBop: 10.099026
+    customersEop: 12.280601
+    newCustomers: 3
+    revenueK: 33.569441
+    cogsK: 14.099165
+    grossProfitK: 19.470276
+    salaryK: 97.500000
+    salesMarketingK: 24.000000
+    researchDevelopmentK: 34.000000
+    generalAdministrativeK: 38.000000
+    opexK: 193.500000
+    ebitdaK: -174.029724
+    fundingInflowK: 0.000000
+    cashEopK: 412.356932
+  - quarter: Q4Y3
+    customersBop: 12.280601
+    customersEop: 15.285382
+    newCustomers: 4
+    revenueK: 41.348975
+    cogsK: 17.366569
+    grossProfitK: 23.982405
+    salaryK: 97.500000
+    salesMarketingK: 26.000000
+    researchDevelopmentK: 36.000000
+    generalAdministrativeK: 40.000000
+    opexK: 199.500000
+    ebitdaK: -175.517595
+    fundingInflowK: 0.000000
+    cashEopK: 236.839337
+totals:
+  y1:
+    revenueK: 6.020691
+    cogsK: 4.214484
+    grossProfitK: 1.806207
+    salaryK: 330.000000
+    salesMarketingK: 51.000000
+    researchDevelopmentK: 186.000000
+    generalAdministrativeK: 242.000000
+    opexK: 809.000000
+    ebitdaK: -807.193793
+    newCustomers: 1
+    fundingInflowK: 2400.000000
+    cashEopK: 1592.806207
+  y2:
+    revenueK: 32.460306
+    cogsK: 15.580947
+    grossProfitK: 16.879359
+    salaryK: 390.000000
+    salesMarketingK: 65.000000
+    researchDevelopmentK: 108.000000
+    generalAdministrativeK: 118.000000
+    opexK: 681.000000
+    ebitdaK: -664.120641
+    newCustomers: 5
+    fundingInflowK: 0.000000
+    cashEopK: 928.685566
+  y3:
+    revenueK: 120.954777
+    cogsK: 50.801006
+    grossProfitK: 70.153771
+    salaryK: 390.000000
+    salesMarketingK: 92.000000
+    researchDevelopmentK: 132.000000
+    generalAdministrativeK: 148.000000
+    opexK: 762.000000
+    ebitdaK: -691.846229
+    newCustomers: 13
+    fundingInflowK: 0.000000
+    cashEopK: 236.839337
+unitEconomics:
+  arpuAnnualK: 12.0
+  grossMarginPct: 58.0
+  cacK: 10.3077
+  monthlyChurnPct: 2.7778
+  avgCustomerLifeMonths: 36.0
+  ltvK: 20.88
+  ltvCacRatio: 2.03
+  cacPaybackMonths: 17.8
+  assumptionRefs:
+    - A3
+    - A4
+    - A5
+    - A8
+fundingAsk:
+  round: pre-seed
+  amountM: 2.4
+  targetRangeM: "2.0-4.0"
+  runwayMonths: 24
+  milestone: "截至第 18个月，完成一到三个付费单元试点，取得书面且可供法律审阅的合作方条款，测量独立见证和差旅成本，并判断重复交付是否达到商业计划设定的门槛；保留六个月应急储备。"
+  useOfFunds:
+    - bucket: "工程"
+      amountUsd: 840000
+      percentage: 35
+    - bucket: GTM
+      amountUsd: 480000
+      percentage: 20
+    - bucket: "G&A"
+      amountUsd: 480000
+      percentage: 20
+    - bucket: "缓冲资金（6 个月）"
+      amountUsd: 600000
+      percentage: 25
+  assumptionRefs:
+    - A1
+    - A11
+scenarios:
+  downside:
+    description: "服务价格下调 20%、Y3 少签约两个单元，会压低收入；精简团队和运营预算保持不变。"
+    y3RevenueK: 92.061069
+    y3EbitdaK: -708.604580
+    cashLowPointK: 216.343873
+    keyAssumptionChanges:
+      - "A9：公司年化服务 ARPU 下调 20% 至 $9.6K。"
+      - "A9：Y3 新增签约少两个，Q3Y3 和 Q4Y3 各少一个。"
+      - "A9：人员配置、未计入收入的合作方保费和非薪酬预算均维持基准情景。"
+  base:
+    description: "试点按阶段门推进并转向重复交付；按仅计服务收入、年化 ARPU 为 $12K 的基准，到 M36 可达到 15.3 个预期活跃付费单元当量。"
+    y3RevenueK: 120.954777
+    y3EbitdaK: -691.846229
+    cashLowPointK: 236.839337
+    keyAssumptionChanges:
+      - "A2-A8：Y1 完成一个付费试点、Y2 签约五个、Y3 签约十三个；按 36 个月生命周期近似，精简招聘，交付和运营成本采用模型估算。"
+  upside:
+    description: "服务价格上调 20%、Y3 后两个季度额外签约两个单元，可提高收入，且无需增加固定编制。"
+    y3RevenueK: 152.199860
+    y3EbitdaK: -673.724081
+    cashLowPointK: 258.698599
+    keyAssumptionChanges:
+      - "A9：公司年化服务 ARPU 上调 20% 至 $14.4K。"
+      - "A9：在现有评估人员产能下，新增签约两个，Q3Y3 和 Q4Y3 各一个。"
+sensitivity:
+  - variable: ARPU
+    downsideCase: "全模型周期内，每个单元的公司年化服务收入为 $9.6K（-20%）。"
+    baseCase: "每个单元的公司年化服务收入为 $12.0K；不计合作方保费。"
+    upsideCase: "全模型周期内，每个单元的公司年化服务收入为 $14.4K（+20%）。"
+    y3RevenueImpactK: -24.190955
+    cashImpactK: -17.767867
+    assumptionRef: A10
+  - variable: "销售周期"
+    downsideCase: "Y3 新增签约少两个，Q3Y3 和 Q4Y3 各少一个。"
+    baseCase: "Q1Y3-Q3Y3 每季度签约三个，Q4Y3 签约四个。"
+    upsideCase: "Y3 额外新增签约两个，Q3Y3 和 Q4Y3 各一个，且不增加固定支出。"
+    y3RevenueImpactK: -5.878440
+    cashImpactK: -3.409495
+    assumptionRef: A10
+  - variable: "流失率"
+    downsideCase: "月流失率为 3.7778%（+1 个百分点），作用于预期活跃单元。"
+    baseCase: "月流失率为 2.7778%，对应 36 个月的预期生命周期近似值。"
+    upsideCase: "月流失率为 1.7778%（-1 个百分点）。"
+    y3RevenueImpactK: -6.955176
+    cashImpactK: -4.868572
+    assumptionRef: A10
+  - variable: "毛利率 / 独立见证成本"
+    downsideCase: "外部交付毛利率各年度下降 10 个百分点，至 20%/42%/48%。"
+    baseCase: "计入受薪员工成本前，Y1/Y2/Y3 外部交付毛利率分别为 30%/52%/58%。"
+    upsideCase: "外部交付毛利率各年度上升 10 个百分点，至 40%/62%/68%。"
+    y3RevenueImpactK: 0.000000
+    cashImpactK: -15.943577
+    assumptionRef: A10
+  - variable: CAC
+    downsideCase: "全模型周期内非薪酬 S&M 支出增加 25%；据此推算的 Y3 CAC 升至每个签约约 $12.08K。"
+    baseCase: "Y3 CAC 为 $10.31K，其中将创始人全口径薪酬的 35% 分摊到 13 笔新增签约中。"
+    upsideCase: "全模型周期内非薪酬 S&M 支出减少 25%；据此推算的 Y3 CAC 降至每个签约约 $8.54K。"
+    y3RevenueImpactK: 0.000000
+    cashImpactK: -52.000000
+    assumptionRef: A10
+modelDiagram:
+  title: "单位经济模型流程"
+  mermaid: |
+    flowchart LR
+      Operator["One-site 3PL pilot"] --> Witness["Independent witness and bounded cell evidence"]
+      Witness --> Partner["Authorized partner binds capped remediation cover"]
+      Partner --> Cell["Paid service cell-year; partner retains risk premium"]
+      Cell --> Revenue["Company revenue = active cells x $12K service ARPU"]
+      Revenue --> Delivery["Contract assessor and travel COGS"]
+      Delivery --> Cash["Cash after payroll, engineering, GTM, and G&A"]
+modelSanity:
+  - checkName: "收入引擎"
+    finding: "模型从 M6 的一个付费试点起步，到 M36 达到 15.3 个预期活跃单元当量；按 $12K 年化 ARPU 计算，Y3 公司服务收入为 $121.0K，不含合作方保费。"
+  - checkName: "成功前提"
+    finding: "后续单元签约要支撑仅计服务收入的 $12K ARPU，授权合作方必须先绑定限额保障，买方也必须为单场地、单集成商、单机器人试点付费。"
+  - checkName: "模型失效条件"
+    finding: "销售与营销计划支出增加 25%，模型期末现金将减少 $52K；若无法绑定合作方保障，则会面临致命但尚未定价的风险。"
+  - checkName: "下一轮融资验证"
+    finding: "第 18 个月的验证门槛包括：完成一到三个付费单元试点，取得可供审阅的合作方条款和法律条款，测出评估人员及差旅成本，并书面记录扩大、收窄或停止的决定。"
+sanityChecks:
+  ruleOf40: "方向性测算为 -299%：Y3 营收增长率 272.6% 加 EBITDA 利润率 -572.0%；在规模小、利润率为负的验证阶段，这一结果没有实际意义。"
+  burnMultiple: "烧钱倍数为 5.7x，即 Y3 EBITDA 烧钱额 $691.8K 除以预期活跃单元增加带来的约 $121.7K 净新增 ARR；未计营运资本和资本开支。"
+  revenuePerFte: "Y3 人均收入为 $40.3K，按平均 3.0 FTE 计算；这里没有引用外部基准，团队仍处于验证阶段。"
+  flags:
+    - "目前没有经验证的 3PL 买方访谈、付费合同、合作方意向、已绑定保障、保费报价、留存结果或客户成果；模型也未将 FORT 的融资和部署表述作为需求或合作证据。"
+    - "研究中的 $15K 市场测算锚点是服务与保障的合并价值；预测仅确认假设为 $12K 的公司服务费，不计合作方保费或佣金。"
+    - "Y3 的 58% 毛利率未扣除受薪交付人员薪酬，仍低于商业计划中重复交付毛利率超过 70% 的目标；全成本贡献毛利率更低。"
+    - "独立评估人员工时、差旅、合作方审核、保障资格和保障索赔主张的处理均未知；Y1 外部 COGS 按 70% 估算以及之后的成本下降均未验证。"
+    - "在没有后续融资的情况下，基准情景现金到 M36 降至 $236.8K；若合作方授权延迟、成本超支或招聘超过三人 FTE 编制，可腾挪的空间有限。"
+    - "Y3 EBITDA 仍亏损 $691.8K，每 FTE 收入为 $40.3K；增长率和 Rule-of-40 的计算结果都未显示出规模化经济性。"
+    - "模型假设 Y3 新增签约 13 个单元，以达到 15.3 个活跃单元当量；这接近商业计划 15-25 个目标的低端，也依赖可复制的合作方和集成商渠道。"
